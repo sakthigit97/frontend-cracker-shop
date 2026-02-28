@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+
+/* 🎨 Festival Premium Theme (Tailwind v4 way) */
+@theme {
+  --color-primary: #111827;
+  /* Charcoal */
+  --color-accent: #F59E0B;
+  /* Saffron / Amber */
+  --color-secondary: #7C2D12;
+  /* Deep Red */
+  --color-background: #F9FAFB;
+  /* Soft off-white */
+  --color-surface: #FFFFFF;
+  /* Cards */
+  --color-muted: #6B7280;
+  /* Muted text */
+  --color-success: #16A34A;
+  --color-danger: #DC2626;
+}
+
+/* App-wide defaults */
+body {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade {
+  animation: fade 0.8s ease-in-out forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.15s ease-out;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
