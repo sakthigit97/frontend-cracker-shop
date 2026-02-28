@@ -1,4 +1,4 @@
-import type { CartItem as Item } from "../../store/cart.store";
+import type { CartItems as Item } from "../../store/cart.store";
 
 interface Props {
   item: Item;

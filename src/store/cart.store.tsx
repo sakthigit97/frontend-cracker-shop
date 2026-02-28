@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type CartItems = Record<string, number>;
+export type CartItems = Record<string, any>;
 
 export interface CartState {
   items: CartItems;
@@ -9,17 +9,13 @@ export interface CartState {
   dirty: boolean;
   dirtyItems: CartItems;
   locked: boolean;
-
   addItem: (productId: string, qty?: number) => void;
   removeItem: (productId: string) => void;
-
   clear: () => void;
   hydrate: (items: CartItems) => void;
-
   markDirty: () => void;
   clearDirty: () => void;
   clearDirtyItems: () => void;
-
   lock: () => void;
   unlock: () => void;
   resetToGuest: () => void;
