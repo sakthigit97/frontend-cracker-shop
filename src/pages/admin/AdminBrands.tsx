@@ -12,11 +12,13 @@ import {
 } from "../../services/adminBrands.api";
 
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import ProductSkeleton from "../../components/product/ProductSkeleton";
+import EmptyState from "../../components/ui/EmptyState";
 export default function AdminBrands() {
     const { fetchPage, loading, clearCache } = useAdminBrandsStore();
     const { showAlert } = useAlert();
-
-    const [page, setPage] = useState(1);
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [cursorStack, setCursorStack] = useState<string[]>([]);
     const [data, setData] = useState<any>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -37,16 +39,17 @@ export default function AdminBrands() {
     );
 
     useEffect(() => {
-        setPage(1);
+        setCursor(null);
+        setCursorStack([]);
     }, [effectiveFilters]);
 
     useEffect(() => {
         loadBrands();
-    }, [page, effectiveFilters]);
+    }, [cursor, effectiveFilters]);
 
     const loadBrands = async () => {
         try {
-            const res = await fetchPage(effectiveFilters, page);
+            const res = await fetchPage(effectiveFilters, cursor);
             setData(res);
         } catch (err: any) {
             showAlert({
@@ -149,6 +152,13 @@ export default function AdminBrands() {
                 </select>
             </div>
 
+            {loading && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <ProductSkeleton key={i} />
+                    ))}
+                </div>
+            )}
             <div className="bg-white border rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[650px]">
@@ -161,28 +171,6 @@ export default function AdminBrands() {
                         </thead>
 
                         <tbody>
-                            {loading && (
-                                <>
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                        <tr key={i} className="border-t animate-pulse">
-                                            <td className="p-3">
-                                                <div className="h-4 w-40 bg-gray-200 rounded" />
-                                            </td>
-
-                                            <td className="p-3">
-                                                <div className="h-4 w-20 bg-gray-200 rounded" />
-                                            </td>
-
-                                            <td className="p-3">
-                                                <div className="flex flex-col sm:flex-row gap-2">
-                                                    <div className="h-8 w-20 bg-gray-200 rounded-lg" />
-                                                    <div className="h-8 w-20 bg-gray-200 rounded-lg" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </>
-                            )}
                             {!loading && data?.items?.length ? (
                                 data.items.map((b: any) => (
                                     <tr key={b.brandId} className="border-t">
@@ -230,7 +218,10 @@ export default function AdminBrands() {
                                         colSpan={3}
                                         className="p-6 text-center text-gray-500"
                                     >
-                                        No brands found
+                                        <EmptyState
+                                            title="No brands found"
+                                            description="Try explore other brands."
+                                        />
                                     </td>
                                 </tr>
                             )}
@@ -238,12 +229,18 @@ export default function AdminBrands() {
                     </table>
                 </div>
 
-                {(page > 1 || data?.nextCursor) && (
+                {(cursorStack.length > 0 || data?.nextCursor) && (
                     <div className="flex justify-center gap-3 p-4 border-t">
-                        {page > 1 && (
+
+                        {cursorStack.length > 0 && (
                             <Button
                                 variant="outline"
-                                onClick={() => setPage((p) => p - 1)}
+                                onClick={() => {
+                                    const prevCursor =
+                                        cursorStack[cursorStack.length - 1];
+                                    setCursorStack((s) => s.slice(0, -1));
+                                    setCursor(prevCursor);
+                                }}
                             >
                                 Previous
                             </Button>
@@ -253,7 +250,10 @@ export default function AdminBrands() {
                             <Button
                                 variant="outline"
                                 disabled={loading}
-                                onClick={() => setPage((p) => p + 1)}
+                                onClick={() => {
+                                    setCursorStack((s) => [...s, cursor || ""]);
+                                    setCursor(data.nextCursor);
+                                }}
                             >
                                 Next
                             </Button>

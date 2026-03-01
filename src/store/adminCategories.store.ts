@@ -2,28 +2,40 @@ import { create } from "zustand";
 import { getAdminCategories } from "../services/adminCategories.api";
 
 type Filters = {
-    search: string;
-    isActive: "" | "true" | "false";
+    search?: string;
+    isActive?: "" | "true" | "false";
 };
 
+interface PageData {
+    items: any[];
+    nextCursor: string | null;
+}
+
 interface CategoryState {
-    cache: Record<string, any>;
+    cache: Record<string, Record<string, PageData>>;
     loading: boolean;
-    fetchPage: (filters: Filters, page: number) => Promise<any>;
+    fetchPage: (
+        filters: Filters,
+        cursor?: string | null
+    ) => Promise<PageData>;
     clearCache: () => void;
 }
+
+const filterKey = (filters: Filters) =>
+    JSON.stringify(filters || {});
+
+const cursorKey = (cursor?: string | null) => cursor || "first";
 
 export const useAdminCategoriesStore = create<CategoryState>((set, get) => ({
     cache: {},
     loading: false,
 
-    async fetchPage(filters, page) {
-        const key = `${filters.search}|${filters.isActive}|${page}`;
-        const cached = get().cache[key];
+    async fetchPage(filters, cursor = null) {
+        const fKey = filterKey(filters);
+        const cKey = cursorKey(cursor);
 
-        if (cached) {
-            return cached;
-        }
+        const cached = get().cache[fKey]?.[cKey];
+        if (cached) return cached;
 
         set({ loading: true });
 
@@ -31,17 +43,16 @@ export const useAdminCategoriesStore = create<CategoryState>((set, get) => ({
             const res = await getAdminCategories({
                 search: filters.search || undefined,
                 isActive: filters.isActive || undefined,
-                cursor:
-                    page > 1
-                        ? get().cache[`${filters.search}|${filters.isActive}|${page - 1}`]
-                            ?.nextCursor
-                        : undefined,
+                cursor: cursor || undefined,
             });
 
             set((state) => ({
                 cache: {
                     ...state.cache,
-                    [key]: res,
+                    [fKey]: {
+                        ...(state.cache[fKey] || {}),
+                        [cKey]: res,
+                    },
                 },
             }));
 

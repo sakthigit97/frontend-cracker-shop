@@ -4,6 +4,7 @@ import ProductCard from "../components/product/ProductCard";
 import { useBrandProducts } from "../store/brandProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
 export default function BrandProducts() {
     const { brandId = "" } = useParams();
@@ -47,9 +48,10 @@ export default function BrandProducts() {
             )}
 
             {!loading && filtered.length === 0 && (
-                <div className="text-center py-16 text-sm text-gray-500">
-                    No products found
-                </div>
+                <EmptyState
+                    title="No products found"
+                    description="Try explore other brands."
+                />
             )}
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">

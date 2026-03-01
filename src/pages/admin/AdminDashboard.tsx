@@ -9,6 +9,7 @@ import {
 } from "../../utils/orderStatus";
 import Button from "../../components/ui/Button";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
+import EmptyState from "../../components/ui/EmptyState";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -122,9 +123,10 @@ export default function AdminDashboard() {
         </div>
 
         {recentOrders.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No recent orders
-          </p>
+          <EmptyState
+            title="No recent orders"
+            description="Try explore other date or categories"
+          />
         ) : (
           <div className="space-y-3">
             {recentOrders.map((o: any) => (

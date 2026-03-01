@@ -20,7 +20,7 @@ export default function AdminCreateProduct() {
     const [form, setForm] = useState<ProductFormData>({
         name: "",
         price: "",
-        quantity: 0,
+        quantity: "",
         brandId: "",
         categoryId: "",
         isActive: true,
@@ -56,7 +56,7 @@ export default function AdminCreateProduct() {
             return;
         }
 
-        if (form.quantity < 0) {
+        if (Number(form.quantity) <= 0) {
             showAlert({
                 type: "error",
                 message: "Quantity cannot be negative",
@@ -80,10 +80,8 @@ export default function AdminCreateProduct() {
             return;
         }
 
-        const brandName =
-            brands.find((b) => b.id === form.brandId)?.name || "";
-        const categoryName =
-            categories.find((c) => c.id === form.categoryId)?.name || "";
+        const brandName = brands.find((b) => b.id === form.brandId)?.name || "";
+        const categoryName = categories.find((c) => c.id === form.categoryId)?.name || "";
 
         const searchText = [form.name, brandName, categoryName]
             .join(" ")
@@ -124,20 +122,30 @@ export default function AdminCreateProduct() {
             setLoading(false);
         }
     };
-
     return (
-        <div className="max-w-3xl">
-            <h1 className="text-xl font-semibold mb-4">Add Product</h1>
+        <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+                <div className="bg-white border rounded-2xl p-6 space-y-6">
 
-            <ProductForm
-                value={form}
-                brands={brands}
-                categories={categories}
-                loading={loading}
-                onChange={setForm}
-                onSubmit={handleSubmit}
-                onCancel={() => navigate("/admin/products")}
-            />
+                    <div>
+                        <h1 className="text-xl font-semibold">Add Product</h1>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Create a new product
+                        </p>
+                    </div>
+
+                    <ProductForm
+                        value={form}
+                        brands={brands}
+                        categories={categories}
+                        loading={loading}
+                        onChange={setForm}
+                        onSubmit={handleSubmit}
+                        onCancel={() => navigate("/admin/products")}
+                    />
+
+                </div>
+            </div>
         </div>
     );
 }

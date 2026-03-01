@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import Button from "../components/ui/Button";
 import { ORDER_STATUS_CONFIG } from "../utils/orderStatus";
 import { useOrdersStore } from "../store/orders.store";
+import ProductSkeleton from "../components/product/ProductSkeleton";
 
 export default function MyOrders() {
   const navigate = useNavigate();
@@ -28,31 +29,11 @@ export default function MyOrders() {
 
   if (loading && orders.length === 0) {
     return (
-
-      <>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <table key={i} >
-            <tbody>
-              <tr className="border-t animate-pulse">
-                <td className="p-3">
-                  <div className="h-4 w-40 bg-gray-200 rounded" />
-                </td>
-
-                <td className="p-3">
-                  <div className="h-4 w-20 bg-gray-200 rounded" />
-                </td>
-
-                <td className="p-3">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="h-8 w-20 bg-gray-200 rounded-lg" />
-                    <div className="h-8 w-20 bg-gray-200 rounded-lg" />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <ProductSkeleton key={i} />
         ))}
-      </>
+      </div>
     );
   }
 

@@ -20,12 +20,12 @@ function ProductCard({
   onDecrease,
 }: Props) {
   const navigate = useNavigate();
-
   const discount = getDiscountPercent(
     product.price,
     product.originalPrice
   );
 
+  const available_qty = product?.qty || 0;
   const handleCardClick = () => {
     navigate(`/product/${product.id}`);
   };
@@ -120,9 +120,13 @@ function ProductCard({
                 stop(e);
                 onAddToCart?.(product);
               }}
-              className="mt-2 w-full text-sm"
+              disabled={available_qty === 0}
+              className={`mt-2 w-full text-sm ${available_qty === 0
+                ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                : ""
+                }`}
             >
-              Add to Cart
+              {available_qty === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>
           ) : (
             <div

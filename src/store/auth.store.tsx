@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }, 20 * 60 * 1000);
     };
 
-    const events = ["mousemove", "keydown", "click", "scroll"];
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"]
     events.forEach((event) => {
       window.addEventListener(event, resetIdleTimer);
     });
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-     loadConfig();
+    loadConfig();
     if (!user) return;
 
     const interval = setInterval(() => {

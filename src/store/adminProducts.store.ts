@@ -23,12 +23,11 @@ interface PageData {
 }
 
 interface AdminProductsState {
-    cache: Record<string, Record<number, PageData>>;
+    cache: Record<string, Record<string, PageData>>;
     loading: boolean;
 
     fetchPage: (
         filters: QueryKey,
-        page: number,
         cursor?: string | null
     ) => Promise<PageData>;
 
@@ -38,13 +37,18 @@ interface AdminProductsState {
 const keyOf = (filters: QueryKey) =>
     JSON.stringify(filters || {});
 
+const cursorKey = (cursor?: string | null) =>
+    cursor || "first";
+
 export const useAdminProductsStore = create<AdminProductsState>((set, get) => ({
     cache: {},
     loading: false,
 
-    async fetchPage(filters, page, cursor) {
-        const key = keyOf(filters);
-        const cached = get().cache[key]?.[page];
+    async fetchPage(filters, cursor = null) {
+        const filterKey = keyOf(filters);
+        const cKey = cursorKey(cursor);
+
+        const cached = get().cache[filterKey]?.[cKey];
         if (cached) return cached;
 
         set({ loading: true });
@@ -58,13 +62,14 @@ export const useAdminProductsStore = create<AdminProductsState>((set, get) => ({
         if (filters.isActive) qs.set("isActive", filters.isActive);
 
         const res = await apiFetch(`/admin/products?${qs.toString()}`);
+
         set((state) => ({
             loading: false,
             cache: {
                 ...state.cache,
-                [key]: {
-                    ...(state.cache[key] || {}),
-                    [page]: res,
+                [filterKey]: {
+                    ...(state.cache[filterKey] || {}),
+                    [cKey]: res,
                 },
             },
         }));

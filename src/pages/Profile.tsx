@@ -3,6 +3,7 @@ import Button from "../components/ui/Button";
 import { useAlert } from "../store/alert.store";
 import { apiFetch } from "../services/api";
 import { useProfileStore } from "../store/profile.store";
+import ProductSkeleton from "../components/product/ProductSkeleton";
 
 interface ProfileData {
   name: string;
@@ -89,8 +90,10 @@ export default function Profile() {
 
   if (loadingProfile || !form) {
     return (
-      <div className="p-6 text-center text-[var(--color-muted)]">
-        Loading profile...
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <ProductSkeleton key={i} />
+        ))}
       </div>
     );
   }

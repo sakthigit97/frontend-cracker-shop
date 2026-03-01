@@ -1,4 +1,5 @@
 export interface Product {
+  qty: number;
   id: string;
   name: string;
   images?: string[];
@@ -9,6 +10,7 @@ export interface Product {
 }
 
 export type ProductDetails = {
+  qty: number;
   id: string;
   name: string;
   categoryName: string;

@@ -7,6 +7,7 @@ import { useAlert } from "../../store/alert.store";
 
 import { useDebounce } from "../../utils/useDebounce";
 import { deleteUser } from "../../services/adminUsers.api";
+import EmptyState from "../../components/ui/EmptyState";
 
 export default function AdminUsers() {
     const { fetchPage, loading, clearCache } = useAdminUsersStore();
@@ -174,7 +175,9 @@ export default function AdminUsers() {
                                             colSpan={3}
                                             className="p-6 text-center text-gray-500"
                                         >
-                                            No users found
+                                            <EmptyState
+                                                title="No users found"
+                                            />
                                         </td>
                                     </tr>
                                 )}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Button from "../ui/Button";
 import { apiFetch } from "../../services/api";
 import type { Product } from "../../types/product";
+import EmptyState from "../ui/EmptyState";
 
 type SelectedItem = Product & {
     quantity: number;
@@ -208,9 +209,10 @@ export default function AddOrderItemModal({
                     {!loading &&
                         search.length >= MIN_SEARCH_LEN &&
                         results.length === 0 && (
-                            <p className="text-sm text-gray-500 text-center mt-6">
-                                No products found
-                            </p>
+                            <EmptyState
+                                title="No products found"
+                                description="Try adjusting your search or explore other categories."
+                            />
                         )}
                 </div>
 

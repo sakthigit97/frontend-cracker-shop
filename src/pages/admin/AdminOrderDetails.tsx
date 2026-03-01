@@ -11,6 +11,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import { useAlert } from "../../store/alert.store";
 import { useLocation } from "react-router-dom";
+import EmptyState from "../../components/ui/EmptyState";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -137,7 +138,10 @@ export default function AdminOrderDetails() {
                     </div>
 
                     <h2 className="text-sm font-semibold text-gray-800">
-                        Order not found
+                        <EmptyState
+                            title="Order not found"
+                            description="Try explore other order."
+                        />
                     </h2>
                     <p className="mt-1 text-xs text-gray-500">
                         The order you are trying to view does not exist or may have been removed.

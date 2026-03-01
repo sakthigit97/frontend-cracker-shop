@@ -10,7 +10,6 @@ export default function Home() {
   const items = cartStore((s) => s.items);
   const addItem = cartStore((s) => s.addItem);
   const removeItem = cartStore((s) => s.removeItem);
-
   const [search, setSearch] = useState("");
 
   useEffect(() => {

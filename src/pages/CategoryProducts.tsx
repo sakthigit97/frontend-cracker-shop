@@ -4,6 +4,7 @@ import ProductCard from "../components/product/ProductCard";
 import { useCategoryProducts } from "../store/categoryProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
 export default function CategoryProducts() {
   const { categoryId = "" } = useParams();
@@ -46,9 +47,10 @@ export default function CategoryProducts() {
       )}
 
       {!loading && filtered.length === 0 && (
-        <div className="text-center py-16 text-sm text-gray-500">
-          No products found
-        </div>
+        <EmptyState
+          title="No products found"
+          description="Try explore other categories."
+        />
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">

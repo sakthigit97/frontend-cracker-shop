@@ -6,6 +6,8 @@ import {
 } from "../store/productDetails.store";
 import { cartStore } from "../store/cart.store";
 import { getDiscountPercent } from "../utils/pricing";
+import ProductSkeleton from "../components/product/ProductSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
 function getYouTubeId(url: string) {
   const regExp =
@@ -60,7 +62,6 @@ export default function ProductDetails() {
   const { productId = "" } = useParams();
   const fetchProduct = useFetchProductDetails();
   const { data: product, loading } = useProductDetails(productId);
-
   const addItem = cartStore((s) => s.addItem);
   const cartQty = cartStore(
     (s) => (product ? s.items[product.id] ?? 0 : 0)
@@ -72,34 +73,20 @@ export default function ProductDetails() {
 
   if (loading && !product) {
     return (
-
-      <>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <tr key={i} className="border-t animate-pulse">
-            <td className="p-3">
-              <div className="h-4 w-40 bg-gray-200 rounded" />
-            </td>
-
-            <td className="p-3">
-              <div className="h-4 w-20 bg-gray-200 rounded" />
-            </td>
-
-            <td className="p-3">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="h-8 w-20 bg-gray-200 rounded-lg" />
-                <div className="h-8 w-20 bg-gray-200 rounded-lg" />
-              </div>
-            </td>
-          </tr>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <ProductSkeleton key={i} />
         ))}
-      </>
+      </div>
     );
   }
-
   if (!product) {
     return (
       <div className="py-20 text-center text-sm text-gray-500">
-        Product not found
+        <EmptyState
+          title="Product not found"
+          description="Try explore other product."
+        />
       </div>
     );
   }
@@ -108,10 +95,8 @@ export default function ProductDetails() {
     product.price,
     product.originalPrice
   );
-
-  const videoId = product.youtubeUrl
-    ? getYouTubeId(product.youtubeUrl)
-    : null;
+  const videoId = product.youtubeUrl ? getYouTubeId(product.youtubeUrl) : null;
+  const available_qty = product?.qty || 0;
 
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-10">
@@ -172,9 +157,13 @@ export default function ProductDetails() {
               {cartQty === 0 ? (
                 <button
                   onClick={() => addItem(product.id, 1)}
-                  className="w-full h-full"
+                  className={`mt-2 w-full text-sm ${available_qty === 0
+                    ? "cursor-not-allowed text-gray-600"
+                    : ""
+                    }`}
+                  disabled={available_qty === 0}
                 >
-                  Add to Cart
+                  {available_qty === 0 ? "Out of Stock" : "Add to Cart"}
                 </button>
               ) : (
                 <div className="flex items-center justify-between w-full px-6">

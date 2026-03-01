@@ -8,11 +8,13 @@ import { useAlert } from "../../store/alert.store";
 import Toggle from "../../components/ui/Toggle";
 import { deactivateProduct, deleteProduct } from "../../services/adminProducts.api";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import EmptyState from "../../components/ui/EmptyState";
 
 export default function AdminProducts() {
     const { fetchPage, loading, clearCache } = useAdminProductsStore();
     const { brands, categories, load } = useMetaStore();
-    const [page, setPage] = useState(1);
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [cursorStack, setCursorStack] = useState<string[]>([]);
     const [data, setData] = useState<any>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -53,15 +55,16 @@ export default function AdminProducts() {
     }, []);
 
     useEffect(() => {
-        setPage(1);
+        setCursor(null);
+        setCursorStack([]);
     }, [effectiveFilters]);
 
     useEffect(() => {
         loadProducts();
-    }, [page, effectiveFilters]);
+    }, [cursor, effectiveFilters]);
 
     const loadProducts = async () => {
-        const res = await fetchPage(effectiveFilters, page);
+        const res = await fetchPage(effectiveFilters, cursor);
         setData(res);
     };
 
@@ -283,26 +286,27 @@ export default function AdminProducts() {
                             ) : (
                                 <tr>
                                     <td colSpan={4} className="p-6 text-center text-gray-500">
-                                        No products found
+                                        <EmptyState
+                                            title="No products found"
+                                            description="Try explore other products."
+                                        />
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
-
-                {(page > 1 || data?.nextCursor) && (
+                {(cursorStack.length > 0 || data?.nextCursor) && (
                     <div className="flex justify-center items-center gap-3 p-4 border-t">
-                        {page > 1 && (
+
+                        {cursorStack.length > 0 && (
                             <button
-                                onClick={() => setPage((p) => p - 1)}
-                                className="
-                                px-4 py-2
-                                text-sm font-medium
-                                border rounded-md
-                                hover:bg-gray-100
-                                transition
-                                "
+                                onClick={() => {
+                                    const prevCursor = cursorStack[cursorStack.length - 1];
+                                    setCursorStack(stack => stack.slice(0, -1));
+                                    setCursor(prevCursor);
+                                }}
+                                className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100 transition"
                             >
                                 ← Previous
                             </button>
@@ -310,16 +314,12 @@ export default function AdminProducts() {
 
                         {data?.nextCursor && (
                             <button
-                                onClick={() => setPage((p) => p + 1)}
+                                onClick={() => {
+                                    setCursorStack(prev => [...prev, cursor || ""]);
+                                    setCursor(data.nextCursor);
+                                }}
                                 disabled={loading}
-                                className="
-                                px-4 py-2
-                                text-sm font-medium
-                                border rounded-md
-                                hover:bg-gray-100
-                                transition
-                                disabled:opacity-50
-                                "
+                                className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100 transition disabled:opacity-50"
                             >
                                 Next →
                             </button>

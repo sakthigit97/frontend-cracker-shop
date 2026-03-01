@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createDiscount } from "../../services/adminDiscounts.api";
 import { useAdminTargetsStore } from "../../store/adminTargets.store";
 import { useAdminDiscountsStore } from "../../store/adminDiscounts.store";
+import ProductSkeleton from "../../components/product/ProductSkeleton";
 
 export default function AdminDiscountsPage() {
     const { showAlert } = useAlert();
@@ -133,15 +134,11 @@ export default function AdminDiscountsPage() {
 
     if (fetching || discountLoading) {
         return (
-            <>
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <div className="p-6 space-y-4" key={i}>
-                        <div className="h-6 w-52 bg-gray-200 rounded animate-pulse" />
-                        <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
-                        <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
-                    </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <ProductSkeleton key={i} />
                 ))}
-            </>
+            </div>
         );
     }
 
