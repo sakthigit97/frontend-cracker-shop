@@ -4,7 +4,7 @@ import { useAlert } from "../../store/alert.store";
 export interface ProductFormData {
     name: string;
     price: string;
-    quantity: string;
+    quantity: any;
     brandId: string;
     categoryId: string;
     isActive: boolean;

@@ -1,7 +1,12 @@
 import { useState } from "react";
 import Button from "../components/ui/Button";
+import { contactUsApi } from "../services/contact.api";
+import { useAlert } from "../store/alert.store";
 
 export default function Contact() {
+  const { showAlert } = useAlert();
+  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -15,15 +20,63 @@ export default function Contact() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Contact Form Submitted:", form);
-    // later → API call
+
+    if (!form.name.trim()) {
+      showAlert({ type: "error", message: "Name is required" });
+      return;
+    }
+
+    if (!/^[6-9]\d{9}$/.test(form.phone)) {
+      showAlert({
+        type: "error",
+        message: "Enter valid 10-digit mobile number",
+      });
+      return;
+    }
+
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      showAlert({
+        type: "error",
+        message: "Enter valid email address",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await contactUsApi({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        message: form.message.trim(),
+      });
+
+      showAlert({
+        type: "success",
+        message: "Your message has been sent successfully!",
+      });
+
+      setForm({
+        name: "",
+        phone: "",
+        email: "",
+        message: "",
+      });
+    } catch (err: any) {
+      showAlert({
+        type: "error",
+        message: err?.message || "Failed to send message",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      {/* Title */}
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-[var(--color-primary)]">
           Contact Us
@@ -33,9 +86,7 @@ export default function Contact() {
         </p>
       </div>
 
-      {/* Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
-        {/* Left Illustration / Info */}
         <div className="flex flex-col justify-center items-center text-center gap-6">
           <img
             src="https://cdn-icons-png.flaticon.com/512/3059/3059518.png"
@@ -55,10 +106,7 @@ export default function Contact() {
           </div>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="text-sm font-medium">
               Shop / Person Name <span className="text-red-500">*</span>
@@ -113,8 +161,12 @@ export default function Contact() {
             />
           </div>
 
-          <Button type="submit" className="w-full md:w-fit px-10">
-            Submit
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full md:w-fit px-10"
+          >
+            {loading ? "Sending..." : "Submit"}
           </Button>
         </form>
       </div>

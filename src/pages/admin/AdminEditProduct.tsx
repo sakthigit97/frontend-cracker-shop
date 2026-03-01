@@ -18,12 +18,9 @@ export default function AdminEditProduct() {
     const { productId } = useParams();
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-
     const { brands, categories, load } = useMetaStore();
-
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
-
     const [existingImages, setExistingImages] = useState<string[]>([]);
     const [form, setForm] = useState<ProductFormData | null>(null);
     const [initialData, setInitialData] = useState<any>(null);
@@ -38,7 +35,6 @@ export default function AdminEditProduct() {
         const loadProduct = async () => {
             try {
                 const data = await getAdminProduct(productId);
-
                 setExistingImages(data.imageUrls || []);
 
                 const formData: ProductFormData = {
@@ -54,7 +50,6 @@ export default function AdminEditProduct() {
                 };
 
                 setForm(formData);
-
                 setInitialData({
                     ...formData,
                     imageUrls: data.imageUrls || [],

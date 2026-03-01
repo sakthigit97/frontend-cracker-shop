@@ -35,7 +35,7 @@ export default function Footer() {
           <h4 className="font-semibold mb-3">Contact</h4>
           <ul className="space-y-2 text-sm text-white/80">
             <li>Sivakasi, Tamil Nadu</li>
-            <li>📞 +91 98845 95718</li>
+            <li>📞 +91 98845 95718, </li>
             <li>📧 support@crackershop.com</li>
           </ul>
         </div>

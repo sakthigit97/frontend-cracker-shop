@@ -219,8 +219,14 @@ export default function AdminDiscountsPage() {
                             <option value="">Select Target</option>
 
                             {filteredTargets.map((t: any) => {
-                                const id =
-                                    t.categoryId || t.brandId || t.productId;
+                                let id = "";
+                                if (form.discountType === "CATEGORY") {
+                                    id = t.categoryId;
+                                } else if (form.discountType === "BRAND") {
+                                    id = t.brandId;
+                                } else if (form.discountType === "PRODUCT") {
+                                    id = t.productId;
+                                }
 
                                 return (
                                     <option key={id} value={id}>

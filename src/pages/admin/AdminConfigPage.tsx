@@ -32,6 +32,8 @@ export default function AdminConfigPage() {
                 setConfig(res);
                 setForm({
                     ...res,
+                    adminMobile: res.adminMobile || "",
+                    adminEmail: res.adminEmail || "",
                     sliderImages: fixedSliderImages
                 });
             } catch {
@@ -100,6 +102,24 @@ export default function AdminConfigPage() {
 
     const handleSave = async () => {
         try {
+            const isValidMobile = /^[6-9]\d{9}$/.test(form.adminMobile);
+            const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.adminEmail);
+
+            if (!isValidMobile) {
+                showAlert({
+                    type: "error",
+                    message: "Enter a valid 10-digit mobile number",
+                });
+                return;
+            }
+
+            if (!isValidEmail) {
+                showAlert({
+                    type: "error",
+                    message: "Enter a valid email address",
+                });
+                return;
+            }
             setLoading(true);
             const updated = await updateAdminConfig(form);
             setConfig(updated);
@@ -120,149 +140,204 @@ export default function AdminConfigPage() {
     if (fetching || !form) {
         return <div className="max-w-2xl">Loading...</div>;
     }
-
     return (
-        <div className="max-w-2xl space-y-6">
-            <h1 className="text-xl font-semibold">Admin Config</h1>
+        <div className="flex justify-center">
+            <div className="w-full max-w-3xl">
+                <div className="bg-white border rounded-2xl p-6 space-y-6">
 
-            {/* FLAGS */}
-            <div className="space-y-3 border rounded-xl p-4">
-                <p className="text-sm font-medium">Feature Toggles</p>
+                    {/* Header */}
+                    <div>
+                        <h1 className="text-xl font-semibold">Admin Config</h1>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Manage global settings and feature toggles
+                        </p>
+                    </div>
 
-                {[
-                    ["isPaymentEnabled", "Payment Enabled"],
-                    ["isReferralEnabled", "Referral Enabled"],
-                    ["isJoinBonusEnabled", "Join Bonus Enabled"],
-                    ["isEmailEnabled", "Email Enabled"],
-                    ["isSmsEnabled", "SMS Enabled"],
-                ].map(([key, label]) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={form[key]}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    [key]: e.target.checked,
-                                }))
-                            }
-                        />
-                        {label}
-                    </label>
-                ))}
-            </div>
+                    {/* FLAGS */}
+                    <div className="space-y-3 border rounded-xl p-4">
+                        <p className="text-sm font-medium">Feature Toggles</p>
 
-            {/* AMOUNTS */}
-            <div className="space-y-4 border rounded-xl p-4">
-                <p className="text-sm font-medium">Wallet Values</p>
+                        {[
+                            ["isPaymentEnabled", "Payment Enabled"],
+                            ["isReferralEnabled", "Referral Enabled"],
+                            ["isJoinBonusEnabled", "Join Bonus Enabled"],
+                            ["isEmailEnabled", "Email Enabled"],
+                            ["isSmsEnabled", "SMS Enabled"],
+                        ].map(([key, label]) => (
+                            <label key={key} className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={form[key]}
+                                    onChange={(e) =>
+                                        setForm((p: any) => ({
+                                            ...p,
+                                            [key]: e.target.checked,
+                                        }))
+                                    }
+                                />
+                                {label}
+                            </label>
+                        ))}
+                    </div>
 
-                <div>
-                    <p className="text-sm">Join Bonus Amount</p>
-                    <input
-                        className="border rounded-lg px-3 py-2 w-full"
-                        value={form.joinBonusAmount || ""}
-                        onChange={(e) =>
-                            setForm((p: any) => ({
-                                ...p,
-                                joinBonusAmount: e.target.value,
-                            }))
-                        }
-                    />
-                </div>
+                    {/* AMOUNTS */}
+                    <div className="space-y-4 border rounded-xl p-4">
+                        <p className="text-sm font-medium">Wallet Values</p>
 
-                <div>
-                    <p className="text-sm">Referral Reward Amount</p>
-                    <input
-                        className="border rounded-lg px-3 py-2 w-full"
-                        value={form.referralRewardAmount || ""}
-                        onChange={(e) =>
-                            setForm((p: any) => ({
-                                ...p,
-                                referralRewardAmount: e.target.value,
-                            }))
-                        }
-                    />
-                </div>
-            </div>
-
-            {/* SLIDER IMAGES */}
-            <div className="space-y-4 border rounded-xl p-4">
-                <p className="text-sm font-medium">Slider Images</p>
-
-                {form.sliderImages.map((img: any, index: number) => (
-                    <div
-                        key={img.id}
-                        className="border rounded-lg p-3 space-y-2"
-                    >
-                        {img.imageUrl ? (
-                            <img
-                                src={img.imageUrl}
-                                className="h-24 w-full object-cover rounded-lg border"
-                            />
-                        ) : (
-                            <p className="text-xs text-gray-400">No image uploaded</p>
-                        )}
-                        <Button
-                            variant="outline"
-                            type="button"
-                            onClick={() => {
-                                setUploadIndex(index);
-                                fileRef.current?.click();
-                            }}
-                        >
-                            {img.imageUrl ? "Change Image" : "Upload Image"}
-                        </Button>
-                        <div className="space-y-1">
-                            <p className="text-xs font-medium">Title</p>
+                        <div>
+                            <p className="text-sm">Join Bonus Amount</p>
                             <input
                                 className="border rounded-lg px-3 py-2 w-full"
-                                placeholder="Enter slider title"
-                                value={img.title || ""}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-
-                                    setForm((prev: any) => {
-                                        const updated = [...prev.sliderImages];
-                                        updated[index].title = value;
-                                        return { ...prev, sliderImages: updated };
-                                    });
-                                }}
+                                value={form.joinBonusAmount || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        joinBonusAmount: e.target.value,
+                                    }))
+                                }
                             />
                         </div>
 
-                        {/* Remove */}
+                        <div>
+                            <p className="text-sm">Referral Reward Amount</p>
+                            <input
+                                className="border rounded-lg px-3 py-2 w-full"
+                                value={form.referralRewardAmount || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        referralRewardAmount: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    {/* ADMIN CONTACT DETAILS */}
+                    <div className="space-y-4 border rounded-xl p-4">
+                        <p className="text-sm font-medium">Admin Contact Details</p>
+
+                        <div>
+                            <p className="text-sm">Admin Mobile Number</p>
+                            <input
+                                type="tel"
+                                maxLength={10}
+                                className="border rounded-lg px-3 py-2 w-full"
+                                placeholder="Enter 10-digit mobile number"
+                                value={form.adminMobile || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        adminMobile: e.target.value.replace(/\D/g, ""),
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <p className="text-sm">Admin Email</p>
+                            <input
+                                type="email"
+                                className="border rounded-lg px-3 py-2 w-full"
+                                placeholder="Enter admin email"
+                                value={form.adminEmail || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        adminEmail: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    {/* SLIDER IMAGES */}
+                    <div className="space-y-4 border rounded-xl p-4">
+                        <p className="text-sm font-medium">Slider Images</p>
+
+                        {form.sliderImages.map((img: any, index: number) => (
+                            <div
+                                key={img.id}
+                                className="border rounded-lg p-3 space-y-2"
+                            >
+                                {img.imageUrl ? (
+                                    <img
+                                        src={img.imageUrl}
+                                        className="h-24 w-full object-cover rounded-lg border"
+                                    />
+                                ) : (
+                                    <p className="text-xs text-gray-400">
+                                        No image uploaded
+                                    </p>
+                                )}
+
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    onClick={() => {
+                                        setUploadIndex(index);
+                                        fileRef.current?.click();
+                                    }}
+                                >
+                                    {img.imageUrl ? "Change Image" : "Upload Image"}
+                                </Button>
+
+                                <div className="space-y-1">
+                                    <p className="text-xs font-medium">Title</p>
+                                    <input
+                                        className="border rounded-lg px-3 py-2 w-full"
+                                        placeholder="Enter slider title"
+                                        value={img.title || ""}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            setForm((prev: any) => {
+                                                const updated = [...prev.sliderImages];
+                                                updated[index].title = value;
+                                                return { ...prev, sliderImages: updated };
+                                            });
+                                        }}
+                                    />
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    onClick={() => removeSlider(index)}
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        ))}
+
+                        <Button variant="outline" onClick={addSlider}>
+                            + Add Slider Image
+                        </Button>
+
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleUploadSlider}
+                        />
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <Button onClick={handleSave} disabled={loading}>
+                            {loading ? "Saving…" : "Save Config"}
+                        </Button>
+
                         <Button
                             variant="outline"
-                            type="button"
-                            onClick={() => removeSlider(index)}
+                            onClick={() => navigate("/admin")}
                         >
-                            Remove
+                            Cancel
                         </Button>
                     </div>
-                ))}
 
-                <Button variant="outline" onClick={addSlider}>
-                    + Add Slider Image
-                </Button>
-
-                <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleUploadSlider}
-                />
-            </div>
-
-            {/* ACTIONS */}
-            <div className="flex gap-3">
-                <Button onClick={handleSave} disabled={loading}>
-                    {loading ? "Saving…" : "Save Config"}
-                </Button>
-
-                <Button variant="outline" onClick={() => navigate("/admin")}>
-                    Cancel
-                </Button>
+                </div>
             </div>
         </div>
     );

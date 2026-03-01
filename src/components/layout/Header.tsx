@@ -29,7 +29,7 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <span className="font-bold tracking-wide hidden sm:block">
-            Cracker Shop
+            Sivakasi Pyro Park
           </span>
         </Link>
 
