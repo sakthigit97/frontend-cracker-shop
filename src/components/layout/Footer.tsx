@@ -1,21 +1,15 @@
 import { Link } from "react-router-dom";
-// import logo from "../../assets/logos/logo.svg";
 
 export default function Footer() {
   return (
     <footer className="bg-[var(--color-primary)] text-white mt-12">
       <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
-
-        {/* Brand */}
         <div className="space-y-3">
-          {/* <img src={logo} alt="Cracker Shop" className="h-8" /> */}
           <p className="text-sm text-white/80 leading-relaxed">
-            Premium quality crackers from Sivakasi.  
+            Premium quality crackers from Sivakasi.
             Celebrate every occasion with safety and joy.
           </p>
         </div>
-
-        {/* Quick Links */}
         <div>
           <h4 className="font-semibold mb-3">Quick Links</h4>
           <ul className="space-y-2 text-sm text-white/80">
@@ -37,7 +31,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Contact */}
         <div>
           <h4 className="font-semibold mb-3">Contact</h4>
           <ul className="space-y-2 text-sm text-white/80">
@@ -47,7 +40,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* App Download */}
         <div>
           <h4 className="font-semibold mb-3">Mobile App</h4>
           <p className="text-sm text-white/80 mb-3">
@@ -70,7 +62,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Bar */}
       <div className="border-t border-white/10 py-4 text-center text-sm text-white/70">
         © {new Date().getFullYear()} Cracker Shop. All rights reserved.
       </div>

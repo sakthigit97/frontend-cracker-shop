@@ -16,7 +16,6 @@ export default function ConfirmStep() {
         reset,
     } = useBulkImportStore();
 
-    // 🛡️ Safety guard – never render empty screen
     if (!validationResult) {
         return (
             <div className="bg-white border rounded-xl p-4 text-sm text-gray-500">
@@ -30,7 +29,6 @@ export default function ConfirmStep() {
 
         try {
             setStatus("CONFIRMING");
-
             await confirmBulkImport(importId);
 
             showAlert({
@@ -48,7 +46,6 @@ export default function ConfirmStep() {
         }
     };
 
-    /* ===================== IMPORTING ===================== */
     if (status === "CONFIRMING") {
         return (
             <div className="bg-white border rounded-xl p-4 space-y-3">
@@ -66,7 +63,6 @@ export default function ConfirmStep() {
         );
     }
 
-    /* ===================== SUCCESS ===================== */
     if (status === "COMPLETED") {
         return (
             <div className="space-y-4">
@@ -89,7 +85,6 @@ export default function ConfirmStep() {
         );
     }
 
-    /* ===================== CONFIRM / ERROR ===================== */
     return (
         <div className="space-y-4">
             <div className="bg-white border rounded-xl p-4 text-sm text-gray-600">

@@ -131,11 +131,8 @@ export default function AdminCreateCategory() {
                             }
                         />
                     </div>
-                    {/* ================= IMAGE UPLOAD ================= */}
                     <div className="space-y-2">
                         <p className="text-sm font-medium">Category Image</p>
-
-                        {/* ----------- EMPTY STATE ----------- */}
                         {!form.image ? (
                             <label
                                 className="
@@ -165,7 +162,6 @@ export default function AdminCreateCategory() {
                                 </p>
                             </label>
                         ) : (
-                            /* ----------- PREVIEW STATE ----------- */
                             <div
                                 className="
                                 flex flex-col sm:flex-row

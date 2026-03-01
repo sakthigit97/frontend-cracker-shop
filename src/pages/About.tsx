@@ -76,7 +76,6 @@ export default function About() {
   );
 }
 
-/* Small internal component */
 function ServiceCard({
   title,
   description,

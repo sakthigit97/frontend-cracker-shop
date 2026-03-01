@@ -16,8 +16,6 @@ export default function BrandProducts() {
         fetchInitial,
         fetchMore,
     } = useBrandProducts(brandId);
-
-    // ✅ cart store wiring (same as CategoryProducts)
     const addItem = cartStore((s) => s.addItem);
     const cartItems = cartStore((s) => s.items);
 
@@ -32,7 +30,6 @@ export default function BrandProducts() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">
-            {/* Search */}
             <input
                 type="text"
                 placeholder="Search crackers..."
@@ -41,7 +38,6 @@ export default function BrandProducts() {
                 className="w-full mb-6 px-5 py-3 rounded-full border focus:ring-2 focus:ring-[var(--color-primary)]"
             />
 
-            {/* Loader */}
             {loading && items.length === 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Array.from({ length: 6 }).map((_, i) => (
@@ -50,14 +46,12 @@ export default function BrandProducts() {
                 </div>
             )}
 
-            {/* Empty */}
             {!loading && filtered.length === 0 && (
                 <div className="text-center py-16 text-sm text-gray-500">
                     No products found
                 </div>
             )}
 
-            {/* Products */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                 {filtered.map((p) => {
                     const quantityInCart = cartItems[p.id] ?? 0;
@@ -75,7 +69,6 @@ export default function BrandProducts() {
                 })}
             </div>
 
-            {/* Load More */}
             {nextCursor && (
                 <div className="flex justify-center py-8">
                     <button

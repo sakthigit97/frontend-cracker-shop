@@ -2,9 +2,6 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 export type AlertType = "success" | "error" | "info";
 
-/**
- * Internal alert state (store-controlled)
- */
 interface AlertState {
   id: number;
   type: AlertType;
@@ -13,9 +10,6 @@ interface AlertState {
   duration?: number;
 }
 
-/**
- * Alert input from UI (no id allowed)
- */
 type AlertInput = Omit<AlertState, "id">;
 
 interface AlertContextType {
@@ -32,10 +26,6 @@ export function AlertProvider({
   children: React.ReactNode;
 }) {
   const [alert, setAlert] = useState<AlertState | null>(null);
-
-  /**
-   * Auto-close logic (runs ONLY when a new alert appears)
-   */
   useEffect(() => {
     if (!alert) return;
 
@@ -49,21 +39,15 @@ export function AlertProvider({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [alert?.id]); // 🔑 CRITICAL FIX
+  }, [alert?.id]);
 
-  /**
-   * Show alert (ID generated internally)
-   */
   const showAlert = (data: AlertInput) => {
     setAlert({
       ...data,
-      id: Date.now(), // unique per alert
+      id: Date.now(),
     });
   };
 
-  /**
-   * Hide alert manually (✕ button)
-   */
   const hideAlert = () => {
     setAlert(null);
   };

@@ -42,7 +42,6 @@ export default function UploadStep() {
                 </div>
             )}
 
-            {/* ---------- INFO ---------- */}
             <div className="bg-white border rounded-xl p-4 text-sm text-gray-600">
                 Upload an Excel (<b>.xlsx</b>) file to import products in bulk.
                 <ul className="list-disc ml-5 mt-2 space-y-1">
@@ -51,7 +50,6 @@ export default function UploadStep() {
                 </ul>
             </div>
 
-            {/* ---------- FILE SELECT ---------- */}
             <div className="bg-white border rounded-xl p-4 space-y-3">
                 <label className="block text-sm font-medium">
                     Select Excel file
@@ -100,7 +98,6 @@ export default function UploadStep() {
                 )}
             </div>
 
-            {/* ---------- ACTION ---------- */}
             <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <Button
                     onClick={handleUpload}

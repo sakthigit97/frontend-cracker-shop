@@ -48,9 +48,6 @@ export default function AdminEditBrand() {
         logoUrl: "",
     });
 
-    /* ================================
-       LOAD BRAND DETAILS
-    ================================ */
     useEffect(() => {
         const loadBrand = async () => {
             try {
@@ -82,9 +79,6 @@ export default function AdminEditBrand() {
         loadBrand();
     }, [brandId]);
 
-    /* ================================
-       LOGO CHANGE HANDLER
-    ================================ */
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -113,9 +107,6 @@ export default function AdminEditBrand() {
         }));
     };
 
-    /* ================================
-       PREVIEW LOGO (WITH CLEANUP)
-    ================================ */
     const previewLogo = useMemo(() => {
         if (form.newLogo) {
             return URL.createObjectURL(form.newLogo);
@@ -131,9 +122,6 @@ export default function AdminEditBrand() {
         return () => URL.revokeObjectURL(url);
     }, [form.newLogo]);
 
-    /* ================================
-       CHANGE DETECTION
-    ================================ */
     const hasChanges = useMemo(() => {
         if (form.name.trim() !== original.name.trim()) return true;
         if (form.isActive !== original.isActive) return true;
@@ -141,9 +129,6 @@ export default function AdminEditBrand() {
         return false;
     }, [form, original]);
 
-    /* ================================
-       UPDATE BRAND
-    ================================ */
     const handleUpdate = async () => {
         if (!form.name.trim()) {
             showAlert({
@@ -204,9 +189,6 @@ export default function AdminEditBrand() {
         }
     };
 
-    /* ================================
-       LOADING UI
-    ================================ */
     if (fetching) {
         return (
             <div className="max-w-2xl space-y-4">
@@ -217,9 +199,6 @@ export default function AdminEditBrand() {
         );
     }
 
-    /* ================================
-       MAIN UI
-    ================================ */
     return (
         <div className="max-w-2xl space-y-6">
             <h1 className="text-xl font-semibold">Edit Brand</h1>

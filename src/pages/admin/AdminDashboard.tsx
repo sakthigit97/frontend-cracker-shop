@@ -48,7 +48,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* ---------- TOP STATS ---------- */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="Today Orders" value={stats.todayTotal} />
         <StatCard label="Pending" value={stats.pending} />
@@ -56,7 +55,6 @@ export default function AdminDashboard() {
         <StatCard label="Dispatched" value={stats.dispatched} />
       </div>
 
-      {/* ---------- STATUS OVERVIEW ---------- */}
       <div className="bg-white rounded-xl border p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">
@@ -112,7 +110,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ---------- RECENT ORDERS ---------- */}
       <div className="bg-white rounded-xl border p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Latest Orders</h2>

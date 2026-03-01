@@ -10,7 +10,6 @@ export default function CartItem({ item, onQtyChange, onRemove }: Props) {
   return (
     <div className="flex items-center gap-4">
 
-      {/* Image */}
       <div className="w-20 h-20 rounded-lg border bg-white flex items-center justify-center overflow-hidden">
         <img
           src={item.image}
@@ -19,7 +18,6 @@ export default function CartItem({ item, onQtyChange, onRemove }: Props) {
         />
       </div>
 
-      {/* Info */}
       <div className="flex-1">
         <h4 className="font-semibold text-[var(--color-primary)]">
           {item.name}
@@ -29,7 +27,6 @@ export default function CartItem({ item, onQtyChange, onRemove }: Props) {
           ₹{item.price} × {item.quantity}
         </p>
 
-        {/* Quantity Controls */}
         <div className="flex items-center gap-2 mt-2">
           <button
             onClick={() =>
@@ -55,7 +52,6 @@ export default function CartItem({ item, onQtyChange, onRemove }: Props) {
         </div>
       </div>
 
-      {/* Remove */}
       <button
         onClick={onRemove}
         className="text-sm text-red-500 hover:underline"

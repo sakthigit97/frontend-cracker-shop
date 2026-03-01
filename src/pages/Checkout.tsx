@@ -171,7 +171,6 @@ export default function Checkout() {
     console.log("Mock Payment Started:", total);
     await new Promise((res) => setTimeout(res, 1500));
 
-
     // Future:
     // 1. Create Razorpay Order API
     // 2. Open Razorpay Checkout
@@ -199,8 +198,6 @@ export default function Checkout() {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-        {/* -------- Address -------- */}
         <div className="bg-white rounded-xl border p-5 space-y-4">
           <h2 className="font-semibold text-lg">Delivery Address</h2>
 
@@ -210,7 +207,6 @@ export default function Checkout() {
             </p>
           ) : (
             <>
-              {/* Saved address option */}
               {profileAddress && (
                 <label className="flex gap-3 cursor-pointer">
                   <input
@@ -225,8 +221,6 @@ export default function Checkout() {
                   </div>
                 </label>
               )}
-
-              {/* New address option */}
               <label className="flex gap-3 cursor-pointer">
                 <input
                   type="radio"
@@ -263,7 +257,6 @@ export default function Checkout() {
           )}
         </div>
 
-        {/* -------- Order Summary -------- */}
         <div className="bg-white rounded-xl border p-5 space-y-4">
           <h2 className="font-semibold text-lg">Order Summary</h2>
 

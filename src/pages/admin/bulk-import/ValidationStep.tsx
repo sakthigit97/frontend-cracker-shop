@@ -72,7 +72,6 @@ export default function ValidationStep() {
                 </div>
             )}
 
-            {/* ---------- SUMMARY ---------- */}
             <div className="bg-white border rounded-xl p-4 text-sm">
                 <div>
                     Total: <b>{validationResult.totalRows}</b>
@@ -85,7 +84,6 @@ export default function ValidationStep() {
                 </div>
             </div>
 
-            {/* ---------- INVALID ROW ERRORS ---------- */}
             {validationResult.errors.length > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                     <p className="font-semibold text-red-700 mb-2">
@@ -102,7 +100,6 @@ export default function ValidationStep() {
                 </div>
             )}
 
-            {/* ---------- PREVIEW TABLE (MATCHES AdminProducts) ---------- */}
             {validationResult.preview.length > 0 && (
                 <div className="bg-white border rounded-xl overflow-hidden">
                     <div className="px-4 py-3 border-b">
@@ -137,7 +134,6 @@ export default function ValidationStep() {
                 </div>
             )}
 
-            {/* ---------- ACTION ---------- */}
             <div className="flex flex-col sm:flex-row justify-between gap-3">
                 <Button onClick={() => setStatus("CONFIRM")}>
                     Proceed to Import

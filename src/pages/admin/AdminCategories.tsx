@@ -70,8 +70,6 @@ export default function AdminCategories() {
             setTogglingId(categoryId);
 
             await updateCategoryStatus(categoryId, !current);
-
-            /* ✅ Instant UI Update (No API Refetch) */
             setData((prev: any) => ({
                 ...prev,
                 items: prev.items.map((c: any) =>
@@ -136,7 +134,6 @@ export default function AdminCategories() {
 
     return (
         <div className="space-y-4">
-            {/* ---------- HEADER ---------- */}
             <div className="flex justify-between items-center">
                 <h1 className="text-xl font-semibold">Categories</h1>
 
@@ -145,7 +142,6 @@ export default function AdminCategories() {
                 </Link>
             </div>
 
-            {/* ---------- FILTERS ---------- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                     placeholder="Search category"
@@ -172,7 +168,6 @@ export default function AdminCategories() {
                 </select>
             </div>
 
-            {/* ---------- TABLE ---------- */}
             <div className="bg-white border rounded-xl overflow-hidden">
                 {/* Loading UI */}
                 {loading && !data ? (

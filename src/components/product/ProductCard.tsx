@@ -56,10 +56,10 @@ function ProductCard({
         hover:ring-opacity-30
       "
     >
-      {/* Image */}
+
       <div className="relative bg-white aspect-[4/3] flex items-center justify-center">
         <img
-          src={product.image || "/placeholder.png"}
+          src={product.image}
           alt={product.name}
           loading="lazy"
           decoding="async"
@@ -85,7 +85,6 @@ function ProductCard({
         )}
       </div>
 
-      {/* Content */}
       <div className="p-3 flex flex-col flex-1 gap-0.5">
         <h3 className="
           text-sm
@@ -114,7 +113,6 @@ function ProductCard({
           )}
         </div>
 
-        {/* CTA */}
         <div className="mt-auto pt-3">
           {quantityInCart === 0 ? (
             <Button

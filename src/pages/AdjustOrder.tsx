@@ -191,7 +191,6 @@ export default function AdjustOrder() {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
-            {/* HEADER */}
             <div className="flex items-center justify-between mb-5">
                 <h1 className="text-2xl font-bold text-[var(--color-primary)]">
                     Adjust Order
@@ -213,7 +212,6 @@ export default function AdjustOrder() {
                 Order ID: <span className="font-medium">{orderId}</span>
             </p>
 
-            {/* UNSAVED INDICATOR */}
             {dirty && canAdjust && (
                 <div className="mb-3 flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-orange-500" />
@@ -223,16 +221,14 @@ export default function AdjustOrder() {
                 </div>
             )}
 
-            {/* LOCK */}
             {!canAdjust && (
                 <div className="mb-4 rounded-lg bg-gray-100 border p-3">
                     <p className="text-sm text-gray-700">
-                        🔒 This order has been confirmed and cannot be adjusted.
+                        This order has been confirmed and cannot be adjusted.
                     </p>
                 </div>
             )}
 
-            {/* ITEMS */}
             <div className="bg-white rounded-2xl border shadow-sm flex flex-col h-[70vh]">
                 <div className="flex-1 overflow-y-auto divide-y">
                     {items.map((item) => (
@@ -241,7 +237,7 @@ export default function AdjustOrder() {
                             className="p-4 flex gap-4 sm:flex-row flex-col"
                         >
                             <img
-                                src={item.image || "/placeholder.png"}
+                                src={item.image}
                                 className="w-16 h-16 object-contain rounded-md"
                             />
 
@@ -291,10 +287,8 @@ export default function AdjustOrder() {
                         </div>
                     ))}
                 </div>
-                {/* SUMMARY */}
                 <div className="border-t px-4 py-4 bg-white">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Left */}
                         <Button
                             variant="outline"
                             disabled={!canAdjust}
@@ -304,7 +298,6 @@ export default function AdjustOrder() {
                             + Add Item
                         </Button>
 
-                        {/* Right */}
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
                             <div className="text-center sm:text-left">
                                 <p className="text-sm text-gray-500">Updated Total</p>
@@ -339,8 +332,6 @@ export default function AdjustOrder() {
                     </div>
                 </div>
             </div>
-
-            {/* MODALS */}
             <AddOrderItemModal
                 open={showAddItem}
                 onClose={() => setShowAddItem(false)}

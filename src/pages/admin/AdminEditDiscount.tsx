@@ -50,9 +50,6 @@ export default function AdminEditDiscount() {
         targetId: "",
     });
 
-    /* ================================
-       LOAD DISCOUNT
-    ================================ */
     useEffect(() => {
         const loadDiscount = async () => {
             try {
@@ -91,9 +88,6 @@ export default function AdminEditDiscount() {
         loadDiscount();
     }, [discountId]);
 
-    /* ================================
-       CHANGE DETECTION
-    ================================ */
     const hasChanges = useMemo(() => {
         if (form.discountMode !== original.discountMode) return true;
         if (form.discountValue !== original.discountValue) return true;
@@ -102,9 +96,6 @@ export default function AdminEditDiscount() {
         return false;
     }, [form, original]);
 
-    /* ================================
-       UPDATE DISCOUNT
-    ================================ */
     const handleUpdate = async () => {
         if (!hasChanges) {
             showAlert({

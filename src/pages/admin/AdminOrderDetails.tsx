@@ -17,10 +17,8 @@ export default function AdminOrderDetails() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
     const location = useLocation();
-
-    const { cache, fetchOrder, loading, updateOrder } =
-        useAdminOrderDetailsStore();
-
+    const [downloading, setDownloading] = useState(false);
+    const { cache, fetchOrder, loading, updateOrder } = useAdminOrderDetailsStore();
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingPayload, setPendingPayload] = useState<{
         status?: string;
@@ -47,23 +45,30 @@ export default function AdminOrderDetails() {
         }
     }, [order]);
 
-    const isTerminal =
-        order?.status === "DISPATCHED" || order?.status === "CANCELLED";
+    const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canAdjust = !isTerminal;
-
     const canDownloadInvoice =
         STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
 
     async function handleDownloadInvoice() {
+        if (downloading) return;
         try {
 
+            setDownloading(true);
             const auth = localStorage.getItem("auth");
             const token = auth ? JSON.parse(auth).token : null;
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
+            if (isMobile) {
+                const url = `${apiUrl}?token=${encodeURIComponent(token || '')}`
+                window.open(url, "_blank");
+                return;
+            }
 
             const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`,
+                apiUrl,
                 {
                     method: "GET",
                     headers: {
@@ -79,27 +84,25 @@ export default function AdminOrderDetails() {
             }
 
             const blob = await res.blob();
-
-            // 🔹 Ensure it is PDF
             if (blob.type !== "application/pdf") {
                 throw new Error("Invalid invoice file received");
             }
 
             const url = window.URL.createObjectURL(blob);
-
             const link = document.createElement("a");
             link.href = url;
             link.download = `invoice-${order.orderId}.pdf`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
             window.URL.revokeObjectURL(url);
         } catch (err: any) {
             showAlert({
                 type: "error",
                 message: err.message || "Unable to download invoice",
             });
+        } finally {
+            setDownloading(false);
         }
     }
 
@@ -143,13 +146,9 @@ export default function AdminOrderDetails() {
             </div>
         );
     }
-
-    const canSubmit =
-        selectedStatus !== "" || comment !== order.adminComment;
-
+    const canSubmit = selectedStatus !== "" || comment !== order.adminComment;
     return (
         <div className="space-y-6">
-            {/* HEADER */}
             <div className="bg-white border rounded-xl p-4 space-y-3">
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -207,7 +206,7 @@ export default function AdminOrderDetails() {
                                 className="px-3 py-1.5 text-xs"
                                 onClick={handleDownloadInvoice}
                             >
-                                Download Invoice
+                                {downloading ? " Downloading Invoice" : " Download Invoice"}
                             </Button>
                         )}
 
@@ -249,9 +248,9 @@ export default function AdminOrderDetails() {
                 {order.items.map((item: any, idx: number) => (
                     <div key={item.productId || idx} className="p-4 flex gap-4">
                         <img
-                            src={item.image || "/placeholder.png"}
+                            src={item.image}
                             onError={(e) =>
-                                (e.currentTarget.src = "/placeholder.png")
+                                (e.currentTarget.src = "")
                             }
                             className="w-14 h-14 rounded object-cover"
                             loading="lazy"

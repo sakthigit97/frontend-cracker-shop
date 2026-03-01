@@ -55,7 +55,6 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Right Form */}
         <form
           onSubmit={handleSubmit}
           className="space-y-5"

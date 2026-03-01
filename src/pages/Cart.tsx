@@ -60,10 +60,7 @@ export default function Cart() {
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-5">
         Your Cart
       </h1>
-
-      {/* MAIN CONTAINER */}
       <div className="bg-white rounded-2xl border shadow-sm flex flex-col h-[70vh]">
-        {/* PRODUCT LIST */}
         <div className="flex-1 overflow-y-auto divide-y">
           {products.map((p) => (
             <div
@@ -78,14 +75,12 @@ export default function Cart() {
                 sm:gap-5
               "
             >
-              {/* Image */}
               <img
-                src={p.image || "/placeholder.png"}
+                src={p.image}
                 alt={p.name}
                 className="w-16 h-16 object-contain rounded-md"
               />
 
-              {/* Info */}
               <div className="flex-1">
                 <h3 className="font-medium text-[var(--color-primary)]">
                   {p.name}
@@ -100,7 +95,6 @@ export default function Cart() {
                 </p>
               </div>
 
-              {/* ACTIONS */}
               <div
                 className="
                   flex
@@ -112,7 +106,6 @@ export default function Cart() {
                   sm:items-end
                 "
               >
-                {/* Quantity */}
                 <div
                   className="
                     w-[120px]

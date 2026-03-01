@@ -238,7 +238,6 @@ export default function AdminBrands() {
                     </table>
                 </div>
 
-                {/* ---------- PAGINATION ---------- */}
                 {(page > 1 || data?.nextCursor) && (
                     <div className="flex justify-center gap-3 p-4 border-t">
                         {page > 1 && (

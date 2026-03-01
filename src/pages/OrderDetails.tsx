@@ -18,6 +18,7 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { showAlert } = useAlert();
+  const [downloading, setDownloading] = useState(false);
 
   if (!order) {
     return (
@@ -34,11 +35,9 @@ export default function OrderDetails() {
 
   const STATUS_KEYS = Object.keys(ORDER_STATUS_CONFIG);
   const currentIndex = STATUS_KEYS.indexOf(order.status);
-
   const isCancelled = order.status === TERMINAL_STATUS;
   const isDispatched = order.status === "DISPATCHED";
   const canCancel = CANCELLABLE_STATUSES.includes(order.status);
-
   const invoiceAvailableFrom = "PAYMENT_CONFIRMED";
 
   const canDownloadInvoice =
@@ -47,13 +46,22 @@ export default function OrderDetails() {
     order.status !== "CANCELLED";
 
   async function handleDownloadInvoice() {
+    if (downloading) return;
     try {
 
+      setDownloading(true);
       const auth = localStorage.getItem("auth");
       const token = auth ? JSON.parse(auth).token : null;
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
+      if (isMobile) {
+        const url = `${apiUrl}?token=${encodeURIComponent(token || '')}`
+        window.open(url, "_blank");
+        return;
+      }
 
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`,
+        apiUrl,
         {
           method: "GET",
           headers: {
@@ -69,27 +77,25 @@ export default function OrderDetails() {
       }
 
       const blob = await res.blob();
-
-      // 🔹 Ensure it is PDF
       if (blob.type !== "application/pdf") {
         throw new Error("Invalid invoice file received");
       }
 
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
       link.href = url;
       link.download = `invoice-${order.orderId}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
       showAlert({
         type: "error",
         message: err.message || "Unable to download invoice",
       });
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -283,7 +289,7 @@ export default function OrderDetails() {
 
         {canDownloadInvoice && (
           <Button onClick={handleDownloadInvoice}>
-            Download Invoice PDF
+            {downloading ? "Downloading...." : "Download Invoice"}
           </Button>
         )}
 
@@ -331,5 +337,3 @@ export default function OrderDetails() {
     </div>
   );
 }
-
-
