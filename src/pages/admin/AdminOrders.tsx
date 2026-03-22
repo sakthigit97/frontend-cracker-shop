@@ -10,17 +10,18 @@ import { useDebounce } from "../../utils/useDebounce";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 
 const DATE_OPTIONS = [
+    { label: "All", value: "all" },
     { label: "Today", value: "today" },
     { label: "Last 7 Days", value: "7" },
     { label: "Last 30 Days", value: "30" },
 ] as const;
-type DateRange = "today" | "7" | "30";
+type DateRange = "all" | "today" | "7" | "30";
 
 export default function AdminOrders() {
     const [status, setStatus] = useState("ORDER_PLACED");
-    const [dateRange, setDateRange] = useState<DateRange>("today");
+    const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
-    const debouncedOrderId = useDebounce(orderIdInput, 500);
+    const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
 
     const {
         filters,

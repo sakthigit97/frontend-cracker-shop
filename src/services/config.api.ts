@@ -11,6 +11,8 @@ export type GlobalConfig = {
     isReferralEnabled: boolean;
     adminMobile: string;
     adminEmail: string;
+    packagingPercent: number;
+    gstPercent: number;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

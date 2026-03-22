@@ -112,11 +112,6 @@ export default function OrderDetails() {
       month: "short",
     });
 
-  const total = order.items.reduce(
-    (sum: number, i: any) => sum + i.total,
-    0
-  );
-
   async function handleCancel() {
     try {
       setLoading(true);
@@ -273,9 +268,48 @@ export default function OrderDetails() {
 
         <hr className="my-3" />
 
-        <div className="flex justify-between font-bold text-lg">
-          <span>Total</span>
-          <span>₹{total}</span>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between text-gray-600">
+            <span>Subtotal</span>
+            <span>
+              ₹
+              {order.subtotal ??
+                order.items.reduce((sum: number, i: any) => sum + i.total, 0)}
+            </span>
+          </div>
+
+          <div className="flex justify-between text-gray-600">
+            <span>Packaging Charges</span>
+            <span>₹{order.packagingCharge ?? 0}</span>
+          </div>
+
+          <div className="flex justify-between text-gray-600">
+            <span>GST (18%)</span>
+            <span>₹{order.gstAmount ?? 0}</span>
+          </div>
+
+          <hr />
+
+          <div className="flex justify-between font-semibold">
+            <span>Total Amount</span>
+            <span>₹{order.totalAmount}</span>
+          </div>
+
+          {order.walletUsed > 0 && (
+            <div className="flex justify-between text-green-700 font-medium">
+              <span>Wallet Used</span>
+              <span>- ₹{order.walletUsed}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between text-lg font-bold text-[var(--color-primary)]">
+            <span>Final Payable</span>
+            <span>
+              ₹
+              {order.finalPayable ??
+                order.totalAmount - (order.walletUsed || 0)}
+            </span>
+          </div>
         </div>
       </div>
 

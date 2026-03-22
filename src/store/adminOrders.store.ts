@@ -3,7 +3,7 @@ import { getAdminOrders } from "../services/admin.api";
 
 export interface AdminOrderFilters {
     status: string;
-    dateRange: "today" | "7" | "30";
+    dateRange: "all" | "today" | "7" | "30";
     orderId?: string;
 }
 
@@ -17,7 +17,6 @@ interface AdminOrdersState {
     filters: AdminOrderFilters;
     data: Record<string, OrdersCache>;
     loading: Record<string, boolean>;
-
     setFilters: (f: AdminOrderFilters) => void;
     fetchInitial: () => Promise<void>;
     fetchMore: () => Promise<void>;
@@ -26,8 +25,14 @@ interface AdminOrdersState {
 
 function buildApiParams(filters: AdminOrderFilters) {
     const now = Date.now();
+    if (filters.dateRange === "all") {
+        return {
+            status: filters.status,
+            orderId: filters.orderId,
+            limit: 10,
+        };
+    }
     let fromDate: number;
-
     if (filters.dateRange === "today") {
         fromDate = new Date().setHours(0, 0, 0, 0);
     } else {
@@ -52,11 +57,9 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
         },
         data: {},
         loading: {},
-
         setFilters: (filters) => {
             set({ filters });
         },
-
         fetchInitial: async () => {
             const { filters, data, loading } = get();
             const key = JSON.stringify({
@@ -66,7 +69,6 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
             });
 
             if (data[key]?.initialized || loading[key]) return;
-
             set({
                 loading: { ...loading, [key]: true },
             });

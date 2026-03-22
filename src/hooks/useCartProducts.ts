@@ -5,7 +5,6 @@ import { useCartProductsStore } from "../store/cartProducts.store";
 export function useCartProducts() {
     const items = cartStore((s) => s.items);
     const { products, fetchProducts, loading } = useCartProductsStore();
-
     const productIds = useMemo(
         () => Object.keys(items),
         [items]

@@ -47,8 +47,20 @@ export default function Checkout() {
     () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     [products]
   );
-  const creditUsed = Math.min(walletCredit, totalAmount);
-  const finalPayable = totalAmount - creditUsed;
+  const packagingPercent = config?.packagingPercent ?? 0;
+  const gstPercent = config?.gstPercent ?? 0;
+  const packagingCharge = useMemo(
+    () => Math.round((totalAmount * packagingPercent) / 100),
+    [totalAmount, packagingPercent]
+  );
+
+  const gstAmount = useMemo(
+    () => Math.round((totalAmount * gstPercent) / 100),
+    [totalAmount, gstPercent]
+  );
+  const grandTotal = totalAmount + packagingCharge + gstAmount;
+  const creditUsed = Math.min(walletCredit, grandTotal);
+  const finalPayable = grandTotal - creditUsed;
 
   useEffect(() => {
     let mounted = true;
@@ -140,7 +152,7 @@ export default function Checkout() {
         paymentStatus = "PENDING";
 
         const paymentResult = await startMockPayment(
-          totalAmount
+          finalPayable
         );
 
         if (!paymentResult.success) {
@@ -162,6 +174,12 @@ export default function Checkout() {
           paymentMode,
           paymentStatus,
           transactionId,
+          subtotal: totalAmount,
+          packagingCharge,
+          gstAmount,
+          totalAmount: grandTotal,
+          walletUsed: creditUsed,
+          finalPayable,
         }),
       });
 
@@ -174,12 +192,11 @@ export default function Checkout() {
         state: {
           orderId: res.orderId,
           address: finalAddress,
-          total: totalAmount,
+          total: finalPayable,
           paymentMode: paymentMode === "ONLINE"
             ? "Online Payment (Paid)"
             : "Online Payment Required",
-          estimatedDelivery:
-            "Tamil Nadu: 5 working days, Other states: 10 working days",
+          estimatedDelivery: "Tamil Nadu: 5 working days, Other states: 10 working days",
         },
       });
 
@@ -335,9 +352,32 @@ export default function Checkout() {
             ))}
           </div>
 
-          <div className="border-t pt-4 flex justify-between font-semibold">
-            <span>Total</span>
-            <span>₹{totalAmount}</span>
+          <div className="border-t pt-4 space-y-2 text-sm">
+
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>₹{totalAmount}</span>
+            </div>
+
+            {packagingCharge > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>Packaging Charges ({packagingPercent}%)</span>
+                <span>₹{packagingCharge}</span>
+              </div>
+            )}
+
+            {gstAmount > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>GST ({gstPercent}%)</span>
+                <span>₹{gstAmount}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between font-semibold text-[var(--color-primary)] pt-2 border-t">
+              <span>Grand Total</span>
+              <span>₹{grandTotal}</span>
+            </div>
+
           </div>
 
           {walletCredit > 0 && (

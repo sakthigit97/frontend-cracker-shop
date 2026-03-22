@@ -12,7 +12,6 @@ interface HomeProductState {
 }
 
 const HomeProductContext = createContext<HomeProductState | null>(null);
-
 export function HomeProductProvider({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<Product[]>([]);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -25,7 +24,7 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
         try {
             setLoading(true);
 
-            const res = await apiFetch("/products?limit=8");
+            const res = await apiFetch("/products?limit=10");
 
             setProducts(res.data.items);
             setNextCursor(res.data.pagination.nextCursor);
@@ -40,7 +39,6 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
 
         try {
             setLoading(true);
-
             const res = await apiFetch(
                 `/products?limit=8&cursor=${encodeURIComponent(nextCursor)}`
             );
