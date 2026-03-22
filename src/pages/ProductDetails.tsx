@@ -8,6 +8,7 @@ import { cartStore } from "../store/cart.store";
 import { getDiscountPercent } from "../utils/pricing";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
+import { useNavigate } from "react-router-dom";
 
 function getYouTubeId(url: string) {
   const regExp =
@@ -63,6 +64,7 @@ export default function ProductDetails() {
   const fetchProduct = useFetchProductDetails();
   const { data: product, loading } = useProductDetails(productId);
   const addItem = cartStore((s) => s.addItem);
+  const navigate = useNavigate();
   const cartQty = cartStore(
     (s) => (product ? s.items[product.id] ?? 0 : 0)
   );
@@ -99,7 +101,16 @@ export default function ProductDetails() {
   const available_qty = product?.qty || 0;
 
   return (
+
     <div className="p-4 max-w-6xl mx-auto space-y-10">
+      <div className="max-w-6xl mx-auto px-4">
+        <button
+          onClick={() => navigate(-1)}
+           className="flex items-center text-sm text-blue-600 hover:underline mb-4"
+        >
+          ← Back
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
         {/* IMAGE */}
         <ProductImage images={product.images} name={product.name} />

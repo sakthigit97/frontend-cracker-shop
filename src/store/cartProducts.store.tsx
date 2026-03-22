@@ -35,6 +35,7 @@ export const useCartProductsStore = create<CartProductsState>(
                 const map = { ...state.products };
 
                 data.forEach((p: any) => {
+                    console.log(p)
                     map[p.productId] = {
                         id: p.productId,
                         name: p.name,

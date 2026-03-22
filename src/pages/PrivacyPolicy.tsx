@@ -67,6 +67,23 @@ export default function PrivacyPolicy() {
           </p>
 
           <h2 className="font-semibold text-lg text-[var(--color-primary)] mt-6">
+            Identity Verification & Compliance
+          </h2>
+          <p>
+            For booking and dispatch of parcels, we may require customers to provide
+            valid government-issued identification documents such as Aadhaar Card,
+            PAN Card, Driving License, or GST Registration details (where applicable).
+            These documents may be requested to comply with legal, transportation,
+            taxation, or regulatory requirements.
+          </p>
+          <p>
+            All submitted documents will be handled with strict confidentiality and
+            stored securely in accordance with applicable data protection practices.
+            Such information will be used solely for verification, compliance, and
+            order fulfillment purposes and will not be shared with unauthorized parties.
+          </p>
+
+          <h2 className="font-semibold text-lg text-[var(--color-primary)] mt-6">
             Information Protection
           </h2>
           <p>

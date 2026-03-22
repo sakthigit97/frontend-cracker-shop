@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import ProductCard from "../components/product/ProductCard";
 import { useCategoryProducts } from "../store/categoryProduct.store";
 import { cartStore } from "../store/cart.store";
@@ -8,6 +8,7 @@ import EmptyState from "../components/ui/EmptyState";
 
 export default function CategoryProducts() {
   const { categoryId = "" } = useParams();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const {
@@ -30,6 +31,21 @@ export default function CategoryProducts() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="mb-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="
+            text-sm
+            text-blue-600
+            hover:text-blue-800
+            hover:underline
+            flex
+            items-center
+          "
+        >
+          ← Back
+        </button>
+      </div>
       <input
         type="text"
         placeholder="Search crackers..."

@@ -15,45 +15,55 @@ export default function About() {
       {/* About Content */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm space-y-4">
         <p className="text-sm leading-relaxed text-[var(--color-muted)]">
-          Greetings from <span className="font-semibold text-[var(--color-primary)]">Sivakasi Pyro Park</span>.
-          We are one of the leading wholesale and retail crackers stores in Sivakasi.
-          Any special occasion is incomplete without crackling sounds and vibrant colors.
+          Greetings from{" "}
+          <span className="font-semibold text-[var(--color-primary)]">
+            Sivakasi Pyro Park
+          </span>
+          . We are one of the leading wholesale and retail crackers stores in
+          Sivakasi. Any special occasion is incomplete without crackling sounds
+          and vibrant colors.
         </p>
 
         <p className="text-sm leading-relaxed text-[var(--color-muted)]">
-          We are a one-stop shop for all your cracker needs, catering to both
-          wholesale and retail customers. As one of the biggest online retailers
-          for the past 10 years, we ensure 100% guaranteed products and excellent
-          customer service.
+          We proudly introduce the <span className="font-medium">first ever
+            online portal designed for crackers estimation</span>. With
+          experience of over a decade in this industry, we understand the needs
+          of both wholesale and retail customers.
         </p>
 
         <p className="text-sm leading-relaxed text-[var(--color-muted)]">
-          Celebrate every happy occasion with our high-quality crackers.
+          Our user-friendly website and mobile app make it easy for customers
+          to browse products and place enquiries online. We carefully choose
+          quality products from multiple trusted brands to ensure the best
+          experience for our customers.
+        </p>
+
+        <p className="text-sm leading-relaxed text-[var(--color-muted)]">
+          Our crackers service is available all over the year, helping customers
+          celebrate every special occasion with joy and safety.
+        </p>
+
+        <p className="text-sm leading-relaxed text-[var(--color-muted)]">
           For orders and enquiries, call or WhatsApp us at{" "}
           <span className="font-medium text-[var(--color-primary)]">
             98845 95718
-          </span>.
+          </span>
+          .
         </p>
       </div>
 
       {/* Services */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ServiceCard
           title="Safe Payment"
-          description="Pay with secure and trusted payment methods."
+          description="Pay with secure and trusted business current accounts."
           icon="💳"
         />
 
         <ServiceCard
           title="Quick Delivery"
-          description="Delivery at your convenient time and date."
+          description="Orders will be delivered within a week. Outside Tamil Nadu delivery may take 2 to 4 weeks depending on the location."
           icon="🚚"
-        />
-
-        <ServiceCard
-          title="24/7 Help Center"
-          description="Our support team is always ready to help you."
-          icon="☎️"
         />
       </div>
 
@@ -64,12 +74,14 @@ export default function About() {
         </h2>
 
         <ul className="space-y-3 text-sm text-[var(--color-muted)]">
-          <li>• Easy-to-use website and mobile app for online enquiries.</li>
+          <li>• First ever online portal designed for crackers estimation.</li>
+          <li>• Experience of over a decade in the crackers industry.</li>
+          <li>• User-friendly website and mobile app for online enquiries.</li>
+          <li>• Carefully chosen quality products from multi brands.</li>
           <li>• Delivery available all over India.</li>
-          <li>• 2 to 5 days delivery with utmost care.</li>
           <li>• Attractive discounts on all products.</li>
-          <li>• High-quality crackers sourced from trusted manufacturers.</li>
-          <li>• Guaranteed service and 100% customer satisfaction.</li>
+          <li>• Guaranteed service and customer satisfaction.</li>
+          <li>• Crackers service available throughout the year.</li>
         </ul>
       </div>
     </div>

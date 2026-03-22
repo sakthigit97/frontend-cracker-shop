@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "../components/ui/Button";
-import { ORDER_STATUS_CONFIG } from "../utils/orderStatus";
+import { ORDER_STATUS_CONFIG, STATUS_ORDER } from "../utils/orderStatus";
 import { useOrdersStore } from "../store/orders.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 
@@ -15,6 +15,7 @@ export default function MyOrders() {
     fetchMore,
   } = useOrdersStore();
 
+  const [sortBy, setSortBy] = useState("latest");
   function formatDate(ts: number) {
     return new Date(ts).toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -26,6 +27,39 @@ export default function MyOrders() {
   useEffect(() => {
     fetchInitial();
   }, [fetchInitial]);
+
+  const STATUS_PRIORITY = STATUS_ORDER.reduce((acc, status, index) => {
+    acc[status] = index;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const sortedOrders = useMemo(() => {
+    const list = [...orders];
+
+    switch (sortBy) {
+      case "latest":
+        return list.sort((a, b) => b.createdAt - a.createdAt);
+
+      case "oldest":
+        return list.sort((a, b) => a.createdAt - b.createdAt);
+
+      case "active":
+        return list
+          .filter((o) => o.status !== "CANCELLED")
+          .sort(
+            (a, b) =>
+              STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status]
+          );
+
+      case "cancelled":
+        return list
+          .filter((o) => o.status === "CANCELLED")
+          .sort((a, b) => b.createdAt - a.createdAt);
+
+      default:
+        return list;
+    }
+  }, [orders, sortBy]);
 
   if (loading && orders.length === 0) {
     return (
@@ -62,9 +96,27 @@ export default function MyOrders() {
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">
         My Orders
       </h1>
+      <div className="mb-6 p-4 rounded-xl bg-yellow-50 border border-yellow-200">
+        <p className="text-sm text-yellow-800">
+          Orders can be adjusted until they are confirmed by Sivakasi Crackers.
+        </p>
+      </div>
+
+      <div className="flex justify-end mb-4">
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm bg-white"
+        >
+          <option value="latest">Latest Orders</option>
+          <option value="oldest">Oldest Orders</option>
+          <option value="active">Active Orders</option>
+          <option value="cancelled">Cancelled Orders</option>
+        </select>
+      </div>
 
       <div className="flex flex-col gap-5">
-        {orders.map((order) => {
+        {sortedOrders.map((order) => {
           const statusConfig =
             ORDER_STATUS_CONFIG[order.status] || {
               label: order.status.replaceAll("_", " "),

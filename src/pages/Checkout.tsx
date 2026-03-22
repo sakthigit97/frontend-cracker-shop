@@ -6,6 +6,7 @@ import { apiFetch } from "../services/api";
 import { cartStore } from "../store/cart.store";
 import { useConfigStore } from "../store/config.store";
 import { useAlert } from "../store/alert.store";
+import { INDIA_STATES } from "../utils/states";
 
 type ProfileResponse = {
   success: boolean;
@@ -29,9 +30,14 @@ export default function Checkout() {
   const config = useConfigStore((s) => s.config);
   const isPaymentEnabled = config?.isPaymentEnabled ?? false;
   const { showAlert } = useAlert();
-
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedTransport, setAcceptedTransport] = useState(false);
   const [profileAddress, setProfileAddress] = useState("");
-  const [newAddress, setNewAddress] = useState("");
+  const [line1, setLine1] = useState("");
+  const [line2, setLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [stateValue, setStateValue] = useState("");
+  const [pincode, setPincode] = useState("");
   const [addressMode, setAddressMode] = useState<AddressMode>("PROFILE");
   const [walletCredit, setWalletCredit] = useState(0);
 
@@ -77,6 +83,14 @@ export default function Checkout() {
 
   const placeOrder = async () => {
     if (placingOrder) return;
+    if (!acceptedTerms || !acceptedTransport) {
+      showAlert({
+        type: "error",
+        message: "Please accept terms and transportation conditions to proceed",
+      });
+      return;
+    }
+
     const cartItems = cartStore.getState().items;
     if (Object.keys(cartItems).length === 0) {
       showAlert({
@@ -85,12 +99,26 @@ export default function Checkout() {
       });
       return;
     }
+    let finalAddress = "";
 
-    const finalAddress =
-      addressMode === "PROFILE"
-        ? profileAddress
-        : newAddress;
+    if (addressMode === "PROFILE") {
+      finalAddress = profileAddress;
+    } else {
+      if (!line1 || !city || !stateValue || pincode.length !== 6) {
+        showAlert({
+          type: "error",
+          message: "Please complete all required address fields",
+        });
+        return;
+      }
 
+      const addressParts = [
+        line1,
+        line2,
+        `${city}, ${stateValue} - ${pincode}`,
+      ];
+      finalAddress = addressParts.filter(Boolean).join("\n");
+    }
     if (!finalAddress.trim()) {
       showAlert({
         type: "error",
@@ -147,10 +175,9 @@ export default function Checkout() {
           orderId: res.orderId,
           address: finalAddress,
           total: totalAmount,
-          paymentMode:
-            paymentMode === "ONLINE"
-              ? "Online Payment (Paid)"
-              : "Cash on Delivery",
+          paymentMode: paymentMode === "ONLINE"
+            ? "Online Payment (Paid)"
+            : "Online Payment Required",
           estimatedDelivery:
             "Tamil Nadu: 5 working days, Other states: 10 working days",
         },
@@ -235,23 +262,57 @@ export default function Checkout() {
               </label>
 
               {addressMode === "NEW" && (
-                <textarea
-                  rows={6}
-                  value={newAddress}
-                  onChange={(e) =>
-                    setNewAddress(e.target.value)
-                  }
-                  placeholder="Enter delivery address"
-                  className="
-                    w-full
-                    rounded-lg
-                    border
-                    p-3
-                    text-sm
-                    focus:ring-2
-                    focus:ring-[var(--color-primary)]
-                  "
-                />
+                <div className="space-y-3 mt-3">
+
+                  <input
+                    type="text"
+                    placeholder="Address Line 1 *"
+                    value={line1}
+                    onChange={(e) => setLine1(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Address Line 2"
+                    value={line2}
+                    onChange={(e) => setLine2(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="City *"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm"
+                  />
+
+                  <select
+                    value={stateValue}
+                    onChange={(e) => setStateValue(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm bg-white"
+                  >
+                    <option value="">Select State *</option>
+                    {INDIA_STATES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    type="text"
+                    placeholder="Pincode *"
+                    value={pincode}
+                    maxLength={6}
+                    onChange={(e) =>
+                      setPincode(e.target.value.replace(/\D/g, ""))
+                    }
+                    className="w-full rounded-lg border p-3 text-sm"
+                  />
+
+                </div>
               )}
             </>
           )}
@@ -298,6 +359,41 @@ export default function Checkout() {
             </div>
           )}
 
+          <div className="space-y-3 text-sm mt-4">
+
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                I agree to the{" "}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  Terms & Conditions
+                </a>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTransport}
+                onChange={(e) => setAcceptedTransport(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                I acknowledge that transportation and parcel charges are to be borne by the customer.
+              </span>
+            </label>
+          </div>
+
           {isPaymentEnabled ? (
             <Button
               onClick={placeOrder}
@@ -316,7 +412,7 @@ export default function Checkout() {
             >
               {placingOrder
                 ? "Placing Order…"
-                : "Place Order (Cash on Delivery)"}
+                : "Place Order (Online Payment Required)"}
             </Button>
           )}
         </div>

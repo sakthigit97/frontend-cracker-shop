@@ -4,6 +4,7 @@ import Button from "../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import ProductSkeleton from "../components/product/ProductSkeleton";
+import { Link } from "react-router-dom";
 
 export default function Cart() {
   const addItem = cartStore((s) => s.addItem);
@@ -13,7 +14,6 @@ export default function Cart() {
 
   const { products, loading } = useCartProducts();
   const isEmpty = products.length === 0;
-
   const totalAmount = useMemo(
     () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     [products]
@@ -82,9 +82,19 @@ export default function Cart() {
               />
 
               <div className="flex-1">
-                <h3 className="font-medium text-[var(--color-primary)]">
+                <Link
+                  to={`/product/${p.id}`}
+                  className="
+                   font-medium
+                    text-blue-600
+                    hover:text-blue-800
+                    hover:underline
+                    cursor-pointer
+                    transition
+                  "
+                >
                   {p.name}
-                </h3>
+                </Link>
 
                 <p className="text-sm text-gray-500 mt-1">
                   ₹{p.price} × {p.quantity}
@@ -171,11 +181,20 @@ export default function Cart() {
             bg-white
           "
         >
-          <div>
-            <p className="text-sm text-gray-500">Total</p>
-            <p className="text-2xl font-bold text-[var(--color-primary)]">
-              ₹{totalAmount}
-            </p>
+          <div className="flex flex-col gap-2">
+            <div>
+              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-2xl font-bold text-[var(--color-primary)]">
+                ₹{totalAmount}
+              </p>
+            </div>
+
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/")}
+            >
+              Add More Items
+            </Button>
           </div>
 
           <Button

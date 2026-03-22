@@ -4,6 +4,7 @@ import Button from "../components/ui/Button";
 import { useAlert } from "../store/alert.store";
 import { apiFetch } from "../services/api";
 import { useConfigStore } from "../store/config.store";
+import { INDIA_STATES } from "../utils/states";
 
 export default function Register() {
   const { showAlert } = useAlert();
@@ -213,14 +214,20 @@ export default function Register() {
             className="w-full border rounded-md p-2 mb-3"
           />
 
-          <input
-            placeholder="State"
+          <select
             value={form.state}
             onChange={(e) =>
               setForm({ ...form, state: e.target.value })
             }
-            className="w-full border rounded-md p-2 mb-3"
-          />
+            className="w-full border rounded-md p-2 mb-3 bg-white"
+          >
+            <option value="">Select State</option>
+            {INDIA_STATES.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
 
           <input
             placeholder="Pincode"
