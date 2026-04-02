@@ -6,6 +6,7 @@ export default function AdminHeader() {
     const [open, setOpen] = useState(false);
     const navigate = useNavigate();
     const { logout } = useAuth();
+    const [reportsOpen, setReportsOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -29,24 +30,47 @@ export default function AdminHeader() {
                     <Link to="/admin" className="hover:text-[var(--color-accent)]">
                         Dashboard
                     </Link>
+
                     <Link to="/admin/products" className="hover:text-[var(--color-accent)]">
                         Products
                     </Link>
+
                     <Link to="/admin/categories" className="hover:text-[var(--color-accent)]">
                         Categories
                     </Link>
+
                     <Link to="/admin/brands" className="hover:text-[var(--color-accent)]">
                         Brands
                     </Link>
+
                     <Link to="/admin/orders" className="hover:text-[var(--color-accent)]">
                         Orders
                     </Link>
+                    <div className="relative group">
+                        <button className="hover:text-[var(--color-accent)]">
+                            Reports
+                        </button>
+
+                        <div className="absolute left-0 hidden group-hover:block pt-2 z-50">
+                            <div className="bg-white text-black rounded-lg shadow-lg min-w-[180px]">
+                                <Link className="block px-4 py-2 hover:bg-gray-100" to="/admin/reports/revenue">
+                                    Revenue Report
+                                </Link>
+                                <Link className="block px-4 py-2 hover:bg-gray-100" to="/admin/reports/products">
+                                    Product Report
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
                     <Link to="/admin/discounts" className="hover:text-[var(--color-accent)]">
                         Discounts
                     </Link>
+
                     <Link to="/admin/users" className="hover:text-[var(--color-accent)]">
                         Users
                     </Link>
+
                     <Link to="/admin/configs" className="hover:text-[var(--color-accent)]">
                         Configs
                     </Link>
@@ -114,6 +138,33 @@ export default function AdminHeader() {
                         <Link onClick={() => setOpen(false)} to="/admin/configs">
                             Configs
                         </Link>
+                        <div>
+                            <button
+                                onClick={() => setReportsOpen(!reportsOpen)}
+                                className="flex justify-between items-center w-full"
+                            >
+                                <span>Reports</span>
+                                <span>{reportsOpen ? "▲" : "▼"}</span>
+                            </button>
+
+                            {reportsOpen && (
+                                <div className="ml-4 mt-2 flex flex-col gap-2 text-sm">
+                                    <Link
+                                        onClick={() => setOpen(false)}
+                                        to="/admin/reports/revenue"
+                                    >
+                                        Revenue Report
+                                    </Link>
+
+                                    <Link
+                                        onClick={() => setOpen(false)}
+                                        to="/admin/reports/products"
+                                    >
+                                        Product Report
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
 
                         <button
                             onClick={handleLogout}

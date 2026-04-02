@@ -40,6 +40,8 @@ import AdminUsers from "../pages/admin/AdminUsers";
 import AdminConfigPage from "../pages/admin/AdminConfigPage";
 import AdminDiscountsPage from "../pages/admin/AdminDiscountsPage";
 import AdminEditDiscount from "../pages/admin/AdminEditDiscount";
+import RevenueReport from "../pages/admin/reports/RevenueReport";
+import ProductReport from "../pages/admin/reports/ProductReport";
 
 
 export default function AppRoutes() {
@@ -99,6 +101,8 @@ export default function AppRoutes() {
             <Route path="/admin/configs" element={<AdminConfigPage />} />
             <Route path="/admin/discounts" element={<AdminDiscountsPage />} />
             <Route path="/admin/discounts/:discountId/edit" element={<AdminEditDiscount />} />
+            <Route path="/admin/reports/revenue" element={<RevenueReport />} />
+            <Route path="/admin/reports/products" element={<ProductReport />} />
           </Route>
         </Route>
       </Routes>
