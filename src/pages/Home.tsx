@@ -29,7 +29,7 @@ export default function Home() {
       <div className="px-4">
         <input
           type="text"
-          placeholder="Search crackers, brands..."
+          placeholder="Search crackers"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--color-primary)]"

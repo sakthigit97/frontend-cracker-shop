@@ -213,6 +213,84 @@ export default function AdminConfigPage() {
                         </div>
                     </div>
 
+                    {/* AMOUNTS */}
+                    <div className="space-y-4 border rounded-xl p-4">
+                        <p className="text-sm font-medium">Orders Values</p>
+
+                        <div>
+                            <p className="text-sm">Package Fee (%)</p>
+                            <input
+                                className="border rounded-lg px-3 py-2 w-full"
+                                value={form.packagingPercent || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        packagingPercent: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <p className="text-sm">GST (%)</p>
+                            <input
+                                className="border rounded-lg px-3 py-2 w-full"
+                                value={form.gstPercent || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        gstPercent: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+
+                        <div>
+                            <p className="text-sm">TN Min Order Value</p>
+                            <input
+                                className="border rounded-lg px-3 py-2 w-full"
+                                value={form.tnMinOrderValue || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        tnMinOrderValue: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+
+                        <div>
+                            <p className="text-sm">Other State Min Order Value</p>
+                            <input
+                                className="border rounded-lg px-3 py-2 w-full"
+                                value={form.otherStateMinOrderValue || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        otherStateMinOrderValue: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+
+                        <div>
+                            <p className="text-sm">NorthEast Min Order Value</p>
+                            <input
+                                className="border rounded-lg px-3 py-2 w-full"
+                                value={form.northEastMinOrderValue || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        northEastMinOrderValue: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                    </div>
+
                     {/* ADMIN CONTACT DETAILS */}
                     <div className="space-y-4 border rounded-xl p-4">
                         <p className="text-sm font-medium">Admin Contact Details</p>

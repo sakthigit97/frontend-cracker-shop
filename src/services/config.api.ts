@@ -13,6 +13,9 @@ export type GlobalConfig = {
     adminEmail: string;
     packagingPercent: number;
     gstPercent: number;
+    tnMinOrderValue: number;
+    otherStateMinOrderValue: number;
+    northEastMinOrderValue: number;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

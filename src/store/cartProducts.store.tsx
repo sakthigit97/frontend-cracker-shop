@@ -7,6 +7,8 @@ type CartProduct = {
     price: number;
     image?: string;
     brand?: string;
+    originalPrice?: number;
+    discountText?: string;
 };
 
 interface CartProductsState {
@@ -20,14 +22,12 @@ export const useCartProductsStore = create<CartProductsState>(
     (set, get) => ({
         products: {},
         loading: false,
-
         fetchProducts: async (ids) => {
             const existing = get().products;
             const missingIds = ids.filter((id) => !existing[id]);
             if (missingIds.length === 0) return;
             set({ loading: true });
             const data = await fetchProductsBatch(missingIds);
-
             set((state) => {
                 const map = { ...state.products };
 
@@ -37,7 +37,9 @@ export const useCartProductsStore = create<CartProductsState>(
                         name: p.name,
                         price: p.price,
                         image: p.image,
-                        brand: p.brandId
+                        brand: p.brandId,
+                        originalPrice: p.originalPrice,
+                        discountText: p.discountText
                     };
                 });
 

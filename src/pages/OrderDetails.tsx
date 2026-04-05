@@ -257,12 +257,39 @@ export default function OrderDetails() {
         {order.items.map((item: any) => (
           <div
             key={item.productId}
-            className="flex justify-between text-sm mb-2"
+            className="flex justify-between items-start text-sm py-2"
           >
-            <span>
-              {item.name} × {item.quantity}
-            </span>
-            <span>₹{item.total}</span>
+            <div>
+              <div>
+                {item.name} × {item.quantity}
+              </div>
+
+              <div className="flex items-center gap-2 mt-1">
+                {item.originalPrice && item.originalPrice > item.price ? (
+                  <>
+                    <span className="line-through text-gray-400 text-xs">
+                      ₹{item.originalPrice}
+                    </span>
+
+                    <span className="text-green-600 font-semibold">
+                      ₹{item.price}
+                    </span>
+
+                    {item.discountText && (
+                      <span className="text-green-700 text-xs font-semibold bg-green-100 px-2 py-[2px] rounded">
+                        {item.discountText}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="font-medium">₹{item.price}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="font-medium">
+              ₹{item.total}
+            </div>
           </div>
         ))}
 

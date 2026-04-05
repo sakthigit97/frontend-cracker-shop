@@ -33,6 +33,7 @@ export default function Checkout() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedTransport, setAcceptedTransport] = useState(false);
   const [profileAddress, setProfileAddress] = useState("");
+  const [profilePincode, setProfilePicode] = useState("");
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
@@ -40,7 +41,6 @@ export default function Checkout() {
   const [pincode, setPincode] = useState("");
   const [addressMode, setAddressMode] = useState<AddressMode>("PROFILE");
   const [walletCredit, setWalletCredit] = useState(0);
-
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const totalAmount = useMemo(
@@ -70,7 +70,6 @@ export default function Checkout() {
         const res: ProfileResponse = await apiFetch("/user/profile");
 
         if (!mounted || !res?.data) return;
-
         const formatted = `
         ${res.data.name}
         ${res.data.mobile}
@@ -80,6 +79,7 @@ export default function Checkout() {
         setWalletCredit(res.data.walletCredit || 0);
 
         setProfileAddress(formatted);
+        setProfilePicode(res.data.pincode);
       } catch {
         setAddressMode("NEW");
       } finally {
@@ -92,6 +92,58 @@ export default function Checkout() {
       mounted = false;
     };
   }, []);
+
+  const NORTH_EAST_STATES = [
+    "Assam",
+    "Arunachal Pradesh",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Tripura",
+    "Sikkim",
+  ];
+
+  async function validateMinimumOrder(
+    pincode: string,
+    amount: number
+  ): Promise<{ valid: boolean; message?: string }> {
+    try {
+      const res = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`
+      );
+      const data = await res.json();
+
+      if (!data || data[0].Status !== "Success") {
+        return {
+          valid: false,
+          message: "Invalid pincode. Please enter a valid pincode.",
+        };
+      }
+
+      const state = data[0].PostOffice[0].State;
+      let minAmount = config?.otherStateMinOrderValue || 5000;
+      if (state === "Tamil Nadu") {
+        minAmount = config?.tnMinOrderValue || 3000;
+      } else if (NORTH_EAST_STATES.includes(state)) {
+        minAmount = config?.northEastMinOrderValue || 10000;
+      }
+
+      if (amount < minAmount) {
+        return {
+          valid: false,
+          message: `Minimum order for ${state} is ₹${minAmount}`,
+        };
+      }
+
+      return { valid: true };
+    } catch (err) {
+      return {
+        valid: false,
+        message: "Unable to verify pincode. Please try again.",
+      };
+    }
+  }
 
   const placeOrder = async () => {
     if (placingOrder) return;
@@ -135,6 +187,31 @@ export default function Checkout() {
       showAlert({
         type: "error",
         message: "Delivery address is required",
+      });
+      return;
+    }
+    const currentPincode =
+      addressMode === "PROFILE"
+        ? profilePincode
+        : pincode;
+
+    if (!currentPincode) {
+      showAlert({
+        type: "error",
+        message: "Pincode is required for validation",
+      });
+      return;
+    }
+
+    const validation = await validateMinimumOrder(
+      currentPincode,
+      finalPayable
+    );
+
+    if (!validation.valid) {
+      showAlert({
+        type: "error",
+        message: validation.message || "Minimum order not met",
       });
       return;
     }
@@ -237,9 +314,20 @@ export default function Checkout() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)]">
-        Checkout
-      </h1>
+
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-[var(--color-primary)]">
+          Checkout
+        </h1>
+
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+        >
+          ← Back
+        </button>
+      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl border p-5 space-y-4">
@@ -340,14 +428,40 @@ export default function Checkout() {
 
           <div className="space-y-2 max-h-[280px] overflow-y-auto">
             {products.map((p) => (
+
               <div
                 key={p.id}
-                className="flex justify-between text-sm"
+                className="flex justify-between items-start text-sm py-2"
               >
-                <span>
-                  {p.name} × {p.quantity}
-                </span>
-                <span>₹{p.price * p.quantity}</span>
+                <div>
+                  <div>{p.name} × {p.quantity}</div>
+
+                  <div className="flex items-center gap-2 mt-1">
+                    {p.originalPrice && p.originalPrice > p.price ? (
+                      <>
+                        <span className="line-through text-gray-400 text-xs">
+                          ₹{p.originalPrice}
+                        </span>
+
+                        <span className="text-green-600 font-semibold">
+                          ₹{p.price}
+                        </span>
+
+                        {p.discountText && (
+                          <span className="text-green-600 text-xs font-medium bg-green-50 px-1 rounded">
+                            {p.discountText}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="font-medium">₹{p.price}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="font-medium">
+                  ₹{p.price * p.quantity}
+                </div>
               </div>
             ))}
           </div>

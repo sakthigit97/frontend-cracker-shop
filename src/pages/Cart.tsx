@@ -57,9 +57,20 @@ export default function Cart() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-5">
-        Your Cart
-      </h1>
+
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-[var(--color-primary)]">
+          Your Cart
+        </h1>
+
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+        >
+          ← Back
+        </button>
+      </div>
+
       <div className="bg-white rounded-2xl border shadow-sm flex flex-col h-[70vh]">
         <div className="flex-1 overflow-y-auto divide-y">
           {products.map((p) => (
