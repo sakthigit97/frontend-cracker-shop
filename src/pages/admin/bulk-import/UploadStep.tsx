@@ -4,6 +4,7 @@ import { useAlert } from "../../../store/alert.store";
 import { useBulkImportStore } from "../../../store/useBulkImportStore";
 import { getBulkImportUploadUrl } from "../../../services/adminProducts.api";
 import { uploadFilesToS3 } from "../../../utils/uploadToS3";
+import { apiFetch } from "../../../services/api";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 export default function UploadStep() {
@@ -31,6 +32,15 @@ export default function UploadStep() {
         }
     };
 
+    const downloadTemplate = async () => {
+        try {
+            const res = await apiFetch("/api/template-download");
+            window.open(res.url, "_blank");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
         <div className="space-y-4">
 
@@ -47,6 +57,9 @@ export default function UploadStep() {
                 <ul className="list-disc ml-5 mt-2 space-y-1">
                     <li>Maximum file size: 2MB</li>
                     <li>Only valid rows will be imported</li>
+                    <Button variant="outline" onClick={downloadTemplate}>
+                        Download Sample Template
+                    </Button>
                 </ul>
             </div>
 
