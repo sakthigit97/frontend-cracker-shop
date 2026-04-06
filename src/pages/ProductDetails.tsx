@@ -5,7 +5,6 @@ import {
   useFetchProductDetails,
 } from "../store/productDetails.store";
 import { cartStore } from "../store/cart.store";
-import { getDiscountPercent } from "../utils/pricing";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
 import { useNavigate } from "react-router-dom";
@@ -93,20 +92,15 @@ export default function ProductDetails() {
     );
   }
 
-  const discount = getDiscountPercent(
-    product.price,
-    product.originalPrice
-  );
   const videoId = product.youtubeUrl ? getYouTubeId(product.youtubeUrl) : null;
   const available_qty = product?.qty || 0;
-
   return (
 
     <div className="p-4 max-w-6xl mx-auto space-y-10">
       <div className="max-w-6xl mx-auto px-4">
         <button
           onClick={() => navigate(-1)}
-           className="flex items-center text-sm text-blue-600 hover:underline mb-4"
+          className="flex items-center text-sm text-blue-600 hover:underline mb-4"
         >
           ← Back
         </button>
@@ -135,9 +129,9 @@ export default function ProductDetails() {
                 ₹{product.originalPrice}
               </span>
             )}
-            {discount && (
+            {product?.discountText && (
               <span className="bg-[var(--color-secondary)] text-white text-sm font-semibold px-3 py-1 rounded-full">
-                {discount}% OFF
+                {product?.discountText}
               </span>
             )}
           </div>

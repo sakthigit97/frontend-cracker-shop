@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ProductCard from "../components/product/ProductCard";
 import HeroSlider from "../components/ui/HeroSlider";
 import { useHomeProducts } from "../store/homeProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
+import { apiFetch } from "../services/api";
+import type { Product } from "../types/product";
 
 export default function Home() {
   const { products, loading, fetchInitial, fetchMore, nextCursor } = useHomeProducts();
@@ -11,14 +13,46 @@ export default function Home() {
   const addItem = cartStore((s) => s.addItem);
   const removeItem = cartStore((s) => s.removeItem);
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchCache = useRef<Record<string, Product[]>>({});
 
   useEffect(() => {
     fetchInitial();
   }, []);
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    if (search.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    if (searchCache.current[search]) {
+      setSearchResults(searchCache.current[search]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+
+        const res = await apiFetch(
+          `/products?search=${encodeURIComponent(search)}&limit=50`
+        );
+
+        const items = res.data.items || [];
+        searchCache.current[search] = items;
+        setSearchResults(items);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const isSearching = search.length >= 3;
+  const displayProducts = isSearching ? searchResults : products;
 
   return (
     <div className="space-y-6">
@@ -29,7 +63,7 @@ export default function Home() {
       <div className="px-4">
         <input
           type="text"
-          placeholder="Search crackers"
+          placeholder="Search crackers (min 3 letters)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--color-primary)]"
@@ -40,7 +74,7 @@ export default function Home() {
         <h2 className="text-lg font-semibold">All Products</h2>
       </div>
 
-      {loading && products.length === 0 && (
+      {loading && products.length === 0 && !isSearching && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <ProductSkeleton key={i} />
@@ -48,8 +82,12 @@ export default function Home() {
         </div>
       )}
 
+      {isSearching && searchLoading && (
+        <p className="text-sm text-gray-500 text-center">Searching...</p>
+      )}
+
       <div className="px-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
-        {filtered.map((product) => {
+        {displayProducts.map((product) => {
           const qty = items[product.id] || 0;
 
           return (
@@ -68,7 +106,7 @@ export default function Home() {
         })}
       </div>
 
-      {nextCursor && (
+      {!isSearching && nextCursor && (
         <div className="flex justify-center py-6">
           <button
             onClick={fetchMore}

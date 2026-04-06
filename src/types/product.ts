@@ -7,6 +7,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   brand?: string;
+  discountText?: string;
 }
 
 export type ProductDetails = {
@@ -19,4 +20,5 @@ export type ProductDetails = {
   originalPrice: number;
   description: string;
   youtubeUrl?: string | null;
+  discountText?: string;
 };

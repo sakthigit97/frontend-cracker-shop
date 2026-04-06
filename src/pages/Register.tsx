@@ -9,7 +9,6 @@ import { INDIA_STATES } from "../utils/states";
 export default function Register() {
   const { showAlert } = useAlert();
   const navigate = useNavigate();
-
   const [step, setStep] = useState<1 | 2>(1);
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
@@ -30,10 +29,7 @@ export default function Register() {
 
   const cleanMobile = mobile.trim();
   const isMobileValid = /^[6-9]\d{9}$/.test(cleanMobile);
-  const passwordsMatch =
-    form.password &&
-    form.confirmPassword &&
-    form.password === form.confirmPassword;
+  const passwordsMatch = form.password && form.confirmPassword && form.password === form.confirmPassword;
 
   const sendOtp = async () => {
     if (!isMobileValid) {

@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
 import type { Product } from "../../types/product";
 import { memo } from "react";
-import { getDiscountPercent } from "../../utils/pricing";
 
 interface Props {
   product: Product;
@@ -20,11 +19,6 @@ function ProductCard({
   onDecrease,
 }: Props) {
   const navigate = useNavigate();
-  const discount = getDiscountPercent(
-    product.price,
-    product.originalPrice
-  );
-
   const available_qty = product?.qty || 0;
   const handleCardClick = () => {
     navigate(`/product/${product.id}`);
@@ -78,9 +72,9 @@ function ProductCard({
           }}
         />
 
-        {discount && (
+        {product?.discountText && (
           <span className="absolute top-2 left-2 bg-[var(--color-secondary)] text-white text-xs font-semibold px-2 py-1 rounded">
-            {discount}% OFF
+            {product?.discountText}
           </span>
         )}
       </div>
