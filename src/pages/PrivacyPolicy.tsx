@@ -1,7 +1,30 @@
+import { useNavigate } from "react-router-dom";
+
 export default function PrivacyPolicy() {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-[var(--color-background)] py-10 px-4">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border p-6 md:p-8">
+
+
+        <button
+          onClick={() => navigate(-1)}
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+        >
+          ←
+        </button>
 
         {/* Title */}
         <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 text-center">

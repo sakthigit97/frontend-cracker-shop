@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import CategoryCard from "../components/product/CategoryCard";
 import { useCatalog } from "../store/catalog.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
+import { useNavigate } from "react-router-dom";
 
 type TabType = "category" | "brand";
 
 export default function Products() {
   const [activeTab, setActiveTab] = useState<TabType>("category");
+  const navigate = useNavigate();
 
   const {
     categories,
@@ -31,10 +33,30 @@ export default function Products() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Title */}
-      <h1 className="text-2xl font-bold mb-6">
-        Shop by {activeTab === "category" ? "Category" : "Brand"}
-      </h1>
+
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+        >
+          ←
+        </button>
+
+        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+          Shop by {activeTab === "category" ? "Category" : "Brand"}
+        </h1>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b">

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import { useAdminProductsStore } from "../../store/adminProducts.store";
 import { useMetaStore } from "../../store/meta.store";
@@ -23,6 +23,7 @@ export default function AdminProducts() {
     const [selectedProductId, setSelectedProductId] = useState<string | null>(
         null
     );
+    const navigate = useNavigate();
 
     const [filters, setFilters] = useState({
         search: "",
@@ -141,7 +142,32 @@ export default function AdminProducts() {
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap justify-between items-center gap-3">
-                <h1 className="text-xl font-semibold">Products</h1>
+
+
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                        flex items-center justify-center
+                        w-9 h-9
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        text-white
+                        shadow-sm
+
+                        hover:scale-105
+                        active:scale-95
+                        transition-all
+                        "
+                    >
+                        ←
+                    </button>
+
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Products
+                    </h1>
+                </div>
+
 
                 <div className="flex gap-2">
                     <Link to="/admin/products/bulk-import">

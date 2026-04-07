@@ -97,14 +97,31 @@ export default function ProductDetails() {
   return (
 
     <div className="p-4 max-w-6xl mx-auto space-y-10">
-      <div className="max-w-6xl mx-auto px-4">
+
+      <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center text-sm text-blue-600 hover:underline mb-4"
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
         >
-          ← Back
+          ←
         </button>
+
+        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+          Detailed Product
+        </h1>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
         {/* IMAGE */}
         <ProductImage images={product.images} name={product.name} />

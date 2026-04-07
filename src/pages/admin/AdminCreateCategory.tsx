@@ -105,37 +105,51 @@ export default function AdminCreateCategory() {
         }
     };
     return (
-        <div className="flex justify-center">
-            <div className="w-full max-w-3xl">
-                <div className="bg-white border rounded-2xl p-6 space-y-6">
+        <div className="bg-white border rounded-2xl p-6 space-y-6">
+            <div>
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
 
-                    {/* Header */}
-                    <div>
-                        <h1 className="text-xl font-semibold">Add Category</h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Create a new product category
-                        </p>
-                    </div>
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Add Category
+                    </h1>
+                </div>
+            </div>
 
-                    {/* Name */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium">
-                            Category Name
-                        </label>
-                        <input
-                            className="border rounded-md p-2 w-full"
-                            placeholder="Enter category name"
-                            value={form.name}
-                            onChange={(e) =>
-                                setForm({ ...form, name: e.target.value })
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium">Category Image</p>
-                        {!form.image ? (
-                            <label
-                                className="
+            {/* Name */}
+            <div className="space-y-1">
+                <label className="text-sm font-medium">
+                    Category Name
+                </label>
+                <input
+                    className="border rounded-md p-2 w-full"
+                    placeholder="Enter category name"
+                    value={form.name}
+                    onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                    }
+                />
+            </div>
+            <div className="space-y-2">
+                <p className="text-sm font-medium">Category Image</p>
+                {!form.image ? (
+                    <label
+                        className="
                                 flex flex-col items-center justify-center
                                 border-2 border-dashed border-gray-300
                                 rounded-xl p-6
@@ -145,25 +159,25 @@ export default function AdminCreateCategory() {
                                 text-center
                                 bg-gray-50
                             "
-                            >
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleImageChange}
-                                />
+                    >
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageChange}
+                        />
 
-                                <p className="text-sm font-medium text-gray-700">
-                                    Click to upload image
-                                </p>
+                        <p className="text-sm font-medium text-gray-700">
+                            Click to upload image
+                        </p>
 
-                                <p className="text-xs text-gray-500 mt-1">
-                                    JPG / PNG · Max 2MB · Only 1 image allowed
-                                </p>
-                            </label>
-                        ) : (
-                            <div
-                                className="
+                        <p className="text-xs text-gray-500 mt-1">
+                            JPG / PNG · Max 2MB · Only 1 image allowed
+                        </p>
+                    </label>
+                ) : (
+                    <div
+                        className="
                                 flex flex-col sm:flex-row
                                 items-start sm:items-center
                                 gap-4
@@ -171,79 +185,77 @@ export default function AdminCreateCategory() {
                                 p-4
                                 bg-white
                             "
-                            >
-                                {/* Preview Image */}
-                                <img
-                                    src={URL.createObjectURL(form.image)}
-                                    alt="Category preview"
-                                    className="
+                    >
+                        {/* Preview Image */}
+                        <img
+                            src={URL.createObjectURL(form.image)}
+                            alt="Category preview"
+                            className="
                                     h-20 w-20
                                     rounded-lg
                                     object-cover
                                     border
                                     shrink-0
                                 "
-                                />
-
-                                {/* File Info */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-800 truncate">
-                                        {form.image.name}
-                                    </p>
-
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {(form.image.size / 1024).toFixed(0)} KB
-                                    </p>
-                                </div>
-
-                                {/* Action Button */}
-                                <div className="w-full sm:w-auto">
-                                    <Button
-                                        variant="outline"
-                                        className="w-full sm:w-auto"
-                                        onClick={() =>
-                                            setForm((prev) => ({
-                                                ...prev,
-                                                image: null,
-                                            }))
-                                        }
-                                    >
-                                        Change Image
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Active */}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={form.isActive}
-                            onChange={(e) =>
-                                setForm({
-                                    ...form,
-                                    isActive: e.target.checked,
-                                })
-                            }
                         />
-                        <span className="text-sm">Active</span>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t">
-                        <Button
-                            variant="outline"
-                            onClick={() => navigate("/admin/categories")}
-                        >
-                            Cancel
-                        </Button>
+                        {/* File Info */}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                                {form.image.name}
+                            </p>
 
-                        <Button onClick={handleSubmit} disabled={loading}>
-                            {loading ? "Saving…" : "Save Category"}
-                        </Button>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {(form.image.size / 1024).toFixed(0)} KB
+                            </p>
+                        </div>
+
+                        {/* Action Button */}
+                        <div className="w-full sm:w-auto">
+                            <Button
+                                variant="outline"
+                                className="w-full sm:w-auto"
+                                onClick={() =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        image: null,
+                                    }))
+                                }
+                            >
+                                Change Image
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
+            </div>
+
+            {/* Active */}
+            <div className="flex items-center gap-2">
+                <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(e) =>
+                        setForm({
+                            ...form,
+                            isActive: e.target.checked,
+                        })
+                    }
+                />
+                <span className="text-sm">Active</span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                    variant="outline"
+                    onClick={() => navigate("/admin/categories")}
+                >
+                    Cancel
+                </Button>
+
+                <Button onClick={handleSubmit} disabled={loading}>
+                    {loading ? "Saving…" : "Save Category"}
+                </Button>
             </div>
         </div>
     );

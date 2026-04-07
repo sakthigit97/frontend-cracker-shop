@@ -20,12 +20,9 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
 
     const fetchInitial = async () => {
         if (hasFetched) return;
-
         try {
             setLoading(true);
-
-            const res = await apiFetch("/products?limit=10");
-
+            const res = await apiFetch("/products?limit=50");
             setProducts(res.data.items);
             setNextCursor(res.data.pagination.nextCursor);
             setHasFetched(true);
@@ -36,7 +33,6 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
 
     const fetchMore = async () => {
         if (!nextCursor || loading) return;
-
         try {
             setLoading(true);
             const res = await apiFetch(

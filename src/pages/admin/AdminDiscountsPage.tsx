@@ -144,11 +144,27 @@ export default function AdminDiscountsPage() {
 
     return (
         <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
-            <div>
-                <h1 className="text-2xl font-bold">Discount Management</h1>
-                <p className="text-sm text-gray-500">
-                    Create product/category/brand level discounts with priority.
-                </p>
+            <div className="flex items-center gap-3 mb-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                >
+                    ←
+                </button>
+                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                    Discount Management
+                </h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

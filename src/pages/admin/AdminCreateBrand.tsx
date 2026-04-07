@@ -109,123 +109,138 @@ export default function AdminCreateBrand() {
     };
 
     return (
-        <div className="flex justify-center">
-            <div className="w-full max-w-3xl">
-                <div className="bg-white border rounded-2xl p-6 space-y-6">
+        <div className="">
+            <div className="bg-white border rounded-2xl shadow-sm p-6 space-y-6">
 
-                    {/* Header */}
-                    <div>
-                        <h1 className="text-xl font-semibold">Add Brand</h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Create a new brand
-                        </p>
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3 mb-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                        >
+                            ←
+                        </button>
+                        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                            Create Brand
+                        </h1>
                     </div>
+                </div>
 
-                    {/* Brand Name */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium">
-                            Brand Name
+                {/* Brand Name */}
+                <div className="space-y-1">
+                    <label className="text-sm font-medium">
+                        Brand Name
+                    </label>
+                    <input
+                        className="border rounded-md p-2 w-full"
+                        placeholder="Enter brand name"
+                        value={form.name}
+                        onChange={(e) =>
+                            setForm((p) => ({
+                                ...p,
+                                name: e.target.value,
+                            }))
+                        }
+                    />
+                </div>
+
+                {/* Logo Upload */}
+                <div className="space-y-2">
+                    <p className="text-sm font-medium">Brand Logo</p>
+
+                    {!form.logo ? (
+                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer hover:border-gray-400 transition text-center bg-gray-50">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleLogoChange}
+                            />
+
+                            <p className="text-sm font-medium text-gray-700">
+                                Click to upload logo
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                PNG / JPG · Max 2MB · Only 1 logo
+                            </p>
                         </label>
-                        <input
-                            className="border rounded-md p-2 w-full"
-                            placeholder="Enter brand name"
-                            value={form.name}
-                            onChange={(e) =>
-                                setForm((p) => ({
-                                    ...p,
-                                    name: e.target.value,
-                                }))
-                            }
-                        />
-                    </div>
+                    ) : (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border rounded-xl p-4 bg-white">
+                            <img
+                                src={URL.createObjectURL(form.logo)}
+                                alt="Logo preview"
+                                className="h-20 w-20 rounded-lg object-cover border shrink-0"
+                            />
 
-                    {/* Logo Upload */}
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium">Brand Logo</p>
-
-                        {!form.logo ? (
-                            <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer hover:border-gray-400 transition text-center bg-gray-50">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleLogoChange}
-                                />
-
-                                <p className="text-sm font-medium text-gray-700">
-                                    Click to upload logo
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                    {form.logo.name}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    PNG / JPG · Max 2MB · Only 1 logo
+                                    {(form.logo.size / 1024).toFixed(0)} KB
                                 </p>
-                            </label>
-                        ) : (
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border rounded-xl p-4 bg-white">
-                                <img
-                                    src={URL.createObjectURL(form.logo)}
-                                    alt="Logo preview"
-                                    className="h-20 w-20 rounded-lg object-cover border shrink-0"
-                                />
-
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">
-                                        {form.logo.name}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {(form.logo.size / 1024).toFixed(0)} KB
-                                    </p>
-                                </div>
-
-                                <div className="w-full sm:w-auto">
-                                    <Button
-                                        variant="outline"
-                                        className="w-full sm:w-auto"
-                                        type="button"
-                                        onClick={() =>
-                                            setForm((p) => ({
-                                                ...p,
-                                                logo: null,
-                                            }))
-                                        }
-                                    >
-                                        Change Logo
-                                    </Button>
-                                </div>
                             </div>
-                        )}
-                    </div>
 
-                    {/* Active */}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={form.isActive}
-                            onChange={(e) =>
-                                setForm((p) => ({
-                                    ...p,
-                                    isActive: e.target.checked,
-                                }))
-                            }
-                        />
-                        <span className="text-sm">Active</span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t">
-                        <Button
-                            variant="outline"
-                            disabled={loading}
-                            onClick={() => navigate("/admin/brands")}
-                        >
-                            Cancel
-                        </Button>
-
-                        <Button onClick={handleSubmit} disabled={loading}>
-                            {loading ? "Saving…" : "Save Brand"}
-                        </Button>
-                    </div>
-
+                            <div className="w-full sm:w-auto">
+                                <Button
+                                    variant="outline"
+                                    className="w-full sm:w-auto"
+                                    type="button"
+                                    onClick={() =>
+                                        setForm((p) => ({
+                                            ...p,
+                                            logo: null,
+                                        }))
+                                    }
+                                >
+                                    Change Logo
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
+
+                {/* Active */}
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={form.isActive}
+                        onChange={(e) =>
+                            setForm((p) => ({
+                                ...p,
+                                isActive: e.target.checked,
+                            }))
+                        }
+                    />
+                    <span className="text-sm">Active</span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button
+                        variant="outline"
+                        disabled={loading}
+                        onClick={() => navigate("/admin/brands")}
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button onClick={handleSubmit} disabled={loading}>
+                        {loading ? "Saving…" : "Save Brand"}
+                    </Button>
+                </div>
+
             </div>
         </div>
     );

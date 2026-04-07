@@ -1,29 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import Button from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
-
 import { useAdminUsersStore } from "../../store/adminUsers.store";
 import { useAlert } from "../../store/alert.store";
-
 import { useDebounce } from "../../utils/useDebounce";
 import { deleteUser } from "../../services/adminUsers.api";
 import EmptyState from "../../components/ui/EmptyState";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminUsers() {
     const { fetchPage, loading, clearCache } = useAdminUsersStore();
     const { showAlert } = useAlert();
-
     const [page, setPage] = useState(1);
     const [data, setData] = useState<any>(null);
-
     const [search, setSearch] = useState("");
-
     const [deletingMobile, setDeletingMobile] = useState<string | null>(null);
-
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [selectedMobile, setSelectedMobile] = useState<string | null>(null);
-
     const debouncedSearch = useDebounce(search, 1000);
+    const navigate = useNavigate();
 
     const effectiveFilters = useMemo(
         () => ({
@@ -86,16 +81,43 @@ export default function AdminUsers() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
-            <div className="flex justify-between items-center">
-                <h1 className="text-xl font-semibold">Users</h1>
+            <div className="flex items-center gap-3 mb-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                >
+                    ←
+                </button>
+                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                    Users
+                </h1>
             </div>
 
             {/* Search */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="">
                 <input
                     placeholder="Search by name or mobile..."
-                    className="border rounded-md p-2"
+                    className="
+                    w-full mb-4
+                    px-5 py-3
+                    rounded-full
+                    border border-gray-300
+                    bg-white
+                    shadow-sm
+                    focus:ring-2 focus:ring-[var(--color-primary)]
+                    "
+
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />

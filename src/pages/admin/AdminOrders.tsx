@@ -8,6 +8,7 @@ import {
 import { useAdminOrdersStore } from "../../store/adminOrders.store";
 import { useDebounce } from "../../utils/useDebounce";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
+import { useNavigate } from "react-router-dom";
 
 const DATE_OPTIONS = [
     { label: "All", value: "all" },
@@ -22,6 +23,7 @@ export default function AdminOrders() {
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
     const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
+    const navigate = useNavigate();
 
     const {
         filters,
@@ -70,12 +72,28 @@ export default function AdminOrders() {
         <div className="space-y-6">
             {/* HEADER */}
             <div>
-                <h1 className="text-xl font-bold text-[var(--color-primary)]">
-                    Orders
-                </h1>
-                <p className="text-sm text-gray-500">
-                    View and manage customer orders
-                </p>
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Orders
+                    </h1>
+                </div>
             </div>
 
             {/* FILTERS */}

@@ -93,9 +93,31 @@ export default function MyOrders() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">
-        My Orders
-      </h1>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+        >
+          ←
+        </button>
+
+        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+          My Orders
+        </h1>
+      </div>
+
+
       <div className="mb-6 p-4 rounded-xl bg-yellow-50 border border-yellow-200">
         <p className="text-sm text-yellow-800">
           Orders can be adjusted until they are confirmed by Sivakasi Crackers.

@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import { ORDER_STATUS_CONFIG, STATUS_ORDER } from "../utils/orderStatus";
-import { cancelOrderApi } from "../services/order.api";
+import { cancelOrderApi, restoreOrderApi } from "../services/order.api";
 import { useOrdersStore } from "../store/orders.store";
 import { useState } from "react";
 import { useAlert } from "../store/alert.store";
@@ -19,6 +19,7 @@ export default function OrderDetails() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { showAlert } = useAlert();
   const [downloading, setDownloading] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   if (!order) {
     return (
@@ -44,6 +45,29 @@ export default function OrderDetails() {
     STATUS_ORDER.indexOf(order.status) >=
     STATUS_ORDER.indexOf(invoiceAvailableFrom) &&
     order.status !== "CANCELLED";
+
+  async function handleRestore() {
+    try {
+      setRestoring(true);
+
+      await restoreOrderApi(order.orderId);
+      clearOrdersCache();
+      showAlert({
+        type: "success",
+        message: "Order Reopened Successfully",
+        duration: 1500,
+      });
+
+      navigate("/orders", { replace: true });
+    } catch (err: any) {
+      showAlert({
+        type: "error",
+        message: err.message || "Unable to reopen order",
+      });
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   async function handleDownloadInvoice() {
     if (downloading) return;
@@ -136,9 +160,30 @@ export default function OrderDetails() {
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[var(--color-primary)]">
-          Order Details
-        </h1>
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+          >
+            ←
+          </button>
+
+          <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+            Order Details
+          </h1>
+        </div>
+
         <p className="text-sm text-[var(--color-muted)]">
           Order ID: {order.orderId}
         </p>
@@ -341,12 +386,15 @@ export default function OrderDetails() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          variant="secondary"
-          onClick={() => navigate("/orders")}
-        >
-          Back to My Orders
-        </Button>
+        {isCancelled && (
+          <Button
+            disabled={restoring}
+            onClick={handleRestore}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {restoring ? "Reopening..." : "Reopen Order"}
+          </Button>
+        )}
 
         {canDownloadInvoice && (
           <Button onClick={handleDownloadInvoice}>

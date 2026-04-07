@@ -20,7 +20,7 @@ export default function AdminHeader() {
 
                 {/* Logo */}
                 <Link to="/admin" className="flex items-center gap-2">
-                    <span className="font-bold tracking-wide hidden sm:block">
+                    <span className="font-bold tracking-wide text-sm sm:text-base">
                         Admin Panel
                     </span>
                 </Link>

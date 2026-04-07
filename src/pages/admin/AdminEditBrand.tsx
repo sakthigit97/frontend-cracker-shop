@@ -31,10 +31,8 @@ export default function AdminEditBrand() {
     }
 
     const clearCache = useAdminBrandsStore((s) => s.clearCache);
-
     const [fetching, setFetching] = useState(true);
     const [loading, setLoading] = useState(false);
-
     const [form, setForm] = useState({
         name: "",
         isActive: true,
@@ -200,8 +198,29 @@ export default function AdminEditBrand() {
     }
 
     return (
-        <div className="max-w-2xl space-y-6">
-            <h1 className="text-xl font-semibold">Edit Brand</h1>
+        <div className="bg-white border rounded-2xl shadow-sm p-6 space-y-6">
+            <div className="flex items-center gap-3 mb-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                >
+                    ←
+                </button>
+                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                    Edit Brand
+                </h1>
+            </div>
 
             {/* Brand Name */}
             <div className="space-y-1">

@@ -11,11 +11,11 @@ import { useAdminRevenueStore } from "../../../store/adminRevenue.store";
 import ProductSkeleton from "../../../components/product/ProductSkeleton";
 import Button from "../../../components/ui/Button";
 import EmptyState from "../../../components/ui/EmptyState";
+import { useNavigate } from "react-router-dom";
 
 export default function RevenueReport() {
-    const { data, loading, error, fetch } =
-        useAdminRevenueStore();
-
+    const { data, loading, error, fetch } = useAdminRevenueStore();
+    const navigate = useNavigate();
     const [range, setRange] = useState("7d");
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
@@ -55,9 +55,29 @@ export default function RevenueReport() {
     return (
         <div className="space-y-8">
             <div className="flex flex-wrap justify-between gap-4 items-center">
-                <h1 className="text-xl font-semibold">
-                    Revenue Report
-                </h1>
+
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Revenue Report
+                    </h1>
+                </div>
 
                 <div className="flex gap-2">
                     <button

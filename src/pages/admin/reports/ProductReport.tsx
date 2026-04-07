@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useProductReportStore } from "../../../store/adminProductReport.store";
 import Button from "../../../components/ui/Button";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductReport() {
     const { data, loading, fetch } = useProductReportStore();
-
     const [range, setRange] = useState("7d");
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch(range);
@@ -22,7 +23,29 @@ export default function ProductReport() {
         <div className="space-y-8">
 
             <div className="flex justify-between items-center">
-                <h1 className="text-xl font-semibold">Product Report</h1>
+
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Product Report
+                    </h1>
+                </div>
 
                 <div className="flex gap-2">
                     <Filter active={range === "7d"} onClick={() => setRange("7d")}>

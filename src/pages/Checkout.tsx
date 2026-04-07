@@ -315,19 +315,30 @@ export default function Checkout() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-[var(--color-primary)]">
-          Checkout
-        </h1>
 
+      <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-        >
-          ← Back
-        </button>
-      </div>
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
 
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+        >
+          ←
+        </button>
+
+        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+          Checkout
+        </h1>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl border p-5 space-y-4">

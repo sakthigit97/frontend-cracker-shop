@@ -18,12 +18,9 @@ export default function AdminEditCategory() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
     const { categoryId } = useParams<{ categoryId: string }>();
-
     const clearCache = useAdminCategoriesStore((s) => s.clearCache);
-
     const [fetching, setFetching] = useState(true);
     const [loading, setLoading] = useState(false);
-
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [form, setForm] = useState({
         name: "",
@@ -203,21 +200,36 @@ export default function AdminEditCategory() {
         );
     }
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8">
-            {/* Page Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">
-                        Edit Category
-                    </h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Update category name, image and status
-                    </p>
-                </div>
-            </div>
-
+        <div>
             {/* Main Card */}
             <div className="bg-white border rounded-2xl shadow-sm p-6 space-y-6">
+
+                {/* Page Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                        >
+                            ←
+                        </button>
+                        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                            Edit Category
+                        </h1>
+                    </div>
+                </div>
+
                 {/* Category Name */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">

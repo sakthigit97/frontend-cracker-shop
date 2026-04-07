@@ -5,6 +5,7 @@ import { apiFetch } from "../services/api";
 import { useProfileStore } from "../store/profile.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { INDIA_STATES } from "../utils/states";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileData {
   name: string;
@@ -19,6 +20,7 @@ interface ProfileData {
 
 export default function Profile() {
   const { showAlert } = useAlert();
+  const navigate = useNavigate();
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const refreshProfile = useProfileStore((s) => s.refreshProfile);
@@ -103,9 +105,30 @@ export default function Profile() {
       <div className="bg-[var(--color-surface)] border rounded-2xl p-6">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold text-[var(--color-primary)]">
-            My Profile
-          </h1>
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="
+              flex items-center justify-center
+              w-9 h-9
+              rounded-full
+              bg-[var(--color-primary)]
+              text-white
+              shadow-sm
+
+              hover:scale-105
+              active:scale-95
+              transition-all
+            "
+            >
+              ←
+            </button>
+
+            <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+              My Profile
+            </h1>
+          </div>
+
 
           {!isEditing && (
             <Button variant="secondary" onClick={() => setIsEditing(true)}>
@@ -201,7 +224,7 @@ export default function Profile() {
               value={form.state}
               disabled={!isEditing}
               onChange={(e) => setForm({ ...form, state: e.target.value })}
-               className="w-full border rounded-md p-2"
+              className="w-full border rounded-md p-2"
             >
               <option value="">Select State</option>
               {INDIA_STATES.map((state) => (

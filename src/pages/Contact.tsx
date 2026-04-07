@@ -2,10 +2,12 @@ import { useState } from "react";
 import Button from "../components/ui/Button";
 import { contactUsApi } from "../services/contact.api";
 import { useAlert } from "../store/alert.store";
+import { useNavigate } from "react-router-dom";
 
 export default function Contact() {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
@@ -78,6 +80,24 @@ export default function Contact() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <div className="text-center mb-10">
+        <button
+          onClick={() => navigate(-1)}
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+        >
+          ←
+        </button>
+
         <h1 className="text-3xl font-bold text-[var(--color-primary)]">
           Contact Us
         </h1>

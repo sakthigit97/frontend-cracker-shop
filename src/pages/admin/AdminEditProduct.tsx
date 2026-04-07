@@ -220,7 +220,28 @@ export default function AdminEditProduct() {
 
     return (
         <div className="max-w-3xl">
-            <h1 className="text-xl font-semibold mb-4">Edit Product</h1>
+            <div className="flex items-center gap-3 mb-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                >
+                    ←
+                </button>
+                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                    Edit Product
+                </h1>
+            </div>
 
             <ProductForm
                 value={form}

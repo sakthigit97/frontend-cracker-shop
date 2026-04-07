@@ -3,7 +3,7 @@ import Button from "../../components/ui/Button";
 import Toggle from "../../components/ui/Toggle";
 import { useAdminCategoriesStore } from "../../store/adminCategories.store";
 import { useAlert } from "../../store/alert.store";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDebounce } from "../../utils/useDebounce";
 
 import {
@@ -24,6 +24,7 @@ export default function AdminCategories() {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const [filters, setFilters] = useState({
         search: "",
@@ -135,8 +136,29 @@ export default function AdminCategories() {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h1 className="text-xl font-semibold">Categories</h1>
 
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Categories
+                    </h1>
+                </div>
                 <Link to="/admin/categories/create">
                     <Button>Add Category</Button>
                 </Link>

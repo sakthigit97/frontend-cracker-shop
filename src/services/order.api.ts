@@ -25,6 +25,13 @@ export async function cancelOrderApi(orderId: string) {
     });
 }
 
+export async function restoreOrderApi(orderId: string) {
+    return await apiFetch(`/orders/restore`, {
+        method: "POST",
+        body: JSON.stringify({ orderId }),
+    });
+}
+
 export async function adjustOrderApi(
     orderId: string,
     items: { productId: string; quantity: number }[]

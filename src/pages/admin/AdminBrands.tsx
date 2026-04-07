@@ -3,7 +3,7 @@ import Button from "../../components/ui/Button";
 import Toggle from "../../components/ui/Toggle";
 import { useAdminBrandsStore } from "../../store/adminBrands.store";
 import { useAlert } from "../../store/alert.store";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDebounce } from "../../utils/useDebounce";
 
 import {
@@ -15,6 +15,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import EmptyState from "../../components/ui/EmptyState";
 export default function AdminBrands() {
+    const navigate = useNavigate();
     const { fetchPage, loading, clearCache } = useAdminBrandsStore();
     const { showAlert } = useAlert();
     const [cursor, setCursor] = useState<string | null>(null);
@@ -119,7 +120,28 @@ export default function AdminBrands() {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h1 className="text-xl font-semibold">Brands</h1>
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Brands
+                    </h1>
+                </div>
 
                 <Link to="/admin/brands/create">
                     <Button>Add Brand</Button>

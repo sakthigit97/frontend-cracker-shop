@@ -154,6 +154,30 @@ export default function AdminOrderDetails() {
     return (
         <div className="space-y-6">
             <div className="bg-white border rounded-xl p-4 space-y-3">
+
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                                flex items-center justify-center
+                                w-9 h-9
+                                rounded-full
+                                bg-[var(--color-primary)]
+                                text-white
+                                shadow-sm
+
+                                hover:scale-105
+                                active:scale-95
+                                transition-all
+                                "
+                    >
+                        ←
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                        Order Details
+                    </h1>
+                </div>
+
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <h1 className="text-base font-semibold text-[var(--color-primary)] break-all">

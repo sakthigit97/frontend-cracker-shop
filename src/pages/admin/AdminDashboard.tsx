@@ -48,7 +48,23 @@ export default function AdminDashboard() {
   })).filter((d) => d.value > 0);
 
   return (
+
     <div className="space-y-8">
+
+      <div className="bg-white border rounded-xl px-4 py-3 mb-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-lg md:text-xl font-semibold text-[var(--color-primary)]">
+              Dashboard
+            </h1>
+            <p className="text-xs text-gray-500">
+              Overview of your system performance
+            </p>
+          </div>
+
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="Today Orders" value={stats.todayTotal} />
         <StatCard label="Pending" value={stats.pending} />

@@ -8,6 +8,7 @@ export interface Product {
   originalPrice?: number;
   brand?: string;
   discountText?: string;
+  categoryId?: string;
 }
 
 export type ProductDetails = {
