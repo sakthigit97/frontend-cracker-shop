@@ -140,40 +140,34 @@ export default function AdminConfigPage() {
     if (fetching || !form) {
         return <div className="max-w-2xl">Loading...</div>;
     }
+
     return (
-        <div className="flex justify-center">
-            <div className="w-full max-w-3xl">
-                <div className="bg-white border rounded-2xl p-6 space-y-6">
+        <div className="flex justify-center px-4">
+            <div className="w-full max-w-5xl">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
 
                     {/* Header */}
                     <div>
-
-                        <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-3 mb-2">
                             <button
                                 onClick={() => navigate(-1)}
-                                className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
-
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
-                                "
+                                className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--color-primary)] text-white hover:scale-105 active:scale-95 transition"
                             >
                                 ←
                             </button>
+
                             <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
                                 Admin Configs
                             </h1>
                         </div>
+
+                        <p className="text-sm text-gray-500">
+                            Manage platform settings and configurations
+                        </p>
                     </div>
 
-                    {/* FLAGS */}
-                    <div className="space-y-3 border rounded-xl p-4">
+                    {/* Feature Toggles */}
+                    <div className="space-y-3 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Feature Toggles</p>
 
                         {[
@@ -199,164 +193,100 @@ export default function AdminConfigPage() {
                         ))}
                     </div>
 
-                    {/* AMOUNTS */}
-                    <div className="space-y-4 border rounded-xl p-4">
+                    {/* Wallet */}
+                    <div className="space-y-4 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Wallet Values</p>
 
-                        <div>
-                            <p className="text-sm">Join Bonus Amount</p>
-                            <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.joinBonusAmount || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        joinBonusAmount: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
+                        <input
+                            className="border border-gray-300 rounded-lg p-3 w-full"
+                            placeholder="Join Bonus Amount"
+                            value={form.joinBonusAmount || ""}
+                            onChange={(e) =>
+                                setForm((p: any) => ({
+                                    ...p,
+                                    joinBonusAmount: e.target.value,
+                                }))
+                            }
+                        />
 
-                        <div>
-                            <p className="text-sm">Referral Reward Amount</p>
-                            <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.referralRewardAmount || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        referralRewardAmount: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
+                        <input
+                            className="border border-gray-300 rounded-lg p-3 w-full"
+                            placeholder="Referral Reward Amount"
+                            value={form.referralRewardAmount || ""}
+                            onChange={(e) =>
+                                setForm((p: any) => ({
+                                    ...p,
+                                    referralRewardAmount: e.target.value,
+                                }))
+                            }
+                        />
                     </div>
 
-                    {/* AMOUNTS */}
-                    <div className="space-y-4 border rounded-xl p-4">
-                        <p className="text-sm font-medium">Orders Values</p>
+                    {/* Orders */}
+                    <div className="space-y-4 border border-gray-200 rounded-xl p-4">
+                        <p className="text-sm font-medium">Order Values</p>
 
-                        <div>
-                            <p className="text-sm">Package Fee (%)</p>
+                        {[
+                            ["packagingPercent", "Package Fee (%)"],
+                            ["gstPercent", "GST (%)"],
+                            ["tnMinOrderValue", "TN Min Order Value"],
+                            ["otherStateMinOrderValue", "Other State Min Order Value"],
+                            ["northEastMinOrderValue", "NorthEast Min Order Value"],
+                        ].map(([key, label]) => (
                             <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.packagingPercent || ""}
+                                key={key}
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                placeholder={label}
+                                value={form[key] || ""}
                                 onChange={(e) =>
                                     setForm((p: any) => ({
                                         ...p,
-                                        packagingPercent: e.target.value,
+                                        [key]: e.target.value,
                                     }))
                                 }
                             />
-                        </div>
-
-                        <div>
-                            <p className="text-sm">GST (%)</p>
-                            <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.gstPercent || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        gstPercent: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
-
-
-                        <div>
-                            <p className="text-sm">TN Min Order Value</p>
-                            <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.tnMinOrderValue || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        tnMinOrderValue: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
-
-
-                        <div>
-                            <p className="text-sm">Other State Min Order Value</p>
-                            <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.otherStateMinOrderValue || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        otherStateMinOrderValue: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
-
-
-                        <div>
-                            <p className="text-sm">NorthEast Min Order Value</p>
-                            <input
-                                className="border rounded-lg px-3 py-2 w-full"
-                                value={form.northEastMinOrderValue || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        northEastMinOrderValue: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
+                        ))}
                     </div>
 
-                    {/* ADMIN CONTACT DETAILS */}
-                    <div className="space-y-4 border rounded-xl p-4">
+                    {/* Admin Contact */}
+                    <div className="space-y-4 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Admin Contact Details</p>
 
-                        <div>
-                            <p className="text-sm">Admin Mobile Number</p>
-                            <input
-                                type="tel"
-                                maxLength={10}
-                                className="border rounded-lg px-3 py-2 w-full"
-                                placeholder="Enter 10-digit mobile number"
-                                value={form.adminMobile || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        adminMobile: e.target.value.replace(/\D/g, ""),
-                                    }))
-                                }
-                            />
-                        </div>
+                        <input
+                            type="tel"
+                            maxLength={10}
+                            className="border border-gray-300 rounded-lg p-3 w-full"
+                            placeholder="Admin Mobile Number"
+                            value={form.adminMobile || ""}
+                            onChange={(e) =>
+                                setForm((p: any) => ({
+                                    ...p,
+                                    adminMobile: e.target.value.replace(/\D/g, ""),
+                                }))
+                            }
+                        />
 
-                        <div>
-                            <p className="text-sm">Admin Email</p>
-                            <input
-                                type="email"
-                                className="border rounded-lg px-3 py-2 w-full"
-                                placeholder="Enter admin email"
-                                value={form.adminEmail || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        adminEmail: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
+                        <input
+                            type="email"
+                            className="border border-gray-300 rounded-lg p-3 w-full"
+                            placeholder="Admin Email"
+                            value={form.adminEmail || ""}
+                            onChange={(e) =>
+                                setForm((p: any) => ({
+                                    ...p,
+                                    adminEmail: e.target.value,
+                                }))
+                            }
+                        />
                     </div>
 
-                    {/* SLIDER IMAGES */}
-                    <div className="space-y-4 border rounded-xl p-4">
+                    {/* Slider */}
+                    <div className="space-y-4 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Slider Images</p>
 
                         {form.sliderImages.map((img: any, index: number) => (
-                            <div
-                                key={img.id}
-                                className="border rounded-lg p-3 space-y-2"
-                            >
+                            <div key={img.id} className="border rounded-xl p-4 space-y-3 bg-gray-50">
+
                                 {img.imageUrl ? (
                                     <img
                                         src={img.imageUrl}
@@ -370,7 +300,6 @@ export default function AdminConfigPage() {
 
                                 <Button
                                     variant="outline"
-                                    type="button"
                                     onClick={() => {
                                         setUploadIndex(index);
                                         fileRef.current?.click();
@@ -379,27 +308,22 @@ export default function AdminConfigPage() {
                                     {img.imageUrl ? "Change Image" : "Upload Image"}
                                 </Button>
 
-                                <div className="space-y-1">
-                                    <p className="text-xs font-medium">Title</p>
-                                    <input
-                                        className="border rounded-lg px-3 py-2 w-full"
-                                        placeholder="Enter slider title"
-                                        value={img.title || ""}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-
-                                            setForm((prev: any) => {
-                                                const updated = [...prev.sliderImages];
-                                                updated[index].title = value;
-                                                return { ...prev, sliderImages: updated };
-                                            });
-                                        }}
-                                    />
-                                </div>
+                                <input
+                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                    placeholder="Slider title"
+                                    value={img.title || ""}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setForm((prev: any) => {
+                                            const updated = [...prev.sliderImages];
+                                            updated[index].title = value;
+                                            return { ...prev, sliderImages: updated };
+                                        });
+                                    }}
+                                />
 
                                 <Button
                                     variant="outline"
-                                    type="button"
                                     onClick={() => removeSlider(index)}
                                 >
                                     Remove
@@ -414,23 +338,27 @@ export default function AdminConfigPage() {
                         <input
                             ref={fileRef}
                             type="file"
-                            accept="image/*"
                             className="hidden"
                             onChange={handleUploadSlider}
                         />
                     </div>
 
-                    {/* ACTIONS */}
-                    <div className="flex justify-end gap-3 pt-4 border-t">
-                        <Button onClick={handleSave} disabled={loading}>
-                            {loading ? "Saving…" : "Save Config"}
-                        </Button>
-
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t">
                         <Button
                             variant="outline"
+                            className="w-full sm:w-auto"
                             onClick={() => navigate("/admin")}
                         >
                             Cancel
+                        </Button>
+
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={handleSave}
+                            disabled={loading}
+                        >
+                            {loading ? "Saving…" : "Save Config"}
                         </Button>
                     </div>
 

@@ -30,7 +30,6 @@ export const useCartProductsStore = create<CartProductsState>(
             const data = await fetchProductsBatch(missingIds);
             set((state) => {
                 const map = { ...state.products };
-
                 data.forEach((p: any) => {
                     map[p.productId] = {
                         id: p.productId,

@@ -286,9 +286,33 @@ export default function AdminOrderDetails() {
 
                         <div className="flex-1">
                             <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-xs text-gray-500">
-                                Qty {item.quantity} x {item.price}
-                            </p>
+                            <div className="text-xs mt-1 flex flex-col gap-1">
+
+                                {/* Discount */}
+                                {item.discountText && (
+                                    <span className="text-green-600 font-semibold">
+                                        {item.discountText}
+                                    </span>
+                                )}
+
+                                {/* Price row */}
+                                <div className="flex items-center gap-2 flex-wrap text-gray-600">
+
+                                    {item.originalPrice && item.originalPrice > item.price && (
+                                        <span className="line-through text-gray-400">
+                                            ₹{item.originalPrice}
+                                        </span>
+                                    )}
+
+                                    <span className="font-medium text-[var(--color-primary)]">
+                                        ₹{item.price}
+                                    </span>
+
+                                    <span>
+                                        × {item.quantity}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <p className="text-sm font-medium">

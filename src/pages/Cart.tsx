@@ -58,7 +58,7 @@ export default function Cart() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
 
-        <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => navigate(-1)}
           className="
@@ -118,13 +118,35 @@ export default function Cart() {
                   {p.name}
                 </Link>
 
-                <p className="text-sm text-gray-500 mt-1">
-                  ₹{p.price} × {p.quantity}
-                </p>
+                <div className="mt-1 flex flex-col gap-1">
 
-                <p className="font-semibold mt-1">
-                  ₹{p.price * p.quantity}
-                </p>
+                  {p.discountText && (
+                    <span className="text-xs font-semibold text-green-600">
+                      {p.discountText}
+                    </span>
+                  )}
+
+                  <div className="flex items-center gap-2 flex-wrap">
+
+
+                    {p.originalPrice && p.originalPrice > p.price && (
+                      <span className="text-sm line-through text-gray-400">
+                        ₹{p.originalPrice}
+                      </span>
+                    )}
+
+                    <span className="font-semibold text-[var(--color-primary)]">
+                      ₹{p.price}
+                    </span>
+
+                    <span className="text-xs text-gray-500">
+                      × {p.quantity}
+                    </span>
+                  </div>
+                  <p className="font-semibold text-sm">
+                    ₹{p.price * p.quantity}
+                  </p>
+                </div>
               </div>
 
               <div

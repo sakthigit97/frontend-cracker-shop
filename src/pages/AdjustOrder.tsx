@@ -13,6 +13,8 @@ type AdjustOrderItem = {
     price: number;
     quantity: number;
     image?: string;
+    discountText?: string;
+    originalPrice?: number;
 };
 
 export default function AdjustOrder() {
@@ -40,6 +42,8 @@ export default function AdjustOrder() {
             quantity: i.quantity,
             price: i.total / i.quantity,
             image: i.image,
+            discountText: i.discountText,
+            originalPrice: i.originalPrice
         }))
     );
 
@@ -253,9 +257,32 @@ export default function AdjustOrder() {
                                 <h3 className="font-medium text-[var(--color-primary)]">
                                     {item.name}
                                 </h3>
-                                <p className="text-sm text-gray-500">
-                                    ₹{item.price} × {item.quantity}
-                                </p>
+                                <div className="text-xs mt-1 flex flex-col gap-1">
+
+                                    {item.discountText && (
+                                        <span className="text-green-600 font-semibold">
+                                            {item.discountText}
+                                        </span>
+                                    )}
+
+                                    <div className="flex items-center gap-2 flex-wrap text-gray-600">
+
+
+                                        {item.originalPrice && item.originalPrice > item.price && (
+                                            <span className="line-through text-gray-400">
+                                                ₹{item.originalPrice}
+                                            </span>
+                                        )}
+
+                                        <span className="font-medium text-[var(--color-primary)]">
+                                            ₹{item.price}
+                                        </span>
+
+                                        <span>
+                                            × {item.quantity}
+                                        </span>
+                                    </div>
+                                </div>
                                 <p className="font-semibold">
                                     ₹{item.price * item.quantity}
                                 </p>

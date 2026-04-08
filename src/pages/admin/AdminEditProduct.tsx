@@ -78,15 +78,22 @@ export default function AdminEditProduct() {
 
     if (fetching) {
         return (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <ProductSkeleton key={i} />
-                ))}
+            <div className="flex justify-center px-4">
+                <div className="w-full max-w-5xl">
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <ProductSkeleton key={i} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
 
     if (!form) return null;
+
     const hasChanges = () => {
         if (!initialData) return false;
 
@@ -179,9 +186,7 @@ export default function AdminEditProduct() {
 
             if (form.images.length > 0) {
                 const presign = await getPresignedUrls(form.images, productId);
-
                 await uploadFilesToS3(presign.uploads, form.images);
-
                 newImageUrls = presign.uploads.map((u: any) => u.fileUrl);
             }
 
@@ -219,43 +224,55 @@ export default function AdminEditProduct() {
     };
 
     return (
-        <div className="max-w-3xl">
-            <div className="flex items-center gap-3 mb-4">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
+        <div className="flex justify-center px-4">
+            <div className="w-full max-w-5xl">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
 
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
+                    {/* Header */}
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="
+                                    w-9 h-9 flex items-center justify-center
+                                    rounded-full
+                                    bg-[var(--color-primary)]
+                                    text-white
+                                    hover:scale-105 active:scale-95 transition
                                 "
-                >
-                    ←
-                </button>
-                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
-                    Edit Product
-                </h1>
-            </div>
+                            >
+                                ←
+                            </button>
 
-            <ProductForm
-                value={form}
-                brands={brands}
-                categories={categories}
-                loading={loading}
-                existingImages={existingImages}
-                onRemoveImage={(url) =>
-                    setExistingImages((imgs) => imgs.filter((i) => i !== url))
-                }
-                onChange={setForm}
-                onSubmit={handleSubmit}
-                onCancel={() => navigate("/admin/products")}
-            />
+                            <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                                Edit Product
+                            </h1>
+                        </div>
+
+                        <p className="text-sm text-gray-500">
+                            Update product details
+                        </p>
+                    </div>
+
+                    {/* Form */}
+                    <ProductForm
+                        value={form}
+                        brands={brands}
+                        categories={categories}
+                        loading={loading}
+                        existingImages={existingImages}
+                        onRemoveImage={(url) =>
+                            setExistingImages((imgs) =>
+                                imgs.filter((i) => i !== url)
+                            )
+                        }
+                        onChange={setForm}
+                        onSubmit={handleSubmit}
+                        onCancel={() => navigate("/admin/products")}
+                    />
+
+                </div>
+            </div>
         </div>
     );
 }

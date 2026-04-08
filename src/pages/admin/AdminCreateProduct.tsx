@@ -80,8 +80,10 @@ export default function AdminCreateProduct() {
             return;
         }
 
-        const brandName = brands.find((b) => b.id === form.brandId)?.name || "";
-        const categoryName = categories.find((c) => c.id === form.categoryId)?.name || "";
+        const brandName =
+            brands.find((b) => b.id === form.brandId)?.name || "";
+        const categoryName =
+            categories.find((c) => c.id === form.categoryId)?.name || "";
 
         const searchText = [form.name, brandName, categoryName]
             .join(" ")
@@ -92,6 +94,7 @@ export default function AdminCreateProduct() {
 
             const presignRes = await getPresignedUrls(form.images);
             await uploadFilesToS3(presignRes.uploads, form.images);
+
             await createProduct({
                 productId: presignRes.productId,
                 name: form.name.trim(),
@@ -122,38 +125,39 @@ export default function AdminCreateProduct() {
             setLoading(false);
         }
     };
+
     return (
-        <div className="flex justify-center">
-            <div className="w-full max-w-4xl">
-                <div className="bg-white border rounded-2xl p-6 space-y-6">
+        <div className="flex justify-center px-4">
+            <div className="w-full max-w-5xl">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+
+                    {/* Header */}
                     <div>
-                        <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-3 mb-2">
                             <button
                                 onClick={() => navigate(-1)}
                                 className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
-
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
+                                    w-9 h-9 flex items-center justify-center
+                                    rounded-full
+                                    bg-[var(--color-primary)]
+                                    text-white
+                                    hover:scale-105 active:scale-95 transition
                                 "
                             >
                                 ←
                             </button>
+
                             <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
                                 Add Product
                             </h1>
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
+
+                        <p className="text-sm text-gray-500">
                             Create a new product
                         </p>
                     </div>
 
+                    {/* Form */}
                     <ProductForm
                         value={form}
                         brands={brands}

@@ -10,6 +10,7 @@ import { uploadFilesToS3 } from "../../utils/uploadToS3";
 import { useAdminCategoriesStore } from "../../store/adminCategories.store";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
 export default function AdminCreateCategory() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
@@ -104,158 +105,157 @@ export default function AdminCreateCategory() {
             setLoading(false);
         }
     };
+
     return (
-        <div className="bg-white border rounded-2xl p-6 space-y-6">
-            <div>
-                <div className="flex items-center gap-3 mb-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
+        <div className="flex justify-center px-4">
+            <div className="w-full max-w-5xl">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
 
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
+                    {/* Header */}
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="
+                                    w-9 h-9 flex items-center justify-center
+                                    rounded-full
+                                    bg-[var(--color-primary)]
+                                    text-white
+                                    hover:scale-105 active:scale-95 transition
                                 "
-                    >
-                        ←
-                    </button>
-                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
-                        Add Category
-                    </h1>
-                </div>
-            </div>
-
-            {/* Name */}
-            <div className="space-y-1">
-                <label className="text-sm font-medium">
-                    Category Name
-                </label>
-                <input
-                    className="border rounded-md p-2 w-full"
-                    placeholder="Enter category name"
-                    value={form.name}
-                    onChange={(e) =>
-                        setForm({ ...form, name: e.target.value })
-                    }
-                />
-            </div>
-            <div className="space-y-2">
-                <p className="text-sm font-medium">Category Image</p>
-                {!form.image ? (
-                    <label
-                        className="
-                                flex flex-col items-center justify-center
-                                border-2 border-dashed border-gray-300
-                                rounded-xl p-6
-                                cursor-pointer
-                                hover:border-gray-400
-                                transition
-                                text-center
-                                bg-gray-50
-                            "
-                    >
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleImageChange}
-                        />
-
-                        <p className="text-sm font-medium text-gray-700">
-                            Click to upload image
-                        </p>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                            JPG / PNG · Max 2MB · Only 1 image allowed
-                        </p>
-                    </label>
-                ) : (
-                    <div
-                        className="
-                                flex flex-col sm:flex-row
-                                items-start sm:items-center
-                                gap-4
-                                border rounded-xl
-                                p-4
-                                bg-white
-                            "
-                    >
-                        {/* Preview Image */}
-                        <img
-                            src={URL.createObjectURL(form.image)}
-                            alt="Category preview"
-                            className="
-                                    h-20 w-20
-                                    rounded-lg
-                                    object-cover
-                                    border
-                                    shrink-0
-                                "
-                        />
-
-                        {/* File Info */}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 truncate">
-                                {form.image.name}
-                            </p>
-
-                            <p className="text-xs text-gray-500 mt-1">
-                                {(form.image.size / 1024).toFixed(0)} KB
-                            </p>
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="w-full sm:w-auto">
-                            <Button
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                onClick={() =>
-                                    setForm((prev) => ({
-                                        ...prev,
-                                        image: null,
-                                    }))
-                                }
                             >
-                                Change Image
-                            </Button>
+                                ←
+                            </button>
+
+                            <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                                Add Category
+                            </h1>
                         </div>
+
+                        <p className="text-sm text-gray-500">
+                            Create a new category
+                        </p>
                     </div>
-                )}
-            </div>
 
-            {/* Active */}
-            <div className="flex items-center gap-2">
-                <input
-                    type="checkbox"
-                    checked={form.isActive}
-                    onChange={(e) =>
-                        setForm({
-                            ...form,
-                            isActive: e.target.checked,
-                        })
-                    }
-                />
-                <span className="text-sm">Active</span>
-            </div>
+                    {/* Name */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                            Category Name
+                        </label>
+                        <input
+                            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                            placeholder="Enter category name"
+                            value={form.name}
+                            onChange={(e) =>
+                                setForm({ ...form, name: e.target.value })
+                            }
+                        />
+                    </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                    variant="outline"
-                    onClick={() => navigate("/admin/categories")}
-                >
-                    Cancel
-                </Button>
+                    {/* Image Upload */}
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium">
+                            Category Image
+                        </p>
 
-                <Button onClick={handleSubmit} disabled={loading}>
-                    {loading ? "Saving…" : "Save Category"}
-                </Button>
+                        {!form.image ? (
+                            <label
+                                className="
+                                    flex flex-col items-center justify-center
+                                    border-2 border-dashed border-gray-300
+                                    rounded-xl p-6
+                                    cursor-pointer
+                                    hover:border-gray-400
+                                    transition
+                                    text-center
+                                    bg-gray-50
+                                "
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageChange}
+                                />
+
+                                <p className="text-sm font-medium text-gray-700">
+                                    Click to upload image
+                                </p>
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    JPG / PNG · Max 2MB · Only 1 image allowed
+                                </p>
+                            </label>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border rounded-xl p-4 bg-white">
+                                <img
+                                    src={URL.createObjectURL(form.image)}
+                                    alt="preview"
+                                    className="h-20 w-20 rounded-lg object-cover border"
+                                />
+
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">
+                                        {form.image.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {(form.image.size / 1024).toFixed(0)} KB
+                                    </p>
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    className="w-full sm:w-auto"
+                                    onClick={() =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            image: null,
+                                        }))
+                                    }
+                                >
+                                    Change Image
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Active */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={form.isActive}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    isActive: e.target.checked,
+                                })
+                            }
+                        />
+                        <span className="text-sm">
+                            Active
+                        </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t">
+                        <Button
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            onClick={() => navigate("/admin/categories")}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                        >
+                            {loading ? "Saving…" : "Save Category"}
+                        </Button>
+                    </div>
+
+                </div>
             </div>
         </div>
     );

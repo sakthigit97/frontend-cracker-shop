@@ -245,13 +245,32 @@ export default function ProductForm({
                 />
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+
                 {onCancel && (
-                    <Button variant="secondary" onClick={onCancel}>
+                    <Button variant="secondary" className="
+                    w-full sm:w-auto
+                    px-5 py-3
+                    rounded-xl
+                    bg-gray-900 text-white
+                    font-medium
+                    hover:opacity-90
+                    transition" 
+                    onClick={onCancel}>
                         Cancel
                     </Button>
                 )}
-                <Button onClick={onSubmit} disabled={loading}>
+                <Button 
+                    className="
+                    w-full sm:w-auto
+                    px-5 py-3
+                    rounded-xl
+                    bg-amber-500 text-black
+                    font-semibold
+                    hover:opacity-90
+                    transition
+                    "
+                    onClick={onSubmit} disabled={loading}>
                     {loading ? "Saving..." : "Save Product"}
                 </Button>
             </div>
