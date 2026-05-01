@@ -15,7 +15,6 @@ export type GlobalConfig = {
     gstPercent: number;
     tnMinOrderValue: number;
     otherStateMinOrderValue: number;
-    northEastMinOrderValue: number;
     adminWhatsapp: string;
     additionalContact: string;
     adminAddress: string;

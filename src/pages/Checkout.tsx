@@ -7,6 +7,7 @@ import { cartStore } from "../store/cart.store";
 import { useConfigStore } from "../store/config.store";
 import { useAlert } from "../store/alert.store";
 import { INDIA_STATES } from "../utils/states";
+import { calculateOrderAmounts } from "../utils/pricing";
 
 type ProfileResponse = {
   success: boolean;
@@ -50,16 +51,24 @@ export default function Checkout() {
   );
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
-  const packagingCharge = useMemo(
-    () => Math.round((totalAmount * packagingPercent) / 100),
-    [totalAmount, packagingPercent]
-  );
+  const currentState =
+    addressMode === "PROFILE"
+      ? profileAddress
+      : stateValue;
 
-  const gstAmount = useMemo(
-    () => Math.round((totalAmount * gstPercent) / 100),
-    [totalAmount, gstPercent]
-  );
-  const grandTotal = totalAmount + packagingCharge + gstAmount;
+  const { packagingCharge, gstAmount, grandTotal } =
+    useMemo(
+      () =>
+        calculateOrderAmounts({
+          totalAmount,
+          packagingPercent,
+          gstPercent,
+          state: currentState,
+          config,
+        }),
+      [totalAmount, packagingPercent, gstPercent, currentState, config]
+    );
+
   const creditUsed = Math.min(walletCredit, grandTotal);
   const finalPayable = grandTotal - creditUsed;
 
@@ -287,7 +296,7 @@ export default function Checkout() {
           paymentMode: paymentMode === "ONLINE"
             ? "Online Payment (Paid)"
             : "Online Payment Required",
-          estimatedDelivery: "Tamil Nadu: 5 working days, Other states: 10 working days",
+          estimatedDelivery: "Tamil Nadu: 3 to 5 working days, Other states: 7 to 10 working days",
         },
       });
 
@@ -356,6 +365,28 @@ export default function Checkout() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl border p-5 space-y-4">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4 text-sm space-y-2">
+            <p className="font-semibold flex items-center gap-2">
+              ⚠️ Important Information
+            </p>
+
+            <p>
+              • Home delivery is not available. Orders will be dispatched via a transport service.
+            </p>
+
+            <p>
+              • Customers must collect the parcel from the transport office/service point.
+            </p>
+
+            <p>
+              • Minimum order value:
+              <br />
+              &nbsp;&nbsp;– Tamil Nadu: ₹{config?.tnMinOrderValue ?? 3000}
+              <br />
+              &nbsp;&nbsp;– Other States: ₹{config?.otherStateMinOrderValue ?? 5000}
+            </p>
+          </div>
+
           <h2 className="font-semibold text-lg">Delivery Address</h2>
 
           {loadingProfile ? (
@@ -584,12 +615,12 @@ export default function Checkout() {
                 !minOrderValid
               }
               className={`w-full py-3 text-base transition-all ${placingOrder ||
-                  !acceptedTerms ||
-                  !acceptedTransport ||
-                  products.length === 0 ||
-                  !minOrderValid
-                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  : "bg-[var(--color-primary)] text-white hover:opacity-90"
+                !acceptedTerms ||
+                !acceptedTransport ||
+                products.length === 0 ||
+                !minOrderValid
+                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-white hover:opacity-90"
                 }`}
 
             >

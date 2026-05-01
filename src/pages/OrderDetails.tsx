@@ -20,6 +20,10 @@ export default function OrderDetails() {
   const { showAlert } = useAlert();
   const [downloading, setDownloading] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const isTamilNadu = order.address?.toLowerCase().includes("tamil nadu");
+  const deliveryText = isTamilNadu
+    ? "3–5 working days"
+    : "7–10 working days";
 
   if (!order) {
     return (
@@ -128,12 +132,6 @@ export default function OrderDetails() {
       day: "2-digit",
       month: "short",
       year: "numeric",
-    });
-
-  const formatDelivery = (ts: number) =>
-    new Date(ts).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
     });
 
   async function handleCancel() {
@@ -260,7 +258,7 @@ export default function OrderDetails() {
               <p className="text-sm text-yellow-800">
                 🚚 Expected Delivery:
                 <span className="font-semibold ml-1">
-                  {formatDelivery(order.expectedDelivery)}
+                  {deliveryText}
                 </span>
               </p>
             </div>
@@ -355,11 +353,12 @@ export default function OrderDetails() {
             <span>₹{order.packagingCharge ?? 0}</span>
           </div>
 
-          <div className="flex justify-between text-gray-600">
-            <span>GST (18%)</span>
-            <span>₹{order.gstAmount ?? 0}</span>
-          </div>
-
+          {(order.gstAmount ?? 0) > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>GST (18%)</span>
+              <span>₹{order.gstAmount}</span>
+            </div>
+          )}
           <hr />
 
           <div className="flex justify-between font-semibold">

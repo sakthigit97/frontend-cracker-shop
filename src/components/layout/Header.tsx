@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../store/auth.store";
 import { cartStore } from "../../store/cart.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
@@ -10,7 +10,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, logout, user } = useAuth();
   const items = cartStore((s) => s.items);
-  const { products } = useHomeProducts();
+  const { products, fetchInitial, hasFetched } = useHomeProducts();
 
   const handleLogout = () => {
     logout();
@@ -21,18 +21,29 @@ export default function Header() {
   const cartCount = useMemo(() => {
     return Object.values(items).reduce((sum, qty) => sum + qty, 0);
   }, [items]);
-  
-  const cartTotal = useMemo(() => {
-    if (!products || products.length === 0) return 0;
 
-    return Object.entries(items).reduce((sum, [productId, qty]) => {
-      const product = products.find((p) => p.id === productId);
+
+  const cartTotal = useMemo(() => {
+    if (!products || products.length === 0) return null;
+
+    return Object.entries(items).reduce((sum, [id, qty]: any) => {
+      if (!id || id === "undefined") return sum;
+
+      const product = products.find((p) => p.id === id);
       if (!product) return sum;
 
-      return sum + product.price * qty;
+      const quantity =
+        typeof qty === "number" ? qty : qty?.qty || 0;
+
+      return sum + product.price * quantity;
     }, 0);
   }, [items, products]);
 
+  useEffect(() => {
+    if (!hasFetched) {
+      fetchInitial();
+    }
+  }, [hasFetched]);
 
   return (
     <header className="bg-[var(--color-primary)] text-white">
@@ -109,18 +120,10 @@ export default function Header() {
                 )}
               </div>
 
-              {cartCount > 0 && (
-                <span
-                  className="
-                    text-sm font-semibold
-                    bg-white/10
-                    px-2 py-1
-                    rounded-md
-                    backdrop-blur-sm
-                  "
-                >
-                  ₹{cartTotal.toLocaleString()}
-                </span>
+              {cartTotal === null ? (
+                <span className="text-xs opacity-70">...</span>
+              ) : (
+                <>₹{cartTotal.toLocaleString()}</>
               )}
 
             </Link>

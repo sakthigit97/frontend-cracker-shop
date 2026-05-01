@@ -231,7 +231,6 @@ export default function AdminConfigPage() {
                             ["gstPercent", "GST (%)"],
                             ["tnMinOrderValue", "TN Min Order Value"],
                             ["otherStateMinOrderValue", "Other State Min Order Value"],
-                            ["northEastMinOrderValue", "NorthEast Min Order Value"],
                         ].map(([key, label]) => (
                             <input
                                 key={key}
