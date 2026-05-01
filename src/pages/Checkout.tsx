@@ -43,6 +43,7 @@ export default function Checkout() {
   const [walletCredit, setWalletCredit] = useState(0);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [minOrderValid, setMinOrderValid] = useState(true);
   const totalAmount = useMemo(
     () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     [products]
@@ -61,6 +62,33 @@ export default function Checkout() {
   const grandTotal = totalAmount + packagingCharge + gstAmount;
   const creditUsed = Math.min(walletCredit, grandTotal);
   const finalPayable = grandTotal - creditUsed;
+
+  useEffect(() => {
+    const currentPincode =
+      addressMode === "PROFILE" ? profilePincode : pincode;
+
+    if (!currentPincode || currentPincode.length !== 6) {
+      setMinOrderValid(false);
+      return;
+    }
+
+    let active = true;
+
+    (async () => {
+      const res = await validateMinimumOrder(
+        currentPincode,
+        totalAmount
+      );
+
+      if (!active) return;
+      setMinOrderValid(res.valid);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [pincode, profilePincode, addressMode, totalAmount]);
+
 
   useEffect(() => {
     let mounted = true;
@@ -93,17 +121,6 @@ export default function Checkout() {
     };
   }, []);
 
-  const NORTH_EAST_STATES = [
-    "Assam",
-    "Arunachal Pradesh",
-    "Manipur",
-    "Meghalaya",
-    "Mizoram",
-    "Nagaland",
-    "Tripura",
-    "Sikkim",
-  ];
-
   async function validateMinimumOrder(
     pincode: string,
     amount: number
@@ -125,8 +142,6 @@ export default function Checkout() {
       let minAmount = config?.otherStateMinOrderValue || 5000;
       if (state === "Tamil Nadu") {
         minAmount = config?.tnMinOrderValue || 3000;
-      } else if (NORTH_EAST_STATES.includes(state)) {
-        minAmount = config?.northEastMinOrderValue || 10000;
       }
 
       if (amount < minAmount) {
@@ -135,7 +150,6 @@ export default function Checkout() {
           message: `Minimum order for ${state} is ₹${minAmount}`,
         };
       }
-
       return { valid: true };
     } catch (err) {
       return {
@@ -205,7 +219,7 @@ export default function Checkout() {
 
     const validation = await validateMinimumOrder(
       currentPincode,
-      finalPayable
+      totalAmount
     );
 
     if (!validation.valid) {
@@ -562,8 +576,22 @@ export default function Checkout() {
           {isPaymentEnabled ? (
             <Button
               onClick={placeOrder}
-              disabled={placingOrder}
-              className="w-full py-3 text-base"
+              disabled={
+                placingOrder ||
+                !acceptedTerms ||
+                !acceptedTransport ||
+                products.length === 0 ||
+                !minOrderValid
+              }
+              className={`w-full py-3 text-base transition-all ${placingOrder ||
+                  !acceptedTerms ||
+                  !acceptedTransport ||
+                  products.length === 0 ||
+                  !minOrderValid
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "bg-[var(--color-primary)] text-white hover:opacity-90"
+                }`}
+
             >
               {placingOrder
                 ? "Redirecting…"
@@ -572,8 +600,22 @@ export default function Checkout() {
           ) : (
             <Button
               onClick={placeOrder}
-              disabled={placingOrder}
-              className="w-full py-3 text-base"
+              disabled={
+                placingOrder ||
+                !acceptedTerms ||
+                !acceptedTransport ||
+                products.length === 0 ||
+                !minOrderValid
+              }
+              className={`w-full py-3 text-base transition-all ${placingOrder ||
+                !acceptedTerms ||
+                !acceptedTransport ||
+                products.length === 0 ||
+                !minOrderValid
+                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-white hover:opacity-90"
+                }`}
+
             >
               {placingOrder
                 ? "Placing Order…"

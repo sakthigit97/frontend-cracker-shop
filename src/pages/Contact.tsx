@@ -3,11 +3,14 @@ import Button from "../components/ui/Button";
 import { contactUsApi } from "../services/contact.api";
 import { useAlert } from "../store/alert.store";
 import { useNavigate } from "react-router-dom";
+import { FaWhatsapp, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { useConfigStore } from "../store/config.store";
 
 export default function Contact() {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const config = useConfigStore((s) => s.config);
 
   const [form, setForm] = useState({
     name: "",
@@ -118,12 +121,82 @@ export default function Contact() {
             Our support team is always ready to help you with product enquiries,
             bulk orders, and delivery-related questions.
           </p>
+          <div className="text-sm text-[var(--color-muted)] space-y-3">
+            <a
+              href="https://www.google.com/maps?q=Sivakasi,Tamil+Nadu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
+            >
+              <FaMapMarkerAlt className="text-red-500" />
+              {config?.adminAddress && (
+                <span>{config.adminAddress}</span>
+              )}
+            </a>
 
-          <div className="text-sm text-[var(--color-muted)] space-y-1">
-            <p>📍 Sivakasi, Tamil Nadu</p>
-            <p>📞 +91 98845 95718</p>
-            <p>📧 support@crackershop.com</p>
+            {config?.adminMobile && (
+              <a
+                href={`tel:+91${config.adminMobile}`}
+                className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
+              >
+                <FaPhoneAlt className="text-blue-500" />
+                <span>+91 {config.adminMobile}</span>
+              </a>
+            )}
+
+            {config?.adminWhatsapp && (
+              <a
+                href={`https://wa.me/91${config.adminWhatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 text-green-600 font-medium hover:underline"
+              >
+                <FaWhatsapp className="text-xl" />
+                <span>+91 {config.adminWhatsapp}</span>
+              </a>
+            )}
+
+            {config?.additionalContact && (
+              <a
+                href={`tel:+91${config.additionalContact}`}
+                className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
+              >
+                <FaPhoneAlt className="text-purple-500" />
+                <span>+91 {config.additionalContact}</span>
+              </a>
+            )}
+
+            {config?.adminEmail && (
+              <a
+                href={`mailto:${config.adminEmail}`}
+                className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
+              >
+                📧 <span>{config.adminEmail}</span>
+              </a>
+            )}
+            <div className="pt-4 flex justify-center">
+              <a
+                href="https://www.google.com/maps?q=Sivakasi,Tamil+Nadu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex items-center gap-2
+                  bg-[var(--color-primary)]
+                  text-white
+                  px-5 py-2.5
+                  rounded-lg
+                  shadow-sm
+                  hover:scale-105
+                  active:scale-95
+                  transition-all
+                "
+              >
+                <FaMapMarkerAlt />
+                Open in Google Maps
+              </a>
+            </div>
           </div>
+
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

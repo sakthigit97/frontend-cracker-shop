@@ -29,9 +29,9 @@ export const cartStore = create<CartState>()(
       dirty: false,
       dirtyItems: {},
       locked: false,
-
       addItem: (productId, qty = 1) =>
         set((state) => {
+          if (!productId) return state;
           if (state.locked) return state;
 
           const nextQty = (state.items[productId] || 0) + qty;
@@ -79,13 +79,22 @@ export const cartStore = create<CartState>()(
           locked: false,
         }),
 
-      hydrate: (items) =>
+      hydrate: (items) => {
+        const cleaned: Record<string, number> = {};
+
+        Object.entries(items || {}).forEach(([key, value]) => {
+          if (key && key !== "undefined") {
+            cleaned[key] = Number(value) || 0;
+          }
+        });
+
         set({
-          items,
+          items: cleaned,
           hydrated: true,
           dirty: false,
           dirtyItems: {},
-        }),
+        });
+      },
 
       resetToGuest: () =>
         set({

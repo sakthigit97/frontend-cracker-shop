@@ -14,6 +14,7 @@ interface AuthUser {
   userId: string;
   role: UserRole;
   token: string;
+  name: string;
 }
 
 interface DecodedToken {
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("auth");
+    sessionStorage.removeItem("cartAlertShown");
     setUser(null);
     cartStore.getState().resetToGuest();
     cartStore.getState().unlock();
@@ -97,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(() => {
       try {
         const decoded: DecodedToken = jwtDecode(user.token);
-
         if (decoded.exp * 1000 <= Date.now()) {
           console.log("Token expired, logging out...");
           logout();

@@ -16,6 +16,9 @@ export type GlobalConfig = {
     tnMinOrderValue: number;
     otherStateMinOrderValue: number;
     northEastMinOrderValue: number;
+    adminWhatsapp: string;
+    additionalContact: string;
+    adminAddress: string;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

@@ -27,7 +27,6 @@ export const ORDER_STATUS_CONFIG: any = {
 
 export type OrderStatus = keyof typeof ORDER_STATUS_CONFIG;
 
-
 export const STATUS_ORDER = [
     "ORDER_PLACED",
     "ORDER_CONFIRMED",

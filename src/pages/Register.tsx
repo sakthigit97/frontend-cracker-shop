@@ -5,6 +5,7 @@ import { useAlert } from "../store/alert.store";
 import { apiFetch } from "../services/api";
 import { useConfigStore } from "../store/config.store";
 import { INDIA_STATES } from "../utils/states";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Register() {
   const { showAlert } = useAlert();
@@ -13,6 +14,7 @@ export default function Register() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [referralCodeUsed, setReferralCodeUsed] = useState("");
   const config = useConfigStore((s) => s.config);
   const isReferralEnabled = config?.isReferralEnabled ?? false;
@@ -29,9 +31,16 @@ export default function Register() {
 
   const cleanMobile = mobile.trim();
   const isMobileValid = /^[6-9]\d{9}$/.test(cleanMobile);
-  const passwordsMatch = form.password && form.confirmPassword && form.password === form.confirmPassword;
-
   const sendOtp = async () => {
+
+    if (!mobile) {
+      showAlert({
+        type: "error",
+        message: "Please enter your mobile number",
+      });
+      return;
+    }
+
     if (!isMobileValid) {
       showAlert({
         type: "error",
@@ -39,13 +48,25 @@ export default function Register() {
       });
       return;
     }
+
+    if (!captchaToken) {
+      showAlert({
+        type: "error",
+        message: "Please complete CAPTCHA verification",
+      });
+      return;
+    }
+
     if (loading) return;
     setLoading(true);
 
     try {
       await apiFetch("/auth/register/send-otp", {
         method: "POST",
-        body: JSON.stringify({ mobile: cleanMobile }),
+        body: JSON.stringify({
+          mobile: cleanMobile,
+          captchaToken,
+        }),
       });
 
       showAlert({
@@ -65,9 +86,32 @@ export default function Register() {
   };
 
   const verifyOtpAndRegister = async () => {
+
+    if (!otp) {
+      showAlert({
+        type: "error",
+        message: "Please enter OTP",
+      });
+      return;
+    }
+
+    if (!form.password || !form.confirmPassword) {
+      showAlert({
+        type: "error",
+        message: "Please enter password",
+      });
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      showAlert({
+        type: "error",
+        message: "Passwords do not match",
+      });
+      return;
+    }
+
     if (
-      !otp ||
-      !passwordsMatch ||
       !form.name ||
       !form.address ||
       !form.city ||
@@ -120,15 +164,35 @@ export default function Register() {
 
   return (
     <div className="p-4 max-w-md mx-auto bg-[var(--color-surface)] border rounded-xl">
-      <h1 className="text-xl font-bold text-[var(--color-primary)] mb-4">
-        Register
-      </h1>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="
+          flex items-center justify-center
+          w-9 h-9
+          rounded-full
+          bg-[var(--color-primary)]
+          text-white
+          shadow-sm
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+        >
+          ←
+        </button>
+
+        <h1 className="text-xl font-bold text-[var(--color-primary)]">
+          Register
+        </h1>
+      </div>
 
       {step === 1 && (
         <>
           <label className="block text-sm mb-1">
             Mobile Number
           </label>
+
           <input
             value={mobile}
             onChange={(e) =>
@@ -138,10 +202,17 @@ export default function Register() {
             className="w-full border rounded-md p-2 mb-4"
           />
 
+          <div className="mb-4 flex justify-center">
+            <ReCAPTCHA
+              sitekey="6Ld4itMsAAAAAFotYg6ziCo1yb2HVlA8oJodr5M_"
+              onChange={(token) => setCaptchaToken(token)}
+            />
+          </div>
+
           <Button
             className="w-full"
             onClick={sendOtp}
-            disabled={!isMobileValid || loading}
+            disabled={loading}
           >
             {loading ? "Sending OTP..." : "Send OTP"}
           </Button>
@@ -237,6 +308,7 @@ export default function Register() {
             }
             className="w-full border rounded-md p-2 mb-3"
           />
+
           {isReferralEnabled && (
             <>
               <input
@@ -253,6 +325,7 @@ export default function Register() {
               </p>
             </>
           )}
+
           <Button
             className="w-full"
             onClick={verifyOtpAndRegister}
