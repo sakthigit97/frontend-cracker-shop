@@ -6,6 +6,8 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { adjustOrderApi } from "../services/order.api";
 import { useOrdersStore } from "../store/orders.store";
 import { useAlert } from "../store/alert.store";
+import { calculateOrderAmounts } from "../utils/pricing";
+import { useConfigStore } from "../store/config.store";
 
 type AdjustOrderItem = {
     productId: string;
@@ -24,6 +26,10 @@ export default function AdjustOrder() {
     const { showAlert } = useAlert();
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const order = location.state?.order;
+    const config = useConfigStore((s) => s.config);
+    const packagingPercent = config?.packagingPercent ?? 0;
+    const gstPercent = config?.gstPercent ?? 0;
+
 
     const originalItemsRef = useRef(
         order.items.map((i: any) => ({
@@ -93,12 +99,23 @@ export default function AdjustOrder() {
         setTimeout(() => setShakeSave(false), 400);
     };
     const isEmpty = items.length === 0;
-
-    const totalAmount = useMemo(
+    const subtotal = useMemo(
         () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
         [items]
     );
+    const derivedState = order?.state || (order?.address?.includes("Tamil Nadu") ? "Tamil Nadu" : "Other");
+    const { packagingCharge, gstAmount, grandTotal } = useMemo(
+        () =>
 
+            calculateOrderAmounts({
+                totalAmount: subtotal,
+                packagingPercent,
+                gstPercent,
+                state: derivedState,
+                config,
+            }),
+        [subtotal, packagingPercent, gstPercent, config]
+    );
     const oldTotal = useMemo(
         () =>
             order.items.reduce(
@@ -108,7 +125,7 @@ export default function AdjustOrder() {
         [order.items]
     );
 
-    const diffAmount = totalAmount - oldTotal;
+    const diffAmount = grandTotal - oldTotal;
     const updateQty = (productId: string, delta: number) => {
         if (!canAdjust) return;
         setDirty(true);
@@ -121,6 +138,46 @@ export default function AdjustOrder() {
             )
         );
     };
+
+    async function validateMinimumOrder(
+        pincode: string,
+        amount: number
+    ): Promise<{ valid: boolean; message?: string }> {
+        try {
+            const res = await fetch(
+                `https://api.postalpincode.in/pincode/${pincode}`
+            );
+            const data = await res.json();
+
+            if (!data || data[0].Status !== "Success") {
+                return {
+                    valid: false,
+                    message: "Invalid pincode",
+                };
+            }
+
+            const state = data[0].PostOffice[0].State;
+            let minAmount = config?.otherStateMinOrderValue || 5000;
+            if (state === "Tamil Nadu") {
+                minAmount = config?.tnMinOrderValue || 3000;
+            }
+
+            if (amount < minAmount) {
+                return {
+                    valid: false,
+                    message: `Minimum order for ${state} is ₹${minAmount}`,
+                };
+            }
+
+            return { valid: true };
+
+        } catch {
+            return {
+                valid: false,
+                message: "Unable to validate pincode",
+            };
+        }
+    }
 
     const removeItem = (productId: string) => {
         if (!canAdjust) return;
@@ -150,6 +207,31 @@ export default function AdjustOrder() {
 
     async function handleSave() {
         if (!orderId) return;
+
+        const pincode =
+            order?.pincode ||
+            order?.address?.match(/\b\d{6}\b/)?.[0];
+
+        if (!pincode) {
+            showAlert({
+                type: "error",
+                message: "Pincode not found for validation",
+            });
+            return;
+        }
+
+        const validation = await validateMinimumOrder(
+            pincode,
+            subtotal
+        );
+
+        if (!validation.valid) {
+            showAlert({
+                type: "error",
+                message: validation.message || "Minimum order not met",
+            });
+            return;
+        }
 
         try {
             setSaving(true);
@@ -336,9 +418,25 @@ export default function AdjustOrder() {
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
                             <div className="text-center sm:text-left">
                                 <p className="text-sm text-gray-500">Updated Total</p>
-                                <p className="text-2xl font-bold text-[var(--color-primary)]">
-                                    ₹{totalAmount}
-                                </p>
+                                <div className="text-sm space-y-1 text-right sm:text-left">
+                                    <p>Subtotal: ₹{subtotal}</p>
+
+                                    {packagingCharge > 0 && (
+                                        <p className="text-gray-600">
+                                            Packaging ({packagingPercent}%): ₹{packagingCharge}
+                                        </p>
+                                    )}
+
+                                    {gstAmount > 0 && (
+                                        <p className="text-gray-600">
+                                            GST ({gstPercent}%): ₹{gstAmount}
+                                        </p>
+                                    )}
+
+                                    <p className="text-xl font-bold text-[var(--color-primary)]">
+                                        ₹{grandTotal}
+                                    </p>
+                                </div>
                             </div>
 
                             <div
@@ -390,7 +488,7 @@ export default function AdjustOrder() {
                     <div className="space-y-1">
                         <p className="text-sm">Old Total: ₹{oldTotal}</p>
                         <p className="font-semibold">
-                            New Total: ₹{totalAmount}
+                            New Total: ₹{grandTotal}
                         </p>
                         {diffAmount !== 0 && (
                             <p

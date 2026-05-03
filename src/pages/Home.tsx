@@ -25,6 +25,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showCartAlert, setShowCartAlert] = useState(false);
+  const [prevAuth, setPrevAuth] = useState(false);
 
   useEffect(() => {
     fetchInitial();
@@ -35,14 +36,15 @@ export default function Home() {
     const hasItems = Object.keys(items).length > 0;
     const alreadyShown = sessionStorage.getItem("cartAlertShown");
 
-    if (isAuthenticated && hasItems && !alreadyShown) {
+    if (!prevAuth && isAuthenticated && hasItems && !alreadyShown) {
       setShowCartAlert(true);
       sessionStorage.setItem("cartAlertShown", "true");
     }
-  }, [isAuthenticated, items]);
+
+    setPrevAuth(isAuthenticated);
+  }, [isAuthenticated]);
 
   const isSearching = search.length >= 1;
-
   const displayProducts = isSearching
     ? products.filter((p) =>
       p.name.toLowerCase().includes(search.toLowerCase())

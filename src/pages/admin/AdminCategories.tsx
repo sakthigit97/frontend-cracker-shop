@@ -204,6 +204,7 @@ export default function AdminCategories() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="p-3 text-left">Name</th>
+                                    <th className="p-3 text-left">ID</th>
                                     <th className="p-3 text-left">Status</th>
                                     <th className="p-3 text-left">Action</th>
                                 </tr>
@@ -216,10 +217,8 @@ export default function AdminCategories() {
                                             key={c.categoryId}
                                             className="border-t"
                                         >
-                                            {/* Name */}
                                             <td className="p-3">{c.name}</td>
-
-                                            {/* Status */}
+                                            <td className="p-3">{c.categoryId}</td>
                                             <td className="p-3">
                                                 <div className="flex items-center gap-2">
                                                     <Toggle

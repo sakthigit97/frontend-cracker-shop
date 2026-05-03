@@ -187,6 +187,7 @@ export default function AdminBrands() {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="p-3 text-left">Name</th>
+                                <th className="p-3 text-left">ID</th>
                                 <th className="p-3 text-left">Status</th>
                                 <th className="p-3 text-left">Action</th>
                             </tr>
@@ -197,6 +198,7 @@ export default function AdminBrands() {
                                 data.items.map((b: any) => (
                                     <tr key={b.brandId} className="border-t">
                                         <td className="p-3">{b.name}</td>
+                                        <td>{b.brandId}</td>
                                         <td className="p-3">
                                             <div className="flex items-center gap-2">
                                                 <Toggle

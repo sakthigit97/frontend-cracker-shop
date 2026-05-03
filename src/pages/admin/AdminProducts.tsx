@@ -24,7 +24,6 @@ export default function AdminProducts() {
         null
     );
     const navigate = useNavigate();
-
     const [filters, setFilters] = useState({
         search: "",
         brandId: "",
@@ -245,6 +244,7 @@ export default function AdminProducts() {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="p-3 text-left">Name</th>
+                                <th className="p-3 text-left">ID</th>
                                 <th className="p-3 text-left">Price</th>
                                 <th className="p-3 text-left">Available Quantity</th>
                                 <th className="p-3 text-left">Brand</th>
@@ -258,6 +258,7 @@ export default function AdminProducts() {
                                 data.items.map((p: any) => (
                                     <tr key={p.productId} className="border-t">
                                         <td className="p-3">{p.name}</td>
+                                        <td className="p-3">{p.productId}</td>
                                         <td className="p-3">₹{p.price}</td>
                                         <td className="p-3">{p.quantity || 0}</td>
                                         <td>{brandMap[p.brandId] || "-"}</td>
