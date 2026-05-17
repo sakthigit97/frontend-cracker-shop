@@ -8,6 +8,7 @@ import { useConfigStore } from "../store/config.store";
 import { useAlert } from "../store/alert.store";
 import { INDIA_STATES } from "../utils/states";
 import { calculateOrderAmounts } from "../utils/pricing";
+import PrivacyPolicy from "./PrivacyPolicy";
 
 type ProfileResponse = {
   success: boolean;
@@ -45,6 +46,7 @@ export default function Checkout() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [minOrderValid, setMinOrderValid] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const totalAmount = useMemo(
     () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     [products]
@@ -580,14 +582,13 @@ export default function Checkout() {
               />
               <span>
                 I agree to the{" "}
-                <a
-                  href="/privacy-policy"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
                   className="text-blue-600 hover:underline"
                 >
                   Terms & Conditions
-                </a>
+                </button>
               </span>
             </label>
 
@@ -655,6 +656,43 @@ export default function Checkout() {
           )}
         </div>
       </div>
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+
+          <div className="
+      bg-white
+      rounded-xl
+      w-full
+      max-w-4xl
+      max-h-[90vh]
+      flex
+      flex-col
+      overflow-hidden
+    ">
+
+            <div className="flex justify-between items-center border-b p-4">
+
+              <h2 className="font-semibold text-lg">
+                Terms & Conditions
+              </h2>
+
+              <button
+                onClick={() => setShowTermsModal(false)}
+                className="text-xl text-gray-500 hover:text-black"
+              >
+                ✕
+              </button>
+
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-4">
+              <PrivacyPolicy />
+            </div>
+
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }

@@ -33,7 +33,10 @@ export default function AdminConfigPage() {
                 setForm({
                     ...res,
                     adminMobile: res.adminMobile || "",
+                    adminWhatsapp: res.adminWhatsapp || "",
                     adminEmail: res.adminEmail || "",
+                    adminAddress: res.adminAddress || "",
+                    disableGstForTN: res.disableGstForTN || false,
                     sliderImages: fixedSliderImages
                 });
             } catch {
@@ -104,11 +107,19 @@ export default function AdminConfigPage() {
         try {
             const isValidMobile = /^[6-9]\d{9}$/.test(form.adminMobile);
             const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.adminEmail);
+            const isValidWhatsapp = /^[6-9]\d{9}$/.test(form.adminWhatsapp)
 
             if (!isValidMobile) {
                 showAlert({
                     type: "error",
                     message: "Enter a valid 10-digit mobile number",
+                });
+                return;
+            }
+            if (!isValidWhatsapp) {
+                showAlert({
+                    type: "error",
+                    message: "Enter valid WhatsApp number",
                 });
                 return;
             }
@@ -264,6 +275,19 @@ export default function AdminConfigPage() {
                                 }))
                             }
                         />
+                        <input
+                            type="tel"
+                            maxLength={10}
+                            className="border border-gray-300 rounded-lg p-3 w-full"
+                            placeholder="Admin WhatsApp Number"
+                            value={form.adminWhatsapp || ""}
+                            onChange={(e) =>
+                                setForm((p: any) => ({
+                                    ...p,
+                                    adminWhatsapp: e.target.value.replace(/\D/g, ""),
+                                }))
+                            }
+                        />
 
                         <input
                             type="email"
@@ -277,6 +301,35 @@ export default function AdminConfigPage() {
                                 }))
                             }
                         />
+
+                        <textarea
+                            rows={4}
+                            className="border border-gray-300 rounded-lg p-3 w-full resize-none"
+                            placeholder="Admin Address"
+                            value={form.adminAddress || ""}
+                            onChange={(e) =>
+                                setForm((p: any) => ({
+                                    ...p,
+                                    adminAddress: e.target.value,
+                                }))
+                            }
+                        />
+
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={form.disableGstForTN || false}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        disableGstForTN: e.target.checked,
+                                    }))
+                                }
+                            />
+
+                            Disable GST for Tamil Nadu
+                        </label>
+
                     </div>
 
                     {/* Slider */}

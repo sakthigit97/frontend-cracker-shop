@@ -18,7 +18,8 @@ export type GlobalConfig = {
     adminWhatsapp: string;
     additionalContact: string;
     adminAddress: string;
-    location: string
+    location: string;
+    disableGstForTN: boolean;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

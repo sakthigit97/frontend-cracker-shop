@@ -52,55 +52,60 @@ export default function AdminOrderDetails() {
         STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
-
     async function handleDownloadInvoice() {
         if (downloading) return;
-        try {
 
+        try {
             setDownloading(true);
+
             const auth = localStorage.getItem("auth");
             const token = auth ? JSON.parse(auth).token : null;
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
-            if (isMobile) {
-                const url = `${apiUrl}?token=${encodeURIComponent(token || '')}`
-                window.open(url, "_blank");
-                return;
-            }
 
-            const res = await fetch(
-                apiUrl,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(token && { Authorization: `Bearer ${token}` }),
-                    },
-                }
-            );
+            const apiUrl =
+                `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
+
+            const res = await fetch(apiUrl, {
+                method: "GET",
+                headers: {
+                    ...(token && {
+                        Authorization: `Bearer ${token}`,
+                    }),
+                },
+            });
 
             if (!res.ok) {
                 const errorText = await res.text();
-                throw new Error(errorText || "Invoice download failed");
+                throw new Error(
+                    errorText || "Invoice download failed"
+                );
             }
 
             const blob = await res.blob();
+
             if (blob.type !== "application/pdf") {
-                throw new Error("Invalid invoice file received");
+                throw new Error(
+                    "Invalid invoice file received"
+                );
             }
 
             const url = window.URL.createObjectURL(blob);
+
             const link = document.createElement("a");
             link.href = url;
             link.download = `invoice-${order.orderId}.pdf`;
+
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            link.remove();
+
             window.URL.revokeObjectURL(url);
+
         } catch (err: any) {
             showAlert({
                 type: "error",
-                message: err.message || "Unable to download invoice",
+                message:
+                    err.message ||
+                    "Unable to download invoice",
             });
         } finally {
             setDownloading(false);

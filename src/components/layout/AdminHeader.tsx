@@ -67,6 +67,10 @@ export default function AdminHeader() {
                         Discounts
                     </Link>
 
+                    <Link to="/admin/queries" className="hover:text-[var(--color-accent)]">
+                        Queries
+                    </Link>
+
                     <Link to="/admin/users" className="hover:text-[var(--color-accent)]">
                         Users
                     </Link>
@@ -131,6 +135,9 @@ export default function AdminHeader() {
                         </Link>
                         <Link onClick={() => setOpen(false)} to="/admin/discounts">
                             Discounts
+                        </Link>
+                        <Link onClick={() => setOpen(false)} to="/admin/queries">
+                            Queries
                         </Link>
                         <Link onClick={() => setOpen(false)} to="/admin/users">
                             Users

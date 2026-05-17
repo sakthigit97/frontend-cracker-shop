@@ -33,7 +33,8 @@ export default function Contact() {
       return;
     }
 
-    if (!/^[6-9]\d{9}$/.test(form.phone)) {
+    const phone = form.phone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(phone)) {
       showAlert({
         type: "error",
         message: "Enter valid 10-digit mobile number",
@@ -54,7 +55,7 @@ export default function Contact() {
 
       await contactUsApi({
         name: form.name.trim(),
-        phone: form.phone.trim(),
+        phone: form.phone.replace(/\D/g, ""),
         email: form.email.trim(),
         message: form.message.trim(),
       });

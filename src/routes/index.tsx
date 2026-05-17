@@ -42,6 +42,7 @@ import AdminDiscountsPage from "../pages/admin/AdminDiscountsPage";
 import AdminEditDiscount from "../pages/admin/AdminEditDiscount";
 import RevenueReport from "../pages/admin/reports/RevenueReport";
 import ProductReport from "../pages/admin/reports/ProductReport";
+import AdminContacts from "../pages/admin/AdminContacts";
 
 
 export default function AppRoutes() {
@@ -103,6 +104,7 @@ export default function AppRoutes() {
             <Route path="/admin/discounts/:discountId/edit" element={<AdminEditDiscount />} />
             <Route path="/admin/reports/revenue" element={<RevenueReport />} />
             <Route path="/admin/reports/products" element={<ProductReport />} />
+            <Route path="/admin/queries" element={<AdminContacts />} />
           </Route>
         </Route>
       </Routes>
