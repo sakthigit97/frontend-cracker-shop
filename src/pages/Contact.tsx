@@ -123,7 +123,7 @@ export default function Contact() {
           </p>
           <div className="text-sm text-[var(--color-muted)] space-y-3">
             <a
-              href="https://www.google.com/maps?q=Sivakasi,Tamil+Nadu"
+              href="https://maps.app.goo.gl/2TDNyJzyhDA1V9wAA?g_st=ipc"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
@@ -176,7 +176,7 @@ export default function Contact() {
             )}
             <div className="pt-4 flex justify-center">
               <a
-                href="https://www.google.com/maps?q=Sivakasi,Tamil+Nadu"
+                href="https://maps.app.goo.gl/2TDNyJzyhDA1V9wAA?g_st=ipc"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="

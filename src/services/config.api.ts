@@ -18,6 +18,7 @@ export type GlobalConfig = {
     adminWhatsapp: string;
     additionalContact: string;
     adminAddress: string;
+    location: string
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

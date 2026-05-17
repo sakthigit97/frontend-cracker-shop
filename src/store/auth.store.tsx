@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
-
 import { useCartSync } from "../hooks/useCartSync";
 import { mergeCartApi, getCartApi } from "../services/cart.api";
 import { cartStore } from "./cart.store";
@@ -54,7 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useCartSync(!!user);
   useCartStorageSync();
 
-  const logout = () => {
+  const logout = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+
     localStorage.removeItem("auth");
     sessionStorage.removeItem("cartAlertShown");
     setUser(null);
@@ -62,35 +65,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     cartStore.getState().unlock();
     useOrdersStore.getState().clear();
     clearConfig();
-  };
+  }, []);
 
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!user) return;
 
-    let idleTimer: ReturnType<typeof setTimeout>;
     const resetIdleTimer = () => {
-      clearTimeout(idleTimer);
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
 
-      idleTimer = setTimeout(() => {
+      idleTimerRef.current = setTimeout(() => {
         console.log("Logging out due to inactivity...");
         logout();
       }, 20 * 60 * 1000);
     };
 
-    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"]
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "pointerdown"
+    ];
     events.forEach((event) => {
-      window.addEventListener(event, resetIdleTimer);
+      window.addEventListener(event, resetIdleTimer, { passive: true });
     });
 
     resetIdleTimer();
 
     return () => {
-      clearTimeout(idleTimer);
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+
       events.forEach((event) => {
         window.removeEventListener(event, resetIdleTimer);
       });
     };
-  }, [user]);
+  }, [user, logout]);
 
   useEffect(() => {
     loadConfig();
@@ -109,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, logout]);
 
   const login = async (data: AuthUser) => {
     localStorage.setItem("auth", JSON.stringify(data));

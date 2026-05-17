@@ -6,7 +6,7 @@ export const contactUsApi = async (payload: {
     email?: string;
     message?: string;
 }) => {
-    return apiFetch("/contact-us", {
+    return apiFetch("/contact", {
         method: "POST",
         body: JSON.stringify(payload),
     });
