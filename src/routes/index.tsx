@@ -43,6 +43,8 @@ import AdminEditDiscount from "../pages/admin/AdminEditDiscount";
 import RevenueReport from "../pages/admin/reports/RevenueReport";
 import ProductReport from "../pages/admin/reports/ProductReport";
 import AdminContacts from "../pages/admin/AdminContacts";
+import ComboPackages from "../pages/ComboPackages";
+import ComboPackageDetails from "../pages/ComboPackageDetails";
 
 
 export default function AppRoutes() {
@@ -60,6 +62,9 @@ export default function AppRoutes() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/combo-packages" element={<ComboPackages />} />
+          <Route path="/combo-packages/:packageId" element={<ComboPackageDetails />}
+          />
         </Route>
 
         {/* ================= AUTH ================= */}

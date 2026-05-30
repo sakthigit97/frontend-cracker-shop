@@ -61,6 +61,9 @@ export default function Header() {
           <Link to="/products" className="hover:text-[var(--color-accent)]">
             Products
           </Link>
+          <Link to="/combo-packages" className="hover:text-[var(--color-accent)]">
+            Combo Packages
+          </Link>
 
           <Link to="/contact" className="hover:text-[var(--color-accent)]">
             Contact us
@@ -189,6 +192,9 @@ export default function Header() {
             </Link>
             <Link onClick={() => setOpen(false)} to="/products">
               Products
+            </Link>
+            <Link onClick={() => setOpen(false)} to="/combo-packages">
+              Combo Packages
             </Link>
             <Link onClick={() => setOpen(false)} to="/contact">
               Contact us

@@ -18,6 +18,8 @@ export default function AdminConfigPage() {
     const [form, setForm] = useState<any>(null);
     const fileRef = useRef<HTMLInputElement | null>(null);
     const [uploadIndex, setUploadIndex] = useState<number | null>(null);
+    const packageFileRef = useRef<HTMLInputElement | null>(null);
+    const [packageUploadIndex, setPackageUploadIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -37,7 +39,8 @@ export default function AdminConfigPage() {
                     adminEmail: res.adminEmail || "",
                     adminAddress: res.adminAddress || "",
                     disableGstForTN: res.disableGstForTN || false,
-                    sliderImages: fixedSliderImages
+                    sliderImages: fixedSliderImages,
+                    packageTags: res.packageTags || []
                 });
             } catch {
                 showAlert({ type: "error", message: "Failed to load config" });
@@ -82,6 +85,73 @@ export default function AdminConfigPage() {
         }
     };
 
+    const addPackageTag = () => {
+        setForm((prev: any) => ({
+            ...prev,
+            packageTags: [
+                ...(prev.packageTags || []),
+                {
+                    id: crypto.randomUUID(),
+                    name: "",
+                    imageUrl: "",
+                },
+            ],
+        }));
+    };
+
+    const removePackageTag = (index: number) => {
+        setForm((prev: any) => ({
+            ...prev,
+            packageTags: prev.packageTags.filter(
+                (_: any, i: number) => i !== index
+            ),
+        }));
+    };
+
+    const handleUploadPackageImage = async (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            showAlert({
+                type: "error",
+                message: "Image must be under 3MB",
+            });
+            return;
+        }
+
+        try {
+            if (packageUploadIndex === null) return;
+
+            const presign = await getSliderPresign({
+                fileName: file.name,
+                contentType: file.type,
+            });
+
+            await uploadFilesToS3(
+                [{ uploadUrl: presign.uploadUrl }],
+                [file]
+            );
+
+            setForm((prev: any) => {
+                const updated = [...(prev.packageTags || [])];
+
+                updated[packageUploadIndex].imageUrl =
+                    presign.fileUrl;
+
+                return {
+                    ...prev,
+                    packageTags: updated,
+                };
+            });
+        } catch {
+            showAlert({
+                type: "error",
+                message: "Upload failed",
+            });
+        }
+    };
+
     const addSlider = () => {
         setForm((prev: any) => ({
             ...prev,
@@ -107,7 +177,7 @@ export default function AdminConfigPage() {
         try {
             const isValidMobile = /^[6-9]\d{9}$/.test(form.adminMobile);
             const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.adminEmail);
-            const isValidWhatsapp = /^[6-9]\d{9}$/.test(form.adminWhatsapp)
+            const isValidWhatsapp = /^[6-9]\d{9}$/.test(form.adminWhatsapp);
 
             if (!isValidMobile) {
                 showAlert({
@@ -116,6 +186,7 @@ export default function AdminConfigPage() {
                 });
                 return;
             }
+
             if (!isValidWhatsapp) {
                 showAlert({
                     type: "error",
@@ -131,8 +202,49 @@ export default function AdminConfigPage() {
                 });
                 return;
             }
+
+            const invalidPackage = (form.packageTags || []).some(
+                (p: any) => !p.name?.trim()
+            );
+
+            if (invalidPackage) {
+                showAlert({
+                    type: "error",
+                    message: "Package name is required",
+                });
+                return;
+            }
+
+            const names = (form.packageTags || []).map(
+                (p: any) => p.name.trim().toLowerCase()
+            );
+
+            if (new Set(names).size !== names.length) {
+                showAlert({
+                    type: "error",
+                    message: "Duplicate package names are not allowed",
+                });
+                return;
+            }
+
             setLoading(true);
-            const updated = await updateAdminConfig(form);
+
+            const payload = {
+                ...form,
+                packageTags: (form.packageTags || []).map(
+                    (p: any) => ({
+                        id: p.name
+                            .trim()
+                            .toLowerCase()
+                            .replace(/\s+/g, "-"),
+                        name: p.name.trim(),
+                        imageUrl: p.imageUrl || "",
+                    })
+                ),
+            };
+
+            const updated = await updateAdminConfig(payload);
+
             setConfig(updated);
 
             showAlert({
@@ -142,7 +254,10 @@ export default function AdminConfigPage() {
 
             navigate("/admin/configs");
         } catch {
-            showAlert({ type: "error", message: "Failed to update config" });
+            showAlert({
+                type: "error",
+                message: "Failed to update config",
+            });
         } finally {
             setLoading(false);
         }
@@ -392,6 +507,110 @@ export default function AdminConfigPage() {
                             type="file"
                             className="hidden"
                             onChange={handleUploadSlider}
+                        />
+                    </div>
+
+                    <div className="space-y-4 border border-gray-200 rounded-xl p-4">
+                        <p className="text-sm font-medium">
+                            Package Tags
+                        </p>
+
+                        {(form.packageTags || []).map(
+                            (tag: any, index: number) => (
+                                <div
+                                    key={tag.id}
+                                    className="
+                    border
+                    rounded-xl
+                    p-4
+                    space-y-3
+                    bg-gray-50
+                "
+                                >
+                                    {tag.imageUrl ? (
+                                        <img
+                                            src={tag.imageUrl}
+                                            className="
+                            h-24
+                            w-full
+                            object-cover
+                            rounded-lg
+                            border
+                        "
+                                        />
+                                    ) : (
+                                        <p className="text-xs text-gray-400">
+                                            No image uploaded
+                                        </p>
+                                    )}
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setPackageUploadIndex(index);
+                                            packageFileRef.current?.click();
+                                        }}
+                                    >
+                                        {tag.imageUrl
+                                            ? "Change Image"
+                                            : "Upload Image"}
+                                    </Button>
+
+                                    <input
+                                        className="
+                        border
+                        border-gray-300
+                        rounded-lg
+                        p-3
+                        w-full
+                    "
+                                        placeholder="Package Name"
+                                        value={tag.name || ""}
+                                        onChange={(e) => {
+                                            const value =
+                                                e.target.value;
+
+                                            setForm((prev: any) => {
+                                                const updated = [
+                                                    ...prev.packageTags,
+                                                ];
+
+                                                updated[index].name =
+                                                    value;
+
+                                                return {
+                                                    ...prev,
+                                                    packageTags:
+                                                        updated,
+                                                };
+                                            });
+                                        }}
+                                    />
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            removePackageTag(index)
+                                        }
+                                    >
+                                        Remove
+                                    </Button>
+                                </div>
+                            )
+                        )}
+
+                        <Button
+                            variant="outline"
+                            onClick={addPackageTag}
+                        >
+                            + Add Package Tag
+                        </Button>
+
+                        <input
+                            ref={packageFileRef}
+                            type="file"
+                            className="hidden"
+                            onChange={handleUploadPackageImage}
                         />
                     </div>
 

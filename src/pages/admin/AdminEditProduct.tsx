@@ -18,7 +18,7 @@ export default function AdminEditProduct() {
     const { productId } = useParams();
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-    const { brands, categories, load } = useMetaStore();
+    const { brands, categories, load, packageTags } = useMetaStore();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -47,12 +47,14 @@ export default function AdminEditProduct() {
                     isActive: data.isActive === "true",
                     images: [],
                     videoUrl: data.videoUrl || "",
+                    packageTagIds: data.packageTagIds || [],
                 };
 
                 setForm(formData);
                 setInitialData({
                     ...formData,
                     imageUrls: data.imageUrls || [],
+                    packageTagIds: data.packageTagIds || [],
                 });
             } catch {
                 showAlert({
@@ -113,6 +115,13 @@ export default function AdminEditProduct() {
         if (
             JSON.stringify(initialData.imageUrls) !==
             JSON.stringify(existingImages)
+        ) {
+            return true;
+        }
+
+        if (
+            JSON.stringify(initialData.packageTagIds || []) !==
+            JSON.stringify(form.packageTagIds || [])
         ) {
             return true;
         }
@@ -205,6 +214,7 @@ export default function AdminEditProduct() {
                 isActive: form.isActive ? "true" : "false",
                 searchText,
                 imageUrls: [...existingImages, ...newImageUrls],
+                packageTagIds: form.packageTagIds || [],
             });
 
             showAlert({
@@ -260,6 +270,7 @@ export default function AdminEditProduct() {
                         brands={brands}
                         categories={categories}
                         loading={loading}
+                        packageTags={packageTags}
                         existingImages={existingImages}
                         onRemoveImage={(url) =>
                             setExistingImages((imgs) =>

@@ -20,6 +20,7 @@ export type GlobalConfig = {
     adminAddress: string;
     location: string;
     disableGstForTN: boolean;
+    packageTags: string[];
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

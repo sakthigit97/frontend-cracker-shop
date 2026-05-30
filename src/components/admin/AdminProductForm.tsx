@@ -11,6 +11,7 @@ export interface ProductFormData {
     images: File[];
     videoUrl: string;
     description: string;
+    packageTagIds: string[],
 }
 
 interface Props {
@@ -23,6 +24,11 @@ interface Props {
     onChange: (v: ProductFormData) => void;
     onSubmit: () => void;
     onCancel?: () => void;
+    packageTags?: {
+        id: string;
+        name: string;
+        imageUrl?: string;
+    }[];
 }
 
 const MAX_IMAGES = 3;
@@ -32,6 +38,7 @@ export default function ProductForm({
     value,
     brands,
     categories,
+    packageTags = [],
     loading,
     existingImages = [],
     onRemoveImage,
@@ -43,6 +50,16 @@ export default function ProductForm({
 
     const update = (key: keyof ProductFormData, v: any) =>
         onChange({ ...value, [key]: v });
+
+    const togglePackageTag = (tagId: string) => {
+        const current = value.packageTagIds || [];
+
+        const next = current.includes(tagId)
+            ? current.filter((id) => id !== tagId)
+            : [...current, tagId];
+
+        update("packageTagIds", next);
+    };
 
     return (
         <div className="space-y-8">
@@ -102,6 +119,34 @@ export default function ProductForm({
                             </option>
                         ))}
                     </select>
+
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium mb-2">
+                            Package Tags
+                        </label>
+
+                        {packageTags.length === 0 ? (
+                            <p className="text-sm text-gray-500">
+                                No package tags configured
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {packageTags.map((tag) => (
+                                    <label
+                                        key={tag.id}
+                                        className="flex items-center gap-3 border rounded-lg px-3 py-2"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={value.packageTagIds.includes(tag.id)}
+                                            onChange={() => togglePackageTag(tag.id)}
+                                        />
+                                        <span>{tag.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
                     <textarea
                         className="border rounded-md p-2 w-full min-h-[100px] sm:col-span-2"
@@ -255,12 +300,12 @@ export default function ProductForm({
                     bg-gray-900 text-white
                     font-medium
                     hover:opacity-90
-                    transition" 
-                    onClick={onCancel}>
+                    transition"
+                        onClick={onCancel}>
                         Cancel
                     </Button>
                 )}
-                <Button 
+                <Button
                     className="
                     w-full sm:w-auto
                     px-5 py-3

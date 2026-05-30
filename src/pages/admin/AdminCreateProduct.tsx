@@ -13,7 +13,7 @@ import { useAdminProductsStore } from "../../store/adminProducts.store";
 
 export default function AdminCreateProduct() {
     const navigate = useNavigate();
-    const { brands, categories, load } = useMetaStore();
+    const { brands, categories, load, packageTags } = useMetaStore();
     const [loading, setLoading] = useState(false);
     const { showAlert } = useAlert();
 
@@ -27,6 +27,7 @@ export default function AdminCreateProduct() {
         images: [],
         videoUrl: "",
         description: "",
+        packageTagIds: [],
     });
 
     useEffect(() => {
@@ -107,6 +108,7 @@ export default function AdminCreateProduct() {
                 description: form.description,
                 searchText,
                 isActive: form.isActive ? "true" : "false",
+                packageTagIds: form.packageTagIds || [],
             });
 
             showAlert({
@@ -162,6 +164,7 @@ export default function AdminCreateProduct() {
                         value={form}
                         brands={brands}
                         categories={categories}
+                        packageTags={packageTags}
                         loading={loading}
                         onChange={setForm}
                         onSubmit={handleSubmit}
