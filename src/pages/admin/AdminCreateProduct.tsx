@@ -28,6 +28,7 @@ export default function AdminCreateProduct() {
         videoUrl: "",
         description: "",
         packageTagIds: [],
+        aiTags: []
     });
 
     useEffect(() => {
@@ -81,11 +82,8 @@ export default function AdminCreateProduct() {
             return;
         }
 
-        const brandName =
-            brands.find((b) => b.id === form.brandId)?.name || "";
-        const categoryName =
-            categories.find((c) => c.id === form.categoryId)?.name || "";
-
+        const brandName = brands.find((b) => b.id === form.brandId)?.name || "";
+        const categoryName = categories.find((c) => c.id === form.categoryId)?.name || "";
         const searchText = [form.name, brandName, categoryName]
             .join(" ")
             .toLowerCase();
@@ -95,7 +93,6 @@ export default function AdminCreateProduct() {
 
             const presignRes = await getPresignedUrls(form.images);
             await uploadFilesToS3(presignRes.uploads, form.images);
-
             await createProduct({
                 productId: presignRes.productId,
                 name: form.name.trim(),
@@ -109,6 +106,7 @@ export default function AdminCreateProduct() {
                 searchText,
                 isActive: form.isActive ? "true" : "false",
                 packageTagIds: form.packageTagIds || [],
+                aiTags: form.aiTags || [],
             });
 
             showAlert({

@@ -46,6 +46,7 @@ export const updateAdminProduct = async (
         searchText?: string;
         isActive?: "true" | "false";
         packageTagIds?: string[];
+        aiTags?: string[];
     }
 ) => {
     return apiFetch(`/admin/products/${productId}`, {

@@ -9,6 +9,7 @@ interface Props {
   onAddToCart?: (product: Product) => void;
   onIncrease?: (product: Product) => void;
   onDecrease?: (product: Product) => void;
+  hideCartControls?: boolean;
 }
 
 function ProductCard({
@@ -17,6 +18,7 @@ function ProductCard({
   onAddToCart,
   onIncrease,
   onDecrease,
+  hideCartControls = false,
 }: Props) {
   const navigate = useNavigate();
   const available_qty = product?.qty || 0;
@@ -106,26 +108,28 @@ function ProductCard({
             </span>
           )}
         </div>
+        {!hideCartControls && (
 
-        <div className="mt-auto pt-3">
-          {quantityInCart === 0 ? (
-            <Button
-              onClick={(e) => {
-                stop(e);
-                onAddToCart?.(product);
-              }}
-              disabled={available_qty === 0}
-              className={`mt-2 w-full text-sm ${available_qty === 0
-                ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                : ""
-                }`}
-            >
-              {available_qty === 0 ? "Out of Stock" : "Add to Cart"}
-            </Button>
-          ) : (
-            <div
-              onClick={stop}
-              className="
+          <>
+            <div className="mt-auto pt-3">
+              {quantityInCart === 0 ? (
+                <Button
+                  onClick={(e) => {
+                    stop(e);
+                    onAddToCart?.(product);
+                  }}
+                  disabled={available_qty === 0}
+                  className={`mt-2 w-full text-sm ${available_qty === 0
+                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                    : ""
+                    }`}
+                >
+                  {available_qty === 0 ? "Out of Stock" : "Add to Cart"}
+                </Button>
+              ) : (
+                <div
+                  onClick={stop}
+                  className="
               mt-2
               flex
               items-center
@@ -142,27 +146,29 @@ function ProductCard({
               hover:opacity-90
               transition-all
             "
-            >
+                >
 
-              <button
-                onClick={() => onDecrease?.(product)}
-                className="text-lg font-bold px-2 hover:scale-110 transition-transform"
-              >
-                −
-              </button>
-              <span className="text-sm font-semibold">
-                {quantityInCart}
-              </span>
+                  <button
+                    onClick={() => onDecrease?.(product)}
+                    className="text-lg font-bold px-2 hover:scale-110 transition-transform"
+                  >
+                    −
+                  </button>
+                  <span className="text-sm font-semibold">
+                    {quantityInCart}
+                  </span>
 
-              <button
-                onClick={() => onIncrease?.(product)}
-                className="text-lg font-bold px-2 hover:scale-110 transition-transform"
-              >
-                +
-              </button>
+                  <button
+                    onClick={() => onIncrease?.(product)}
+                    className="text-lg font-bold px-2 hover:scale-110 transition-transform"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

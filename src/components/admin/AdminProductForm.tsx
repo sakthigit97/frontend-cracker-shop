@@ -1,5 +1,6 @@
 import Button from "../ui/Button";
 import { useAlert } from "../../store/alert.store";
+import { PRODUCT_AI_TAGS } from "../../utils/productAiTags";
 
 export interface ProductFormData {
     name: string;
@@ -12,6 +13,7 @@ export interface ProductFormData {
     videoUrl: string;
     description: string;
     packageTagIds: string[],
+    aiTags: string[];
 }
 
 interface Props {
@@ -59,6 +61,16 @@ export default function ProductForm({
             : [...current, tagId];
 
         update("packageTagIds", next);
+    };
+
+    const toggleAiTag = (tag: string) => {
+        const current = value.aiTags || [];
+
+        const next = current.includes(tag)
+            ? current.filter(t => t !== tag)
+            : [...current, tag];
+
+        update("aiTags", next);
     };
 
     return (
@@ -130,7 +142,11 @@ export default function ProductForm({
                                 No package tags configured
                             </p>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-2 
+                                border border-gray-200
+                                rounded-xl
+                                p-4
+                                bg-gray-50/50">
                                 {packageTags.map((tag) => (
                                     <label
                                         key={tag.id}
@@ -146,6 +162,65 @@ export default function ProductForm({
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium mb-3">
+                            AI Search Tags
+                        </label>
+
+                        <div className="space-y-4 
+        border border-gray-200
+        rounded-xl
+        p-4
+        bg-gray-50/50">
+
+                            {Object.entries(PRODUCT_AI_TAGS).map(
+                                ([group, tags]) => (
+                                    <div
+                                        key={group}
+                                    >
+                                        <p className="text-xs font-semibold text-gray-600 mb-2">
+                                            {group}
+                                        </p>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            {tags.map((tag) => {
+                                                const selected =
+                                                    value.aiTags?.includes(tag);
+
+                                                return (
+                                                    <button
+                                                        key={tag}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            toggleAiTag(tag)
+                                                        }
+                                                        className={`
+                                        px-3 py-1.5
+                                        rounded-full
+                                        text-sm
+                                        border
+                                        transition
+                                        ${selected
+                                                                ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+                                                                : "bg-white text-gray-700 border-gray-300 hover:border-[var(--color-primary)]"
+                                                            }
+                                    `}
+                                                    >
+                                                        {selected ? "✓ " : ""}
+                                                        {tag}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )
+                            )}
+                            <p className="text-xs text-gray-500 mt-3">
+                                Used by AI Smart Search and Recommendation Engine
+                            </p>
+                        </div>
                     </div>
 
                     <textarea

@@ -48,6 +48,7 @@ export default function AdminEditProduct() {
                     images: [],
                     videoUrl: data.videoUrl || "",
                     packageTagIds: data.packageTagIds || [],
+                    aiTags: data.aiTags || []
                 };
 
                 setForm(formData);
@@ -55,6 +56,7 @@ export default function AdminEditProduct() {
                     ...formData,
                     imageUrls: data.imageUrls || [],
                     packageTagIds: data.packageTagIds || [],
+                    aiTags: data.aiTags || []
                 });
             } catch {
                 showAlert({
@@ -122,6 +124,13 @@ export default function AdminEditProduct() {
         if (
             JSON.stringify(initialData.packageTagIds || []) !==
             JSON.stringify(form.packageTagIds || [])
+        ) {
+            return true;
+        }
+
+        if (
+            JSON.stringify(initialData.aiTags || []) !==
+            JSON.stringify(form.aiTags || [])
         ) {
             return true;
         }
@@ -215,6 +224,7 @@ export default function AdminEditProduct() {
                 searchText,
                 imageUrls: [...existingImages, ...newImageUrls],
                 packageTagIds: form.packageTagIds || [],
+                aiTags: form.aiTags || [],
             });
 
             showAlert({

@@ -45,6 +45,7 @@ import ProductReport from "../pages/admin/reports/ProductReport";
 import AdminContacts from "../pages/admin/AdminContacts";
 import ComboPackages from "../pages/ComboPackages";
 import ComboPackageDetails from "../pages/ComboPackageDetails";
+import AiAssistant from "../pages/AiAssistant";
 
 
 export default function AppRoutes() {
@@ -63,8 +64,8 @@ export default function AppRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/combo-packages" element={<ComboPackages />} />
-          <Route path="/combo-packages/:packageId" element={<ComboPackageDetails />}
-          />
+          <Route path="/combo-packages/:packageId" element={<ComboPackageDetails />} />
+          <Route path="/ai-assistant" element={<AiAssistant />} />
         </Route>
 
         {/* ================= AUTH ================= */}
