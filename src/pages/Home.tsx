@@ -54,7 +54,6 @@ export default function Home() {
   return (
     <div className="space-y-6">
 
-      {/* Popup */}
       {showCartAlert && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-[90%] max-w-sm shadow-lg text-center space-y-4">

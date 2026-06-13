@@ -10,6 +10,7 @@ interface Props {
   onIncrease?: (product: Product) => void;
   onDecrease?: (product: Product) => void;
   hideCartControls?: boolean;
+  buttonLabel?: string;
 }
 
 function ProductCard({
@@ -19,6 +20,7 @@ function ProductCard({
   onIncrease,
   onDecrease,
   hideCartControls = false,
+  buttonLabel = "Add to Cart",
 }: Props) {
   const navigate = useNavigate();
   const available_qty = product?.qty || 0;
@@ -29,7 +31,7 @@ function ProductCard({
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   return (
     <div
-      onClick={handleCardClick}
+      onClick={buttonLabel === "Add to Cart" ? handleCardClick : undefined}
       className="
         cursor-pointer
         bg-[var(--color-surface)]
@@ -124,28 +126,26 @@ function ProductCard({
                     : ""
                     }`}
                 >
-                  {available_qty === 0 ? "Out of Stock" : "Add to Cart"}
+                  {available_qty === 0 ? "Out of Stock" : buttonLabel}
                 </Button>
               ) : (
                 <div
                   onClick={stop}
                   className="
-              mt-2
-              flex
-              items-center
-              justify-between
-              rounded-lg
-              px-3
-              py-1.5
-
-              bg-[var(--color-primary)]
-              text-white
-              border
-              border-[var(--color-primary)]
-
-              hover:opacity-90
-              transition-all
-            "
+                    mt-2
+                    flex
+                    items-center
+                    justify-between
+                    rounded-lg
+                    px-3
+                    py-1.5
+                    bg-[var(--color-primary)]
+                    text-white
+                    border
+                    border-[var(--color-primary)]
+                    hover:opacity-90
+                    transition-all
+                  "
                 >
 
                   <button

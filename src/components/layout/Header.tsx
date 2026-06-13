@@ -9,7 +9,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, logout, user } = useAuth();
-  const items = cartStore((s) => s.items);  
+  const items = cartStore((s) => s.items);
   const { products, fetchInitial, hasFetched } = useHomeProducts();
 
   const handleLogout = () => {
@@ -61,6 +61,10 @@ export default function Header() {
 
           <Link to="/products" className="hover:text-[var(--color-accent)]">
             Products
+          </Link>
+
+          <Link to="/quick-estimate" className="hover:text-[var(--color-accent)]">
+            Quick Estimate
           </Link>
 
           <Link to="/ai-assistant" className="hover:text-[var(--color-accent)]">
@@ -198,6 +202,9 @@ export default function Header() {
             </Link>
             <Link onClick={() => setOpen(false)} to="/products">
               Products
+            </Link>
+            <Link onClick={() => setOpen(false)} to="/quick-estimate">
+              Quick Estimate
             </Link>
             <Link onClick={() => setOpen(false)} to="/ai-assistant">
               AI-Assistant
