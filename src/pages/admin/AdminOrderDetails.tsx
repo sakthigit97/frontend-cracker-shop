@@ -24,6 +24,8 @@ export default function AdminOrderDetails() {
     const [pendingPayload, setPendingPayload] = useState<{
         status?: string;
         adminComment?: string;
+        mobile: string;
+        amount: string;
     } | null>(null);
 
     const [selectedStatus, setSelectedStatus] = useState("");
@@ -60,10 +62,7 @@ export default function AdminOrderDetails() {
 
             const auth = localStorage.getItem("auth");
             const token = auth ? JSON.parse(auth).token : null;
-
-            const apiUrl =
-                `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
-
+            const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
             const res = await fetch(apiUrl, {
                 method: "GET",
                 headers: {
@@ -81,7 +80,6 @@ export default function AdminOrderDetails() {
             }
 
             const blob = await res.blob();
-
             if (blob.type !== "application/pdf") {
                 throw new Error(
                     "Invalid invoice file received"
@@ -89,15 +87,12 @@ export default function AdminOrderDetails() {
             }
 
             const url = window.URL.createObjectURL(blob);
-
             const link = document.createElement("a");
             link.href = url;
             link.download = `invoice-${order.orderId}.pdf`;
-
             document.body.appendChild(link);
             link.click();
             link.remove();
-
             window.URL.revokeObjectURL(url);
 
         } catch (err: any) {
@@ -385,8 +380,9 @@ export default function AdminOrderDetails() {
                             if (!canSubmit) return;
                             setPendingPayload({
                                 status: selectedStatus || undefined,
-                                adminComment:
-                                    comment !== order.adminComment ? comment : undefined,
+                                adminComment: comment !== order.adminComment ? comment : undefined,
+                                mobile: order.userId || '',
+                                amount: order.totalAmount || 0
                             });
                             setShowConfirm(true);
                         }}

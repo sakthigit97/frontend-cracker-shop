@@ -4,111 +4,70 @@ import { cartStore } from "../../store/cart.store";
 import { useQuickEstimateProducts } from "../../hooks/useQuickEstimateProducts";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useMemo } from "react";
+import { useConfigStore } from "../../store/config.store";
+import { calculateOrderAmounts } from "../../utils/pricing";
 
 interface Props {
     open: boolean;
     onClose: () => void;
 }
 
-
 export default function QuickEstimateModal({
     open,
     onClose,
 }: Props) {
-
-    const {
-        products,
-    } =
-        useQuickEstimateProducts();
+    const { products } = useQuickEstimateProducts();
 
     const isEstimateEmpty = products.length === 0;
-    const addItem =
-        quickEstimateStore(
-            (s) => s.addItem
-        );
+    const addItem = quickEstimateStore((s) => s.addItem);
 
-    const removeItem =
-        quickEstimateStore(
-            (s) => s.removeItem
-        );
+    const removeItem = quickEstimateStore((s) => s.removeItem);
 
-    const clear =
-        quickEstimateStore(
-            (s) => s.clear
-        );
+    const clear = quickEstimateStore((s) => s.clear);
 
-    const cartAdd =
-        cartStore(
-            (s) => s.addItem
-        );
+    const cartAdd = cartStore((s) => s.addItem);
 
-    if (!open) {
-        return null;
-    }
+    const config = useConfigStore((s) => s.config);
 
-    const originalTotal =
-        products.reduce(
-            (sum, p) =>
-                sum +
-                (
-                    (
-                        p.originalPrice ||
-                        p.price
-                    ) *
-                    p.quantity
-                ),
-            0
-        );
+    const packagingPercent = config?.packagingPercent ?? 0;
 
-    const finalTotal =
-        products.reduce(
-            (sum, p) =>
-                sum +
-                (
-                    p.price *
-                    p.quantity
-                ),
-            0
-        );
+    const gstPercent = config?.gstPercent ?? 0;
 
-    const savings =
-        originalTotal -
-        finalTotal;
+    const originalTotal = products.reduce(
+        (sum, p) => sum + (p.originalPrice || p.price) * p.quantity,
+        0
+    );
 
-    const totalQty =
-        products.reduce(
-            (sum, p) =>
-                sum +
-                p.quantity,
-            0
-        );
+    const totalAmount = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
 
-    const addAllToCart =
-        () => {
+    const { packagingCharge, gstAmount, grandTotal } = useMemo(
+        () =>
+            calculateOrderAmounts({
+                totalAmount,
+                packagingPercent,
+                gstPercent,
+                state: "Tamil Nadu",
+                config,
+            }),
+        [totalAmount, packagingPercent, gstPercent, config]
+    );
 
-            products.forEach(
-                (
-                    product
-                ) => {
+    const savings = originalTotal - totalAmount;
 
-                    cartAdd(
-                        product.id,
-                        product.quantity
-                    );
-                }
-            );
-            clear();
-            onClose();
-        };
+    const totalQty = products.reduce((sum, p) => sum + p.quantity, 0);
+
+    const addAllToCart = () => {
+        products.forEach((product) => {
+            cartAdd(product.id, product.quantity);
+        });
+        clear();
+        onClose();
+    };
 
     const downloadPdf = () => {
-
         const doc = new jsPDF();
-
-        const formatMoney = (amount: number) =>
-            `Rs. ${amount.toLocaleString("en-IN")}`;
-
-        // HEADER
+        const formatMoney = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}`;
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(22);
@@ -116,57 +75,58 @@ export default function QuickEstimateModal({
         doc.text(
             "SIVAKASI PYRO PARK",
             14,
-            20
+            18
         );
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(14);
+        doc.setFontSize(13);
 
         doc.text(
             "Quick Estimate Summary",
             14,
-            30
+            27
+        );
+
+        doc.setFontSize(10);
+
+        doc.setTextColor(90);
+
+        doc.text(
+            "Mobile : +91 " + config?.adminMobile,
+            14,
+            34
+        );
+
+        doc.text(
+            "Email : +91 " + config?.adminEmail,
+            120,
+            34
         );
 
         doc.setDrawColor(220);
         doc.line(
             14,
-            36,
+            40,
             196,
-            36
+            40
         );
-
-        // PRODUCT TABLE
 
         autoTable(doc, {
             startY: 42,
 
-            head: [[
-                "Product",
-                "Qty",
-                "Price",
-                "Amount"
-            ]],
+            head: [["Product", "Qty", "MRP", "Offer Price", "Amount"]],
 
-            body: products.map(
-                (product) => [
+            body: products.map((product) => [
+                product.name,
 
-                    product.name,
+                String(product.quantity),
 
-                    String(
-                        product.quantity
-                    ),
+                product.originalPrice ? formatMoney(product.originalPrice) : "-",
 
-                    formatMoney(
-                        product.price
-                    ),
+                formatMoney(product.price),
 
-                    formatMoney(
-                        product.price *
-                        product.quantity
-                    )
-                ]
-            ),
+                formatMoney(product.price * product.quantity),
+            ]),
 
             theme: "striped",
 
@@ -183,94 +143,100 @@ export default function QuickEstimateModal({
 
             columnStyles: {
                 0: {
-                    cellWidth: 90,
+                    cellWidth: 72,
                 },
+
                 1: {
+                    cellWidth: 16,
                     halign: "center",
-                    cellWidth: 20,
                 },
+
                 2: {
+                    cellWidth: 28,
                     halign: "right",
-                    cellWidth: 35,
                 },
+
                 3: {
+                    cellWidth: 34,
                     halign: "right",
-                    cellWidth: 35,
                 },
+
+                4: {
+                    cellWidth: 38,
+                    halign: "right",
+                },
+            },
+
+            didParseCell: (data) => {
+                if (data.section === "body" && data.column.index === 2) {
+                    data.cell.styles.fillColor = [245, 245, 245];
+
+                    data.cell.styles.textColor = [120, 120, 120];
+                }
+
+                if (data.section === "body" && data.column.index === 3) {
+                    data.cell.styles.fontStyle = "bold";
+
+                    data.cell.styles.textColor = [15, 23, 42];
+                }
+
+                if (data.section === "body" && data.column.index === 4) {
+                    data.cell.styles.fontStyle = "bold";
+                }
             },
         });
 
-        const finalY =
-            (doc as any)
-                .lastAutoTable
-                .finalY + 10;
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-        // SUMMARY TITLE
-
-        doc.setFont(
-            "helvetica",
-            "bold"
-        );
+        doc.setFont("helvetica", "bold");
 
         doc.setFontSize(13);
 
-        doc.text(
-            "Estimate Summary",
-            14,
-            finalY
-        );
+        doc.text("Estimate Summary", 14, finalY);
 
-        // SUMMARY TABLE
+        const summaryRows: string[][] = [
+            ["Products", String(products.length)],
+
+            ["Quantity", String(totalQty)],
+
+            ["MRP Total", formatMoney(originalTotal)],
+
+            ["Discount", formatMoney(savings)],
+
+            ["Sub Total", formatMoney(totalAmount)],
+        ];
+
+        if (packagingPercent > 0 && packagingCharge > 0) {
+            summaryRows.push([
+                `Packaging (${packagingPercent}%)`,
+
+                formatMoney(packagingCharge),
+            ]);
+        }
+
+        if (gstPercent > 0 && gstAmount > 0) {
+            summaryRows.push([`GST (${gstPercent}%)`, formatMoney(gstAmount)]);
+        }
+
+        summaryRows.push(["Grand Total", formatMoney(grandTotal)]);
 
         autoTable(doc, {
             startY: finalY + 4,
 
             theme: "grid",
 
-            body: [
-                [
-                    "Products",
-                    String(
-                        products.length
-                    ),
-                ],
-
-                [
-                    "Quantity",
-                    String(
-                        totalQty
-                    ),
-                ],
-
-                [
-                    "MRP Total",
-                    formatMoney(
-                        originalTotal
-                    ),
-                ],
-
-                [
-                    "Savings",
-                    formatMoney(
-                        savings
-                    ),
-                ],
-
-                [
-                    "Final Total",
-                    formatMoney(
-                        finalTotal
-                    ),
-                ],
-            ],
+            body: summaryRows,
 
             styles: {
                 fontSize: 11,
+
+                cellPadding: 3,
             },
 
             columnStyles: {
                 0: {
                     fontStyle: "bold",
+
                     cellWidth: 70,
                 },
 
@@ -280,72 +246,66 @@ export default function QuickEstimateModal({
             },
 
             didParseCell: (data) => {
+                if (data.section !== "body") return;
 
-                if (
-                    data.row.index === 4
-                ) {
-                    data.cell.styles.fontStyle =
-                        "bold";
-
-                    data.cell.styles.fontSize =
-                        13;
+                if (summaryRows[data.row.index]?.[0] === "Discount") {
+                    data.cell.styles.textColor = [22, 163, 74];
+                    data.cell.styles.fontStyle = "bold";
                 }
 
-                if (
-                    data.row.index === 3
-                ) {
-                    data.cell.styles.textColor =
-                        [34, 139, 34];
+                if (summaryRows[data.row.index]?.[0] === "Grand Total") {
+                    data.cell.styles.fillColor = [15, 23, 42];
+                    data.cell.styles.textColor = [255, 255, 255];
+                    data.cell.styles.fontStyle = "bold";
+                    data.cell.styles.fontSize = 12;
                 }
             },
         });
 
-        const summaryEndY =
-            (doc as any)
-                .lastAutoTable
-                .finalY + 15;
+        const summaryEndY = (doc as any).lastAutoTable.finalY + 12;
 
-        // FOOTER
+        const generatedDate = new Date().toLocaleString("en-IN", {
+            dateStyle: "medium",
+            timeStyle: "short",
+        });
 
-        const generatedDate =
-            new Date()
-                .toLocaleString(
-                    "en-IN",
-                    {
-                        dateStyle:
-                            "medium",
-                        timeStyle:
-                            "short",
-                    }
-                );
-
-        doc.setFont(
-            "helvetica",
-            "normal"
-        );
+        doc.setFont("helvetica", "normal");
 
         doc.setFontSize(10);
 
-        doc.setTextColor(
-            100
-        );
+        doc.setTextColor(100);
 
-        doc.text(
-            `Generated On: ${generatedDate}`,
-            14,
-            summaryEndY
-        );
+        doc.text(`Generated On : ${generatedDate}`, 14, summaryEndY);
+
+        let footerY = summaryEndY + 8;
+
+        if (packagingPercent > 0) {
+            doc.text(`Packaging Charges (${packagingPercent}%) Included`, 14, footerY);
+
+            footerY += 6;
+        }
+
+        if (gstPercent > 0) {
+            doc.text(`GST (${gstPercent}%) Included`, 14, footerY);
+            footerY += 6;
+        }
 
         doc.text(
             "This estimate is for reference only. Prices are subject to stock availability.",
             14,
-            summaryEndY + 8
+            footerY
         );
 
-        doc.save(
-            `quick-estimate-${Date.now()}.pdf`
-        );
+        footerY += 6;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(15, 23, 42);
+        doc.text("Thank you for choosing Sivakasi Pyro Park!", 14, footerY);
+        doc.save(`quick-estimate-${Date.now()}.pdf`);
     };
+
+    if (!open) {
+        return null;
+    }
 
     return (
         <div
@@ -357,6 +317,7 @@ export default function QuickEstimateModal({
                 flex
                 justify-end
             "
+            onClick={onClose}
         >
             <div
                 className="
@@ -371,6 +332,7 @@ export default function QuickEstimateModal({
             >
 
                 <div
+                    onClick={(e) => e.stopPropagation()}
                     className="
                         p-4
                         border-b
@@ -528,94 +490,50 @@ export default function QuickEstimateModal({
                         space-y-2
                     "
                 >
-                    <div
-                        className="
-                            flex
-                            justify-between
-                        "
-                    >
-                        <span>
-                            Products
-                        </span>
-
-                        <span>
-                            {
-                                products.length
-                            }
-                        </span>
+                    <div className="flex justify-between">
+                        <span>Products</span>
+                        <span>{products.length}</span>
                     </div>
 
-                    <div
-                        className="
-                            flex
-                            justify-between
-                        "
-                    >
-                        <span>
-                            Quantity
-                        </span>
-
-                        <span>
-                            {
-                                totalQty
-                            }
-                        </span>
+                    <div className="flex justify-between">
+                        <span>Quantity</span>
+                        <span>{totalQty}</span>
                     </div>
 
-                    <div
-                        className="
-                            flex
-                            justify-between
-                        "
-                    >
-                        <span>
-                            MRP Total
-                        </span>
-
-                        <span>
-                            ₹
-                            {
-                                originalTotal.toLocaleString()
-                            }
-                        </span>
+                    <div className="flex justify-between">
+                        <span>MRP Total</span>
+                        <span>₹{originalTotal.toLocaleString()}</span>
                     </div>
 
-                    <div
-                        className="
-                            flex
-                            justify-between
-                            text-green-600
-                        "
-                    >
-                        <span>
-                            Savings
-                        </span>
-
-                        <span>
-                            ₹
-                            {
-                                savings.toLocaleString()
-                            }
-                        </span>
+                    <div className="flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span>- ₹{savings.toLocaleString()}</span>
                     </div>
 
-                    <div
-                        className="
-                            flex
-                            justify-between
-                            font-bold
-                            text-lg
-                        "
-                    >
-                        <span>
-                            Final Total
-                        </span>
+                    <div className="flex justify-between">
+                        <span>Sub Total</span>
+                        <span>₹{totalAmount.toLocaleString()}</span>
+                    </div>
+
+                    {packagingPercent > 0 && packagingCharge > 0 && (
+                        <div className="flex justify-between">
+                            <span>Packaging ({packagingPercent}%)</span>
+                            <span>₹{(packagingCharge)}</span>
+                        </div>
+                    )}
+
+                    {gstPercent > 0 && gstAmount > 0 && (
+                        <div className="flex justify-between">
+                            <span>GST ({gstPercent}%)</span>
+                            <span>₹{(gstAmount)}</span>
+                        </div>
+                    )}
+
+                    <div className="border-t pt-3 flex justify-between font-bold text-xl">
+                        <span>Grand Total</span>
 
                         <span>
-                            ₹
-                            {
-                                finalTotal.toLocaleString()
-                            }
+                            ₹{grandTotal.toLocaleString()}
                         </span>
                     </div>
 

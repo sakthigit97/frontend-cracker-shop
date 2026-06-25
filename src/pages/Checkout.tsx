@@ -47,6 +47,7 @@ export default function Checkout() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [minOrderValid, setMinOrderValid] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [mobile, setMobile] = useState("");
   const totalAmount = useMemo(
     () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     [products]
@@ -77,7 +78,6 @@ export default function Checkout() {
   useEffect(() => {
     const currentPincode =
       addressMode === "PROFILE" ? profilePincode : pincode;
-
     if (!currentPincode || currentPincode.length !== 6) {
       setMinOrderValid(false);
       return;
@@ -107,8 +107,8 @@ export default function Checkout() {
     async function fetchProfile() {
       try {
         const res: ProfileResponse = await apiFetch("/user/profile");
-
         if (!mounted || !res?.data) return;
+        setMobile(res.data.mobile);
         const formatted = `
         ${res.data.name}
         ${res.data.mobile}
@@ -116,7 +116,6 @@ export default function Checkout() {
         ${res.data.city}, ${res.data.state} - ${res.data.pincode}
         `.trim();
         setWalletCredit(res.data.walletCredit || 0);
-
         setProfileAddress(formatted);
         setProfilePicode(res.data.pincode);
       } catch {
@@ -282,6 +281,7 @@ export default function Checkout() {
           totalAmount: grandTotal,
           walletUsed: creditUsed,
           finalPayable,
+          mobile: mobile.trim()
         }),
       });
 
