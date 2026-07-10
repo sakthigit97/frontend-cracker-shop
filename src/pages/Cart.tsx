@@ -11,6 +11,7 @@ export default function Cart() {
   const removeItem = cartStore((s) => s.removeItem);
   const navigate = useNavigate();
   const locked = cartStore((s) => s.locked);
+  const clearCart = cartStore((s) => s.clear);
 
   const { products, loading } = useCartProducts();
   const isEmpty = products.length === 0;
@@ -58,28 +59,50 @@ export default function Cart() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
 
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="
-          flex items-center justify-center
-          w-9 h-9
-          rounded-full
-          bg-[var(--color-primary)]
-          text-white
-          shadow-sm
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="
+            flex items-center justify-center
+            w-9 h-9
+            rounded-full
+            bg-[var(--color-primary)]
+            text-white
+            shadow-sm
+            hover:scale-105
+            active:scale-95
+            transition-all
+        "
+          >
+            ←
+          </button>
 
-          hover:scale-105
-          active:scale-95
-          transition-all
+          <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+            Your Cart
+          </h1>
+        </div>
+
+        <button
+          onClick={() => {
+            if (window.confirm("Clear all items from the cart?")) {
+              clearCart();
+            }
+          }}
+          className="
+            flex items-center gap-2
+            text-red-600
+            hover:text-red-700
+            text-sm
+            font-medium
+            transition
         "
         >
-          ←
+          🗑
+          <span className="hidden sm:inline">
+            Clear Cart
+          </span>
         </button>
-
-        <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
-          Your Cart
-        </h1>
       </div>
 
       <div className="bg-white rounded-2xl border shadow-sm flex flex-col h-[70vh]">

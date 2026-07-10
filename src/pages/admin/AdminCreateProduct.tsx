@@ -13,7 +13,7 @@ import { useAdminProductsStore } from "../../store/adminProducts.store";
 
 export default function AdminCreateProduct() {
     const navigate = useNavigate();
-    const { brands, categories, load, packageTags } = useMetaStore();
+    const { brands, categories, load, packageTags, aiTags } = useMetaStore();
     const [loading, setLoading] = useState(false);
     const { showAlert } = useAlert();
 
@@ -163,6 +163,7 @@ export default function AdminCreateProduct() {
                         brands={brands}
                         categories={categories}
                         packageTags={packageTags}
+                        aiTags={aiTags}
                         loading={loading}
                         onChange={setForm}
                         onSubmit={handleSubmit}

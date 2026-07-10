@@ -116,6 +116,10 @@ export default function ValidationStep() {
                                     <th className="p-3 text-left">Price</th>
                                     <th className="p-3 text-left">Brand</th>
                                     <th className="p-3 text-left">Category</th>
+                                    <th className="p-3 text-left">Active</th>
+                                    <th className="p-3 text-left">Package Tags</th>
+                                    <th className="p-3 text-left">AI Tags</th>
+                                    <th className="p-3 text-left">Discount</th>
                                 </tr>
                             </thead>
 
@@ -123,9 +127,34 @@ export default function ValidationStep() {
                                 {validationResult.preview.map((r: any) => (
                                     <tr key={r.row} className="border-t">
                                         <td className="p-3">{r.name}</td>
+
                                         <td className="p-3">₹{r.price}</td>
+
                                         <td className="p-3">{r.brandId}</td>
+
                                         <td className="p-3">{r.categoryId}</td>
+
+                                        <td className="p-3">
+                                            {r.isActive ? "Yes" : "No"}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {r.packageTagIds?.length
+                                                ? r.packageTagIds.join(", ")
+                                                : "-"}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {r.aiTags?.length
+                                                ? r.aiTags.join(", ")
+                                                : "-"}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {r.discountMode
+                                                ? `${r.discountValue}${r.discountMode === "PERCENT" ? "%" : " ₹"}`
+                                                : "-"}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

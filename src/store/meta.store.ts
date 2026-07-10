@@ -5,6 +5,7 @@ interface MetaState {
     brands: any[];
     categories: any[];
     packageTags: any[];
+    aiTags: any[];
     lastLoaded: number | null;
     TTL: number;
     load: () => Promise<void>;
@@ -14,6 +15,7 @@ export const useMetaStore = create<MetaState>((set, get) => ({
     brands: [],
     categories: [],
     packageTags: [],
+    aiTags: [],
     lastLoaded: null,
     TTL: 10 * 60 * 1000,
 
@@ -39,6 +41,7 @@ export const useMetaStore = create<MetaState>((set, get) => ({
             categories: categoriesRes?.data?.items || [],
             lastLoaded: Date.now(),
             packageTags: configRes?.packageTags || [],
+            aiTags: configRes?.aiTags || [],
         });
     },
 }));

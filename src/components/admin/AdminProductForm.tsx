@@ -1,6 +1,5 @@
 import Button from "../ui/Button";
 import { useAlert } from "../../store/alert.store";
-import { PRODUCT_AI_TAGS } from "../../utils/productAiTags";
 
 export interface ProductFormData {
     name: string;
@@ -31,6 +30,10 @@ interface Props {
         name: string;
         imageUrl?: string;
     }[];
+    aiTags?: {
+        id: string;
+        name: string;
+    }[];
 }
 
 const MAX_IMAGES = 3;
@@ -41,6 +44,7 @@ export default function ProductForm({
     brands,
     categories,
     packageTags = [],
+    aiTags = [],
     loading,
     existingImages = [],
     onRemoveImage,
@@ -81,62 +85,93 @@ export default function ProductForm({
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input
-                        placeholder="Product name *"
-                        className="border rounded-md px-3 py-2 text-sm"
-                        value={value.name}
-                        onChange={(e) => update("name", e.target.value)}
-                    />
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Product Name *
+                        </label>
 
-                    <input
-                        type="number"
-                        placeholder="Price *"
-                        className="border rounded-md px-3 py-2 text-sm"
-                        value={value.price}
-                        onChange={(e) => update("price", e.target.value)}
-                    />
+                        <input
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.name}
+                            onChange={(e) => update("name", e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Product Price (₹) *
+                        </label>
 
-                    <input
-                        type="number"
-                        placeholder="Quantity (Stock) *"
-                        className="border rounded-md px-3 py-2 text-sm"
-                        value={value.quantity}
-                        onChange={(e) =>
-                            update("quantity", Number(e.target.value))
-                        }
-                    />
+                        <input
+                            type="number"
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.price}
+                            onChange={(e) => update("price", e.target.value)}
+                        />
+                    </div>
 
-                    <select
-                        className="border rounded-md px-3 py-2 text-sm"
-                        value={value.brandId}
-                        onChange={(e) => update("brandId", e.target.value)}
-                    >
-                        <option value="">Select Brand *</option>
-                        {brands.map((b) => (
-                            <option key={b.id} value={b.id}>
-                                {b.name}
-                            </option>
-                        ))}
-                    </select>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Available Stock Quantity *
+                        </label>
 
-                    <select
-                        className="border rounded-md px-3 py-2 text-sm"
-                        value={value.categoryId}
-                        onChange={(e) => update("categoryId", e.target.value)}
-                    >
-                        <option value="">Select Category *</option>
-                        {categories.map((c) => (
-                            <option key={c.id} value={c.id}>
-                                {c.name}
-                            </option>
-                        ))}
-                    </select>
+                        <input
+                            type="number"
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.quantity}
+                            onChange={(e) =>
+                                update("quantity", Number(e.target.value))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Brand *
+                        </label>
+
+                        <select
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.brandId}
+                            onChange={(e) => update("brandId", e.target.value)}
+                        >
+                            <option value="">Select Brand</option>
+
+                            {brands.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                    {b.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Category *
+                        </label>
+
+                        <select
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.categoryId}
+                            onChange={(e) => update("categoryId", e.target.value)}
+                        >
+                            <option value="">Select Category</option>
+
+                            {categories.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
                             Package Tags
                         </label>
 
+                        <p className="text-xs text-gray-500 mb-3">
+                            Select the package types applicable for this product.
+                        </p>
                         {packageTags.length === 0 ? (
                             <p className="text-sm text-gray-500">
                                 No package tags configured
@@ -164,73 +199,66 @@ export default function ProductForm({
                         )}
                     </div>
 
+
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium mb-3">
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
                             AI Search Tags
                         </label>
 
-                        <div className="space-y-4 
-        border border-gray-200
-        rounded-xl
-        p-4
-        bg-gray-50/50">
+                        <p className="text-xs text-gray-500 mb-3">
+                            Select the AI tags applicable for this product.
+                        </p>
 
-                            {Object.entries(PRODUCT_AI_TAGS).map(
-                                ([group, tags]) => (
-                                    <div
-                                        key={group}
-                                    >
-                                        <p className="text-xs font-semibold text-gray-600 mb-2">
-                                            {group}
-                                        </p>
-
-                                        <div className="flex flex-wrap gap-2">
-                                            {tags.map((tag) => {
-                                                const selected =
-                                                    value.aiTags?.includes(tag);
-
-                                                return (
-                                                    <button
-                                                        key={tag}
-                                                        type="button"
-                                                        onClick={() =>
-                                                            toggleAiTag(tag)
-                                                        }
-                                                        className={`
-                                        px-3 py-1.5
-                                        rounded-full
-                                        text-sm
-                                        border
-                                        transition
-                                        ${selected
-                                                                ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
-                                                                : "bg-white text-gray-700 border-gray-300 hover:border-[var(--color-primary)]"
-                                                            }
-                                    `}
-                                                    >
-                                                        {selected ? "✓ " : ""}
-                                                        {tag}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )
-                            )}
-                            <p className="text-xs text-gray-500 mt-3">
-                                Used by AI Smart Search and Recommendation Engine
+                        {aiTags.length === 0 ? (
+                            <p className="text-sm text-gray-500">
+                                No AI tags configured
                             </p>
-                        </div>
+                        ) : (
+                            <div
+                                className="
+                                    space-y-2
+                                    border
+                                    border-gray-200
+                                    rounded-xl
+                                    p-4
+                                    bg-gray-50/50
+                                "
+                            >
+                                {aiTags.map((tag) => (
+                                    <label
+                                        key={tag.id}
+                                        className="flex items-center gap-3 border rounded-lg px-3 py-2"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={value.aiTags.includes(tag.id)}
+                                            onChange={() => toggleAiTag(tag.id)}
+                                        />
+
+                                        <span>{tag.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+
+                        <p className="text-xs text-gray-500 mt-3">
+                            Used by AI Smart Search and Recommendation Engine.
+                        </p>
                     </div>
 
-                    <textarea
-                        className="border rounded-md p-2 w-full min-h-[100px] sm:col-span-2"
-                        placeholder="Product description *"
-                        value={value.description}
-                        onChange={(e) =>
-                            update("description", e.target.value)
-                        }
-                    />
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Product Description *
+                        </label>
+
+                        <textarea
+                            className="border rounded-md p-3 w-full min-h-[100px]"
+                            value={value.description}
+                            onChange={(e) =>
+                                update("description", e.target.value)
+                            }
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -298,8 +326,11 @@ export default function ProductForm({
 
             <div className="bg-white border rounded-xl p-5 space-y-3">
                 <h2 className="text-sm font-semibold text-gray-700">
-                    Add New Images
+                    Upload New Product Images
                 </h2>
+                <p className="text-xs text-gray-500 mb-3">
+                    Maximum 3 images. Each image should be less than 2 MB.
+                </p>
 
                 <input
                     type="file"
@@ -355,15 +386,15 @@ export default function ProductForm({
                 )}
             </div>
 
-            <div className="bg-white border rounded-xl p-5 space-y-2">
-                <h2 className="text-sm font-semibold text-gray-700">Video</h2>
-                <input
-                    placeholder="Video URL (optional)"
-                    className="border rounded-md px-3 py-2 text-sm w-full"
-                    value={value.videoUrl}
-                    onChange={(e) => update("videoUrl", e.target.value)}
-                />
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product Video URL (Optional)
+            </label>
+
+            <input
+                className="border rounded-md px-3 py-2 text-sm w-full"
+                value={value.videoUrl}
+                onChange={(e) => update("videoUrl", e.target.value)}
+            />
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
 

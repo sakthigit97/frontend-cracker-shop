@@ -115,8 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const decoded: DecodedToken = jwtDecode(user.token);
         if (decoded.exp * 1000 <= Date.now()) {
-          console.log("Token expired, logging out...");
-          logout();
+          // console.log("Token expired, logging out...");
+          // logout();
         }
       } catch {
         logout();

@@ -59,7 +59,6 @@ export const cartStore = create<CartState>()(
 
           const items = { ...state.items };
           const dirtyItems = { ...state.dirtyItems };
-
           delete items[productId];
           dirtyItems[productId] = 0;
 

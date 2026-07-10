@@ -40,7 +40,8 @@ export default function AdminConfigPage() {
                     adminAddress: res.adminAddress || "",
                     disableGstForTN: res.disableGstForTN || false,
                     sliderImages: fixedSliderImages,
-                    packageTags: res.packageTags || []
+                    packageTags: res.packageTags || [],
+                    aiTags: res.aiTags || [],
                 });
             } catch {
                 showAlert({ type: "error", message: "Failed to load config" });
@@ -103,6 +104,28 @@ export default function AdminConfigPage() {
         setForm((prev: any) => ({
             ...prev,
             packageTags: prev.packageTags.filter(
+                (_: any, i: number) => i !== index
+            ),
+        }));
+    };
+
+    const addAiTag = () => {
+        setForm((prev: any) => ({
+            ...prev,
+            aiTags: [
+                ...(prev.aiTags || []),
+                {
+                    id: crypto.randomUUID(),
+                    name: "",
+                },
+            ],
+        }));
+    };
+
+    const removeAiTag = (index: number) => {
+        setForm((prev: any) => ({
+            ...prev,
+            aiTags: prev.aiTags.filter(
                 (_: any, i: number) => i !== index
             ),
         }));
@@ -227,6 +250,29 @@ export default function AdminConfigPage() {
                 return;
             }
 
+            const invalidAiTag = (form.aiTags || []).some(
+                (t: any) => !t.name?.trim()
+            );
+
+            if (invalidAiTag) {
+                showAlert({
+                    type: "error",
+                    message: "AI Tag name is required",
+                });
+                return;
+            }
+            const aiNames = (form.aiTags || []).map(
+                (t: any) => t.name.trim().toLowerCase()
+            );
+
+            if (new Set(aiNames).size !== aiNames.length) {
+                showAlert({
+                    type: "error",
+                    message: "Duplicate AI Tags are not allowed",
+                });
+                return;
+            }
+
             setLoading(true);
 
             const payload = {
@@ -239,6 +285,15 @@ export default function AdminConfigPage() {
                             .replace(/\s+/g, "-"),
                         name: p.name.trim(),
                         imageUrl: p.imageUrl || "",
+                    })
+                ),
+                aiTags: (form.aiTags || []).map(
+                    (t: any) => ({
+                        id: t.name
+                            .trim()
+                            .toLowerCase()
+                            .replace(/\s+/g, "-"),
+                        name: t.name.trim(),
                     })
                 ),
             };
@@ -323,112 +378,148 @@ export default function AdminConfigPage() {
                     <div className="space-y-4 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Wallet Values</p>
 
-                        <input
-                            className="border border-gray-300 rounded-lg p-3 w-full"
-                            placeholder="Join Bonus Amount"
-                            value={form.joinBonusAmount || ""}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    joinBonusAmount: e.target.value,
-                                }))
-                            }
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Join Bonus Amount
+                            </label>
 
-                        <input
-                            className="border border-gray-300 rounded-lg p-3 w-full"
-                            placeholder="Referral Reward Amount"
-                            value={form.referralRewardAmount || ""}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    referralRewardAmount: e.target.value,
-                                }))
-                            }
-                        />
+                            <input
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.joinBonusAmount || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        joinBonusAmount: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Referral Reward Amount
+                            </label>
+
+                            <input
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.referralRewardAmount || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        referralRewardAmount: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
                     </div>
 
                     {/* Orders */}
                     <div className="space-y-4 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Order Values</p>
-
                         {[
                             ["packagingPercent", "Package Fee (%)"],
                             ["gstPercent", "GST (%)"],
-                            ["tnMinOrderValue", "TN Min Order Value"],
-                            ["otherStateMinOrderValue", "Other State Min Order Value"],
+                            ["tnMinOrderValue", "TN Minimum Order Value"],
+                            ["otherStateMinOrderValue", "Other State Minimum Order Value"],
                         ].map(([key, label]) => (
-                            <input
-                                key={key}
-                                className="border border-gray-300 rounded-lg p-3 w-full"
-                                placeholder={label}
-                                value={form[key] || ""}
-                                onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        [key]: e.target.value,
-                                    }))
-                                }
-                            />
+                            <div key={key}>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {label}
+                                </label>
+
+                                <input
+                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                    value={form[key] || ""}
+                                    onChange={(e) =>
+                                        setForm((p: any) => ({
+                                            ...p,
+                                            [key]: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
                         ))}
                     </div>
 
                     {/* Admin Contact */}
                     <div className="space-y-4 border border-gray-200 rounded-xl p-4">
-                        <p className="text-sm font-medium">Admin Contact Details</p>
+                        <p className="text-sm font-medium">
+                            Admin Contact Details
+                        </p>
 
-                        <input
-                            type="tel"
-                            maxLength={10}
-                            className="border border-gray-300 rounded-lg p-3 w-full"
-                            placeholder="Admin Mobile Number"
-                            value={form.adminMobile || ""}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    adminMobile: e.target.value.replace(/\D/g, ""),
-                                }))
-                            }
-                        />
-                        <input
-                            type="tel"
-                            maxLength={10}
-                            className="border border-gray-300 rounded-lg p-3 w-full"
-                            placeholder="Admin WhatsApp Number"
-                            value={form.adminWhatsapp || ""}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    adminWhatsapp: e.target.value.replace(/\D/g, ""),
-                                }))
-                            }
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Admin Mobile Number
+                            </label>
 
-                        <input
-                            type="email"
-                            className="border border-gray-300 rounded-lg p-3 w-full"
-                            placeholder="Admin Email"
-                            value={form.adminEmail || ""}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    adminEmail: e.target.value,
-                                }))
-                            }
-                        />
+                            <input
+                                type="tel"
+                                maxLength={10}
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.adminMobile || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        adminMobile: e.target.value.replace(/\D/g, ""),
+                                    }))
+                                }
+                            />
+                        </div>
 
-                        <textarea
-                            rows={4}
-                            className="border border-gray-300 rounded-lg p-3 w-full resize-none"
-                            placeholder="Admin Address"
-                            value={form.adminAddress || ""}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    adminAddress: e.target.value,
-                                }))
-                            }
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Admin WhatsApp Number
+                            </label>
+
+                            <input
+                                type="tel"
+                                maxLength={10}
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.adminWhatsapp || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        adminWhatsapp: e.target.value.replace(/\D/g, ""),
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Admin Email Address
+                            </label>
+
+                            <input
+                                type="email"
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.adminEmail || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        adminEmail: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Admin Address
+                            </label>
+
+                            <textarea
+                                rows={4}
+                                className="border border-gray-300 rounded-lg p-3 w-full resize-none"
+                                value={form.adminAddress || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        adminAddress: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
 
                         <label className="flex items-center gap-2 text-sm">
                             <input
@@ -444,7 +535,6 @@ export default function AdminConfigPage() {
 
                             Disable GST for Tamil Nadu
                         </label>
-
                     </div>
 
                     {/* Slider */}
@@ -612,6 +702,61 @@ export default function AdminConfigPage() {
                             className="hidden"
                             onChange={handleUploadPackageImage}
                         />
+                    </div>
+
+                    <div className="space-y-4 border border-gray-200 rounded-xl p-4">
+
+                        <p className="text-sm font-medium">
+                            AI Tags
+                        </p>
+
+                        {(form.aiTags || []).map(
+                            (tag: any, index: number) => (
+                                <div
+                                    key={tag.id}
+                                    className="border rounded-xl p-4 space-y-3 bg-gray-50"
+                                >
+
+                                    <input
+                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                        placeholder="AI Tag Name"
+                                        value={tag.name || ""}
+                                        onChange={(e) => {
+
+                                            const value = e.target.value;
+
+                                            setForm((prev: any) => {
+
+                                                const updated = [...prev.aiTags];
+
+                                                updated[index].name = value;
+
+                                                return {
+                                                    ...prev,
+                                                    aiTags: updated,
+                                                };
+                                            });
+                                        }}
+                                    />
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => removeAiTag(index)}
+                                    >
+                                        Remove
+                                    </Button>
+
+                                </div>
+                            )
+                        )}
+
+                        <Button
+                            variant="outline"
+                            onClick={addAiTag}
+                        >
+                            + Add AI Tag
+                        </Button>
+
                     </div>
 
                     {/* Actions */}

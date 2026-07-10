@@ -21,6 +21,7 @@ export type GlobalConfig = {
     location: string;
     disableGstForTN: boolean;
     packageTags: string[];
+    aiTags: string[];
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

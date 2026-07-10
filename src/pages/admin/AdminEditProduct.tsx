@@ -18,7 +18,7 @@ export default function AdminEditProduct() {
     const { productId } = useParams();
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-    const { brands, categories, load, packageTags } = useMetaStore();
+    const { brands, categories, load, packageTags, aiTags } = useMetaStore();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -281,6 +281,7 @@ export default function AdminEditProduct() {
                         categories={categories}
                         loading={loading}
                         packageTags={packageTags}
+                        aiTags={aiTags}
                         existingImages={existingImages}
                         onRemoveImage={(url) =>
                             setExistingImages((imgs) =>
