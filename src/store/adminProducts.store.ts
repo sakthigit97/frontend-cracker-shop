@@ -54,7 +54,7 @@ export const useAdminProductsStore = create<AdminProductsState>((set, get) => ({
         set({ loading: true });
 
         const qs = new URLSearchParams();
-        qs.set("limit", "20");
+        qs.set("limit", "2000");
         if (cursor) qs.set("cursor", cursor);
         if (filters.search) qs.set("search", filters.search);
         if (filters.brandId) qs.set("brandId", filters.brandId);

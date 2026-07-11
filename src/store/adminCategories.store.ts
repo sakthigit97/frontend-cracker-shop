@@ -21,11 +21,8 @@ interface CategoryState {
     clearCache: () => void;
 }
 
-const filterKey = (filters: Filters) =>
-    JSON.stringify(filters || {});
-
+const filterKey = (filters: Filters) => JSON.stringify(filters || {});
 const cursorKey = (cursor?: string | null) => cursor || "first";
-
 export const useAdminCategoriesStore = create<CategoryState>((set, get) => ({
     cache: {},
     loading: false,

@@ -4,8 +4,6 @@ import Toggle from "../../components/ui/Toggle";
 import { useAdminBrandsStore } from "../../store/adminBrands.store";
 import { useAlert } from "../../store/alert.store";
 import { Link, useNavigate } from "react-router-dom";
-import { useDebounce } from "../../utils/useDebounce";
-
 import {
     updateBrandStatus,
     deleteBrand,
@@ -18,39 +16,27 @@ export default function AdminBrands() {
     const navigate = useNavigate();
     const { fetchPage, loading, clearCache } = useAdminBrandsStore();
     const { showAlert } = useAlert();
-    const [cursor, setCursor] = useState<string | null>(null);
-    const [cursorStack, setCursorStack] = useState<string[]>([]);
     const [data, setData] = useState<any>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [brandToDelete, setBrandToDelete] = useState<string | null>(null);
+    const PAGE_SIZE = 20;
+    const [page, setPage] = useState(1);
 
     const [filters, setFilters] = useState({
         search: "",
         isActive: "" as "" | "true" | "false",
     });
-    const debouncedSearch = useDebounce(filters.search, 1000);
-    const effectiveFilters = useMemo(
-        () => ({
-            search: debouncedSearch,
-            isActive: filters.isActive,
-        }),
-        [debouncedSearch, filters.isActive]
-    );
 
-    useEffect(() => {
-        setCursor(null);
-        setCursorStack([]);
-    }, [effectiveFilters]);
 
     useEffect(() => {
         loadBrands();
-    }, [cursor, effectiveFilters]);
+    }, []);
 
     const loadBrands = async () => {
         try {
-            const res = await fetchPage(effectiveFilters, cursor);
+            const res = await fetchPage({}, null);
             setData(res);
         } catch (err: any) {
             showAlert({
@@ -60,21 +46,27 @@ export default function AdminBrands() {
         }
     };
 
+
     const handleToggleStatus = async (brandId: string, current: boolean) => {
         if (togglingId) return;
 
         try {
             setTogglingId(brandId);
-
             await updateBrandStatus(brandId, !current);
-
             showAlert({
                 type: "success",
                 message: `Brand marked as ${!current ? "Active" : "Inactive"}`,
             });
-
+            setData((prev: any) => ({
+                ...prev,
+                items: prev.items.map((b: any) =>
+                    b.brandId === brandId
+                        ? { ...b, isActive: !current }
+                        : b
+                ),
+            }));
             clearCache();
-            loadBrands();
+
         } catch (err: any) {
             showAlert({
                 type: "error",
@@ -116,6 +108,48 @@ export default function AdminBrands() {
             setShowDeleteConfirm(false);
         }
     };
+    const query = filters.search.trim().toLowerCase();
+    const filteredBrands = useMemo(() => {
+        return (data?.items ?? []).filter((b: any) => {
+            const matchesSearch =
+                !query ||
+                (`${b.name} ${b.brandId}`)
+                    .toLowerCase()
+                    .includes(query);
+
+            const matchesStatus =
+                !filters.isActive ||
+                String(b.isActive) === filters.isActive;
+
+            return (
+                matchesSearch &&
+                matchesStatus
+            );
+        });
+    }, [
+        data?.items,
+        query,
+        filters.isActive,
+    ]);
+    const paginatedBrands = useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+
+        return filteredBrands.slice(
+            start,
+            start + PAGE_SIZE
+        );
+    }, [filteredBrands, page]);
+    const totalPages = Math.ceil(
+        filteredBrands.length / PAGE_SIZE
+    );
+    useEffect(() => {
+        setPage(1);
+    }, [query, filters.isActive]);
+    useEffect(() => {
+        if (page > totalPages && totalPages > 0) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     return (
         <div className="space-y-4">
@@ -174,7 +208,7 @@ export default function AdminBrands() {
                 </select>
             </div>
 
-            {loading && (
+            {loading && !data && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Array.from({ length: 6 }).map((_, i) => (
                         <ProductSkeleton key={i} />
@@ -194,8 +228,8 @@ export default function AdminBrands() {
                         </thead>
 
                         <tbody>
-                            {!loading && data?.items?.length ? (
-                                data.items.map((b: any) => (
+                            {!loading && paginatedBrands.length ? (
+                                paginatedBrands.map((b: any) => (
                                     <tr key={b.brandId} className="border-t">
                                         <td className="p-3">{b.name}</td>
                                         <td>{b.brandId}</td>
@@ -252,38 +286,29 @@ export default function AdminBrands() {
                         </tbody>
                     </table>
                 </div>
+                <div className="flex justify-center items-center gap-3 p-4 border-t">
 
-                {(cursorStack.length > 0 || data?.nextCursor) && (
-                    <div className="flex justify-center gap-3 p-4 border-t">
+                    <Button
+                        variant="outline"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => p - 1)}
+                    >
+                        ← Previous
+                    </Button>
 
-                        {cursorStack.length > 0 && (
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    const prevCursor =
-                                        cursorStack[cursorStack.length - 1];
-                                    setCursorStack((s) => s.slice(0, -1));
-                                    setCursor(prevCursor);
-                                }}
-                            >
-                                Previous
-                            </Button>
-                        )}
+                    <span className="text-sm">
+                        Page {page} of {totalPages || 1}
+                    </span>
 
-                        {data?.nextCursor && (
-                            <Button
-                                variant="outline"
-                                disabled={loading}
-                                onClick={() => {
-                                    setCursorStack((s) => [...s, cursor || ""]);
-                                    setCursor(data.nextCursor);
-                                }}
-                            >
-                                Next
-                            </Button>
-                        )}
-                    </div>
-                )}
+                    <Button
+                        variant="outline"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => p + 1)}
+                    >
+                        Next →
+                    </Button>
+
+                </div>
             </div>
 
             <ConfirmDialog

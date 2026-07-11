@@ -33,6 +33,10 @@ export default function AdminDiscountsPage() {
     });
 
     const [search, setSearch] = useState("");
+    const PAGE_SIZE = 10;
+    const [page, setPage] = useState(1);
+    const [discountSearch, setDiscountSearch] = useState("");
+
 
     useEffect(() => {
         const load = async () => {
@@ -82,6 +86,46 @@ export default function AdminDiscountsPage() {
 
         return found?.name || d.targetId;
     };
+
+
+    const filteredDiscounts = useMemo(() => {
+        const query = discountSearch.trim().toLowerCase();
+
+        if (!query) return discounts;
+
+        return discounts.filter((d: any) => {
+            const targetName = resolveTargetName(d);
+
+            return (
+                `${targetName} ${d.targetId}`
+                    .toLowerCase()
+                    .includes(query)
+            );
+        });
+    }, [discounts, discountSearch, categories, brands, products]);
+    const paginatedDiscounts = useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+
+        return filteredDiscounts.slice(
+            start,
+            start + PAGE_SIZE
+        );
+    }, [filteredDiscounts, page]);
+
+    const totalPages = Math.ceil(
+        filteredDiscounts.length / PAGE_SIZE
+    );
+
+
+    useEffect(() => {
+        setPage(1);
+    }, [discountSearch]);
+
+    useEffect(() => {
+        if (page > totalPages && totalPages > 0) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const handleCreate = async () => {
         if (!form.targetId) {
@@ -310,10 +354,22 @@ export default function AdminDiscountsPage() {
                 </div>
 
                 <div className="lg:col-span-2 bg-white border rounded-2xl shadow-sm p-5 flex flex-col">
-                    <h2 className="font-semibold text-lg mb-4">
-                        Existing Discounts
-                    </h2>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
 
+                        <h2 className="font-semibold text-lg">
+                            Existing Discounts
+                        </h2>
+
+                        <input
+                            placeholder="Search Target Name / Target ID"
+                            className="border rounded-lg px-3 py-2 w-full md:w-72"
+                            value={discountSearch}
+                            onChange={(e) =>
+                                setDiscountSearch(e.target.value)
+                            }
+                        />
+
+                    </div>
                     <div className="border rounded-xl overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
@@ -328,7 +384,7 @@ export default function AdminDiscountsPage() {
                                 </thead>
 
                                 <tbody className="divide-y">
-                                    {discounts.length === 0 && (
+                                    {filteredDiscounts.length === 0 && (
                                         <tr>
                                             <td
                                                 colSpan={5}
@@ -339,7 +395,7 @@ export default function AdminDiscountsPage() {
                                         </tr>
                                     )}
 
-                                    {discounts.map((d) => (
+                                    {paginatedDiscounts.map((d) => (
                                         <tr
                                             key={d.discountId}
                                             className="hover:bg-gray-50 transition"
@@ -380,7 +436,29 @@ export default function AdminDiscountsPage() {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="max-h-[420px] overflow-y-auto"></div>
+                        <div className="flex justify-center items-center gap-3 p-4 border-t">
+
+                            <Button
+                                variant="outline"
+                                disabled={page === 1}
+                                onClick={() => setPage((p) => p - 1)}
+                            >
+                                ← Previous
+                            </Button>
+
+                            <span className="text-sm">
+                                Page {page} of {totalPages || 1}
+                            </span>
+
+                            <Button
+                                variant="outline"
+                                disabled={page >= totalPages}
+                                onClick={() => setPage((p) => p + 1)}
+                            >
+                                Next →
+                            </Button>
+
+                        </div>
                     </div>
                 </div>
 

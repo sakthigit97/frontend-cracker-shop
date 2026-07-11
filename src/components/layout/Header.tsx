@@ -341,10 +341,6 @@ export default function Header() {
 
             <div className="hidden md:block leading-tight">
 
-              <div className="text-[11px] text-white/60">
-                Cart
-              </div>
-
               <div className="text-sm font-semibold">
 
                 {cartTotal === null
@@ -357,7 +353,6 @@ export default function Header() {
 
           </Link>
 
-          {/* Login */}
 
           {!isAuthenticated ? (
             <Link

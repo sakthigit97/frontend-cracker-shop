@@ -4,6 +4,11 @@ import {
     getPackageDetailsApi,
 } from "../services/package.api";
 
+const HOME_PACKAGE_IDS = {
+    BEST_SELLING: "best-selling",
+    NEW_ARRIVALS: "new-arrivals",
+};
+
 interface PackageItem {
     id: string;
     name: string;
@@ -26,7 +31,13 @@ interface PackageStore {
 
     loading: boolean;
 
+    bestSellingPackage?: PackageItem;
+
+    newArrivalPackage?: PackageItem;
+
     fetchPackages: () => Promise<void>;
+
+    loadingPackages: Record<string, boolean>;
 
     fetchPackageProducts: (
         packageId: string
@@ -41,10 +52,15 @@ export const usePackageStore =
 
         loading: false,
 
+        loadingPackages: {},
+
+        bestSellingPackage: undefined,
+
+        newArrivalPackage: undefined,
+
         async fetchPackages() {
             const { packages } = get();
 
-            // already loaded
             if (packages.length > 0) {
                 return;
             }
@@ -52,35 +68,56 @@ export const usePackageStore =
             try {
                 set({ loading: true });
 
-                const res =
-                    await getPackagesApi();
+                const res = await getPackagesApi();
+
+                const packagesList = res || [];
 
                 set({
-                    packages: res || [],
+                    packages: packagesList,
+
+                    bestSellingPackage:
+                        packagesList.find(
+                            (p: PackageItem) =>
+                                p.id ===
+                                HOME_PACKAGE_IDS.BEST_SELLING
+                        ),
+
+                    newArrivalPackage:
+                        packagesList.find(
+                            (p: PackageItem) =>
+                                p.id ===
+                                HOME_PACKAGE_IDS.NEW_ARRIVALS
+                        ),
                 });
             } finally {
                 set({ loading: false });
             }
         },
-
         async fetchPackageProducts(
             packageId: string
         ) {
             const {
                 packageProducts,
+                loadingPackages,
             } = get();
 
-            // already loaded
-            if (
-                packageProducts[
-                packageId
-                ]
-            ) {
+            // Already cached
+            if (packageProducts[packageId]) {
+                return;
+            }
+
+            // Already loading
+            if (loadingPackages[packageId]) {
                 return;
             }
 
             try {
-                set({ loading: true });
+                set((state) => ({
+                    loadingPackages: {
+                        ...state.loadingPackages,
+                        [packageId]: true,
+                    },
+                }));
 
                 const res =
                     await getPackageDetailsApi(
@@ -92,16 +129,26 @@ export const usePackageStore =
                         ...state.packageProducts,
 
                         [packageId]: {
-                            package:
-                                res.package,
-
+                            package: res.package,
                             products:
                                 res.products || [],
                         },
                     },
+
+                    loadingPackages: {
+                        ...state.loadingPackages,
+                        [packageId]: false,
+                    },
                 }));
-            } finally {
-                set({ loading: false });
+            } catch (err) {
+                set((state) => ({
+                    loadingPackages: {
+                        ...state.loadingPackages,
+                        [packageId]: false,
+                    },
+                }));
+
+                throw err;
             }
-        },
+        }
     }));

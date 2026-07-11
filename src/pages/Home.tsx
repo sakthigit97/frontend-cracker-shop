@@ -6,6 +6,8 @@ import { useHomeProducts } from "../store/homeProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { useAuth } from "../store/auth.store";
+import { useMemo } from "react";
+import { usePackageStore } from "../store/package.store";
 
 export default function Home() {
   const {
@@ -13,10 +15,18 @@ export default function Home() {
     popularProducts,
     fetchPopular,
     loading,
-    fetchInitial,
+    fetchAll,
     fetchMore,
     nextCursor,
   } = useHomeProducts();
+
+  const {
+    bestSellingPackage,
+    newArrivalPackage,
+    packageProducts,
+    fetchPackages,
+    fetchPackageProducts,
+  } = usePackageStore();
 
   const items = cartStore((s) => s.items);
   const addItem = cartStore((s) => s.addItem);
@@ -26,11 +36,34 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [showCartAlert, setShowCartAlert] = useState(false);
   const [prevAuth, setPrevAuth] = useState(false);
+  type HomeTab =
+    | "products"
+    | "popular"
+    | "bestSelling"
+    | "newArrival";
+
+  const [activeTab, setActiveTab] =
+    useState<HomeTab>("products");
 
   useEffect(() => {
-    fetchInitial();
+    fetchAll();
     fetchPopular();
+    fetchPackages();
   }, []);
+
+  useEffect(() => {
+    if (bestSellingPackage) {
+      fetchPackageProducts(bestSellingPackage.id);
+    }
+
+    if (newArrivalPackage) {
+      fetchPackageProducts(newArrivalPackage.id);
+    }
+  }, [
+    bestSellingPackage,
+    newArrivalPackage,
+    fetchPackageProducts,
+  ]);
 
   useEffect(() => {
     const hasItems = Object.keys(items).length > 0;
@@ -44,12 +77,95 @@ export default function Home() {
     setPrevAuth(isAuthenticated);
   }, [isAuthenticated]);
 
-  const isSearching = search.length >= 1;
+
+
+  const bestSellingProducts =
+    bestSellingPackage
+      ? packageProducts[
+        bestSellingPackage.id
+      ]?.products ?? []
+      : [];
+
+  const newArrivalProducts =
+    newArrivalPackage
+      ? packageProducts[
+        newArrivalPackage.id
+      ]?.products ?? []
+      : [];
+
+
+  const isSearching = search.trim().length > 0;
+  const currentProducts =
+    activeTab === "products"
+      ? products
+      : activeTab === "popular"
+        ? popularProducts
+        : activeTab === "bestSelling"
+          ? bestSellingProducts
+          : newArrivalProducts;
+
+  const query = search.trim().toLowerCase();
   const displayProducts = isSearching
-    ? products.filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+    ? currentProducts.filter((p) =>
+      (`${p.name} ${p.searchText ?? ""}`)
+        .toLowerCase()
+        .includes(query)
     )
-    : products;
+    : currentProducts;
+
+  const tabs = useMemo(() => {
+    const items: {
+      key: HomeTab;
+      label: string;
+    }[] = [];
+
+    if (products.length > 0) {
+      items.push({
+        key: "products",
+        label: "All Products",
+      });
+    }
+
+    if (popularProducts.length > 0) {
+      items.push({
+        key: "popular",
+        label: "🔥 Popular",
+      });
+    }
+
+    if (bestSellingProducts && bestSellingProducts.length > 0) {
+      items.push({
+        key: "bestSelling",
+        label: "⭐ Best Selling",
+      });
+    }
+
+    if (newArrivalProducts && newArrivalProducts.length > 0) {
+      items.push({
+        key: "newArrival",
+        label: "🆕 New Arrivals",
+      });
+    }
+
+    return items;
+  }, [
+    products.length,
+    popularProducts.length,
+    bestSellingProducts,
+    newArrivalProducts,
+  ]);
+
+  useEffect(() => {
+    if (
+      !tabs.some(
+        (tab) => tab.key === activeTab
+      ) &&
+      tabs.length > 0
+    ) {
+      setActiveTab(tabs[0].key);
+    }
+  }, [tabs]);
+
 
   return (
     <div className="space-y-6">
@@ -99,73 +215,104 @@ export default function Home() {
         />
       </div>
 
-      {popularProducts.length > 0 && !isSearching && (
-        <div className="px-4 space-y-4">
-          <h2 className="text-lg font-semibold">🔥 Popular Products</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
-            {popularProducts.map((product) => {
-              const qty = items[product.id] || 0;
-              return (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  quantityInCart={qty}
-                  onAddToCart={() => addItem(product.id, 1)}
-                  onIncrease={() => addItem(product.id, 1)}
-                  onDecrease={() => {
-                    if (qty === 1) removeItem(product.id);
-                    else addItem(product.id, -1);
-                  }}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       <div className="px-4">
-        <h2 className="text-lg font-semibold">All Products</h2>
+
+        {tabs.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => {
+                  setActiveTab(tab.key);
+                  setSearch("");
+                }}
+                className={`
+            whitespace-nowrap
+            px-4
+            py-2
+            rounded-full
+            text-sm
+            font-medium
+            transition-all
+            border
+
+            ${activeTab === tab.key
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+                    : "bg-white border-gray-200 hover:border-[var(--color-primary)]"
+                  }
+          `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <h2 className="text-lg font-semibold mb-4">
+          {isSearching
+            ? `Search Results (${displayProducts.length})`
+            : tabs.find((t) => t.key === activeTab)?.label ??
+            "All Products"}
+        </h2>
+
+        {loading &&
+          activeTab === "products" &&
+          products.length === 0 &&
+          !isSearching && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductSkeleton key={i} />
+              ))}
+            </div>
+          )}
+
+        {(activeTab === "products" ||
+          activeTab === "popular" ||
+          activeTab === "bestSelling" ||
+          activeTab === "newArrival") && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
+              {
+                displayProducts.map((product) => {
+                  const qty = items[product.id] || 0;
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      quantityInCart={qty}
+                      onAddToCart={() =>
+                        addItem(product.id, 1)
+                      }
+                      onIncrease={() =>
+                        addItem(product.id, 1)
+                      }
+                      onDecrease={() => {
+                        if (qty === 1)
+                          removeItem(product.id);
+                        else
+                          addItem(product.id, -1);
+                      }}
+                    />
+                  );
+                })
+
+              }
+            </div>
+          )}
+
+        {!isSearching &&
+          activeTab === "products" &&
+          nextCursor && (
+            <div className="flex justify-center py-6">
+              <button
+                onClick={fetchMore}
+                disabled={loading}
+                className="px-6 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm disabled:opacity-60"
+              >
+                {loading ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )}
       </div>
-
-      {loading && products.length === 0 && !isSearching && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <ProductSkeleton key={i} />
-          ))}
-        </div>
-      )}
-
-      <div className="px-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
-        {displayProducts.map((product) => {
-          const qty = items[product.id] || 0;
-
-          return (
-            <ProductCard
-              key={product.id}
-              product={product}
-              quantityInCart={qty}
-              onAddToCart={() => addItem(product.id, 1)}
-              onIncrease={() => addItem(product.id, 1)}
-              onDecrease={() => {
-                if (qty === 1) removeItem(product.id);
-                else addItem(product.id, -1);
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {!isSearching && nextCursor && (
-        <div className="flex justify-center py-6">
-          <button
-            onClick={fetchMore}
-            disabled={loading}
-            className="px-6 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm disabled:opacity-60"
-          >
-            {loading ? "Loading..." : "Load More"}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

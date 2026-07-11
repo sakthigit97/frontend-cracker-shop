@@ -1,21 +1,15 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProductCard from "../components/product/ProductCard";
 import { useCategoryProducts } from "../store/categoryProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
-import { apiFetch } from "../services/api";
-import type { Product } from "../types/product";
 
 export default function CategoryProducts() {
   const { categoryId = "" } = useParams();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const searchCache = useRef<Record<string, Product[]>>({});
-
   const {
     items,
     loading,
@@ -31,42 +25,18 @@ export default function CategoryProducts() {
     fetchInitial();
   }, [categoryId]);
 
-  useEffect(() => {
-    if (search.length < 3) {
-      setSearchResults([]);
-      return;
-    }
 
-    const key = search.toLowerCase().trim();
-    if (searchCache.current[key]) {
-      setSearchResults(searchCache.current[key]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        setSearchLoading(true);
-        const res = await apiFetch(
-          `/products?search=${encodeURIComponent(key)}&limit=50`
-        );
-
-        const items = (res.data.items || []).filter(
-          (p: Product) => p.categoryId === categoryId
-        );
-
-        searchCache.current[key] = items;
-
-        setSearchResults(items);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [search, categoryId]);
-
-  const isSearching = search.length >= 3;
-  const displayProducts = isSearching ? searchResults : items;
+  const isSearching = search.trim().length > 0;
+  const query = search.trim().toLowerCase();
+  const displayProducts = isSearching
+    ? items.filter((p) =>
+      (
+        `${p.name} ${p.searchText ?? ""}`
+      )
+        .toLowerCase()
+        .includes(query)
+    )
+    : items;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -111,7 +81,6 @@ export default function CategoryProducts() {
         "
       />
 
-      {/* NORMAL LOADING */}
       {loading && items.length === 0 && !isSearching && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -120,12 +89,6 @@ export default function CategoryProducts() {
         </div>
       )}
 
-      {/* SEARCH LOADING */}
-      {isSearching && searchLoading && (
-        <p className="text-center text-sm text-gray-500">Searching...</p>
-      )}
-
-      {/* EMPTY */}
       {!loading && displayProducts.length === 0 && (
         <EmptyState
           title="No products found"
@@ -150,7 +113,6 @@ export default function CategoryProducts() {
         })}
       </div>
 
-      {/* LOAD MORE ONLY WHEN NOT SEARCHING */}
       {!isSearching && nextCursor && (
         <div className="flex justify-center py-8">
           <button

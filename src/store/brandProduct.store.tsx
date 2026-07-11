@@ -16,14 +16,12 @@ interface StoreState {
 }
 
 const BrandProductContext = createContext<StoreState | null>(null);
-
 export function BrandProductProvider({
     children,
 }: {
     children: React.ReactNode;
 }) {
     const [data, setData] = useState<Record<string, BrandProductState>>({});
-
     const fetchInitial = async (brandId: string) => {
         const existing = data[brandId];
         if (existing?.hasFetched) return;
@@ -40,7 +38,7 @@ export function BrandProductProvider({
 
         try {
             const res = await apiFetch(
-                `/products/brand/${brandId}?limit=8`
+                `/products/brand/${brandId}?limit=2000`
             );
 
             setData((prev) => ({

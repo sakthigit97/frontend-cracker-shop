@@ -4,7 +4,6 @@ import Toggle from "../../components/ui/Toggle";
 import { useAdminCategoriesStore } from "../../store/adminCategories.store";
 import { useAlert } from "../../store/alert.store";
 import { Link, useNavigate } from "react-router-dom";
-import { useDebounce } from "../../utils/useDebounce";
 
 import {
     updateCategoryStatus,
@@ -17,8 +16,6 @@ import EmptyState from "../../components/ui/EmptyState";
 export default function AdminCategories() {
     const { fetchPage, loading, clearCache } = useAdminCategoriesStore();
     const { showAlert } = useAlert();
-    const [cursor, setCursor] = useState<string | null>(null);
-    const [cursorStack, setCursorStack] = useState<string[]>([]);
     const [data, setData] = useState<any>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -30,28 +27,61 @@ export default function AdminCategories() {
         search: "",
         isActive: "" as "" | "true" | "false",
     });
+    const PAGE_SIZE = 20;
+    const [page, setPage] = useState(1);
 
-    const debouncedSearch = useDebounce(filters.search, 1000);
-    const effectiveFilters = useMemo(
-        () => ({
-            search: debouncedSearch,
-            isActive: filters.isActive,
-        }),
-        [debouncedSearch, filters.isActive]
-    );
-
-    useEffect(() => {
-        setCursor(null);
-        setCursorStack([]);
-    }, [effectiveFilters]);
 
     useEffect(() => {
         loadCategories();
-    }, [cursor, effectiveFilters]);
+    }, []);
+
+    const query = filters.search.trim().toLowerCase();
+    const filteredCategories = useMemo(() => {
+        return (data?.items ?? []).filter((c: any) => {
+            const matchesSearch =
+                !query ||
+                (`${c.name} ${c.categoryId}`)
+                    .toLowerCase()
+                    .includes(query);
+
+            const matchesStatus =
+                !filters.isActive ||
+                String(c.isActive) === filters.isActive;
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [
+        data?.items,
+        query,
+        filters.isActive,
+    ]);
+
+    const paginatedCategories = useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+
+        return filteredCategories.slice(
+            start,
+            start + PAGE_SIZE
+        );
+    }, [filteredCategories, page]);
+
+    const totalPages = Math.ceil(
+        filteredCategories.length / PAGE_SIZE
+    );
+
+    useEffect(() => {
+        setPage(1);
+    }, [query, filters.isActive]);
+
+    useEffect(() => {
+        if (page > totalPages && totalPages > 0) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const loadCategories = async () => {
         try {
-            const res = await fetchPage(effectiveFilters, cursor);
+            const res = await fetchPage({}, null);
             setData(res);
         } catch (err: any) {
             showAlert({
@@ -211,8 +241,8 @@ export default function AdminCategories() {
                             </thead>
 
                             <tbody>
-                                {data?.items?.length ? (
-                                    data.items.map((c: any) => (
+                                {paginatedCategories.length ? (
+                                    paginatedCategories.map((c: any) => (
                                         <tr
                                             key={c.categoryId}
                                             className="border-t"
@@ -292,38 +322,28 @@ export default function AdminCategories() {
                     </div>
                 )}
 
-                {/* Pagination */}
-                {(cursorStack.length > 0 || data?.nextCursor) && (
-                    <div className="flex justify-center gap-3 p-4 border-t">
+                <div className="flex justify-center items-center gap-3 p-4 border-t">
+                    <Button
+                        variant="outline"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => p - 1)}
+                    >
+                        ← Previous
+                    </Button>
 
-                        {cursorStack.length > 0 && (
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    const prevCursor =
-                                        cursorStack[cursorStack.length - 1];
-                                    setCursorStack((s) => s.slice(0, -1));
-                                    setCursor(prevCursor);
-                                }}
-                            >
-                                Previous
-                            </Button>
-                        )}
+                    <span className="text-sm">
+                        Page {page} of {totalPages || 1}
+                    </span>
 
-                        {data?.nextCursor && (
-                            <Button
-                                variant="outline"
-                                disabled={loading}
-                                onClick={() => {
-                                    setCursorStack((s) => [...s, cursor || ""]);
-                                    setCursor(data.nextCursor);
-                                }}
-                            >
-                                Next
-                            </Button>
-                        )}
-                    </div>
-                )}
+                    <Button
+                        variant="outline"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => p + 1)}
+                    >
+                        Next →
+                    </Button>
+                </div>
+
             </div>
 
             <ConfirmDialog

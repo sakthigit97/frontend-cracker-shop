@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import { useAdminProductsStore } from "../../store/adminProducts.store";
 import { useMetaStore } from "../../store/meta.store";
-import { useDebounce } from "../../utils/useDebounce";
 import { useAlert } from "../../store/alert.store";
 import Toggle from "../../components/ui/Toggle";
 import { deactivateProduct, deleteProduct } from "../../services/adminProducts.api";
@@ -11,10 +10,8 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import EmptyState from "../../components/ui/EmptyState";
 
 export default function AdminProducts() {
-    const { fetchPage, loading, clearCache } = useAdminProductsStore();
+    const { fetchPage, clearCache } = useAdminProductsStore();
     const { brands, categories, load } = useMetaStore();
-    const [cursor, setCursor] = useState<string | null>(null);
-    const [cursorStack, setCursorStack] = useState<string[]>([]);
     const [data, setData] = useState<any>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -23,6 +20,9 @@ export default function AdminProducts() {
     const [selectedProductId, setSelectedProductId] = useState<string | null>(
         null
     );
+    const PAGE_SIZE = 20;
+    const [page, setPage] = useState(1);
+
     const navigate = useNavigate();
     const [filters, setFilters] = useState({
         search: "",
@@ -40,31 +40,56 @@ export default function AdminProducts() {
         () => Object.fromEntries(categories.map(c => [c.id, c.name])),
         [categories]
     );
+    const query = filters.search.trim().toLowerCase();
 
-    const debouncedSearch = useDebounce(filters.search, 1000);
-    const effectiveFilters = useMemo(
-        () => ({
-            ...filters,
-            search: debouncedSearch,
-        }),
-        [debouncedSearch, filters.brandId, filters.categoryId, filters.isActive]
-    );
+    const filteredProducts = useMemo(() => {
+        return (data?.items ?? []).filter((p: any) => {
+            const matchesSearch =
+                !query ||
+                (`${p.name} ${p.productId} ${p.searchText ?? ""}`)
+                    .toLowerCase()
+                    .includes(query);
+
+            const matchesBrand =
+                !filters.brandId || p.brandId === filters.brandId;
+
+            const matchesCategory =
+                !filters.categoryId || p.categoryId === filters.categoryId;
+
+            const matchesStatus =
+                !filters.isActive || p.isActive === filters.isActive;
+
+            return (
+                matchesSearch &&
+                matchesBrand &&
+                matchesCategory &&
+                matchesStatus
+            );
+        });
+    }, [data?.items, query, filters.brandId, filters.categoryId, filters.isActive]);
+
+
+    const paginatedProducts = useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+
+        return filteredProducts.slice(
+            start,
+            start + PAGE_SIZE
+        );
+    }, [filteredProducts, page]);
+    const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
+
 
     useEffect(() => {
         load();
     }, []);
 
     useEffect(() => {
-        setCursor(null);
-        setCursorStack([]);
-    }, [effectiveFilters]);
-
-    useEffect(() => {
         loadProducts();
-    }, [cursor, effectiveFilters]);
+    }, []);
 
     const loadProducts = async () => {
-        const res = await fetchPage(effectiveFilters, cursor);
+        const res = await fetchPage({}, null);
         setData(res);
     };
 
@@ -137,6 +162,16 @@ export default function AdminProducts() {
             setSelectedProductId(null);
         }
     };
+
+    useEffect(() => {
+        setPage(1);
+    }, [query, filters.brandId, filters.categoryId, filters.isActive]);
+
+    useEffect(() => {
+        if (page > totalPages && totalPages > 0) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     return (
         <div className="space-y-4">
@@ -254,8 +289,8 @@ export default function AdminProducts() {
                             </tr>
                         </thead>
                         <tbody>
-                            {data?.items?.length ? (
-                                data.items.map((p: any) => (
+                            {paginatedProducts.length ? (
+                                paginatedProducts.map((p: any) => (
                                     <tr key={p.productId} className="border-t">
                                         <td className="p-3">{p.name}</td>
                                         <td className="p-3">{p.productId}</td>
@@ -323,36 +358,27 @@ export default function AdminProducts() {
                         </tbody>
                     </table>
                 </div>
-                {(cursorStack.length > 0 || data?.nextCursor) && (
-                    <div className="flex justify-center items-center gap-3 p-4 border-t">
+                <div className="flex justify-center items-center gap-3 p-4 border-t">
+                    <button
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => p - 1)}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        ← Previous
+                    </button>
 
-                        {cursorStack.length > 0 && (
-                            <button
-                                onClick={() => {
-                                    const prevCursor = cursorStack[cursorStack.length - 1];
-                                    setCursorStack(stack => stack.slice(0, -1));
-                                    setCursor(prevCursor);
-                                }}
-                                className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100 transition"
-                            >
-                                ← Previous
-                            </button>
-                        )}
+                    <span className="text-sm">
+                        Page {page} of {totalPages || 1}
+                    </span>
 
-                        {data?.nextCursor && (
-                            <button
-                                onClick={() => {
-                                    setCursorStack(prev => [...prev, cursor || ""]);
-                                    setCursor(data.nextCursor);
-                                }}
-                                disabled={loading}
-                                className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100 transition disabled:opacity-50"
-                            >
-                                Next →
-                            </button>
-                        )}
-                    </div>
-                )}
+                    <button
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => p + 1)}
+                        className="px-4 py-2 border rounded disabled:opacity-50"
+                    >
+                        Next →
+                    </button>
+                </div>
             </div>
 
             <ConfirmDialog

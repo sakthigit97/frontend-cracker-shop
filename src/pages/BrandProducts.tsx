@@ -1,20 +1,15 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProductCard from "../components/product/ProductCard";
 import { useBrandProducts } from "../store/brandProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
-import { apiFetch } from "../services/api";
-import type { Product } from "../types/product";
 
 export default function BrandProducts() {
     const { brandId = "" } = useParams();
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
-    const [searchResults, setSearchResults] = useState<Product[]>([]);
-    const [searchLoading, setSearchLoading] = useState(false);
-    const searchCache = useRef<Record<string, Product[]>>({});
 
     const {
         items,
@@ -30,48 +25,20 @@ export default function BrandProducts() {
     useEffect(() => {
         fetchInitial();
     }, [brandId]);
+    const isSearching = search.trim().length > 0;
 
-    useEffect(() => {
-        if (search.length < 3) {
-            setSearchResults([]);
-            return;
-        }
-
-        const key = search.toLowerCase().trim();
-
-        if (searchCache.current[key]) {
-            setSearchResults(searchCache.current[key]);
-            return;
-        }
-
-        const timer = setTimeout(async () => {
-            try {
-                setSearchLoading(true);
-
-                const res = await apiFetch(
-                    `/products/brand/${brandId}?search=${encodeURIComponent(
-                        key
-                    )}&limit=50`
-                );
-
-                const items = res.data.items || [];
-
-                searchCache.current[key] = items;
-                setSearchResults(items);
-            } finally {
-                setSearchLoading(false);
-            }
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [search, brandId]);
-
-    const isSearching = search.length >= 3;
-    const displayProducts = isSearching ? searchResults : items;
+    const displayProducts = isSearching
+        ? items.filter((p) =>
+            (
+                `${p.name} ${p.searchText ?? ""}`
+            )
+                .toLowerCase()
+                .includes(search.trim().toLowerCase())
+        )
+        : items;
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">
-            {/* HEADER */}
             <div className="flex items-center gap-3 mb-4">
                 <button
                     onClick={() => navigate(-1)}
@@ -90,7 +57,6 @@ export default function BrandProducts() {
                 </h1>
             </div>
 
-            {/* SEARCH */}
             <input
                 type="text"
                 placeholder="Search crackers..."
@@ -99,7 +65,6 @@ export default function BrandProducts() {
                 className="w-full mb-4 px-5 py-3 rounded-full border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[var(--color-primary)]"
             />
 
-            {/* LOADING */}
             {loading && items.length === 0 && !isSearching && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Array.from({ length: 6 }).map((_, i) => (
@@ -108,12 +73,6 @@ export default function BrandProducts() {
                 </div>
             )}
 
-            {/* SEARCH LOADING */}
-            {isSearching && searchLoading && (
-                <p className="text-center text-sm text-gray-500">Searching...</p>
-            )}
-
-            {/* EMPTY */}
             {!loading && displayProducts.length === 0 && (
                 <EmptyState
                     title="No products found"
@@ -121,7 +80,6 @@ export default function BrandProducts() {
                 />
             )}
 
-            {/* GRID */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                 {displayProducts.map((p) => {
                     const quantityInCart = cartItems[p.id] ?? 0;
@@ -139,7 +97,6 @@ export default function BrandProducts() {
                 })}
             </div>
 
-            {/* LOAD MORE */}
             {!isSearching && nextCursor && (
                 <div className="flex justify-center py-8">
                     <button

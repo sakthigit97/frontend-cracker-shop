@@ -3,7 +3,6 @@ import Button from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useAdminUsersStore } from "../../store/adminUsers.store";
 import { useAlert } from "../../store/alert.store";
-import { useDebounce } from "../../utils/useDebounce";
 import { deleteUser } from "../../services/adminUsers.api";
 import EmptyState from "../../components/ui/EmptyState";
 import { useNavigate } from "react-router-dom";
@@ -17,27 +16,21 @@ export default function AdminUsers() {
     const [deletingMobile, setDeletingMobile] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [selectedMobile, setSelectedMobile] = useState<string | null>(null);
-    const debouncedSearch = useDebounce(search, 1000);
     const navigate = useNavigate();
-
-    const effectiveFilters = useMemo(
-        () => ({
-            search: debouncedSearch,
-        }),
-        [debouncedSearch]
-    );
+    const PAGE_SIZE = 20;
+    const query = search.trim().toLowerCase();
 
     useEffect(() => {
         setPage(1);
-    }, [effectiveFilters]);
+    }, [query]);
 
     useEffect(() => {
         loadUsers();
-    }, [page, effectiveFilters]);
+    }, []);
 
     const loadUsers = async () => {
         try {
-            const res = await fetchPage(effectiveFilters, page);
+            const res = await fetchPage({}, 1);
             setData(res);
         } catch (err: any) {
             showAlert({
@@ -46,6 +39,35 @@ export default function AdminUsers() {
             });
         }
     };
+
+    const filteredUsers = useMemo(() => {
+        return (data?.items ?? []).filter((u: any) =>
+            (
+                `${u.name ?? ""} ${u.mobile ?? ""}`
+            )
+                .toLowerCase()
+                .includes(query)
+        );
+    }, [data?.items, query]);
+
+    const paginatedUsers = useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+
+        return filteredUsers.slice(
+            start,
+            start + PAGE_SIZE
+        );
+    }, [filteredUsers, page]);
+
+    const totalPages = Math.ceil(
+        filteredUsers.length / PAGE_SIZE
+    );
+
+    useEffect(() => {
+        if (page > totalPages && totalPages > 0) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const handleDeleteClick = (mobile: string) => {
         setSelectedMobile(mobile);
@@ -64,9 +86,14 @@ export default function AdminUsers() {
                 type: "success",
                 message: "User deleted successfully",
             });
+            setData((prev: any) => ({
+                ...prev,
+                items: prev.items.filter(
+                    (u: any) => u.mobile !== selectedMobile
+                ),
+            }));
 
             clearCache();
-            loadUsers();
         } catch (err: any) {
             showAlert({
                 type: "error",
@@ -104,7 +131,6 @@ export default function AdminUsers() {
                 </h1>
             </div>
 
-            {/* Search */}
             <div className="">
                 <input
                     placeholder="Search by name or mobile..."
@@ -123,7 +149,6 @@ export default function AdminUsers() {
                 />
             </div>
 
-            {/* Table */}
             <div className="bg-white border rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[700px]">
@@ -138,7 +163,6 @@ export default function AdminUsers() {
                         </thead>
 
                         <tbody>
-                            {/* Loading Skeleton */}
                             {loading &&
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr
@@ -159,9 +183,8 @@ export default function AdminUsers() {
                                     </tr>
                                 ))}
 
-                            {/* Data */}
-                            {!loading && data?.items?.length ? (
-                                data.items.map((u: any) => (
+                            {!loading && paginatedUsers.length ? (
+                                paginatedUsers.map((u: any) => (
                                     <tr key={u.mobile} className="border-t">
                                         <td className="p-3">{u.name}</td>
                                         <td className="p-3">{u.mobile}</td>
@@ -188,7 +211,6 @@ export default function AdminUsers() {
                                 ))
                             ) : null}
 
-                            {/* Empty */}
                             {!loading &&
                                 (!data?.items ||
                                     data.items.length === 0) && (
@@ -206,9 +228,31 @@ export default function AdminUsers() {
                         </tbody>
                     </table>
                 </div>
+                <div className="flex justify-center items-center gap-3 p-4 border-t">
+
+                    <Button
+                        variant="outline"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => p - 1)}
+                    >
+                        ← Previous
+                    </Button>
+
+                    <span className="text-sm">
+                        Page {page} of {totalPages || 1}
+                    </span>
+
+                    <Button
+                        variant="outline"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => p + 1)}
+                    >
+                        Next →
+                    </Button>
+
+                </div>
             </div>
 
-            {/* Confirm Dialog */}
             <ConfirmDialog
                 open={showDeleteConfirm}
                 title="Delete User?"

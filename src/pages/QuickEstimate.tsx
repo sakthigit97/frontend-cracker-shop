@@ -26,13 +26,14 @@ export default function QuickEstimate() {
     useEffect(() => {
         fetchAll();
     }, []);
+    const query = search.trim().toLowerCase();
 
     const displayProducts =
-        search.trim().length > 0
+        query.length > 0
             ? products.filter((p) =>
-                p.name
+                (`${p.name} ${p.searchText ?? ""}`)
                     .toLowerCase()
-                    .includes(search.toLowerCase())
+                    .includes(query)
             )
             : products;
 

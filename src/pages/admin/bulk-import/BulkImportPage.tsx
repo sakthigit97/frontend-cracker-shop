@@ -9,7 +9,7 @@ export default function AdminBulkImport() {
     const navigate = useNavigate();
 
     return (
-        <div className="max-w-4xl space-y-6">
+        <div className="max-w-7xl mx-auto px-4 py-6">
             <div className="flex items-center gap-3 mb-4">
                 <button
                     onClick={() => navigate(-1)}

@@ -40,7 +40,7 @@ export function CategoryProductProvider({
 
         try {
             const res = await apiFetch(
-                `/products/category/${categoryId}?limit=8`
+                `/products/category/${categoryId}?limit=1000`
             );
 
             setData((prev) => ({
@@ -79,7 +79,7 @@ export function CategoryProductProvider({
 
         try {
             const res = await apiFetch(
-                `/products/category/${categoryId}?limit=8&cursor=${encodeURIComponent(
+                `/products/category/${categoryId}?limit=2000&cursor=${encodeURIComponent(
                     current.nextCursor
                 )}`
             );

@@ -1,4 +1,5 @@
 export interface Product {
+  searchText: string;
   qty: number;
   id: string;
   name: string;
