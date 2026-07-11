@@ -10,6 +10,7 @@ export interface Product {
   brand?: string;
   discountText?: string;
   categoryId?: string;
+  isComboPackage?: boolean;
 }
 
 export type ProductDetails = {
@@ -23,4 +24,5 @@ export type ProductDetails = {
   description: string;
   youtubeUrl?: string | null;
   discountText?: string;
+  isComboPackage?: boolean;
 };

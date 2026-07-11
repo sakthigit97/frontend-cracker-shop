@@ -9,6 +9,7 @@ type CartProduct = {
     brand?: string;
     originalPrice?: number;
     discountText?: string;
+    isComboPackage?: boolean;
 };
 
 interface CartProductsState {
@@ -38,7 +39,8 @@ export const useCartProductsStore = create<CartProductsState>(
                         image: p.image,
                         brand: p.brandId,
                         originalPrice: p.originalPrice,
-                        discountText: p.discountText
+                        discountText: p.discountText,
+                        isComboPackage: p.isComboPackage || false,
                     };
                 });
 

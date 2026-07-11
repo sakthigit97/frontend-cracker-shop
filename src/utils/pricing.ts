@@ -4,29 +4,30 @@ export function isTamilNadu(state?: string) {
 
 export function calculateOrderAmounts({
     totalAmount,
+    chargeableAmount,
     packagingPercent,
     gstPercent,
     state,
     config,
 }: {
     totalAmount: number;
+    chargeableAmount?: number;
     packagingPercent: number;
     gstPercent: number;
     state?: string;
     config?: any;
 }) {
-    const packagingCharge = Math.round(
-        (totalAmount * packagingPercent) / 100
-    );
 
+    const chargeableBaseAmount = chargeableAmount ?? totalAmount;
+    const packagingCharge = Math.round(
+        (chargeableBaseAmount * packagingPercent) / 100
+    );
     const disableGstForTN = config?.disableGstForTN ?? false;
     const isTN = isTamilNadu(state);
-
     let gstAmount = 0;
     if (!(isTN && disableGstForTN)) {
-        gstAmount = Math.round((totalAmount * gstPercent) / 100);
+        gstAmount = Math.round((chargeableBaseAmount * gstPercent) / 100);
     }
-
     const grandTotal = totalAmount + packagingCharge + gstAmount;
     return {
         packagingCharge,

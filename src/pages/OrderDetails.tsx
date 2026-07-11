@@ -309,8 +309,16 @@ export default function OrderDetails() {
             className="flex justify-between items-start text-sm py-2"
           >
             <div>
-              <div>
-                {item.name} × {item.quantity}
+              <div className="flex items-center gap-2">
+                <span>
+                  {item.name} × {item.quantity}
+                </span>
+
+                {item.isComboPackage && (
+                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    Combo
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2 mt-1">
@@ -354,14 +362,39 @@ export default function OrderDetails() {
             </span>
           </div>
 
+          {(order.comboAmount ?? 0) > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>Combo Package Amount</span>
+              <span>₹{order.comboAmount}</span>
+            </div>
+          )}
+
+          {(order.comboAmount ?? 0) > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>GST / Packaging Eligible Amount</span>
+              <span>₹{order.eligibleChargeAmount}</span>
+            </div>
+          )}
+
           <div className="flex justify-between text-gray-600">
-            <span>Packaging Charges</span>
+            <span>
+              Packaging Charges
+              {(order.comboAmount ?? 0) > 0 &&
+                " (Eligible Items Only)"}
+            </span>
+
             <span>₹{order.packagingCharge ?? 0}</span>
           </div>
 
           {(order.gstAmount ?? 0) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>GST (18%)</span>
+              <span>
+                GST (18%
+                {(order.comboAmount ?? 0) > 0
+                  ? " on Eligible Items"
+                  : ""}
+                )
+              </span>
               <span>₹{order.gstAmount}</span>
             </div>
           )}

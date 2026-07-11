@@ -7,6 +7,7 @@ import { adjustOrderApi } from "../services/order.api";
 import { useOrdersStore } from "../store/orders.store";
 import { useAlert } from "../store/alert.store";
 import { calculateOrderAmounts } from "../utils/pricing";
+import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { useConfigStore } from "../store/config.store";
 import defaultImage from "../assets/default-image.png";
 
@@ -18,6 +19,7 @@ type AdjustOrderItem = {
     image?: string;
     discountText?: string;
     originalPrice?: number;
+    isComboPackage?: boolean;
 };
 
 export default function AdjustOrder() {
@@ -50,7 +52,8 @@ export default function AdjustOrder() {
             price: i.total / i.quantity,
             image: i.image,
             discountText: i.discountText,
-            originalPrice: i.originalPrice
+            originalPrice: i.originalPrice,
+            isComboPackage: i.isComboPackage
         }))
     );
 
@@ -100,32 +103,32 @@ export default function AdjustOrder() {
         setTimeout(() => setShakeSave(false), 400);
     };
     const isEmpty = items.length === 0;
-    const subtotal = useMemo(
-        () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    const pricingBreakdown = useMemo(
+        () => calculateOrderPricingBreakdown(items),
         [items]
     );
+    const subtotal = pricingBreakdown.subtotal;
     const derivedState = order?.state || (order?.address?.includes("Tamil Nadu") ? "Tamil Nadu" : "Other");
     const { packagingCharge, gstAmount, grandTotal } = useMemo(
         () =>
-
             calculateOrderAmounts({
-                totalAmount: subtotal,
+                totalAmount: pricingBreakdown.subtotal,
+                chargeableAmount: pricingBreakdown.eligibleChargeAmount,
                 packagingPercent,
                 gstPercent,
                 state: derivedState,
                 config,
             }),
-        [subtotal, packagingPercent, gstPercent, config]
+        [
+            pricingBreakdown.subtotal,
+            pricingBreakdown.eligibleChargeAmount,
+            packagingPercent,
+            gstPercent,
+            derivedState,
+            config,
+        ]
     );
-    const oldTotal = useMemo(
-        () =>
-            order.items.reduce(
-                (sum: number, i: any) => sum + i.total,
-                0
-            ),
-        [order.items]
-    );
-
+    const oldTotal = Number(order.totalAmount || 0);
     const diffAmount = grandTotal - oldTotal;
     const updateQty = (productId: string, delta: number) => {
         if (!canAdjust) return;
@@ -337,9 +340,17 @@ export default function AdjustOrder() {
                             />
 
                             <div className="flex-1">
-                                <h3 className="font-medium text-[var(--color-primary)]">
-                                    {item.name}
-                                </h3>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h3 className="font-medium text-[var(--color-primary)]">
+                                        {item.name}
+                                    </h3>
+
+                                    {item.isComboPackage && (
+                                        <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                            Combo
+                                        </span>
+                                    )}
+                                </div>
                                 <div className="text-xs mt-1 flex flex-col gap-1">
 
                                     {item.discountText && (
@@ -422,15 +433,31 @@ export default function AdjustOrder() {
                                 <div className="text-sm space-y-1 text-right sm:text-left">
                                     <p>Subtotal: ₹{subtotal}</p>
 
+                                    {pricingBreakdown.comboAmount > 0 && (
+                                        <>
+                                            <p className="text-gray-600">
+                                                Combo Package Amount: ₹{pricingBreakdown.comboAmount}
+                                            </p>
+
+                                            <p className="text-gray-600">
+                                                GST / Packaging Eligible Amount: ₹{pricingBreakdown.eligibleChargeAmount}
+                                            </p>
+                                        </>
+                                    )}
+
                                     {packagingCharge > 0 && (
                                         <p className="text-gray-600">
-                                            Packaging ({packagingPercent}%): ₹{packagingCharge}
+                                            {pricingBreakdown.comboAmount > 0
+                                                ? `Packaging (${packagingPercent}% - Eligible Items)`
+                                                : `Packaging (${packagingPercent}%)`}: ₹{packagingCharge}
                                         </p>
                                     )}
 
                                     {gstAmount > 0 && (
                                         <p className="text-gray-600">
-                                            GST ({gstPercent}%): ₹{gstAmount}
+                                            {pricingBreakdown.comboAmount > 0
+                                                ? `GST (${gstPercent}% - Eligible Items)`
+                                                : `GST (${gstPercent}%)`}: ₹{gstAmount}
                                         </p>
                                     )}
 
@@ -487,10 +514,27 @@ export default function AdjustOrder() {
                 title="Confirm Order Adjustment"
                 message={
                     <div className="space-y-1">
-                        <p className="text-sm">Old Total: ₹{oldTotal}</p>
+                        <p className="text-sm">
+                            Old Total: ₹{oldTotal}
+                        </p>
+
                         <p className="font-semibold">
                             New Total: ₹{grandTotal}
                         </p>
+
+                        {pricingBreakdown.comboAmount > 0 && (
+                            <>
+                                <p className="text-xs text-gray-500">
+                                    Combo Package Amount:
+                                    ₹{pricingBreakdown.comboAmount}
+                                </p>
+
+                                <p className="text-xs text-gray-500">
+                                    GST / Packaging Eligible Amount:
+                                    ₹{pricingBreakdown.eligibleChargeAmount}
+                                </p>
+                            </>
+                        )}
                         {diffAmount !== 0 && (
                             <p
                                 className={`text-sm font-medium ${diffAmount > 0

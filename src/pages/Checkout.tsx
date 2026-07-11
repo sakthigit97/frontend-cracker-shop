@@ -8,6 +8,7 @@ import { useConfigStore } from "../store/config.store";
 import { useAlert } from "../store/alert.store";
 import { INDIA_STATES } from "../utils/states";
 import { calculateOrderAmounts } from "../utils/pricing";
+import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import PrivacyPolicy from "./PrivacyPolicy";
 
 type ProfileResponse = {
@@ -48,28 +49,35 @@ export default function Checkout() {
   const [minOrderValid, setMinOrderValid] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [mobile, setMobile] = useState("");
-  const totalAmount = useMemo(
-    () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
+
+  const pricingBreakdown = useMemo(
+    () => calculateOrderPricingBreakdown(products),
     [products]
   );
+
+  const totalAmount = pricingBreakdown.subtotal;
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
-  const currentState =
-    addressMode === "PROFILE"
-      ? profileAddress
-      : stateValue;
+  const currentState = addressMode === "PROFILE" ? profileAddress : stateValue;
 
   const { packagingCharge, gstAmount, grandTotal } =
     useMemo(
       () =>
         calculateOrderAmounts({
-          totalAmount,
+          totalAmount: pricingBreakdown.subtotal,
+          chargeableAmount: pricingBreakdown.eligibleChargeAmount,
           packagingPercent,
           gstPercent,
           state: currentState,
           config,
         }),
-      [totalAmount, packagingPercent, gstPercent, currentState, config]
+      [
+        pricingBreakdown,
+        packagingPercent,
+        gstPercent,
+        currentState,
+        config,
+      ]
     );
 
   const creditUsed = Math.min(walletCredit, grandTotal);
@@ -84,7 +92,6 @@ export default function Checkout() {
     }
 
     let active = true;
-
     (async () => {
       const res = await validateMinimumOrder(
         currentPincode,
@@ -278,6 +285,8 @@ export default function Checkout() {
           subtotal: totalAmount,
           packagingCharge,
           gstAmount,
+          eligibleChargeAmount: pricingBreakdown.eligibleChargeAmount,
+          comboAmount: pricingBreakdown.comboAmount,
           totalAmount: grandTotal,
           walletUsed: creditUsed,
           finalPayable,
@@ -531,16 +540,33 @@ export default function Checkout() {
               <span>₹{totalAmount}</span>
             </div>
 
+            {pricingBreakdown.hasComboItems && (
+              <div className="flex justify-between text-gray-600">
+                <span>Combo Package Amount</span>
+                <span>₹{pricingBreakdown.comboAmount}</span>
+              </div>
+            )}
+
             {packagingCharge > 0 && (
               <div className="flex justify-between text-gray-600">
-                <span>Packaging Charges ({packagingPercent}%)</span>
+                <span>
+                  Packaging Charges
+                  {pricingBreakdown.hasComboItems
+                    ? ` (${packagingPercent}% on eligible items)`
+                    : ` (${packagingPercent}%)`}
+                </span>
                 <span>₹{packagingCharge}</span>
               </div>
             )}
 
             {gstAmount > 0 && (
               <div className="flex justify-between text-gray-600">
-                <span>GST ({gstPercent}%)</span>
+                <span>
+                  GST
+                  {pricingBreakdown.hasComboItems
+                    ? ` (${gstPercent}% on eligible items)`
+                    : ` (${gstPercent}%)`}
+                </span>
                 <span>₹{gstAmount}</span>
               </div>
             )}
