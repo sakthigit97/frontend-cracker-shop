@@ -12,6 +12,7 @@ import ProductSkeleton from "../../components/product/ProductSkeleton";
 import { useAlert } from "../../store/alert.store";
 import { useLocation } from "react-router-dom";
 import EmptyState from "../../components/ui/EmptyState";
+import defaultImage from "../../assets/default-image.png";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -276,7 +277,7 @@ export default function AdminOrderDetails() {
                 {order.items.map((item: any, idx: number) => (
                     <div key={item.productId || idx} className="p-4 flex gap-4">
                         <img
-                            src={item.image}
+                            src={item.image || defaultImage}
                             onError={(e) =>
                                 (e.currentTarget.src = "")
                             }

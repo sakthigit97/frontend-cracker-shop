@@ -1,249 +1,605 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  FaShoppingCart,
+  FaBoxOpen,
+  FaRobot,
+  FaCalculator,
+  FaPhoneAlt,
+  FaUserCircle,
+  FaClipboardList,
+  FaShieldAlt,
+  FaSignOutAlt,
+  FaHome,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
+
+import HeaderDropdown from "./HeaderDropdown";
+import type { HeaderDropdownItem } from "./HeaderDropdown";
+import MobileAccordion from "./MobileAccordion";
+import type { MobileAccordionItem } from "./MobileAccordion";
+
 import { useAuth } from "../../store/auth.store";
 import { cartStore } from "../../store/cart.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
-import { FaShoppingCart } from "react-icons/fa";
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const { isAuthenticated, logout, user } = useAuth();
+
   const items = cartStore((s) => s.items);
-  const { products, fetchInitial, hasFetched } = useHomeProducts();
 
-  const handleLogout = () => {
-    logout();
-    setOpen(false);
-    navigate("/");
-  };
-
-  const cartCount = useMemo(() => {
-    return Object.values(items).reduce((sum, qty) => sum + qty, 0);
-  }, [items]);
-
-
-  const cartTotal = useMemo(() => {
-    if (!products || products.length === 0) return null;
-
-    return Object.entries(items).reduce((sum, [id, qty]: any) => {
-      if (!id || id === "undefined") return sum;
-
-      const product = products.find((p) => p.id === id);
-      if (!product) return sum;
-
-      const quantity =
-        typeof qty === "number" ? qty : qty?.qty || 0;
-
-      return sum + product.price * quantity;
-    }, 0);
-  }, [items, products]);
+  const {
+    products,
+    fetchInitial,
+    hasFetched,
+  } = useHomeProducts();
 
   useEffect(() => {
     if (!hasFetched) {
       fetchInitial();
     }
-  }, [hasFetched]);
+  }, [fetchInitial, hasFetched]);
+
+  const handleLogout = () => {
+    logout();
+    setMobileOpen(false);
+    navigate("/");
+  };
+
+  const closeMobile = () => setMobileOpen(false);
+
+  const cartCount = useMemo(() => {
+    return Object.values(items).reduce(
+      (sum, qty) => sum + qty,
+      0
+    );
+  }, [items]);
+
+  const cartTotal = useMemo(() => {
+    if (!products.length) return null;
+
+    return Object.entries(items).reduce(
+      (sum, [id, qty]) => {
+        if (!id || id === "undefined") return sum;
+
+        const product = products.find(
+          (p) => p.id === id
+        );
+
+        if (!product) return sum;
+
+        const quantity =
+          typeof qty === "number"
+            ? qty
+            : (qty as any)?.qty ?? 0;
+
+        return sum + product.price * quantity;
+      },
+      0
+    );
+  }, [items, products]);
+
+  const productMenu: HeaderDropdownItem[] = [
+    {
+      label: "All Products",
+      to: "/products",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "Combo Packages",
+      to: "/combo-packages",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "Quick Estimate",
+      to: "/quick-estimate",
+      icon: <FaCalculator />,
+    },
+    {
+      label: "AI Assistant",
+      to: "/ai-assistant",
+      icon: <FaRobot />,
+    },
+  ];
+
+  const supportMenu: HeaderDropdownItem[] = [
+    {
+      label: "Contact Us",
+      to: "/contact",
+      icon: <FaPhoneAlt />,
+    },
+    {
+      label: "Privacy Policy",
+      to: "/privacy-policy",
+      icon: <FaShieldAlt />,
+    },
+  ];
+
+  const accountMenu: HeaderDropdownItem[] = [
+    {
+      label: "Orders",
+      to: "/orders",
+      icon: <FaClipboardList />,
+    },
+    {
+      label: "Profile",
+      to: "/profile",
+      icon: <FaUserCircle />,
+    },
+    {
+      label: "Logout",
+      icon: <FaSignOutAlt />,
+      onClick: handleLogout,
+      danger: true,
+    },
+  ];
+
+  const mobileProducts: MobileAccordionItem[] = [
+    {
+      label: "All Products",
+      to: "/products",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "Combo Packages",
+      to: "/combo-packages",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "Quick Estimate",
+      to: "/quick-estimate",
+      icon: <FaCalculator />,
+    },
+    {
+      label: "AI Assistant",
+      to: "/ai-assistant",
+      icon: <FaRobot />,
+    },
+  ];
+
+  const mobileSupport: MobileAccordionItem[] = [
+    {
+      label: "Contact Us",
+      to: "/contact",
+      icon: <FaPhoneAlt />,
+    },
+    {
+      label: "Privacy Policy",
+      to: "/privacy-policy",
+      icon: <FaShieldAlt />,
+    },
+  ];
+
+  const mobileAccount: MobileAccordionItem[] = [
+    {
+      label: "Orders",
+      to: "/orders",
+      icon: <FaClipboardList />,
+    },
+    {
+      label: "Profile",
+      to: "/profile",
+      icon: <FaUserCircle />,
+    },
+    {
+      label: "Logout",
+      icon: <FaSignOutAlt />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <header className="bg-[var(--color-primary)] text-white">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto h-16 px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span className="font-bold tracking-wide hidden sm:block">
             Sivakasi Pyro Park
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <Link to="/" className="hover:text-[var(--color-accent)]">
+
+        <nav className="hidden lg:flex items-center gap-2">
+
+          <Link
+            to="/"
+            className="
+              rounded-xl
+              px-4
+              py-2
+              text-sm
+              font-medium
+              transition-all
+              duration-200
+              hover:bg-white/10
+            "
+          >
             Home
           </Link>
 
-          <Link to="/products" className="hover:text-[var(--color-accent)]">
-            Products
-          </Link>
+          <HeaderDropdown
+            title="Products"
+            items={productMenu}
+          />
 
-          <Link to="/quick-estimate" className="hover:text-[var(--color-accent)]">
-            Quick Estimate
-          </Link>
-
-          <Link to="/ai-assistant" className="hover:text-[var(--color-accent)]">
-            AI-Assistant
-          </Link>
-
-          <Link to="/combo-packages" className="hover:text-[var(--color-accent)]">
-            Combo Packages
-          </Link>
-
-          <Link to="/contact" className="hover:text-[var(--color-accent)]">
-            Contact us
-          </Link>
-
-          <Link to="/privacy-policy" className="hover:text-[var(--color-accent)]">
-            Privacy Policy
-          </Link>
+          <HeaderDropdown
+            title="Support"
+            items={supportMenu}
+          />
 
           {isAuthenticated && (
-            <Link to="/orders" className="hover:text-[var(--color-accent)]">
-              Orders
-            </Link>
+            <HeaderDropdown
+              title="My Account"
+              items={accountMenu}
+            />
           )}
         </nav>
 
+        {/* ================= Right Section ================= */}
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+
+          {/* Welcome Chip */}
+
           {isAuthenticated && (
             <div
               className="
-      flex items-center gap-1
-      bg-white/10
-      px-2 py-1
-      sm:px-3 sm:py-1.5
-      rounded-full
-      text-xs sm:text-sm
-      backdrop-blur-sm
-      max-w-[120px] sm:max-w-[180px]
-    "
+                hidden
+                md:flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-white/10
+                bg-white/10
+                px-4
+                py-2
+                backdrop-blur
+              "
             >
-              <span className="text-white/80">Welcome,</span>
-
-              <span className="font-semibold text-white truncate">
-                {user?.name || "User"}
-              </span>
-            </div>
-          )}
-          {cartCount > 0 ? (
-            <Link to="/cart" className="flex items-center gap-2">
-              <div className="relative">
-                <FaShoppingCart className="text-xl" />
-
-                {cartCount > 0 && (
-                  <span
-                    className="
-                    absolute -top-2 -right-2
-                    min-w-[18px] h-[18px] px-1
-                    flex items-center justify-center
-                    rounded-full text-[11px] font-bold
-                    bg-white text-[var(--color-primary)]
-                    ring-2 ring-[var(--color-primary)]
-                  "
-                  >
-                    {cartCount}
-                  </span>
-                )}
+              <div
+                className="
+                  flex
+                  h-8
+                  w-8
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-white/20
+                "
+              >
+                <FaUserCircle />
               </div>
 
-              {cartTotal === null ? (
-                <span className="text-xs opacity-70">...</span>
-              ) : (
-                <>₹{cartTotal.toLocaleString()}</>
-              )}
+              <div className="leading-tight">
+                <div className="text-[11px] text-white/60">
+                  Welcome
+                </div>
 
-            </Link>
-          ) : (
-            <span
-              className="
-                relative
-                text-lg
-                opacity-50
-                cursor-not-allowed
-              "
-              title="Cart is empty"
-            >
-              <FaShoppingCart className="text-xl" />
-            </span>
+                <div
+                  className="
+                    max-w-[130px]
+                    truncate
+                    text-sm
+                    font-semibold
+                  "
+                >
+                  {user?.name ?? "User"}
+                </div>
+              </div>
+            </div>
           )}
 
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden focus:outline-none"
+          <Link
+            to="/cart"
+            className="
+        flex
+        items-center
+        gap-2
+        rounded-full
+        bg-white/10
+        hover:bg-white/20
+        px-3
+        py-1.5
+        transition-all
+    "
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+            <div className="relative">
+
+              <FaShoppingCart className="text-xl" />
+
+              {cartCount > 0 && (
+                <span
+                  className="
+                    absolute
+                    -right-2
+                    -top-2
+                    flex
+                    h-5
+                    min-w-[20px]
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-red-500
+                    px-1
+                    text-[11px]
+                    font-bold
+                    text-white
+                  "
+                >
+                  {cartCount}
+                </span>
+              )}
+
+            </div>
+
+            <div className="hidden md:block leading-tight">
+
+              <div className="text-[11px] text-white/60">
+                Cart
+              </div>
+
+              <div className="text-sm font-semibold">
+
+                {cartTotal === null
+                  ? "..."
+                  : `₹${cartTotal.toLocaleString()}`}
+
+              </div>
+
+            </div>
+
+          </Link>
+
+          {/* Login */}
 
           {!isAuthenticated ? (
             <Link
               to="/login"
-              className="hidden md:inline-block bg-[var(--color-accent)] text-[var(--color-primary)] px-3 py-1 rounded-md text-sm font-semibold"
+              className="
+                hidden
+                lg:inline-flex
+                items-center
+                rounded-xl
+                bg-[var(--color-accent)]
+                px-5
+                py-2.5
+                text-sm
+                font-semibold
+                text-[var(--color-primary)]
+                transition-all
+                duration-200
+                hover:scale-[1.03]
+              "
             >
               Login
             </Link>
           ) : (
             <button
               onClick={handleLogout}
-              className="hidden md:inline-flex items-center px-3 py-1 rounded-md
-                        text-sm font-semibold
-                        bg-white/10 hover:bg-white/20
-                        transition"
+              className="
+                hidden
+                lg:inline-flex
+                items-center
+                rounded-xl
+                border
+                border-white/10
+                bg-white/10
+                px-5
+                py-2.5
+                text-sm
+                font-semibold
+                transition-all
+                duration-200
+                hover:bg-red-500
+                hover:text-white
+              "
             >
               Logout
             </button>
           )}
+
+          {/* Mobile Menu Button */}
+
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="
+              rounded-xl
+              p-2
+              transition-all
+              duration-200
+              hover:bg-white/10
+              lg:hidden
+            "
+          >
+            {mobileOpen ? (
+              <FaTimes className="text-xl" />
+            ) : (
+              <FaBars className="text-xl" />
+            )}
+          </button>
+
         </div>
       </div>
+      {/* ================= Mobile Navigation ================= */}
 
-      {open && (
-        <div className="md:hidden bg-[var(--color-primary)] border-t border-white/10">
-          <nav className="flex flex-col p-4 space-y-3 text-sm">
-            <Link onClick={() => setOpen(false)} to="/">
+      {mobileOpen && (
+        <div
+          className="
+            lg:hidden
+            border-t
+            border-white/10
+            bg-[var(--color-primary)]/95
+            backdrop-blur-xl
+          "
+        >
+          <div className="space-y-4 p-4">
+
+            {/* Home */}
+
+            <Link
+              to="/"
+              onClick={closeMobile}
+              className="
+                flex
+                items-center
+                gap-3
+                rounded-2xl
+                bg-white/5
+                px-4
+                py-3
+                text-sm
+                font-medium
+                transition-all
+                duration-200
+                hover:bg-white/10
+              "
+            >
+              <FaHome />
+
               Home
             </Link>
-            <Link onClick={() => setOpen(false)} to="/products">
-              Products
-            </Link>
-            <Link onClick={() => setOpen(false)} to="/quick-estimate">
-              Quick Estimate
-            </Link>
-            <Link onClick={() => setOpen(false)} to="/ai-assistant">
-              AI-Assistant
-            </Link>
-            <Link onClick={() => setOpen(false)} to="/combo-packages">
-              Combo Packages
-            </Link>
-            <Link onClick={() => setOpen(false)} to="/contact">
-              Contact us
-            </Link>
-            <Link onClick={() => setOpen(false)} to="/privacy-policy">
-              Privacy Policy
-            </Link>
+
+            {/* Products */}
+
+            <MobileAccordion
+              title="Products"
+              items={mobileProducts}
+              onNavigate={closeMobile}
+            />
+
+            {/* Support */}
+
+            <MobileAccordion
+              title="Support"
+              items={mobileSupport}
+              onNavigate={closeMobile}
+            />
+
+            {/* Account */}
 
             {isAuthenticated && (
-              <>
-                <Link onClick={() => setOpen(false)} to="/orders">
-                  Orders
-                </Link>
-
-                <Link to="/profile" className="hover:text-[var(--color-accent)]">
-                  Profile
-                </Link>
-              </>
+              <MobileAccordion
+                title="My Account"
+                items={mobileAccount}
+                onNavigate={closeMobile}
+              />
             )}
 
-            {!isAuthenticated ? (
-              <Link onClick={() => setOpen(false)} to="/login">
+            {/* Login */}
+
+            {!isAuthenticated && (
+              <Link
+                to="/login"
+                onClick={closeMobile}
+                className="
+                  flex
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-[var(--color-accent)]
+                  px-4
+                  py-3
+                  font-semibold
+                  text-[var(--color-primary)]
+                  transition-all
+                  duration-200
+                "
+              >
                 Login
               </Link>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="text-left text-white/90 hover:text-white font-medium"
-              >
-                Logout
-              </button>
             )}
-          </nav>
+
+            {/* Cart Summary */}
+
+            <Link
+              to="/cart"
+              onClick={closeMobile}
+              className="
+                flex
+                items-center
+                justify-between
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/5
+                px-4
+                py-4
+                transition-all
+                duration-200
+                hover:bg-white/10
+              "
+            >
+              <div className="flex items-center gap-3">
+
+                <div className="relative">
+
+                  <FaShoppingCart className="text-lg" />
+
+                  {cartCount > 0 && (
+                    <span
+                      className="
+                        absolute
+                        -right-2
+                        -top-2
+                        flex
+                        h-5
+                        min-w-[20px]
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-red-500
+                        px-1
+                        text-[11px]
+                        font-bold
+                        text-white
+                      "
+                    >
+                      {cartCount}
+                    </span>
+                  )}
+
+                </div>
+
+                <div>
+
+                  <div className="text-xs text-white/60">
+                    Shopping Cart
+                  </div>
+
+                  <div className="font-semibold">
+                    {cartCount} Item{cartCount !== 1 ? "s" : ""}
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="text-right">
+
+                <div className="text-xs text-white/60">
+                  Total
+                </div>
+
+                <div className="font-bold">
+
+                  {cartTotal === null
+                    ? "..."
+                    : `₹${cartTotal.toLocaleString()}`}
+
+                </div>
+
+              </div>
+
+            </Link>
+
+          </div>
         </div>
       )}
     </header>

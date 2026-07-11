@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
 import type { Product } from "../../types/product";
 import { memo } from "react";
+import defaultImage from "../../assets/default-image.png";
 
 interface Props {
   product: Product;
@@ -57,8 +58,7 @@ function ProductCard({
 
       <div className="relative bg-white aspect-[4/3] flex items-center justify-center">
         <img
-          src={product.image}
-          alt={product.name}
+          src={product.image || defaultImage}
           loading="lazy"
           decoding="async"
           className="

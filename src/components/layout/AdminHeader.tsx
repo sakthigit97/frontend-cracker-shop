@@ -1,185 +1,439 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+
+import {
+    FaBars,
+    FaTimes,
+    FaTachometerAlt,
+    FaBoxOpen,
+    FaTags,
+    FaLayerGroup,
+    FaPercentage,
+    FaShoppingBag,
+    FaChartBar,
+    FaUsers,
+    FaEnvelope,
+    FaCog,
+    FaSignOutAlt,
+    FaFolderOpen,
+    FaServer,
+} from "react-icons/fa";
+
+import HeaderDropdown from "./HeaderDropdown";
+import type { HeaderDropdownItem } from "./HeaderDropdown";
+import MobileAccordion from "./MobileAccordion";
+import type { MobileAccordionItem } from "./MobileAccordion";
+
 import { useAuth } from "../../store/auth.store";
 
 export default function AdminHeader() {
-    const [open, setOpen] = useState(false);
     const navigate = useNavigate();
+
+    const [mobileOpen, setMobileOpen] = useState(false);
+
     const { logout } = useAuth();
-    const [reportsOpen, setReportsOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
-        setOpen(false);
+        setMobileOpen(false);
         navigate("/");
     };
 
-    return (
-        <header className="bg-[var(--color-primary)] text-white">
-            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    const closeMobile = () => setMobileOpen(false);
 
-                {/* Logo */}
-                <Link to="/admin" className="flex items-center gap-2">
-                    <span className="font-bold tracking-wide text-sm sm:text-base">
-                        Admin Panel
-                    </span>
+    const catalogMenu: HeaderDropdownItem[] = [
+        {
+            label: "Products",
+            to: "/admin/products",
+            icon: <FaBoxOpen />,
+        },
+        {
+            label: "Categories",
+            to: "/admin/categories",
+            icon: <FaLayerGroup />,
+        },
+        {
+            label: "Brands",
+            to: "/admin/brands",
+            icon: <FaTags />,
+        },
+        {
+            label: "Discounts",
+            to: "/admin/discounts",
+            icon: <FaPercentage />,
+        },
+    ];
+
+    const salesMenu: HeaderDropdownItem[] = [
+        {
+            label: "Orders",
+            to: "/admin/orders",
+            icon: <FaShoppingBag />,
+        },
+        {
+            label: "Revenue Report",
+            to: "/admin/reports/revenue",
+            icon: <FaChartBar />,
+        },
+        {
+            label: "Product Report",
+            to: "/admin/reports/products",
+            icon: <FaChartBar />,
+        },
+    ];
+
+    const systemMenu: HeaderDropdownItem[] = [
+        {
+            label: "Users",
+            to: "/admin/users",
+            icon: <FaUsers />,
+        },
+        {
+            label: "Queries",
+            to: "/admin/queries",
+            icon: <FaEnvelope />,
+        },
+        {
+            label: "Configurations",
+            to: "/admin/configs",
+            icon: <FaCog />,
+        },
+        {
+            label: "Logout",
+            icon: <FaSignOutAlt />,
+            onClick: handleLogout,
+            danger: true,
+        },
+    ];
+
+    const mobileCatalog: MobileAccordionItem[] = [
+        {
+            label: "Products",
+            to: "/admin/products",
+            icon: <FaBoxOpen />,
+        },
+        {
+            label: "Categories",
+            to: "/admin/categories",
+            icon: <FaLayerGroup />,
+        },
+        {
+            label: "Brands",
+            to: "/admin/brands",
+            icon: <FaTags />,
+        },
+        {
+            label: "Discounts",
+            to: "/admin/discounts",
+            icon: <FaPercentage />,
+        },
+    ];
+
+    const mobileSales: MobileAccordionItem[] = [
+        {
+            label: "Orders",
+            to: "/admin/orders",
+            icon: <FaShoppingBag />,
+        },
+        {
+            label: "Revenue Report",
+            to: "/admin/reports/revenue",
+            icon: <FaChartBar />,
+        },
+        {
+            label: "Product Report",
+            to: "/admin/reports/products",
+            icon: <FaChartBar />,
+        },
+    ];
+
+    const mobileSystem: MobileAccordionItem[] = [
+        {
+            label: "Users",
+            to: "/admin/users",
+            icon: <FaUsers />,
+        },
+        {
+            label: "Queries",
+            to: "/admin/queries",
+            icon: <FaEnvelope />,
+        },
+        {
+            label: "Configurations",
+            to: "/admin/configs",
+            icon: <FaCog />,
+        },
+        {
+            label: "Logout",
+            icon: <FaSignOutAlt />,
+            danger: true,
+            onClick: handleLogout,
+        },
+    ];
+
+    return (
+
+        <header className="bg-[var(--color-primary)] text-white">
+            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">                {/* ================= Logo ================= */}
+
+                <Link
+                    to="/admin"
+                    className="flex items-center gap-3 flex-shrink-0"
+                >
+                    <div
+                        className="
+              flex
+              h-11
+              w-11
+              items-center
+              justify-center
+              rounded-xl
+              bg-white/10
+              backdrop-blur
+            "
+                    >
+                        <FaServer className="text-lg" />
+                    </div>
+
+                    <div className="hidden sm:block">
+                        <div className="text-lg font-bold leading-none">
+                            Admin Panel
+                        </div>
+
+                        <div className="text-xs text-white/60">
+                            Management Console
+                        </div>
+                    </div>
                 </Link>
 
-                {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-                    <Link to="/admin" className="hover:text-[var(--color-accent)]">
+
+                <nav className="hidden lg:flex items-center gap-2">
+
+                    <Link
+                        to="/admin"
+                        className="
+              rounded-xl
+              px-4
+              py-2
+              text-sm
+              font-medium
+              transition-all
+              duration-200
+              hover:bg-white/10
+            "
+                    >
                         Dashboard
                     </Link>
 
-                    <Link to="/admin/products" className="hover:text-[var(--color-accent)]">
-                        Products
-                    </Link>
+                    <HeaderDropdown
+                        title="Catalog"
+                        icon={<FaFolderOpen size={14} />}
+                        items={catalogMenu}
+                    />
 
-                    <Link to="/admin/categories" className="hover:text-[var(--color-accent)]">
-                        Categories
-                    </Link>
+                    <HeaderDropdown
+                        title="Sales"
+                        icon={<FaShoppingBag size={14} />}
+                        items={salesMenu}
+                    />
 
-                    <Link to="/admin/brands" className="hover:text-[var(--color-accent)]">
-                        Brands
-                    </Link>
+                    <HeaderDropdown
+                        title="System"
+                        icon={<FaCog size={14} />}
+                        items={systemMenu}
+                    />
 
-                    <Link to="/admin/orders" className="hover:text-[var(--color-accent)]">
-                        Orders
-                    </Link>
-                    <div className="relative group">
-                        <button className="hover:text-[var(--color-accent)]">
-                            Reports
-                        </button>
+                </nav>
 
-                        <div className="absolute left-0 hidden group-hover:block pt-2 z-50">
-                            <div className="bg-white text-black rounded-lg shadow-lg min-w-[180px]">
-                                <Link className="block px-4 py-2 hover:bg-gray-100" to="/admin/reports/revenue">
-                                    Revenue Report
-                                </Link>
-                                <Link className="block px-4 py-2 hover:bg-gray-100" to="/admin/reports/products">
-                                    Product Report
-                                </Link>
+                {/* ================= Right Actions ================= */}
+
+                <div className="flex items-center gap-3">
+
+                    {/* Admin Badge */}
+
+                    <div
+                        className="
+              hidden
+              md:flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-white/10
+              bg-white/10
+              px-4
+              py-2
+              backdrop-blur
+            "
+                    >
+                        <div
+                            className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+                bg-white/20
+              "
+                        >
+                            <FaTachometerAlt />
+                        </div>
+
+                        <div className="leading-tight">
+                            <div className="text-[11px] text-white/60">
+                                Administration
+                            </div>
+
+                            <div className="text-sm font-semibold">
+                                Control Panel
                             </div>
                         </div>
                     </div>
 
-                    <Link to="/admin/discounts" className="hover:text-[var(--color-accent)]">
-                        Discounts
-                    </Link>
-
-                    <Link to="/admin/queries" className="hover:text-[var(--color-accent)]">
-                        Queries
-                    </Link>
-
-                    <Link to="/admin/users" className="hover:text-[var(--color-accent)]">
-                        Users
-                    </Link>
-
-                    <Link to="/admin/configs" className="hover:text-[var(--color-accent)]">
-                        Configs
-                    </Link>
-                </nav>
-
-                {/* Right actions */}
-                <div className="flex items-center gap-4">
-                    {/* Hamburger */}
-                    <button
-                        onClick={() => setOpen(!open)}
-                        className="md:hidden focus:outline-none"
-                    >
-                        <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                        </svg>
-                    </button>
-
                     {/* Desktop Logout */}
+
                     <button
                         onClick={handleLogout}
-                        className="hidden md:inline-flex items-center px-3 py-1 rounded-md
-                       text-sm font-semibold
-                       bg-white/10 hover:bg-white/20
-                       transition"
+                        className="
+              hidden
+              lg:inline-flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              border-white/10
+              bg-white/10
+              px-5
+              py-2.5
+              text-sm
+              font-semibold
+              transition-all
+              duration-200
+              hover:bg-red-500
+              hover:text-white
+            "
                     >
+                        <FaSignOutAlt />
+
                         Logout
                     </button>
+
+                    {/* Mobile Menu */}
+
+                    <button
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        className="
+              rounded-xl
+              p-2
+              transition-all
+              duration-200
+              hover:bg-white/10
+              lg:hidden
+            "
+                    >
+                        {mobileOpen ? (
+                            <FaTimes className="text-xl" />
+                        ) : (
+                            <FaBars className="text-xl" />
+                        )}
+                    </button>
+
                 </div>
             </div>
+            {/* ================= Mobile Navigation ================= */}
 
-            {open && (
-                <div className="md:hidden bg-[var(--color-primary)] border-t border-white/10">
-                    <nav className="flex flex-col p-4 space-y-3 text-sm">
-                        <Link onClick={() => setOpen(false)} to="/admin">
+            {mobileOpen && (
+                <div
+                    className="
+            lg:hidden
+            border-t
+            border-white/10
+            bg-[var(--color-primary)]/95
+            backdrop-blur-xl
+          "
+                >
+                    <div className="space-y-4 p-4">
+
+                        {/* Dashboard */}
+
+                        <Link
+                            to="/admin"
+                            onClick={closeMobile}
+                            className="
+                flex
+                items-center
+                gap-3
+                rounded-2xl
+                bg-white/5
+                px-4
+                py-3
+                text-sm
+                font-medium
+                transition-all
+                duration-200
+                hover:bg-white/10
+              "
+                        >
+                            <FaTachometerAlt />
+
                             Dashboard
                         </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/products">
-                            Products
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/categories">
-                            Categories
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/brands">
-                            Brands
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/orders">
-                            Orders
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/discounts">
-                            Discounts
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/queries">
-                            Queries
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/users">
-                            Users
-                        </Link>
-                        <Link onClick={() => setOpen(false)} to="/admin/configs">
-                            Configs
-                        </Link>
-                        <div>
-                            <button
-                                onClick={() => setReportsOpen(!reportsOpen)}
-                                className="flex justify-between items-center w-full"
-                            >
-                                <span>Reports</span>
-                                <span>{reportsOpen ? "▲" : "▼"}</span>
-                            </button>
 
-                            {reportsOpen && (
-                                <div className="ml-4 mt-2 flex flex-col gap-2 text-sm">
-                                    <Link
-                                        onClick={() => setOpen(false)}
-                                        to="/admin/reports/revenue"
-                                    >
-                                        Revenue Report
-                                    </Link>
+                        {/* Catalog */}
 
-                                    <Link
-                                        onClick={() => setOpen(false)}
-                                        to="/admin/reports/products"
-                                    >
-                                        Product Report
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
+                        <MobileAccordion
+                            title="Catalog"
+                            icon={<FaFolderOpen />}
+                            items={mobileCatalog}
+                            onNavigate={closeMobile}
+                        />
+
+                        {/* Sales */}
+
+                        <MobileAccordion
+                            title="Sales"
+                            icon={<FaShoppingBag />}
+                            items={mobileSales}
+                            onNavigate={closeMobile}
+                        />
+
+                        {/* System */}
+
+                        <MobileAccordion
+                            title="System"
+                            icon={<FaCog />}
+                            items={mobileSystem}
+                            onNavigate={closeMobile}
+                        />
+
+                        {/* Quick Logout */}
 
                         <button
                             onClick={handleLogout}
-                            className="text-left text-white/90 hover:text-white font-medium"
+                            className="
+                flex
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-2xl
+                bg-red-500
+                px-4
+                py-3
+                font-semibold
+                text-white
+                transition-all
+                duration-200
+                hover:bg-red-600
+              "
                         >
+                            <FaSignOutAlt />
+
                             Logout
                         </button>
-                    </nav>
+
+                    </div>
                 </div>
             )}
         </header>

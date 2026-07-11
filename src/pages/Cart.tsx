@@ -2,9 +2,13 @@ import { cartStore } from "../store/cart.store";
 import { useCartProducts } from "../hooks/useCartProducts";
 import Button from "../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { Link } from "react-router-dom";
+import defaultImage from "../assets/default-image.png";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
+import { useAlert } from "../store/alert.store";
+
 
 export default function Cart() {
   const addItem = cartStore((s) => s.addItem);
@@ -12,6 +16,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const locked = cartStore((s) => s.locked);
   const clearCart = cartStore((s) => s.clear);
+  const [showClearCartConfirm, setShowClearCartConfirm] = useState(false);
 
   const { products, loading } = useCartProducts();
   const isEmpty = products.length === 0;
@@ -19,6 +24,7 @@ export default function Cart() {
     () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     [products]
   );
+  const { showAlert } = useAlert();
 
   if (loading) {
     return (
@@ -82,20 +88,22 @@ export default function Cart() {
             Your Cart
           </h1>
         </div>
-
         <button
-          onClick={() => {
-            if (window.confirm("Clear all items from the cart?")) {
-              clearCart();
-            }
-          }}
+          onClick={() => setShowClearCartConfirm(true)}
+          disabled={products.length === 0}
           className="
-            flex items-center gap-2
-            text-red-600
-            hover:text-red-700
-            text-sm
-            font-medium
-            transition
+          flex items-center gap-2
+          px-3 py-2
+          rounded-lg
+          border
+          border-red-200
+          bg-red-50
+          text-red-600
+          hover:bg-red-100
+          hover:border-red-300
+          transition-all
+          disabled:opacity-50
+          disabled:cursor-not-allowed
         "
         >
           🗑
@@ -121,8 +129,7 @@ export default function Cart() {
               "
             >
               <img
-                src={p.image}
-                alt={p.name}
+                src={p.image || defaultImage}
                 className="w-16 h-16 object-contain rounded-md"
               />
 
@@ -273,6 +280,32 @@ export default function Cart() {
           </Button>
         </div>
       </div>
+      <ConfirmDialog
+        open={showClearCartConfirm}
+        title="Clear Cart?"
+        message={
+          <>
+            Are you sure you want to remove all items from your cart?
+            <br />
+            <span className="text-red-500 font-medium">
+              This action cannot be undone.
+            </span>
+          </>
+        }
+        confirmText="Yes, Clear Cart"
+        cancelText="Cancel"
+        onCancel={() => setShowClearCartConfirm(false)}
+        onConfirm={async () => {
+          clearCart();
+
+          showAlert({
+            type: "success",
+            message: "Cart cleared successfully.",
+          });
+
+          setShowClearCartConfirm(false);
+        }}
+      />
     </div>
   );
 }

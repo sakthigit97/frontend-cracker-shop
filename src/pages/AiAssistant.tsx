@@ -5,40 +5,70 @@ export default function AiAssistant() {
     const navigate = useNavigate();
 
     return (
-        <div className="max-w-6xl mx-auto py-6">
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            <div className="px-4 mb-6">
-
-                <button
-                    onClick={() => navigate(-1)}
+                {/* Header */}
+                <div
                     className="
-                        flex items-center justify-center
-                        w-9 h-9
-                        rounded-full
-                        bg-[var(--color-primary)]
-                        text-white
+                        bg-white
+                        rounded-3xl
+                        border
                         shadow-sm
-
-                        hover:scale-105
-                        active:scale-95
-                        transition-all
-                        "
+                        p-6
+                        mb-8
+                    "
                 >
-                    ←
-                </button>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                            w-11
+                            h-11
+                            flex
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-[var(--color-primary)]
+                            text-white
+                            shadow-md
+                            hover:scale-105
+                            transition
+                        "
+                    >
+                        ←
+                    </button>
 
-                <h1 className="text-2xl font-bold">
-                    AI Cracker Assistant
-                </h1>
+                    <div className="mt-5">
 
-                <p className="text-gray-500 mt-1">
-                    Describe your requirements and we'll build the perfect cracker package.
-                </p>
+                        <h1
+                            className="
+                                mt-4
+                                text-3xl
+                                md:text-4xl
+                                font-bold
+                                text-gray-900
+                            "
+                        >
+                            AI Cracker Assistant
+                        </h1>
 
+                        <p
+                            className="
+                                mt-3
+                                text-gray-600
+                                max-w-3xl
+                                leading-7
+                            "
+                        >
+                            Answer a few simple questions and our AI will
+                            prepare the best cracker package based on your
+                            audience, preferences and budget.
+                        </p>
+                    </div>
+                </div>
+
+                <AiAssistantCard />
             </div>
-
-            <AiAssistantCard />
-
         </div>
     );
 }

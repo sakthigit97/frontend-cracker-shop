@@ -5,31 +5,37 @@ import {
 } from "react";
 
 import { apiFetch } from "../services/api";
+
 import type {
-    AiMessage,
+    AiRecommendationRequest,
     AiRecommendationResponse,
 } from "../types/aiRecommendation.types";
 
 interface AiRecommendationState {
-    messages: AiMessage[];
+
     loading: boolean;
+
     response:
     AiRecommendationResponse | null;
-    pendingQuery: string | null;
+
     cache:
     Record<
         string,
         AiRecommendationResponse
     >;
+
     askAi: (
-        query: string
+        request: AiRecommendationRequest
     ) => Promise<void>;
+
     clear: () => void;
+
 }
 
-const AiRecommendationContext = createContext<
-    AiRecommendationState | null
->(null);
+const AiRecommendationContext =
+    createContext<
+        AiRecommendationState | null
+    >(null);
 
 export function AiRecommendationProvider({
     children,
@@ -37,13 +43,14 @@ export function AiRecommendationProvider({
     children: React.ReactNode;
 }) {
 
-    const [messages, setMessages] = useState<AiMessage[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [response, setResponse] = useState<
-        AiRecommendationResponse | null
-    >(null);
+    const [loading, setLoading] =
+        useState(false);
 
-    const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+    const [response, setResponse] =
+        useState<
+            AiRecommendationResponse | null
+        >(null);
+
     const [cache, setCache] =
         useState<
             Record<
@@ -53,53 +60,26 @@ export function AiRecommendationProvider({
         >({});
 
     const askAi = async (
-        query: string
+        request: AiRecommendationRequest
     ) => {
 
-        const normalized = query.trim().toLowerCase();
-        setResponse(null);
-        setPendingQuery(null);
-        if (!normalized) {
-            return;
-        }
+        const cacheKey =
+            JSON.stringify(request);
 
-        setMessages(prev => {
+        /*
+         * Cache
+         */
 
-            const lastMessage =
-                prev[prev.length - 1];
+        if (
+            cache[cacheKey]
+        ) {
 
-            if (
-                lastMessage?.role === "user" &&
-                lastMessage?.text === query
-            ) {
-                return prev;
-            }
-
-            return [
-                ...prev,
-                {
-                    role: "user",
-                    text: query,
-                },
-            ];
-        });
-
-        if (cache[normalized]) {
-
-            const cached = cache[normalized];
-            setResponse(cached);
-
-            setMessages(prev => [
-                ...prev,
-                {
-                    role: "assistant",
-                    text:
-                        cached.message ||
-                        cached.status,
-                },
-            ]);
+            setResponse(
+                cache[cacheKey]
+            );
 
             return;
+
         }
 
         try {
@@ -111,9 +91,9 @@ export function AiRecommendationProvider({
                     "/ai-recommendation",
                     {
                         method: "POST",
-                        body: JSON.stringify({
-                            query,
-                        }),
+                        body: JSON.stringify(
+                            request
+                        ),
                     }
                 );
 
@@ -124,85 +104,69 @@ export function AiRecommendationProvider({
 
             if (
                 data.status ===
-                "NEEDS_BUDGET"
-            ) {
-                setPendingQuery(query);
-            }
-
-            if (
-                data.status === "NEEDS_BUDGET" ||
-                data.status === "INVALID_BUDGET" ||
-                data.status === "NO_MATCH_FOUND"
-            ) {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        role: "assistant",
-                        text: data.message || "",
-                    },
-                ]);
-            }
-
-            if (
-                data.status === "SUCCESS"
+                "SUCCESS"
             ) {
 
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        role: "assistant",
-                        text: "I found a recommended package for you.",
-                    },
-                ]);
+                setCache(
+                    prev => ({
+
+                        ...prev,
+
+                        [cacheKey]:
+                            data,
+
+                    })
+                );
+
             }
 
-            if (
-                data.status === "SUCCESS" ||
-                data.status ===
-                "NO_MATCH_FOUND"
-            ) {
-
-                setCache(prev => ({
-                    ...prev,
-                    [normalized]:
-                        data,
-                }));
-            }
-
-        } catch (err) {
+        }
+        catch (err) {
 
             console.error(
-                "AI Error",
+                "AI Recommendation Error",
                 err
             );
 
-        } finally {
+        }
+        finally {
 
             setLoading(false);
+
         }
+
     };
 
     const clear = () => {
-        setMessages([]);
+
         setResponse(null);
-        setPendingQuery(null);
+
     };
 
     return (
+
         <AiRecommendationContext.Provider
             value={{
-                messages,
+
                 loading,
+
                 response,
-                pendingQuery,
+
                 cache,
+
                 askAi,
+
                 clear,
+
             }}
         >
+
             {children}
+
         </AiRecommendationContext.Provider>
+
     );
+
 }
 
 export function useAiRecommendation() {
@@ -217,7 +181,9 @@ export function useAiRecommendation() {
         throw new Error(
             "useAiRecommendation must be used inside AiRecommendationProvider"
         );
+
     }
 
     return ctx;
+
 }

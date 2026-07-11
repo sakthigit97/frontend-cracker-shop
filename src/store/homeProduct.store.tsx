@@ -8,6 +8,7 @@ interface HomeProductState {
     nextCursor: string | null;
     loading: boolean;
     hasFetched: boolean;
+    fetchAll: () => Promise<void>;
     fetchInitial: () => Promise<void>;
     fetchMore: () => Promise<void>;
     fetchPopular: () => Promise<void>;
@@ -21,6 +22,7 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
     const [loading, setLoading] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
     const [hasFetchedPopular, setHasFetchedPopular] = useState(false);
+    const [hasFetchedAll, setHasFetchedAll] = useState(false);
 
     const fetchInitial = async () => {
         if (hasFetched) return;
@@ -30,6 +32,23 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
             setProducts(res.data.items);
             setNextCursor(res.data.pagination.nextCursor);
             setHasFetched(true);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAll = async () => {
+        if (hasFetchedAll) return;
+
+        try {
+            setLoading(true);
+
+            const res = await apiFetch("/products/all");
+
+            setProducts(res.data.items || []);
+            setNextCursor(null);
+
+            setHasFetchedAll(true);
         } finally {
             setLoading(false);
         }
@@ -70,6 +89,7 @@ export function HomeProductProvider({ children }: { children: React.ReactNode })
                 loading,
                 hasFetched,
                 fetchInitial,
+                fetchAll,
                 fetchMore,
                 fetchPopular,
             }}

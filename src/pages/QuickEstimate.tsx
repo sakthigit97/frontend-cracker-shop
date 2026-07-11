@@ -11,7 +11,7 @@ export default function QuickEstimate() {
     const {
         products,
         loading,
-        fetchInitial,
+        fetchAll,
     } = useHomeProducts();
 
     const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function QuickEstimate() {
         quickEstimateStore((s) => s.items);
 
     useEffect(() => {
-        fetchInitial();
+        fetchAll();
     }, []);
 
     const displayProducts =
@@ -95,10 +95,6 @@ export default function QuickEstimate() {
                     </p>
                 </div>
             </div>
-
-
-
-            {/* Search */}
 
             <div className="px-2">
 

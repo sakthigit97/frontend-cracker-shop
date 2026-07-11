@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
     useNavigate,
     useParams,
@@ -14,6 +14,8 @@ export default function ComboPackageDetails() {
     const navigate = useNavigate();
 
     const { packageId = "" } = useParams();
+    const [packageAdded, setPackageAdded] = useState(false);
+
 
     const {
         packageProducts,
@@ -46,9 +48,13 @@ export default function ComboPackageDetails() {
 
     const handleAddEntirePackage = () => {
 
+        if (packageAdded) return;
+
         products.forEach((product) => {
             addItem(product.id, 1);
         });
+        setPackageAdded(true);
+
     };
 
     useEffect(() => {
@@ -209,32 +215,64 @@ export default function ComboPackageDetails() {
                                         );
                                     }
                                 }}
+                                hideCartControls={true}
                             />
                         );
                     }
                 )}
             </div>
-            <div className="mb-6">
-                <button
-                    onClick={handleAddEntirePackage}
-                    disabled={products.length === 0}
+            <div
+                className="
+        fixed
+        bottom-4
+        left-1/2
+        -translate-x-1/2
+        z-40
+        w-[calc(100%-2rem)]
+        max-w-xl
+    "
+            >
+                <div
                     className="
-            w-full
-            md:w-auto
-            px-5
-            py-3
-            rounded-lg
             bg-[var(--color-primary)]
             text-white
-            font-medium
-            shadow-sm
-            hover:opacity-90
-            transition-all
-            disabled:opacity-50
+            rounded-2xl
+            shadow-2xl
+            px-5
+            py-4
+            flex
+            items-center
+            justify-between
         "
                 >
-                    Add Entire Package To Cart
-                </button>
+                    <div>
+                        <p className="font-semibold">
+                            {products.length} Products
+                        </p>
+
+                        <p className="text-sm text-gray-200">
+                            Add the complete combo package
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleAddEntirePackage}
+                        disabled={products.length === 0}
+                        className="
+                        bg-white
+                        text-[var(--color-primary)]
+                        px-6
+                        py-3
+                        rounded-full
+                        font-semibold
+                        hover:scale-105
+                        transition
+                        disabled:opacity-50
+                    "
+                    >
+                        {packageAdded ? "✓ Package Added" : "Add Entire Package To Cart"}
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -1,5 +1,7 @@
 import { memo } from "react";
 import type { Product } from "../../types/product";
+import defaultImage from "../../assets/default-image.png";
+
 
 interface Props {
     product: Product;
@@ -23,19 +25,14 @@ function QuickEstimateTableRow({
     return (
         <tr className="border-b hover:bg-gray-50">
 
-            {/* Image */}
-
             <td className="p-2 w-24">
 
                 <img
-                    src={product.image}
-                    alt={product.name}
+                    src={product.image || defaultImage}
                     className="h-14 w-14 object-contain rounded-md border bg-white"
                 />
 
             </td>
-
-            {/* Product */}
 
             <td className="p-2">
 
@@ -68,8 +65,6 @@ function QuickEstimateTableRow({
 
             </td>
 
-            {/* MRP */}
-
             <td className="text-center p-2">
 
                 {product.originalPrice ? (
@@ -88,8 +83,6 @@ function QuickEstimateTableRow({
 
             </td>
 
-            {/* Offer */}
-
             <td className="text-center p-2">
 
                 <span className="font-bold text-[var(--color-primary)]">
@@ -99,8 +92,6 @@ function QuickEstimateTableRow({
                 </span>
 
             </td>
-
-            {/* Quantity */}
 
             <td className="text-center p-2">
 
@@ -179,8 +170,6 @@ function QuickEstimateTableRow({
                 )}
 
             </td>
-
-            {/* Total */}
 
             <td className="text-right p-2">
 

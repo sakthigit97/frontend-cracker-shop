@@ -1,6 +1,7 @@
 import { quickEstimateStore } from "../../store/quickEstimate.store";
 import type { Product } from "../../types/product";
 import QuickEstimateTableRow from "./QuickEstimateTableRow";
+import defaultImage from "../../assets/default-image.png";
 
 interface Props {
     products: Product[];
@@ -17,9 +18,6 @@ export default function QuickEstimateTable({
     return (
 
         <div className="w-full">
-
-            {/* Desktop */}
-
             <div className="hidden lg:block overflow-x-auto rounded-xl border bg-white shadow-sm">
 
                 <table className="w-full">
@@ -104,9 +102,6 @@ export default function QuickEstimateTable({
                 </table>
 
             </div>
-
-            {/* Mobile */}
-
             <div className="lg:hidden space-y-3">
 
                 {products.map((product) => {
@@ -130,7 +125,7 @@ export default function QuickEstimateTable({
                             <div className="flex gap-3">
 
                                 <img
-                                    src={product.image}
+                                    src={product.image || defaultImage}
                                     className="h-14 w-14 object-contain border rounded-md"
                                 />
 
@@ -252,9 +247,7 @@ export default function QuickEstimateTable({
                 })}
 
             </div>
-
         </div>
-
     );
 
 }

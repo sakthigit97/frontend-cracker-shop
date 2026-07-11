@@ -71,6 +71,16 @@ export default function AiPackageResult() {
             0
         );
 
+    const recommendedBudget =
+        response.recommendedPackage.total;
+
+    const remainingBudget =
+        Math.max(
+            0,
+            recommendedBudget -
+            totalAmount
+        );
+
 
     const totalItems = packageItems.length;
     const totalQuantity =
@@ -225,28 +235,66 @@ export default function AiPackageResult() {
                         AI Recommended Package
                     </h3>
 
-                    <div className="mt-2 text-sm text-gray-700">
+                    <div className="grid grid-cols-3 gap-4 mt-4">
 
-                        <p>
-                            Total Amount:
-                            <span className="font-semibold ml-1">
-                                ₹{totalAmount}
-                            </span>
-                        </p>
+                        <div className="rounded-lg bg-white p-3 text-center">
 
-                        <p>
-                            Products:
-                            <span className="font-semibold ml-1">
+                            <div className="text-xs text-gray-500">
+                                Products
+                            </div>
+
+                            <div className="text-xl font-bold">
                                 {totalItems}
-                            </span>
-                        </p>
+                            </div>
 
-                        <p>
-                            Total Quantity:
-                            <span className="font-semibold ml-1">
+                        </div>
+
+                        <div className="rounded-lg bg-white p-3 text-center">
+
+                            <div className="text-xs text-gray-500">
+                                Quantity
+                            </div>
+
+                            <div className="text-xl font-bold">
                                 {totalQuantity}
-                            </span>
-                        </p>
+                            </div>
+
+                        </div>
+
+                        <div className="rounded-lg bg-white p-3 text-center">
+
+                            <div className="text-xs text-gray-500">
+                                Amount
+                            </div>
+
+                            <div className="text-xl font-bold">
+                                ₹{totalAmount}
+                            </div>
+
+                        </div>
+
+                        <div className="mt-4">
+
+                            <div className="flex justify-between">
+
+                                <span>
+                                    Remaining Budget
+                                </span>
+
+                                <span
+                                    className={
+                                        remainingBudget <= 100
+                                            ? "text-green-600 font-semibold"
+                                            : "text-orange-600 font-semibold"
+                                    }
+                                >
+                                    ₹{remainingBudget}
+                                </span>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>

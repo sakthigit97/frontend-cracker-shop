@@ -8,6 +8,7 @@ import { useOrdersStore } from "../store/orders.store";
 import { useAlert } from "../store/alert.store";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { useConfigStore } from "../store/config.store";
+import defaultImage from "../assets/default-image.png";
 
 type AdjustOrderItem = {
     productId: string;
@@ -331,7 +332,7 @@ export default function AdjustOrder() {
                             className="p-4 flex gap-4 sm:flex-row flex-col"
                         >
                             <img
-                                src={item.image}
+                                src={item.image || defaultImage}
                                 className="w-16 h-16 object-contain rounded-md"
                             />
 

@@ -70,12 +70,20 @@ export const cartStore = create<CartState>()(
         }),
 
       clear: () =>
-        set({
-          items: {},
-          dirtyItems: {},
-          hydrated: true,
-          dirty: true,
-          locked: false,
+        set((state) => {
+          const dirtyItems: CartItems = {};
+
+          Object.keys(state.items).forEach((productId) => {
+            dirtyItems[productId] = 0;
+          });
+
+          return {
+            items: {},
+            dirtyItems,
+            hydrated: true,
+            dirty: true,
+            locked: false,
+          };
         }),
 
       hydrate: (items) => {

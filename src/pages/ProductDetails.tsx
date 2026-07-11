@@ -8,6 +8,7 @@ import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
 import { useNavigate } from "react-router-dom";
+import defaultImage from "../assets/default-image.png";
 
 function getYouTubeId(url: string) {
   const regExp =
@@ -47,7 +48,7 @@ const ProductImage = memo(function ProductImage({
     <div className="relative rounded-2xl p-6 flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 border shadow-inner">
       <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5" />
       <img
-        src={images[activeImage]}
+        src={images[activeImage] || defaultImage}
         alt={name}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

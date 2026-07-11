@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import defaultImage from "../../assets/default-image.png";
 
 interface Props {
     packageItem: {
@@ -37,19 +38,14 @@ export default function PackageCard({
                 <img
                     src={
                         packageItem.imageUrl ||
-                        "/placeholder-package.jpg"
+                        defaultImage
                     }
-                    alt={packageItem.name}
                     className="
                         w-28
                         h-28
                         object-cover
                         flex-shrink-0
                     "
-                    onError={(e) => {
-                        e.currentTarget.src =
-                            "/placeholder-package.jpg";
-                    }}
                 />
 
                 <div

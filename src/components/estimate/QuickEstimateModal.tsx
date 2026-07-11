@@ -4,9 +4,11 @@ import { cartStore } from "../../store/cart.store";
 import { useQuickEstimateProducts } from "../../hooks/useQuickEstimateProducts";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useConfigStore } from "../../store/config.store";
 import { calculateOrderAmounts } from "../../utils/pricing";
+import defaultImage from "../../assets/default-image.png";
+
 
 interface Props {
     open: boolean;
@@ -301,7 +303,23 @@ export default function QuickEstimateModal({
         doc.setTextColor(15, 23, 42);
         doc.text("Thank you for choosing Sivakasi Pyro Park!", 14, footerY);
         doc.save(`quick-estimate-${Date.now()}.pdf`);
-    };
+    }; useEffect(() => {
+        if (!open) return;
+
+        const html = document.documentElement;
+        const body = document.body;
+
+        const htmlOverflow = html.style.overflow;
+        const bodyOverflow = body.style.overflow;
+
+        html.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+
+        return () => {
+            html.style.overflow = htmlOverflow;
+            body.style.overflow = bodyOverflow;
+        };
+    }, [open]);
 
     if (!open) {
         return null;
@@ -310,24 +328,31 @@ export default function QuickEstimateModal({
     return (
         <div
             className="
-                fixed
-                inset-0
-                bg-black/50
-                z-50
-                flex
-                justify-end
+            fixed
+            top-0
+            left-0
+            w-screen
+            h-screen
+            z-[9999]
+            bg-slate-900/65
+            backdrop-blur-sm
+            flex
+            justify-end
             "
             onClick={onClose}
         >
             <div
                 className="
-                    bg-white
-                    w-full
-                    md:w-[450px]
-                    h-full
-                    overflow-y-auto
-                    flex
-                    flex-col
+                relative
+                bg-white
+                w-full
+                md:w-[460px]
+                h-screen
+                max-h-screen
+                overflow-y-auto
+                flex
+                flex-col
+                shadow-2xl
                 "
             >
 
@@ -382,7 +407,7 @@ export default function QuickEstimateModal({
                             >
                                 <img
                                     src={
-                                        product.image
+                                        product.image || defaultImage
                                     }
                                     className="
                                         w-16
