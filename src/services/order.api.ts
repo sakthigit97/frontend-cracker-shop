@@ -33,12 +33,13 @@ export async function restoreOrderApi(orderId: string) {
 }
 
 export async function adjustOrderApi(
+    mobile: string,
     orderId: string,
     items: { productId: string; quantity: number }[]
 ) {
     const res = await apiFetch(`/orders/${orderId}/adjust`, {
         method: "PUT",
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, mobile }),
     });
     const order =
         res?.order?.order ??

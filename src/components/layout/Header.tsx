@@ -7,7 +7,7 @@ import { calculateOrderAmounts } from "../../utils/pricing";
 import {
   FaShoppingCart,
   FaBoxOpen,
-  FaRobot,
+  // FaRobot,
   FaCalculator,
   FaPhoneAlt,
   FaUserCircle,
@@ -121,11 +121,11 @@ export default function Header() {
       to: "/quick-estimate",
       icon: <FaCalculator />,
     },
-    {
-      label: "AI Assistant",
-      to: "/ai-assistant",
-      icon: <FaRobot />,
-    },
+    // {
+    //   label: "AI Assistant",
+    //   to: "/ai-assistant",
+    //   icon: <FaRobot />,
+    // },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -176,11 +176,11 @@ export default function Header() {
       to: "/quick-estimate",
       icon: <FaCalculator />,
     },
-    {
-      label: "AI Assistant",
-      to: "/ai-assistant",
-      icon: <FaRobot />,
-    },
+    // {
+    //   label: "AI Assistant",
+    //   to: "/ai-assistant",
+    //   icon: <FaRobot />,
+    // },
   ];
 
   const mobileSupport: MobileAccordionItem[] = [

@@ -215,6 +215,7 @@ export default function AdjustOrder() {
         const pincode =
             order?.pincode ||
             order?.address?.match(/\b\d{6}\b/)?.[0];
+        const mobile = order.userId || 0;
 
         if (!pincode) {
             showAlert({
@@ -241,6 +242,7 @@ export default function AdjustOrder() {
             setSaving(true);
 
             const updatedOrder = await adjustOrderApi(
+                mobile,
                 orderId,
                 items.map((i) => ({
                     productId: i.productId,

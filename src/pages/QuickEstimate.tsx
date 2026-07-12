@@ -31,7 +31,7 @@ export default function QuickEstimate() {
     const displayProducts =
         query.length > 0
             ? products.filter((p) =>
-                (`${p.name} ${p.searchText ?? ""}`)
+                (`${p.name}`)
                     .toLowerCase()
                     .includes(query)
             )
@@ -222,19 +222,14 @@ export default function QuickEstimate() {
                 >
 
                     <div className="flex items-center justify-between">
-
                         <div>
-
                             <div className="font-bold text-lg">
-
                                 {selectedProducts} Item{selectedProducts > 1 ? "s" : ""}
 
                             </div>
-
                             <div className="text-sm text-gray-300">
                                 Estimate ₹{grandTotal.toLocaleString("en-IN")}
                             </div>
-
                         </div>
 
                         <button

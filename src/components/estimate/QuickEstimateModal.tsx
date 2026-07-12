@@ -812,11 +812,11 @@ export default function QuickEstimateModal({
                             onClick={addAllToCart}
                             disabled={isEstimateEmpty}
                             className="
-            w-full
-            h-12
-            bg-[var(--color-accent)]
-            text-[var(--color-primary)]
-        "
+                                w-full
+                                h-12
+                                bg-[var(--color-accent)]
+                                text-[var(--color-primary)]
+                            "
                         >
                             Add All To Cart
                         </Button>
@@ -825,6 +825,7 @@ export default function QuickEstimateModal({
 
                             <Button
                                 variant="outline"
+                                disabled={isEstimateEmpty}
                                 onClick={() => setShowDownloadDialog(true)}
                                 className="h-11 whitespace-nowrap"
                             >

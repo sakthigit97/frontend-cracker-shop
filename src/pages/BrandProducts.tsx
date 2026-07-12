@@ -30,7 +30,7 @@ export default function BrandProducts() {
     const displayProducts = isSearching
         ? items.filter((p) =>
             (
-                `${p.name} ${p.searchText ?? ""}`
+                `${p.name}`
             )
                 .toLowerCase()
                 .includes(search.trim().toLowerCase())

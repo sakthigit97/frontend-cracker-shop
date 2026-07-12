@@ -40,7 +40,10 @@ export default function AdminConfigPage() {
                     adminAddress: res.adminAddress || "",
                     disableGstForTN: res.disableGstForTN || false,
                     sliderImages: fixedSliderImages,
-                    packageTags: res.packageTags || [],
+                    packageTags: (res.packageTags || []).map((p: any) => ({
+                        ...p,
+                        productId: p.productId || "",
+                    })),
                     aiTags: res.aiTags || [],
                 });
             } catch {
@@ -95,6 +98,7 @@ export default function AdminConfigPage() {
                     id: crypto.randomUUID(),
                     name: "",
                     imageUrl: "",
+                    productId: "",
                 },
             ],
         }));
@@ -285,7 +289,8 @@ export default function AdminConfigPage() {
                             .replace(/\s+/g, "-"),
                         name: p.name.trim(),
                         imageUrl: p.imageUrl || "",
-                    })
+                        productId: p.productId.trim(),
+                    }),
                 ),
                 aiTags: (form.aiTags || []).map(
                     (t: any) => ({
@@ -348,30 +353,109 @@ export default function AdminConfigPage() {
                     </div>
 
                     {/* Feature Toggles */}
-                    <div className="space-y-3 border border-gray-200 rounded-xl p-4">
-                        <p className="text-sm font-medium">Feature Toggles</p>
+                    <div className="space-y-6 border border-gray-200 rounded-xl p-4">
 
-                        {[
-                            ["isPaymentEnabled", "Payment Enabled"],
-                            ["isReferralEnabled", "Referral Enabled"],
-                            ["isJoinBonusEnabled", "Join Bonus Enabled"],
-                            ["isEmailEnabled", "Email Enabled"],
-                            ["isSmsEnabled", "SMS Enabled"],
-                        ].map(([key, label]) => (
-                            <label key={key} className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={form[key]}
-                                    onChange={(e) =>
-                                        setForm((p: any) => ({
-                                            ...p,
-                                            [key]: e.target.checked,
-                                        }))
-                                    }
-                                />
-                                {label}
-                            </label>
-                        ))}
+                        <div>
+                            <p className="text-sm font-semibold mb-3">
+                                General Features
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-3">
+                                {[
+                                    ["isPaymentEnabled", "Payment Enabled"],
+                                    ["isReferralEnabled", "Referral Enabled"],
+                                    ["isJoinBonusEnabled", "Join Bonus Enabled"],
+                                    ["isEmailEnabled", "Email Enabled"],
+                                    ["isSmsEnabled", "SMS Enabled"],
+                                ].map(([key, label]) => (
+                                    <label
+                                        key={key}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={!!form[key]}
+                                            onChange={(e) =>
+                                                setForm((p: any) => ({
+                                                    ...p,
+                                                    [key]: e.target.checked,
+                                                }))
+                                            }
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div>
+                            <p className="text-sm font-semibold mb-3">
+                                Email Features
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-3">
+                                {[
+                                    ["isEstimateEmailEnabled", "Estimate Email"],
+                                ].map(([key, label]) => (
+                                    <label
+                                        key={key}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={!!form[key]}
+                                            onChange={(e) =>
+                                                setForm((p: any) => ({
+                                                    ...p,
+                                                    [key]: e.target.checked,
+                                                }))
+                                            }
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div>
+                            <p className="text-sm font-semibold mb-3">
+                                SMS / OTP Features
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-3">
+                                {[
+                                    ["isRegisterOTPEnabled", "Register OTP"],
+                                    ["isForgotOTPEnabled", "Forgot Password OTP"],
+                                    ["isOrderPlaceSMSEnabled", "Order Placed SMS"],
+                                    ["IsOrderConfirmSMSEnabled", "Order Confirm SMS"],
+                                    ["isOrderDispatchSMSEnabled", "Order Dispatch SMS"],
+                                    ["isPaidSMSEnabled", "Payment Success SMS"],
+                                    ["isCartUpdateSMSEnabled", "Cart Update SMS"],
+                                ].map(([key, label]) => (
+                                    <label
+                                        key={key}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={!!form[key]}
+                                            onChange={(e) =>
+                                                setForm((p: any) => ({
+                                                    ...p,
+                                                    [key]: e.target.checked,
+                                                }))
+                                            }
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
                     </div>
 
                     {/* Wallet */}
@@ -610,23 +694,23 @@ export default function AdminConfigPage() {
                                 <div
                                     key={tag.id}
                                     className="
-                    border
-                    rounded-xl
-                    p-4
-                    space-y-3
-                    bg-gray-50
-                "
+                                        border
+                                        rounded-xl
+                                        p-4
+                                        space-y-3
+                                        bg-gray-50
+                                    "
                                 >
                                     {tag.imageUrl ? (
                                         <img
                                             src={tag.imageUrl}
                                             className="
-                            h-24
-                            w-full
-                            object-cover
-                            rounded-lg
-                            border
-                        "
+                                                h-24
+                                                w-full
+                                                object-cover
+                                                rounded-lg
+                                                border
+                                            "
                                         />
                                     ) : (
                                         <p className="text-xs text-gray-400">
@@ -648,12 +732,12 @@ export default function AdminConfigPage() {
 
                                     <input
                                         className="
-                        border
-                        border-gray-300
-                        rounded-lg
-                        p-3
-                        w-full
-                    "
+                                        border
+                                        border-gray-300
+                                        rounded-lg
+                                        p-3
+                                        w-full
+                                    "
                                         placeholder="Package Name"
                                         value={tag.name || ""}
                                         onChange={(e) => {
@@ -676,6 +760,32 @@ export default function AdminConfigPage() {
                                             });
                                         }}
                                     />
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Product ID
+                                        </label>
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            placeholder="Product ID"
+                                            value={tag.productId || ""}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+
+                                                setForm((prev: any) => {
+                                                    const updated = [...prev.packageTags];
+
+                                                    updated[index].productId = value;
+
+                                                    return {
+                                                        ...prev,
+                                                        packageTags: updated,
+                                                    };
+                                                });
+                                            }}
+                                        />
+                                    </div>
 
                                     <Button
                                         variant="outline"

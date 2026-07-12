@@ -31,7 +31,7 @@ export default function CategoryProducts() {
   const displayProducts = isSearching
     ? items.filter((p) =>
       (
-        `${p.name} ${p.searchText ?? ""}`
+        `${p.name}`
       )
         .toLowerCase()
         .includes(query)

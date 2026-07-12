@@ -107,7 +107,7 @@ export default function Home() {
   const query = search.trim().toLowerCase();
   const displayProducts = isSearching
     ? currentProducts.filter((p) =>
-      (`${p.name} ${p.searchText ?? ""}`)
+      (`${p.name}`)
         .toLowerCase()
         .includes(query)
     )
