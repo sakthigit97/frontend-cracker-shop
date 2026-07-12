@@ -8,6 +8,9 @@ import { Link } from "react-router-dom";
 import defaultImage from "../assets/default-image.png";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useAlert } from "../store/alert.store";
+import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
+import { calculateOrderAmounts } from "../utils/pricing";
+import { useConfigStore } from "../store/config.store";
 
 
 export default function Cart() {
@@ -17,13 +20,39 @@ export default function Cart() {
   const locked = cartStore((s) => s.locked);
   const clearCart = cartStore((s) => s.clear);
   const [showClearCartConfirm, setShowClearCartConfirm] = useState(false);
-
   const { products, loading } = useCartProducts();
   const isEmpty = products.length === 0;
-  const totalAmount = useMemo(
-    () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
+  const { config } = useConfigStore();
+  const packagingPercent = Number(config?.packagingPercent || 0);
+  const gstPercent = Number(config?.gstPercent || 0);
+
+  const pricingBreakdown = useMemo(
+    () => calculateOrderPricingBreakdown(products),
     [products]
   );
+
+  const {
+    packagingCharge,
+    gstAmount,
+    grandTotal,
+  } = useMemo(
+    () =>
+      calculateOrderAmounts({
+        totalAmount: pricingBreakdown.subtotal,
+        chargeableAmount: pricingBreakdown.eligibleChargeAmount,
+        packagingPercent,
+        gstPercent,
+        config,
+      }),
+    [
+      pricingBreakdown.subtotal,
+      pricingBreakdown.eligibleChargeAmount,
+      packagingPercent,
+      gstPercent,
+      config,
+    ]
+  );
+
   const { showAlert } = useAlert();
 
   if (loading) {
@@ -62,9 +91,9 @@ export default function Cart() {
     );
   }
 
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <button
@@ -113,8 +142,14 @@ export default function Cart() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border shadow-sm flex flex-col h-[70vh]">
-        <div className="flex-1 overflow-y-auto divide-y">
+      <div className="bg-white rounded-2xl border shadow-sm flex flex-col">
+        <div
+          className="
+            divide-y
+            max-h-[55vh]
+            overflow-y-auto
+          "
+        >
           {products.map((p) => (
             <div
               key={p.id}
@@ -240,44 +275,104 @@ export default function Cart() {
           ))}
         </div>
 
-        {/* SUMMARY */}
         <div
           className="
-            border-t
-            px-4
-            py-4
-            flex
-            flex-col
-            gap-4
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-            bg-white
-          "
+    border-t
+    px-4 md:px-6
+    py-6
+    flex
+    flex-col
+    lg:flex-row
+    lg:justify-between
+    lg:items-start
+    gap-6
+    bg-white
+"
         >
-          <div className="flex flex-col gap-2">
-            <div>
-              <p className="text-sm text-gray-500">Total</p>
-              <p className="text-2xl font-bold text-[var(--color-primary)]">
-                ₹{totalAmount}
-              </p>
+          <div className="w-full lg:flex-1 lg:max-w-[620px]">
+            <div className="rounded-xl bg-gray-50 border p-5 w-full max-w-full">
+              <div className="grid grid-cols-[1fr_auto] gap-6 text-sm">
+                <span>Subtotal</span>
+                <span>₹{pricingBreakdown.subtotal}</span>
+              </div>
+
+              {pricingBreakdown.comboAmount > 0 && (
+                <>
+                  <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
+                    <span>Combo Package Amount</span>
+                    <span>₹{pricingBreakdown.comboAmount}</span>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
+                    <span>GST / Packaging Eligible Amount</span>
+                    <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
+                  </div>
+                </>
+              )}
+
+              <div className="grid grid-cols-[1fr_auto] gap-6 text-sm">
+                <span>
+                  {pricingBreakdown.comboAmount > 0
+                    ? "Packaging (Eligible Items)"
+                    : "Packaging"}
+                </span>
+                <span>₹{packagingCharge}</span>
+              </div>
+
+              {gstAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span>
+                    {pricingBreakdown.comboAmount > 0
+                      ? `GST (${gstPercent}% - Eligible Items)`
+                      : `GST (${gstPercent}%)`}
+                  </span>
+                  <span>₹{gstAmount}</span>
+                </div>
+              )}
+
+              <div className="border-t mt-3 pt-3">
+                <p className="text-xs text-gray-500">
+                  Estimated Total
+                </p>
+
+                <p className="text-3xl font-bold text-[var(--color-primary)]">
+                  ₹{grandTotal}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Includes GST & Packaging Charges
+                </p>
+              </div>
+
             </div>
 
+          </div>
+          <div
+            className="
+      w-full
+      lg:w-[340px]
+      flex
+      flex-col
+      gap-3
+      lg:self-center
+  "
+          >
             <Button
               variant="secondary"
+              className="w-full"
               onClick={() => navigate("/")}
             >
               Add More Items
             </Button>
-          </div>
 
-          <Button
-            disabled={products.length === 0}
-            onClick={() => navigate("/checkout")}
-            className="px-8 py-3 text-base"
-          >
-            Proceed to Checkout
-          </Button>
+            <Button
+              className="w-full"
+              disabled={products.length === 0}
+              onClick={() => navigate("/checkout")}
+            >
+              Proceed to Checkout
+            </Button>
+          </div>
         </div>
       </div>
       <ConfirmDialog

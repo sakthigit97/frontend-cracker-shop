@@ -14,6 +14,7 @@ interface PackageItem {
     name: string;
     imageUrl: string;
     productCount: number;
+    productId: string;
 }
 
 interface PackageDetails {
@@ -23,22 +24,15 @@ interface PackageDetails {
 
 interface PackageStore {
     packages: PackageItem[];
-
     packageProducts: Record<
         string,
         PackageDetails
     >;
-
     loading: boolean;
-
     bestSellingPackage?: PackageItem;
-
     newArrivalPackage?: PackageItem;
-
     fetchPackages: () => Promise<void>;
-
     loadingPackages: Record<string, boolean>;
-
     fetchPackageProducts: (
         packageId: string
     ) => Promise<void>;
@@ -47,41 +41,30 @@ interface PackageStore {
 export const usePackageStore =
     create<PackageStore>((set, get) => ({
         packages: [],
-
         packageProducts: {},
-
         loading: false,
-
         loadingPackages: {},
-
         bestSellingPackage: undefined,
-
         newArrivalPackage: undefined,
-
         async fetchPackages() {
             const { packages } = get();
-
             if (packages.length > 0) {
                 return;
             }
 
             try {
                 set({ loading: true });
-
                 const res = await getPackagesApi();
-
                 const packagesList = res || [];
 
                 set({
                     packages: packagesList,
-
                     bestSellingPackage:
                         packagesList.find(
                             (p: PackageItem) =>
                                 p.id ===
                                 HOME_PACKAGE_IDS.BEST_SELLING
                         ),
-
                     newArrivalPackage:
                         packagesList.find(
                             (p: PackageItem) =>
@@ -101,12 +84,10 @@ export const usePackageStore =
                 loadingPackages,
             } = get();
 
-            // Already cached
             if (packageProducts[packageId]) {
                 return;
             }
 
-            // Already loading
             if (loadingPackages[packageId]) {
                 return;
             }
@@ -147,7 +128,6 @@ export const usePackageStore =
                         [packageId]: false,
                     },
                 }));
-
                 throw err;
             }
         }

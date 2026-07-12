@@ -15,18 +15,21 @@ export const quickEstimateStore =
                 items: {},
                 addItem: (id, qty = 1) =>
                     set((state) => {
-                        const next = (state.items[id] || 0) + qty;
-                        const items = {
-                            ...state.items,
-                        };
+                        if (!id) return state;
 
-                        if (next <= 0)
+                        const current = Number(state.items[id] || 0);
+                        const next = current + Number(qty);
+
+                        const items = { ...state.items };
+
+                        if (next <= 0) {
                             delete items[id];
-                        else
+                        } else {
                             items[id] = next;
+                        }
+
                         return { items };
                     }),
-
                 removeItem: (id) =>
                     set((state) => {
                         const items = {

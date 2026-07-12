@@ -22,6 +22,14 @@ export type GlobalConfig = {
     disableGstForTN: boolean;
     packageTags: string[];
     aiTags: string[];
+    isEstimateEmailEnabled: boolean;
+    isForgotOTPEnabled: boolean;
+    IsOrderConfirmSMSEnabled: boolean;
+    isOrderDispatchSMSEnabled: boolean;
+    isOrderPlaceSMSEnabled: boolean;
+    isPaidSMSEnabled: boolean;
+    isRegisterOTPEnabled: boolean;
+    isCartUpdateSMSEnabled: boolean;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

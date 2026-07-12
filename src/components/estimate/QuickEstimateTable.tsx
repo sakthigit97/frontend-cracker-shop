@@ -57,10 +57,7 @@ export default function QuickEstimateTable({
                     <tbody>
 
                         {products.map((product) => {
-
-                            const qty =
-                                items[product.id] || 0;
-
+                            const qty = Number(items[product.id] ?? 0);
                             return (
 
                                 <QuickEstimateTableRow

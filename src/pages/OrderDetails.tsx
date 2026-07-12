@@ -37,6 +37,8 @@ export default function OrderDetails() {
       </div>
     );
   }
+  const eligibleAmount = order.eligibleChargeAmount ?? 0;
+  const hasEligibleItems = eligibleAmount > 0;
 
   const STATUS_KEYS = Object.keys(ORDER_STATUS_CONFIG);
   const currentIndex = STATUS_KEYS.indexOf(order.status);
@@ -369,24 +371,25 @@ export default function OrderDetails() {
             </div>
           )}
 
-          {(order.comboAmount ?? 0) > 0 && (
+          {hasEligibleItems && (
             <div className="flex justify-between text-gray-600">
               <span>GST / Packaging Eligible Amount</span>
-              <span>₹{order.eligibleChargeAmount}</span>
+              <span>₹{eligibleAmount}</span>
             </div>
           )}
 
-          <div className="flex justify-between text-gray-600">
-            <span>
-              Packaging Charges
-              {(order.comboAmount ?? 0) > 0 &&
-                " (Eligible Items Only)"}
-            </span>
+          {(order.packagingCharge ?? 0) > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>
+                Packaging Charges
+                {hasEligibleItems && " (Eligible Items Only)"}
+              </span>
 
-            <span>₹{order.packagingCharge ?? 0}</span>
-          </div>
+              <span>₹{order.packagingCharge}</span>
+            </div>
+          )}
 
-          {(order.gstAmount ?? 0) > 0 && (
+          {(order.gstAmount ?? 0) > 0 && hasEligibleItems && (
             <div className="flex justify-between text-gray-600">
               <span>
                 GST (18%

@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useHomeProducts } from "../store/homeProduct.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { quickEstimateStore } from "../store/quickEstimate.store";
 import QuickEstimateModal from "../components/estimate/QuickEstimateModal";
 import QuickEstimateTable from "../components/estimate/QuickEstimateTable";
 import { useNavigate } from "react-router-dom";
+import { useConfigStore } from "../store/config.store";
+import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
+import { calculateOrderAmounts } from "../utils/pricing";
+
 
 export default function QuickEstimate() {
 
@@ -15,13 +19,9 @@ export default function QuickEstimate() {
     } = useHomeProducts();
 
     const navigate = useNavigate();
-    const [showEstimate, setShowEstimate] =
-        useState(false);
-
+    const [showEstimate, setShowEstimate] = useState(false);
     const [search, setSearch] = useState("");
-
-    const items =
-        quickEstimateStore((s) => s.items);
+    const items = quickEstimateStore((s) => s.items);
 
     useEffect(() => {
         fetchAll();
@@ -37,21 +37,54 @@ export default function QuickEstimate() {
             )
             : products;
 
-    const selectedProducts =
-        Object.values(items).reduce(
-            (a, b) => a + b,
-            0
-        );
+    const selectedProducts = Object.values(items).reduce(
+        (sum, qty) => sum + Math.max(0, Number(qty) || 0),
+        0
+    );
 
-    const totalAmount = displayProducts.reduce((total, product) => {
-        const qty = items[product.id] || 0;
-        return total + qty * product.price;
-    }, 0);
+    const estimateProducts = useMemo(
+        () =>
+            products
+                .filter((p) => (items[p.id] || 0) > 0)
+                .map((p) => ({
+                    ...p,
+                    quantity: items[p.id],
+                })),
+        [products, items]
+    );
+
+    const { config } = useConfigStore();
+    const packagingPercent = Number(config?.packagingPercent || 0);
+    const gstPercent = Number(config?.gstPercent || 0);
+
+    const pricingBreakdown = useMemo(
+        () => calculateOrderPricingBreakdown(estimateProducts),
+        [estimateProducts]
+    );
+
+    const {
+        grandTotal,
+    } = useMemo(
+        () =>
+            calculateOrderAmounts({
+                totalAmount: pricingBreakdown.subtotal,
+                chargeableAmount: pricingBreakdown.eligibleChargeAmount,
+                packagingPercent,
+                gstPercent,
+                config,
+            }),
+        [
+            pricingBreakdown.subtotal,
+            pricingBreakdown.eligibleChargeAmount,
+            packagingPercent,
+            gstPercent,
+            config,
+        ]
+    );
 
     return (
 
         <div className="space-y-8">
-
 
             <QuickEstimateModal
                 open={showEstimate}
@@ -199,7 +232,7 @@ export default function QuickEstimate() {
                             </div>
 
                             <div className="text-sm text-gray-300">
-                                Estimate ₹{totalAmount.toLocaleString("en-IN")}
+                                Estimate ₹{grandTotal.toLocaleString("en-IN")}
                             </div>
 
                         </div>

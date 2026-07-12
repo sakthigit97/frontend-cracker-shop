@@ -132,7 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { items, clear } = cartStore.getState();
     if (Object.keys(items).length > 0) {
-      await mergeCartApi({ guestItems: items });
+      if (data.role != 'ADMIN') {
+        await mergeCartApi({ guestItems: items });
+      }
     }
     clear();
     localStorage.removeItem("guest_cart");

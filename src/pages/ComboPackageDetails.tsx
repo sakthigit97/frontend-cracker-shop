@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
     useNavigate,
     useParams,
@@ -14,7 +14,6 @@ export default function ComboPackageDetails() {
     const navigate = useNavigate();
 
     const { packageId = "" } = useParams();
-    const [packageAdded, setPackageAdded] = useState(false);
 
 
     const {
@@ -23,17 +22,12 @@ export default function ComboPackageDetails() {
         fetchPackageProducts,
     } = usePackageStore();
 
-    const packageData =
-        packageProducts[
+    const packageData = packageProducts[
         packageId
-        ];
+    ];
 
-    const products =
-        packageData?.products || [];
-
-    const selectedPackage =
-        packageData?.package;
-
+    const products = packageData?.products || [];
+    const selectedPackage = packageData?.package;
     const items = cartStore(
         (s) => s.items
     );
@@ -47,15 +41,20 @@ export default function ComboPackageDetails() {
     );
 
     const handleAddEntirePackage = () => {
-
         if (packageAdded) return;
 
-        products.forEach((product) => {
-            addItem(product.id, 1);
-        });
-        setPackageAdded(true);
+        const comboProductId = selectedPackage?.productId;
+
+        if (!comboProductId) return;
+
+        addItem(comboProductId, 1);
 
     };
+
+    const comboQty = selectedPackage?.productId
+        ? items[selectedPackage.productId] || 0
+        : 0;
+    const packageAdded = comboQty > 0;
 
     useEffect(() => {
         if (packageId) {
@@ -65,9 +64,6 @@ export default function ComboPackageDetails() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">
-
-            {/* HEADER */}
-
             <div className="flex items-center gap-3 mb-6">
                 <button
                     onClick={() =>
@@ -257,7 +253,9 @@ export default function ComboPackageDetails() {
 
                     <button
                         onClick={handleAddEntirePackage}
-                        disabled={products.length === 0}
+                        disabled={
+                            !selectedPackage?.productId
+                        }
                         className="
                         bg-white
                         text-[var(--color-primary)]
@@ -270,7 +268,7 @@ export default function ComboPackageDetails() {
                         disabled:opacity-50
                     "
                     >
-                        {packageAdded ? "✓ Package Added" : "Add Entire Package To Cart"}
+                        {packageAdded ? "✓ Package Added" : "Add Package To Cart"}
                     </button>
                 </div>
             </div>

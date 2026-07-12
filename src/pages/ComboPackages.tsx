@@ -17,9 +17,16 @@ export default function ComboPackages() {
         fetchPackages();
     }, []);
 
+    const EXCLUDED_PACKAGE_IDS = new Set([
+        "best-selling",
+        "new-arrivals",
+    ]);
     const visiblePackages = packages.filter(
-        (p) => p.productCount > 0
+        (p) =>
+            p.productCount > 0 &&
+            !EXCLUDED_PACKAGE_IDS.has(p.id)
     );
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">

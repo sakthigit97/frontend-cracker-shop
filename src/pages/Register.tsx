@@ -17,6 +17,7 @@ export default function Register() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [referralCodeUsed, setReferralCodeUsed] = useState("");
   const config = useConfigStore((s) => s.config);
+  const isRegisterOTPSend = config?.isRegisterOTPEnabled || true;
   const isReferralEnabled = config?.isReferralEnabled ?? false;
 
   const [form, setForm] = useState({
@@ -59,6 +60,11 @@ export default function Register() {
 
     if (loading) return;
     setLoading(true);
+
+    if (!isRegisterOTPSend) {
+      console.log('Register OTP send is not enabled');
+      return
+    }
 
     try {
       await apiFetch("/auth/register/send-otp", {

@@ -91,7 +91,10 @@ export const cartStore = create<CartState>()(
 
         Object.entries(items || {}).forEach(([key, value]) => {
           if (key && key !== "undefined") {
-            cleaned[key] = Number(value) || 0;
+            const qty = Number(value);
+            if (qty > 0) {
+              cleaned[key] = qty;
+            }
           }
         });
 

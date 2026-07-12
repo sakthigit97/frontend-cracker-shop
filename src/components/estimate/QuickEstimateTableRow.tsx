@@ -131,6 +131,8 @@ function QuickEstimateTableRow({
 
                         <input
                             value={quantity}
+                            min={0}
+                            step={1}
                             onChange={(e) => {
 
                                 const qty =

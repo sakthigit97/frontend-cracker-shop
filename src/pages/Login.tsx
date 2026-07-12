@@ -5,11 +5,14 @@ import { useAlert } from "../store/alert.store";
 import Button from "../components/ui/Button";
 import { apiFetch, ApiError } from "../services/api";
 import ReCAPTCHA from "react-google-recaptcha";
+import { useConfigStore } from "../store/config.store";
+
 
 export default function Login() {
   const { login } = useAuth();
   const { showAlert } = useAlert();
   const navigate = useNavigate();
+  const { config } = useConfigStore();
 
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +26,7 @@ export default function Login() {
 
   const cleanMobile = mobile.trim();
   const isMobileValid = /^[6-9]\d{9}$/.test(cleanMobile);
+  const isForgotOTPSend = config?.isForgotOTPEnabled || true;
 
   const validateForm = () => {
     if (!cleanMobile) {
@@ -111,6 +115,12 @@ export default function Login() {
   };
 
   const sendForgotOtp = async () => {
+
+    if (!isForgotOTPSend) {
+      console.log('OTP is not enabled to send')
+      return;
+    }
+
     if (!isMobileValid) {
       showAlert({
         type: "error",

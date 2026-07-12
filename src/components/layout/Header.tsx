@@ -1,5 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
+import { calculateOrderAmounts } from "../../utils/pricing";
+
 
 import {
   FaShoppingCart,
@@ -24,15 +27,17 @@ import type { MobileAccordionItem } from "./MobileAccordion";
 import { useAuth } from "../../store/auth.store";
 import { cartStore } from "../../store/cart.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
+import { useConfigStore } from "../../store/config.store";
 
 export default function Header() {
   const navigate = useNavigate();
+  const { config } = useConfigStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const { isAuthenticated, logout, user } = useAuth();
-
   const items = cartStore((s) => s.items);
+  const packagingPercent = Number(config?.packagingPercent || 0);
+  const gstPercent = Number(config?.gstPercent || 0);
 
   const {
     products,
@@ -53,37 +58,52 @@ export default function Header() {
   };
 
   const closeMobile = () => setMobileOpen(false);
-
   const cartCount = useMemo(() => {
-    return Object.values(items).reduce(
-      (sum, qty) => sum + qty,
-      0
-    );
+    return Object.values(items).reduce((sum, qty) => {
+      const quantity = typeof qty === "number"
+        ? qty
+        : Number((qty as any)?.qty ?? 0);
+
+      return sum + quantity;
+    }, 0);
   }, [items]);
 
-  const cartTotal = useMemo(() => {
+  const cartPricing = useMemo(() => {
     if (!products.length) return null;
 
-    return Object.entries(items).reduce(
-      (sum, [id, qty]) => {
-        if (!id || id === "undefined") return sum;
+    const cartProducts = Object.entries(items)
+      .map(([id, qty]) => {
+        if (!id || id === "undefined") return null;
 
-        const product = products.find(
-          (p) => p.id === id
-        );
-
-        if (!product) return sum;
+        const product = products.find((p) => p.id === id);
+        if (!product) return null;
 
         const quantity =
           typeof qty === "number"
             ? qty
             : (qty as any)?.qty ?? 0;
 
-        return sum + product.price * quantity;
-      },
-      0
-    );
+        return {
+          ...product,
+          quantity,
+        };
+      })
+      .filter(
+        (p): p is NonNullable<typeof p> => p !== null
+      );
+
+    const pricingBreakdown =
+      calculateOrderPricingBreakdown(cartProducts);
+
+    return calculateOrderAmounts({
+      totalAmount: pricingBreakdown.subtotal,
+      chargeableAmount:
+        pricingBreakdown.eligibleChargeAmount,
+      packagingPercent: packagingPercent,
+      gstPercent: gstPercent,
+    });
   }, [items, products]);
+
 
   const productMenu: HeaderDropdownItem[] = [
     {
@@ -342,10 +362,9 @@ export default function Header() {
             <div className="hidden md:block leading-tight">
 
               <div className="text-sm font-semibold">
-
-                {cartTotal === null
+                {cartPricing === null
                   ? "..."
-                  : `₹${cartTotal.toLocaleString()}`}
+                  : `₹${cartPricing.grandTotal.toLocaleString()}`}
 
               </div>
 
@@ -583,17 +602,13 @@ export default function Header() {
                 </div>
 
                 <div className="font-bold">
-
-                  {cartTotal === null
+                  {cartPricing === null
                     ? "..."
-                    : `₹${cartTotal.toLocaleString()}`}
+                    : `₹${cartPricing.grandTotal.toLocaleString()}`}
 
                 </div>
-
               </div>
-
             </Link>
-
           </div>
         </div>
       )}

@@ -12,19 +12,26 @@ export function useQuickEstimateProducts() {
     );
 
     useEffect(() => {
-        if (productIds.length === 0) return;
+        if (productIds.length === 0) {
+            return;
+        }
+
         fetchProducts(productIds);
-    }, [productIds, fetchProducts]);
+    }, [fetchProducts, productIds.join(",")]);
 
     const merged = useMemo(() => {
         return productIds
             .map((id) => {
+                const qty = Number(items[id] ?? 0);
+
+                if (qty <= 0) return null;
+
                 const p = products[id];
                 if (!p) return null;
 
                 return {
                     ...p,
-                    quantity: items[id],
+                    quantity: qty,
                 };
             })
             .filter(

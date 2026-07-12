@@ -140,6 +140,16 @@ export default function AdminDiscountsPage() {
             });
             return;
         }
+        if (
+            form.discountMode === "PERCENT" &&
+            Number(form.discountValue) > 100
+        ) {
+            showAlert({
+                type: "error",
+                message: "Percentage discount cannot exceed 100%",
+            });
+            return;
+        }
 
         try {
             setLoading(true);
