@@ -124,7 +124,7 @@ export default function Contact() {
           </p>
           <div className="text-sm text-[var(--color-muted)] space-y-3">
             <a
-              href="https://maps.app.goo.gl/2TDNyJzyhDA1V9wAA?g_st=ipc"
+              href={config?.gmapLink}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
@@ -175,6 +175,21 @@ export default function Contact() {
                 📧 <span>{config.adminEmail}</span>
               </a>
             )}
+
+            {config?.gmapLink && (
+              <li>
+                <a
+                  href={config.gmapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:underline text-red-300"
+                >
+                  <FaMapMarkerAlt />
+                  <span>View on Google Maps</span>
+                </a>
+              </li>
+            )}
+
             <div className="pt-4 flex justify-center">
               <a
                 href="https://maps.app.goo.gl/2TDNyJzyhDA1V9wAA?g_st=ipc"

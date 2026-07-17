@@ -30,6 +30,7 @@ export type GlobalConfig = {
     isPaidSMSEnabled: boolean;
     isRegisterOTPEnabled: boolean;
     isCartUpdateSMSEnabled: boolean;
+    gmapLink: string;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

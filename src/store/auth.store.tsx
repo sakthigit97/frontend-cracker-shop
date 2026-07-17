@@ -56,18 +56,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+
+    if (tokenTimerRef.current) {
+      clearTimeout(tokenTimerRef.current);
+      tokenTimerRef.current = null;
     }
 
     localStorage.removeItem("auth");
     sessionStorage.removeItem("cartAlertShown");
+
     setUser(null);
     cartStore.getState().resetToGuest();
     cartStore.getState().unlock();
     useOrdersStore.getState().clear();
+
     clearConfig();
-  }, []);
+  }, [clearConfig]);
 
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tokenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!user) return;
 
@@ -109,44 +118,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadConfig();
+  }, [loadConfig]);
+
+
+  useEffect(() => {
     if (!user) return;
 
-    const interval = setInterval(() => {
-      try {
-        const decoded: DecodedToken = jwtDecode(user.token);
-        if (decoded.exp * 1000 <= Date.now()) {
-          // console.log("Token expired, logging out...");
-          // logout();
-        }
-      } catch {
-        logout();
-      }
-    }, 60 * 1000);
+    try {
+      const decoded: DecodedToken = jwtDecode(user.token);
 
-    return () => clearInterval(interval);
+      const expiresAt = decoded.exp * 1000;
+      const timeout = expiresAt - Date.now();
+
+      if (tokenTimerRef.current) {
+        clearTimeout(tokenTimerRef.current);
+      }
+
+      if (timeout <= 0) {
+        logout();
+        return;
+      }
+
+      tokenTimerRef.current = setTimeout(() => {
+        console.log("JWT expired. Logging out...");
+        logout();
+      }, timeout);
+
+    } catch {
+      logout();
+    }
+
+    return () => {
+      if (tokenTimerRef.current) {
+        clearTimeout(tokenTimerRef.current);
+      }
+    };
   }, [user, logout]);
 
   const login = async (data: AuthUser) => {
     localStorage.setItem("auth", JSON.stringify(data));
     setUser(data);
 
-    const { items, clear } = cartStore.getState();
-    if (Object.keys(items).length > 0) {
-      if (data.role != 'ADMIN') {
+    try {
+      const { items, clear } = cartStore.getState();
+
+      if (Object.keys(items).length > 0 && data.role !== "ADMIN") {
         await mergeCartApi({ guestItems: items });
       }
-    }
-    clear();
-    localStorage.removeItem("guest_cart");
 
-    const cartRes = await getCartApi();
-    const normalized: Record<string, number> = {};
-    for (const row of cartRes.items) {
-      normalized[row.itemId] = row.quantity;
+      clear();
+      localStorage.removeItem("guest_cart");
+
+      if (data.role !== "ADMIN") {
+        const cartRes = await getCartApi();
+
+        const normalized: Record<string, number> = {};
+
+        for (const row of cartRes.items) {
+          normalized[row.itemId] = row.quantity;
+        }
+
+        cartStore.getState().hydrate(normalized);
+      }
+
+    } catch (err) {
+      console.error("Cart sync failed:", err);
     }
 
-    cartStore.getState().hydrate(normalized);
-    await loadConfig();
+    try {
+      await loadConfig();
+    } catch (err) {
+      console.error("Failed to load config:", err);
+    }
   };
 
   return (

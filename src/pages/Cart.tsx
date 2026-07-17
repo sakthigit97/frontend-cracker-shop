@@ -185,9 +185,9 @@ export default function Cart() {
 
                 <div className="mt-1 flex flex-col gap-1">
 
-                  {p.discountText && (
+                  {(p.discountText || !p.isComboPackage) && (
                     <span className="text-xs font-semibold text-green-600">
-                      {p.discountText}
+                      {p.discountText || "NET RATE"}
                     </span>
                   )}
 
@@ -299,9 +299,15 @@ export default function Cart() {
               {pricingBreakdown.comboAmount > 0 && (
                 <>
                   <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
-                    <span>Combo Package Amount</span>
+                    <div>
+                      <span className="font-medium">Combo Package Amount</span>
+                      <span className="ml-2 text-xs text-blue-500">
+                        (GST & Packaging Charges Not Applied)
+                      </span>
+                    </div>
                     <span>₹{pricingBreakdown.comboAmount}</span>
                   </div>
+
 
                   <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
                     <span>GST / Packaging Eligible Amount</span>

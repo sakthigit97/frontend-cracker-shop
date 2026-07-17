@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
+import { FaWhatsapp, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { useConfigStore } from "../../store/config.store";
 
 export default function Footer() {
@@ -90,6 +90,20 @@ export default function Footer() {
                   className="hover:underline"
                 >
                   📧 {config.adminEmail}
+                </a>
+              </li>
+            )}
+
+            {config?.gmapLink && (
+              <li>
+                <a
+                  href={config.gmapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:underline text-red-300"
+                >
+                  <FaMapMarkerAlt />
+                  <span>View on Google Maps</span>
                 </a>
               </li>
             )}

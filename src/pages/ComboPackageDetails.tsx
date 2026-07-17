@@ -42,13 +42,9 @@ export default function ComboPackageDetails() {
 
     const handleAddEntirePackage = () => {
         if (packageAdded) return;
-
         const comboProductId = selectedPackage?.productId;
-
         if (!comboProductId) return;
-
         addItem(comboProductId, 1);
-
     };
 
     const comboQty = selectedPackage?.productId

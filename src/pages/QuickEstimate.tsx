@@ -9,6 +9,7 @@ import { useConfigStore } from "../store/config.store";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
+import QuickEstimateProductModal from "../components/product/QuickEstimateProductModal";
 
 
 export default function QuickEstimate() {
@@ -23,6 +24,7 @@ export default function QuickEstimate() {
     const [showEstimate, setShowEstimate] = useState(false);
     const [search, setSearch] = useState("");
     const items = quickEstimateStore((s) => s.items);
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchAll();
@@ -94,13 +96,22 @@ export default function QuickEstimate() {
                     setShowEstimate(false)
                 }
             />
-
+            <QuickEstimateProductModal
+                open={selectedProductId !== null}
+                productId={selectedProductId}
+                onClose={() => setSelectedProductId(null)}
+            />
             <div className="flex items-center gap-4 mb-3">
                 <button
                     onClick={() => navigate(-1)}
                     className="
-                        flex items-center justify-center
-                        w-8 h-8
+                        flex
+                        items-center
+                        justify-center
+                        w-8
+                        h-8
+                        ml-3
+                        md:ml-4
                         rounded-full
                         bg-[var(--color-primary)]
                         text-white
@@ -196,6 +207,7 @@ export default function QuickEstimate() {
 
                     <QuickEstimateTable
                         products={displayProducts}
+                        onProductClick={(id) => setSelectedProductId(id)}
                     />
 
                 )}

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
 import { calculateOrderAmounts } from "../../utils/pricing";
-
+import logo from '../../assets/icon-new.png'
 
 import {
   FaShoppingCart,
@@ -28,6 +28,14 @@ import { useAuth } from "../../store/auth.store";
 import { cartStore } from "../../store/cart.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
 import { useConfigStore } from "../../store/config.store";
+
+function formatCartAmount(amount: number) {
+  if (amount >= 1000) {
+    return `₹${(amount / 1000).toFixed(1)}K`;
+  }
+
+  return `₹${amount}`;
+}
 
 export default function Header() {
   const navigate = useNavigate();
@@ -218,12 +226,27 @@ export default function Header() {
   return (
     <header className="bg-[var(--color-primary)] text-white">
       <div className="max-w-7xl mx-auto h-16 px-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="font-bold tracking-wide hidden sm:block">
-            Sivakasi Pyro Park
-          </span>
-        </Link>
 
+        <Link
+          to="/"
+          className="flex items-center gap-2 shrink-0"
+        >
+          <img
+            src={logo}
+            alt="Sivakasi Pyro Park"
+            className="h-8 w-8"
+          />
+
+          <div className="leading-tight">
+            <div className="text-sm sm:text-base font-bold">
+              Sivakasi
+            </div>
+
+            <div className="text-[10px] sm:text-xs text-white/70">
+              Pyro Park
+            </div>
+          </div>
+        </Link>
 
         <nav className="hidden lg:flex items-center gap-2">
 
@@ -315,20 +338,21 @@ export default function Header() {
               </div>
             </div>
           )}
-
           <Link
             to="/cart"
             className="
-        flex
-        items-center
-        gap-2
-        rounded-full
-        bg-white/10
-        hover:bg-white/20
-        px-3
-        py-1.5
-        transition-all
-    "
+    group
+    relative
+    flex
+    items-center
+    gap-2
+    rounded-full
+    bg-white/10
+    hover:bg-white/20
+    px-3
+    py-1.5
+    transition-all
+  "
           >
             <div className="relative">
 
@@ -360,16 +384,50 @@ export default function Header() {
             </div>
 
             <div className="hidden md:block leading-tight">
-
               <div className="text-sm font-semibold">
                 {cartPricing === null
                   ? "..."
                   : `₹${cartPricing.grandTotal.toLocaleString()}`}
-
               </div>
-
             </div>
 
+            <div className="block md:hidden text-xs font-semibold">
+              {cartPricing === null
+                ? "..."
+                : formatCartAmount(cartPricing.grandTotal)}
+            </div>
+            <div
+              className="
+              absolute
+              top-full
+              right-0
+              mt-2
+              w-64
+              rounded-xl
+              border
+              border-gray-200
+              bg-white
+              p-3
+              shadow-xl
+              text-gray-700
+              text-sm
+              opacity-0
+              invisible
+              transition-all
+              duration-200
+              group-hover:opacity-100
+              group-hover:visible
+              z-50
+            "
+            >
+              <p className="font-semibold text-gray-900">
+                Estimated Total
+              </p>
+
+              <p className="mt-1 text-xs text-gray-500">
+                Includes applicable GST and Packaging Charges.
+              </p>
+            </div>
           </Link>
 
 
@@ -598,14 +656,13 @@ export default function Header() {
               <div className="text-right">
 
                 <div className="text-xs text-white/60">
-                  Total
+                  Total (Incl. GST & Packaging)
                 </div>
 
-                <div className="font-bold">
-                  {cartPricing === null
-                    ? "..."
-                    : `₹${cartPricing.grandTotal.toLocaleString()}`}
-
+                <div className="text-xs font-semibold md:hidden">
+                  {cartPricing
+                    ? formatCartAmount(cartPricing.grandTotal)
+                    : "..."}
                 </div>
               </div>
             </Link>

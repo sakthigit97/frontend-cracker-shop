@@ -2,13 +2,13 @@ import { memo } from "react";
 import type { Product } from "../../types/product";
 import defaultImage from "../../assets/default-image.png";
 
-
 interface Props {
     product: Product;
     quantity: number;
     onIncrease: () => void;
     onDecrease: () => void;
     onChange: (qty: number) => void;
+    onProductClick: () => void;
 }
 
 function QuickEstimateTableRow({
@@ -17,6 +17,7 @@ function QuickEstimateTableRow({
     onIncrease,
     onDecrease,
     onChange,
+    onProductClick,
 }: Props) {
     const availableQty = product.qty || 0;
     const total = product.price * quantity;
@@ -25,59 +26,75 @@ function QuickEstimateTableRow({
         <tr className="border-b hover:bg-gray-50">
 
             <td className="p-2 w-24">
-
                 <img
                     src={product.image || defaultImage}
-                    className="h-14 w-14 object-contain rounded-md border bg-white"
+                    alt={product.name}
+                    className="
+                        h-14
+                        w-14
+                        object-contain
+                        rounded-md
+                        border
+                        bg-white
+                    "
                 />
-
             </td>
 
             <td className="p-2">
 
-                <div className="font-semibold">
-                    {product.name}
-                </div>
+                <div className="flex flex-col">
 
-                {product.brand && (
-                    <div className="text-xs text-gray-500 mt-1">
-                        {product.brand}
-                    </div>
-                )}
-
-                {product.discountText && (
                     <span
+                        onClick={onProductClick}
                         className="
-                        inline-block
-                        mt-2
-                        px-1
-                        py-1
-                        rounded-full
-                        text-xs
-                        bg-green-100
-                        text-green-700
-                    "
+                            inline-block
+                            w-fit
+                            cursor-pointer
+                            text-blue-600
+                            hover:text-blue-700
+                            hover:underline
+                            font-semibold
+                            transition-colors
+                        "
                     >
-                        {product.discountText}
+                        {product.name}
                     </span>
-                )}
+
+                    {product.brand && (
+                        <div className="text-xs text-gray-500 mt-1">
+                            {product.brand}
+                        </div>
+                    )}
+                    {(product.discountText || !product.isComboPackage) && (
+                        <span
+                            className="
+                                inline-block
+                                mt-2
+                                px-2
+                                py-1
+                                rounded-full
+                                text-xs
+                                bg-green-100
+                                text-green-700
+                                w-fit
+                        "
+                        >
+                            {product.discountText || "NET RATE"}
+                        </span>
+                    )}
+
+                </div>
 
             </td>
 
             <td className="text-center p-2">
 
                 {product.originalPrice ? (
-
                     <span className="line-through text-gray-400">
-
                         ₹{product.originalPrice}
-
                     </span>
-
                 ) : (
-
                     "-"
-
                 )}
 
             </td>
@@ -85,9 +102,7 @@ function QuickEstimateTableRow({
             <td className="text-center p-2">
 
                 <span className="font-bold text-[var(--color-primary)]">
-
                     ₹{product.price}
-
                 </span>
 
             </td>
@@ -97,21 +112,19 @@ function QuickEstimateTableRow({
                 {availableQty === 0 ? (
 
                     <span className="text-red-500 text-sm">
-
                         Out of Stock
-
                     </span>
 
                 ) : (
 
                     <div
                         className="
-                        inline-flex
-                        items-center
-                        border
-                        rounded-lg
-                        overflow-hidden
-                    "
+                            inline-flex
+                            items-center
+                            border
+                            rounded-lg
+                            overflow-hidden
+                        "
                     >
 
                         <button
@@ -133,17 +146,11 @@ function QuickEstimateTableRow({
                             min={0}
                             step={1}
                             onChange={(e) => {
+                                const qty = Number(e.target.value);
 
-                                const qty =
-                                    Number(e.target.value);
-
-                                if (
-                                    Number.isNaN(qty)
-                                )
-                                    return;
+                                if (Number.isNaN(qty)) return;
 
                                 onChange(qty);
-
                             }}
                             className="
                                 w-14
@@ -175,9 +182,7 @@ function QuickEstimateTableRow({
             <td className="text-right p-2">
 
                 <span className="font-bold">
-
                     ₹{total}
-
                 </span>
 
             </td>

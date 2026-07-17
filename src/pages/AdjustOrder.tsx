@@ -354,16 +354,13 @@ export default function AdjustOrder() {
                                     )}
                                 </div>
                                 <div className="text-xs mt-1 flex flex-col gap-1">
-
-                                    {item.discountText && (
+                                    {(item.discountText || !item.isComboPackage) && (
                                         <span className="text-green-600 font-semibold">
-                                            {item.discountText}
+                                            {item.discountText || "NET RATE"}
                                         </span>
                                     )}
 
                                     <div className="flex items-center gap-2 flex-wrap text-gray-600">
-
-
                                         {item.originalPrice && item.originalPrice > item.price && (
                                             <span className="line-through text-gray-400">
                                                 ₹{item.originalPrice}
@@ -437,30 +434,42 @@ export default function AdjustOrder() {
 
                                     {pricingBreakdown.comboAmount > 0 && (
                                         <>
-                                            <p className="text-gray-600">
-                                                Combo Package Amount: ₹{pricingBreakdown.comboAmount}
-                                            </p>
+                                            <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
+                                                <div>
+                                                    <span className="font-medium">Combo Package Amount</span>
+                                                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                                                        No GST & Packaging
+                                                    </span>
+                                                </div>
+                                                <span>₹{pricingBreakdown.comboAmount}</span>
+                                            </div>
 
-                                            <p className="text-gray-600">
-                                                GST / Packaging Eligible Amount: ₹{pricingBreakdown.eligibleChargeAmount}
-                                            </p>
+                                            <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
+                                                <span>GST / Packaging Eligible Amount</span>
+                                                <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
+                                            </div>
                                         </>
                                     )}
-
                                     {packagingCharge > 0 && (
-                                        <p className="text-gray-600">
-                                            {pricingBreakdown.comboAmount > 0
-                                                ? `Packaging (${packagingPercent}% - Eligible Items)`
-                                                : `Packaging (${packagingPercent}%)`}: ₹{packagingCharge}
-                                        </p>
+                                        <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
+                                            <span>
+                                                {pricingBreakdown.comboAmount > 0
+                                                    ? `Packaging (${packagingPercent}% - Eligible Items)`
+                                                    : `Packaging (${packagingPercent}%)`}
+                                            </span>
+                                            <span>₹{packagingCharge}</span>
+                                        </div>
                                     )}
 
                                     {gstAmount > 0 && (
-                                        <p className="text-gray-600">
-                                            {pricingBreakdown.comboAmount > 0
-                                                ? `GST (${gstPercent}% - Eligible Items)`
-                                                : `GST (${gstPercent}%)`}: ₹{gstAmount}
-                                        </p>
+                                        <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
+                                            <span>
+                                                {pricingBreakdown.comboAmount > 0
+                                                    ? `GST (${gstPercent}% - Eligible Items)`
+                                                    : `GST (${gstPercent}%)`}
+                                            </span>
+                                            <span>₹{gstAmount}</span>
+                                        </div>
                                     )}
 
                                     <p className="text-xl font-bold text-[var(--color-primary)]">
@@ -523,20 +532,26 @@ export default function AdjustOrder() {
                         <p className="font-semibold">
                             New Total: ₹{grandTotal}
                         </p>
-
                         {pricingBreakdown.comboAmount > 0 && (
                             <>
-                                <p className="text-xs text-gray-500">
-                                    Combo Package Amount:
-                                    ₹{pricingBreakdown.comboAmount}
-                                </p>
+                                <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
+                                    <div>
+                                        <span className="font-medium">Combo Package Amount</span>
+                                        <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                                            No GST & Packaging
+                                        </span>
+                                    </div>
 
-                                <p className="text-xs text-gray-500">
-                                    GST / Packaging Eligible Amount:
-                                    ₹{pricingBreakdown.eligibleChargeAmount}
-                                </p>
+                                    <span>₹{pricingBreakdown.comboAmount}</span>
+                                </div>
+
+                                <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
+                                    <span>GST / Packaging Eligible Amount</span>
+                                    <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
+                                </div>
                             </>
                         )}
+
                         {diffAmount !== 0 && (
                             <p
                                 className={`text-sm font-medium ${diffAmount > 0

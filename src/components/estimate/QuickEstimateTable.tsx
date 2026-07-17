@@ -5,10 +5,12 @@ import defaultImage from "../../assets/default-image.png";
 
 interface Props {
     products: Product[];
+    onProductClick: (productId: string) => void;
 }
 
 export default function QuickEstimateTable({
     products,
+    onProductClick,
 }: Props) {
 
     const items = quickEstimateStore((s) => s.items);
@@ -61,6 +63,7 @@ export default function QuickEstimateTable({
                             return (
 
                                 <QuickEstimateTableRow
+                                    onProductClick={() => onProductClick(product.id)}
                                     key={product.id}
                                     product={product}
                                     quantity={qty}
@@ -118,8 +121,14 @@ export default function QuickEstimateTable({
                                 p-3
                             "
                         >
-
-                            <div className="flex gap-3">
+                            <div
+                                className="
+                                    flex
+                                    gap-3
+                                    cursor-pointer
+                                "
+                                onClick={() => onProductClick(product.id)}
+                            >
 
                                 <img
                                     src={product.image || defaultImage}
@@ -128,11 +137,21 @@ export default function QuickEstimateTable({
 
                                 <div className="flex-1">
 
-                                    <div className="font-semibold text-sm">
-
+                                    <span
+                                        onClick={() => onProductClick(product.id)}
+                                        className="
+                                            inline-block
+                                            text-sm
+                                            font-semibold
+                                            text-blue-600
+                                            hover:text-blue-700
+                                            hover:underline
+                                            cursor-pointer
+                                            transition-colors
+                                        "
+                                    >
                                         {product.name}
-
-                                    </div>
+                                    </span>
 
                                     <div className="mt-1">
 

@@ -21,12 +21,31 @@ export default function EstimateDownloadDialog({
     const [customerName, setCustomerName] = useState("");
     const [mobile, setMobile] = useState("");
     const [email, setEmail] = useState("");
+    const [captchaA, setCaptchaA] = useState(0);
+    const [captchaB, setCaptchaB] = useState(0);
+    const [captchaOp, setCaptchaOp] = useState<"+" | "-">("+");
+    const [captchaAnswer, setCaptchaAnswer] = useState("");
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (open) {
             setErrors({});
+
+            const a = Math.floor(Math.random() * 20) + 5;
+            const b = Math.floor(Math.random() * 20) + 1;
+
+            if (Math.random() > 0.5) {
+                setCaptchaA(a);
+                setCaptchaB(b);
+                setCaptchaOp("+");
+            } else {
+                setCaptchaA(Math.max(a, b));
+                setCaptchaB(Math.min(a, b));
+                setCaptchaOp("-");
+            }
+
+            setCaptchaAnswer("");
         }
     }, [open]);
 
@@ -34,6 +53,15 @@ export default function EstimateDownloadDialog({
 
     function validate() {
         const next: Record<string, string> = {};
+
+        const expected =
+            captchaOp === "+"
+                ? captchaA + captchaB
+                : captchaA - captchaB;
+
+        if (Number(captchaAnswer) !== expected) {
+            next.captcha = "Incorrect answer";
+        }
 
         if (!customerName.trim()) {
             next.customerName = "Customer name is required";
@@ -145,6 +173,34 @@ export default function EstimateDownloadDialog({
                         {errors.email && (
                             <p className="text-red-500 text-xs mt-1">
                                 {errors.email}
+                            </p>
+                        )}
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium">
+                            Security Check *
+                        </label>
+
+                        <div className="flex items-center gap-3 mt-1">
+                            <div className="rounded-lg bg-gray-100 px-4 py-2 font-semibold">
+                                {captchaA} {captchaOp} {captchaB} = ?
+                            </div>
+
+                            <input
+                                value={captchaAnswer}
+                                onChange={(e) =>
+                                    setCaptchaAnswer(
+                                        e.target.value.replace(/\D/g, "")
+                                    )
+                                }
+                                className="flex-1 rounded-lg border px-3 py-2"
+                                placeholder="Answer"
+                            />
+                        </div>
+
+                        {errors.captcha && (
+                            <p className="text-red-500 text-xs mt-1">
+                                {errors.captcha}
                             </p>
                         )}
                     </div>

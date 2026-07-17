@@ -47,11 +47,13 @@ import ComboPackages from "../pages/ComboPackages";
 import ComboPackageDetails from "../pages/ComboPackageDetails";
 import AiAssistant from "../pages/AiAssistant";
 import QuickEstimate from "../pages/QuickEstimate";
+import ScrollToTop from "../components/ui/ScrollToTop";
 
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
 
         {/* ================= PUBLIC USER APP ================= */}

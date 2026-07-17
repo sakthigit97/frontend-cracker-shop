@@ -322,7 +322,6 @@ export default function OrderDetails() {
                   </span>
                 )}
               </div>
-
               <div className="flex items-center gap-2 mt-1">
                 {item.originalPrice && item.originalPrice > item.price ? (
                   <>
@@ -333,17 +332,20 @@ export default function OrderDetails() {
                     <span className="text-green-600 font-semibold">
                       ₹{item.price}
                     </span>
-
-                    {item.discountText && (
-                      <span className="text-green-700 text-xs font-semibold bg-green-100 px-2 py-[2px] rounded">
-                        {item.discountText}
-                      </span>
-                    )}
                   </>
                 ) : (
-                  <span className="font-medium">₹{item.price}</span>
+                  <span className="font-medium">
+                    ₹{item.price}
+                  </span>
+                )}
+
+                {(item.discountText || !item.isComboPackage) && (
+                  <span className="text-green-700 text-xs font-semibold bg-green-100 px-2 py-[2px] rounded">
+                    {item.discountText || "NET RATE"}
+                  </span>
                 )}
               </div>
+
             </div>
 
             <div className="font-medium">
@@ -363,12 +365,18 @@ export default function OrderDetails() {
                 order.items.reduce((sum: number, i: any) => sum + i.total, 0)}
             </span>
           </div>
-
           {(order.comboAmount ?? 0) > 0 && (
-            <div className="flex justify-between text-gray-600">
-              <span>Combo Package Amount</span>
-              <span>₹{order.comboAmount}</span>
-            </div>
+            <>
+              <div className="flex justify-between text-gray-600">
+                <div>
+                  <span className="font-medium">Combo Package Amount</span>
+                  <span className="ml-2 text-xs text-blue-500">
+                    (GST &amp; Packaging Charges Not Applied)
+                  </span>
+                </div>
+                <span>₹{order.comboAmount}</span>
+              </div>
+            </>
           )}
 
           {hasEligibleItems && (

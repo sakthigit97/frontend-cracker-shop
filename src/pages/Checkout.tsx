@@ -321,6 +321,8 @@ export default function Checkout() {
     }
   };
 
+  console.log(products)
+
   async function startMockPayment(total: number) {
     console.log("Mock Payment Started:", total);
     await new Promise((res) => setTimeout(res, 1500));
@@ -385,7 +387,7 @@ export default function Checkout() {
             </p>
 
             <p>
-              • Customers must collect the parcel from the transport office/service point.
+              •  Customers must collect their parcel from the designated transport office/service point by paying transporation.
             </p>
 
             <p>
@@ -501,7 +503,6 @@ export default function Checkout() {
               >
                 <div>
                   <div>{p.name} × {p.quantity}</div>
-
                   <div className="flex items-center gap-2 mt-1">
                     {p.originalPrice && p.originalPrice > p.price ? (
                       <>
@@ -512,15 +513,17 @@ export default function Checkout() {
                         <span className="text-green-600 font-semibold">
                           ₹{p.price}
                         </span>
-
-                        {p.discountText && (
-                          <span className="text-green-600 text-xs font-medium bg-green-50 px-1 rounded">
-                            {p.discountText}
-                          </span>
-                        )}
                       </>
                     ) : (
-                      <span className="font-medium">₹{p.price}</span>
+                      <span className="font-medium">
+                        ₹{p.price}
+                      </span>
+                    )}
+
+                    {(p.discountText || !p.isComboPackage) && (
+                      <span className="text-green-600 text-xs font-medium bg-green-50 px-1 rounded">
+                        {p.discountText || "NET RATE"}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -540,11 +543,24 @@ export default function Checkout() {
             </div>
 
             {pricingBreakdown.hasComboItems && (
-              <div className="flex justify-between text-gray-600">
-                <span>Combo Package Amount</span>
-                <span>₹{pricingBreakdown.comboAmount}</span>
-              </div>
+              <>
+                <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
+                  <div>
+                    <span className="font-medium">Combo Package Amount</span>
+                    <span className="ml-2 text-xs text-blue-500">
+                      (GST & Packaging Charges Not Applied)
+                    </span>
+                  </div>
+                  <span>₹{pricingBreakdown.comboAmount}</span>
+                </div>
+
+                <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
+                  <span>GST / Packaging Eligible Amount</span>
+                  <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
+                </div>
+              </>
             )}
+
 
             {packagingCharge > 0 && (
               <div className="flex justify-between text-gray-600">

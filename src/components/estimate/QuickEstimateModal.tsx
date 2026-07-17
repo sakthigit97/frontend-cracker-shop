@@ -203,7 +203,6 @@ export default function QuickEstimateModal({
                 y
             );
         }
-
         y += 4;
 
         if (config?.adminAddress) {
@@ -214,22 +213,17 @@ export default function QuickEstimateModal({
             );
 
             text(address, LEFT, y);
-
             y += address.length * 3.4;
         }
 
         y += 2;
-
         line(y);
-
         y += 5;
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
         doc.setTextColor(0);
-
         text("CUSTOMER", LEFT, y);
-
         y += 5;
 
         doc.setFont("helvetica", "normal");
@@ -384,9 +378,6 @@ export default function QuickEstimateModal({
                     return;
                 }
 
-                //-----------------------------------------
-                // Combo Package Highlight
-                //-----------------------------------------
 
                 if (
                     data.section === "body" &&
@@ -444,9 +435,6 @@ export default function QuickEstimateModal({
                         COLORS.primary;
                 }
 
-                //-----------------------------------------
-                // Total
-                //-----------------------------------------
 
                 if (
                     data.section === "body" &&
@@ -520,7 +508,7 @@ export default function QuickEstimateModal({
         if (comboAmount > 0) {
 
             summaryRows.push([
-                "Combo Amount",
+                "Combo Amount (No GST & Packaging)",
                 formatMoney(comboAmount),
             ]);
 
@@ -604,9 +592,6 @@ export default function QuickEstimateModal({
                 const label =
                     summaryRows[data.row.index][0];
 
-                //-------------------------------------
-                // Discount
-                //-------------------------------------
 
                 if (label === "Discount") {
 
@@ -615,10 +600,6 @@ export default function QuickEstimateModal({
 
                     data.cell.styles.fontStyle = "bold";
                 }
-
-                //-------------------------------------
-                // Combo Amount
-                //-------------------------------------
 
                 if (label === "Combo Amount") {
 
@@ -629,10 +610,6 @@ export default function QuickEstimateModal({
                     ];
                 }
 
-                //-------------------------------------
-                // GST Eligible
-                //-------------------------------------
-
                 if (label === "GST Eligible") {
 
                     data.cell.styles.fillColor = [
@@ -641,10 +618,6 @@ export default function QuickEstimateModal({
                         252,
                     ];
                 }
-
-                //-------------------------------------
-                // Grand Total
-                //-------------------------------------
 
                 if (label === "Grand Total") {
 
@@ -663,10 +636,6 @@ export default function QuickEstimateModal({
                 }
             },
         });
-
-        //------------------------------------------------------------------
-        // FOOTER
-        //------------------------------------------------------------------
 
         let footerY =
             (doc as any).lastAutoTable.finalY + 6;
@@ -767,12 +736,7 @@ export default function QuickEstimateModal({
             footerY
         );
 
-        //------------------------------------------------------------------
-        // PAGE NUMBERS
-        //------------------------------------------------------------------
-
         const pageCount = doc.getNumberOfPages();
-
         for (let page = 1; page <= pageCount; page++) {
 
             doc.setPage(page);
@@ -805,16 +769,9 @@ export default function QuickEstimateModal({
             );
         }
 
-        //------------------------------------------------------------------
-        // EXPORT PDF
-        //------------------------------------------------------------------
-
         const pdfBlob = doc.output("blob");
-
         const arrayBuffer = doc.output("arraybuffer");
-
         const bytes = new Uint8Array(arrayBuffer);
-
         let binary = "";
 
         for (const byte of bytes) {
@@ -870,7 +827,6 @@ export default function QuickEstimateModal({
         setDownloading(true);
 
         await new Promise((resolve) => setTimeout(resolve, 50));
-
         setShowDownloadDialog(false);
 
         try {
@@ -967,8 +923,7 @@ export default function QuickEstimateModal({
                         </li>
 
                         <li>
-                            Customers must collect their parcel from the designated transport
-                            office/service point.
+                            Customers must collect their parcel from the designated transport office/service point by paying transporation.
                         </li>
 
                         <li>
@@ -1141,13 +1096,14 @@ export default function QuickEstimateModal({
                     {comboAmount > 0 && (
                         <>
                             <div className="flex justify-between">
-                                <span>Combo Package Amount</span>
-                                <span>₹{comboAmount.toLocaleString()}</span>
-                            </div>
+                                <div className="flex items-center gap-2">
+                                    <span>Combo Package Amount</span>
+                                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                                        No GST & Packaging
+                                    </span>
+                                </div>
 
-                            <div className="flex justify-between">
-                                <span>GST / Packaging Eligible Amount</span>
-                                <span>₹{eligibleChargeAmount.toLocaleString()}</span>
+                                <span>₹{comboAmount.toLocaleString()}</span>
                             </div>
                         </>
                     )}
