@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useConfigStore } from "../store/config.store";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { calculateOrderAmounts } from "../utils/pricing";
+import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 
 export default function QuickEstimate() {
@@ -28,7 +29,7 @@ export default function QuickEstimate() {
     }, []);
     const query = search.trim().toLowerCase();
 
-    const displayProducts =
+    let displayProducts: any =
         query.length > 0
             ? products.filter((p) =>
                 (`${p.name}`)
@@ -36,6 +37,7 @@ export default function QuickEstimate() {
                     .includes(query)
             )
             : products;
+    displayProducts = sortProductsBySequence(displayProducts);
 
     const selectedProducts = Object.values(items).reduce(
         (sum, qty) => sum + Math.max(0, Number(qty) || 0),
@@ -84,7 +86,7 @@ export default function QuickEstimate() {
 
     return (
 
-        <div className="space-y-8">
+        <div className="space-y-4">
 
             <QuickEstimateModal
                 open={showEstimate}
@@ -93,13 +95,12 @@ export default function QuickEstimate() {
                 }
             />
 
-
-            <div className="flex items-center gap-6 mb-5">
+            <div className="flex items-center gap-4 mb-3">
                 <button
                     onClick={() => navigate(-1)}
                     className="
                         flex items-center justify-center
-                        w-9 h-9
+                        w-8 h-8
                         rounded-full
                         bg-[var(--color-primary)]
                         text-white
@@ -115,8 +116,8 @@ export default function QuickEstimate() {
                 <div>
                     <h1
                         className="
-                            text-xl
-                            md:text-2xl
+                            text-lg
+                            md:text-xl
                             font-semibold
                             text-[var(--color-primary)]
                         "
@@ -124,13 +125,13 @@ export default function QuickEstimate() {
                         Quick Estimate
                     </h1>
 
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-gray-500">
                         Select quantities and generate an estimate.
                     </p>
                 </div>
             </div>
 
-            <div className="px-2">
+            <div className="px-3">
 
                 <input
                     value={search}
@@ -140,10 +141,10 @@ export default function QuickEstimate() {
                     placeholder="Search crackers..."
                     className="
                         w-full
-                        rounded-xl
+                        rounded-lg
                         border
                         px-3
-                        py-2
+                        py-1.5
                         text-base
                         focus:ring-2
                         focus:ring-[var(--color-primary)]
@@ -152,7 +153,7 @@ export default function QuickEstimate() {
 
             </div>
 
-            <div className="px-5 min-h-[55vh]">
+            <div className="px-3 min-h-[65vh]">
 
                 {loading && products.length === 0 ? (
 
@@ -206,7 +207,7 @@ export default function QuickEstimate() {
                 <div
                     className="
                         fixed
-                        bottom-6
+                        bottom-4
                         left-1/2
                         -translate-x-1/2
                         z-40
@@ -216,18 +217,18 @@ export default function QuickEstimate() {
                         shadow-2xl
                         w-[92%]
                         max-w-xl
-                        px-6
-                        py-4
+                        px-5
+                        py-3
                     "
                 >
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <div className="font-bold text-lg">
+                            <div className="font-semibold text-base">
                                 {selectedProducts} Item{selectedProducts > 1 ? "s" : ""}
 
                             </div>
-                            <div className="text-sm text-gray-300">
+                            <div className="text-xs text-gray-300">
                                 Estimate ₹{grandTotal.toLocaleString("en-IN")}
                             </div>
                         </div>
@@ -239,8 +240,8 @@ export default function QuickEstimate() {
                             className="
                                 bg-white
                                 text-slate-900
-                                px-6
-                                py-3
+                                px-5
+                                py-2
                                 rounded-full
                                 font-semibold
                                 hover:shadow-lg
@@ -248,7 +249,7 @@ export default function QuickEstimate() {
                             "
                         >
 
-                            Review Estimate →
+                            Review ({selectedProducts}) →
                         </button>
                     </div>
 

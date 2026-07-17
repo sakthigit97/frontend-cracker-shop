@@ -84,8 +84,7 @@ export default function Checkout() {
   const finalPayable = grandTotal - creditUsed;
 
   useEffect(() => {
-    const currentPincode =
-      addressMode === "PROFILE" ? profilePincode : pincode;
+    const currentPincode = addressMode === "PROFILE" ? profilePincode : pincode;
     if (!currentPincode || currentPincode.length !== 6) {
       setMinOrderValid(false);
       return;

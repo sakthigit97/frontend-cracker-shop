@@ -8,6 +8,7 @@ import ProductSkeleton from "../components/product/ProductSkeleton";
 import { useAuth } from "../store/auth.store";
 import { useMemo } from "react";
 import { usePackageStore } from "../store/package.store";
+import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 export default function Home() {
   const {
@@ -105,13 +106,14 @@ export default function Home() {
           : newArrivalProducts;
 
   const query = search.trim().toLowerCase();
-  const displayProducts = isSearching
+  let displayProducts = isSearching
     ? currentProducts.filter((p) =>
       (`${p.name}`)
         .toLowerCase()
         .includes(query)
     )
     : currentProducts;
+  displayProducts = sortProductsBySequence(displayProducts);
 
   const tabs = useMemo(() => {
     const items: {
@@ -276,7 +278,7 @@ export default function Home() {
                   const qty = items[product.id] || 0;
                   return (
                     <ProductCard
-                      key={product.id}
+                      key={product.sequenceNumber}
                       product={product}
                       quantityInCart={qty}
                       onAddToCart={() =>

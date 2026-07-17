@@ -8,6 +8,7 @@ import Toggle from "../../components/ui/Toggle";
 import { deactivateProduct, deleteProduct } from "../../services/adminProducts.api";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import EmptyState from "../../components/ui/EmptyState";
+import { sortProductsBySequence } from "../../utils/sequncerUtil";
 
 export default function AdminProducts() {
     const { fetchPage, clearCache } = useAdminProductsStore();
@@ -42,11 +43,11 @@ export default function AdminProducts() {
     );
     const query = filters.search.trim().toLowerCase();
 
-    const filteredProducts = useMemo(() => {
+    let filteredProducts = useMemo(() => {
         return (data?.items ?? []).filter((p: any) => {
             const matchesSearch =
                 !query ||
-                (`${p.name} ${p.productId} ${p.searchText ?? ""}`)
+                (`${p.name} ${p.productId}`)
                     .toLowerCase()
                     .includes(query);
 
@@ -67,11 +68,10 @@ export default function AdminProducts() {
             );
         });
     }, [data?.items, query, filters.brandId, filters.categoryId, filters.isActive]);
-
+    filteredProducts = sortProductsBySequence(filteredProducts);
 
     const paginatedProducts = useMemo(() => {
         const start = (page - 1) * PAGE_SIZE;
-
         return filteredProducts.slice(
             start,
             start + PAGE_SIZE
@@ -111,6 +111,7 @@ export default function AdminProducts() {
         try {
             setTogglingId(productId);
             await deactivateProduct(productId);
+            clearCache();
         } catch (err: any) {
             setData((prev: any) => ({
                 ...prev,
@@ -148,7 +149,6 @@ export default function AdminProducts() {
                 type: "success",
                 message: "Product deleted successfully",
             });
-
             clearCache();
             loadProducts();
         } catch (err: any) {

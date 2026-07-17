@@ -11,7 +11,6 @@ import {
 
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
 import { useAdminCategoriesStore } from "../../store/adminCategories.store";
-
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
 export default function AdminEditCategory() {
@@ -140,7 +139,6 @@ export default function AdminEditCategory() {
                 type: "success",
                 message: "Category updated successfully",
             });
-
             clearCache();
             navigate("/admin/categories");
         } catch (err: any) {

@@ -5,6 +5,7 @@ import { useCategoryProducts } from "../store/categoryProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
+import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 export default function CategoryProducts() {
   const { categoryId = "" } = useParams();
@@ -28,7 +29,7 @@ export default function CategoryProducts() {
 
   const isSearching = search.trim().length > 0;
   const query = search.trim().toLowerCase();
-  const displayProducts = isSearching
+  let displayProducts: any = isSearching
     ? items.filter((p) =>
       (
         `${p.name}`
@@ -37,6 +38,7 @@ export default function CategoryProducts() {
         .includes(query)
     )
     : items;
+  displayProducts = sortProductsBySequence(displayProducts);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -97,7 +99,7 @@ export default function CategoryProducts() {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-        {displayProducts.map((p) => {
+        {displayProducts.map((p: any) => {
           const quantityInCart = cartItems[p.id] ?? 0;
 
           return (

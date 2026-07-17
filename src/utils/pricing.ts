@@ -24,10 +24,19 @@ export function calculateOrderAmounts({
     );
     const disableGstForTN = config?.disableGstForTN ?? false;
     const isTN = isTamilNadu(state);
+
     let gstAmount = 0;
+
     if (!(isTN && disableGstForTN)) {
-        gstAmount = Math.round((chargeableBaseAmount * gstPercent) / 100);
+        // Business Rule:
+        // Display GST as 18%
+        // Calculate GST as 9%
+        const effectiveGstPercent = gstPercent / 2;
+        gstAmount = Math.round(
+            (chargeableBaseAmount * effectiveGstPercent) / 100
+        );
     }
+
     const grandTotal = totalAmount + packagingCharge + gstAmount;
     return {
         packagingCharge,

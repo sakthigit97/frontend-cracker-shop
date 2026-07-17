@@ -6,6 +6,8 @@ import { createDiscount } from "../../services/adminDiscounts.api";
 import { useAdminTargetsStore } from "../../store/adminTargets.store";
 import { useAdminDiscountsStore } from "../../store/adminDiscounts.store";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { deleteDiscount } from "../../services/adminDiscounts.api";
 
 export default function AdminDiscountsPage() {
     const { showAlert } = useAlert();
@@ -19,6 +21,8 @@ export default function AdminDiscountsPage() {
     const fetchDiscounts = useAdminDiscountsStore((s) => s.fetchDiscounts);
     const refreshDiscounts = useAdminDiscountsStore((s) => s.refreshDiscounts);
     const discountLoading = useAdminDiscountsStore((s) => s.loading);
+    const [deleteDiscountId, setDeleteDiscountId] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const [fetching, setFetching] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -36,7 +40,6 @@ export default function AdminDiscountsPage() {
     const PAGE_SIZE = 10;
     const [page, setPage] = useState(1);
     const [discountSearch, setDiscountSearch] = useState("");
-
 
     useEffect(() => {
         const load = async () => {
@@ -105,7 +108,6 @@ export default function AdminDiscountsPage() {
     }, [discounts, discountSearch, categories, brands, products]);
     const paginatedDiscounts = useMemo(() => {
         const start = (page - 1) * PAGE_SIZE;
-
         return filteredDiscounts.slice(
             start,
             start + PAGE_SIZE
@@ -116,6 +118,30 @@ export default function AdminDiscountsPage() {
         filteredDiscounts.length / PAGE_SIZE
     );
 
+    const handleDelete = async () => {
+        if (!deleteDiscountId) return;
+
+        try {
+            setDeleting(true);
+
+            await deleteDiscount(deleteDiscountId);
+
+            showAlert({
+                type: "success",
+                message: "Discount deleted successfully",
+            });
+
+            setDeleteDiscountId(null);
+            await refreshDiscounts();
+        } catch (err: any) {
+            showAlert({
+                type: "error",
+                message: err?.message || "Failed to delete discount",
+            });
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     useEffect(() => {
         setPage(1);
@@ -153,7 +179,6 @@ export default function AdminDiscountsPage() {
 
         try {
             setLoading(true);
-
             await createDiscount({
                 ...form,
                 discountValue: Number(form.discountValue),
@@ -176,10 +201,11 @@ export default function AdminDiscountsPage() {
             });
 
             setSearch("");
-        } catch {
+        } catch (e) {
+            console.log(e)
             showAlert({
                 type: "error",
-                message: "Failed to create discount",
+                message: "Failed to create discount : " + e,
             });
         } finally {
             setLoading(false);
@@ -430,16 +456,28 @@ export default function AdminDiscountsPage() {
                                             </td>
 
                                             <td className="px-4 py-3 text-right">
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/admin/discounts/${d.discountId}/edit`
-                                                        )
-                                                    }
-                                                >
-                                                    Edit
-                                                </Button>
+                                                <div className="flex justify-end gap-2">
+
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            navigate(`/admin/discounts/${d.discountId}/edit`)
+                                                        }
+                                                    >
+                                                        Edit
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="outline"
+                                                        className="border-red-500 text-red-600"
+                                                        onClick={() =>
+                                                            setDeleteDiscountId(d.discountId)
+                                                        }
+                                                    >
+                                                        Delete
+                                                    </Button>
+
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -473,6 +511,15 @@ export default function AdminDiscountsPage() {
                 </div>
 
             </div>
+            <ConfirmDialog
+                open={!!deleteDiscountId}
+                title="Delete Discount"
+                description="Are you sure you want to delete this discount? This action cannot be undone."
+                confirmText={deleting ? "Deleting..." : "Delete"}
+                loading={deleting}
+                onCancel={() => setDeleteDiscountId(null)}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }

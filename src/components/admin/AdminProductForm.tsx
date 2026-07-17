@@ -77,6 +77,8 @@ export default function ProductForm({
         update("aiTags", next);
     };
 
+    console.log(existingImages)
+
     return (
         <div className="space-y-8">
             <div className="bg-white border rounded-xl p-5 space-y-4">
@@ -344,9 +346,7 @@ export default function ProductForm({
                         hover:file:opacity-90"
                     onChange={(e) => {
                         const files = Array.from(e.target.files || []);
-                        const totalImages =
-                            (existingImages?.length || 0) + files.length;
-
+                        const totalImages = (existingImages?.length || 0) + files.length;
                         if (totalImages > MAX_IMAGES) {
                             showAlert({
                                 type: "error",

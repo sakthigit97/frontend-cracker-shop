@@ -8,6 +8,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useConfigStore } from "../../store/config.store";
 import { calculateOrderAmounts } from "../../utils/pricing";
 import defaultImage from "../../assets/default-image.png";
+import Icon from "../../assets/icon-new.png";
 import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
 import EstimateDownloadDialog from "./EstimateDownloadDialog";
 import { apiFetch } from "../../services/api";
@@ -90,162 +91,281 @@ export default function QuickEstimateModal({
         mobile: string;
         email?: string;
     }) => {
-        const doc = new jsPDF();
-        const formatMoney = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}`;
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+            compress: true,
+        });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+
+        const LEFT = 12;
+        const RIGHT = 198;
+
+        const COLORS = {
+            primary: [15, 23, 42] as [number, number, number],
+            border: [225, 225, 225] as [number, number, number],
+            alternate: [249, 249, 249] as [number, number, number],
+            success: [22, 163, 74] as [number, number, number],
+            warning: [245, 158, 11] as [number, number, number],
+            warningBg: [255, 248, 235] as [number, number, number],
+            gray: [110, 110, 110] as [number, number, number],
+            dark: [45, 45, 45] as [number, number, number],
+        };
+
+        const formatMoney = (amount: number) =>
+            `Rs. ${amount.toLocaleString("en-IN")}`;
+
+        const text = (
+            value: string,
+            x: number,
+            y: number,
+            options?: any
+        ) => doc.text(value, x, y, options);
+
+        const line = (y: number) => {
+            doc.setDrawColor(...COLORS.border);
+            doc.line(LEFT, y, RIGHT, y);
+        };
+
+        let y = 10;
+
+        doc.addImage(Icon, "PNG", LEFT, y - 1, 14, 14);
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
-        doc.text("SIVAKASI PYRO PARK", 14, 16);
+        doc.setTextColor(0);
 
+        text("SIVAKASI PYRO PARK", LEFT + 17, y + 4);
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        let infoY = 28;
+        doc.setFontSize(8);
+        doc.setTextColor(...COLORS.gray);
 
-        // IMPORTANT NOTICE (Right Side)
-        const noticeX = 118;
-        const noticeY = 22;
-        const noticeWidth = 78;
-        const noticeHeight = 24;
+        text(
+            "Premium Fireworks & Crackers",
+            LEFT + 17,
+            y + 9
+        );
 
-        doc.setFillColor(255, 248, 230);
-        doc.setDrawColor(245, 158, 11);
+        const boxX = 138;
+        const boxY = 8;
+        const boxW = 60;
+        const boxH = 16;
+
+        doc.setFillColor(...COLORS.warningBg);
+        doc.setDrawColor(...COLORS.warning);
+
         doc.roundedRect(
-            noticeX,
-            noticeY,
-            noticeWidth,
-            noticeHeight,
+            boxX,
+            boxY,
+            boxW,
+            boxH,
             2,
             2,
             "FD"
         );
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
+        doc.setFontSize(8.5);
         doc.setTextColor(146, 64, 14);
-        doc.text("IMPORTANT", noticeX + 3, noticeY + 5);
+
+        text("IMPORTANT", boxX + 2.5, boxY + 4);
 
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(...COLORS.dark);
+
+        text("No Home Delivery", boxX + 2.5, boxY + 8);
+
+        text("Transportation fee should be paid by customer", boxX + 2.5, boxY + 11.5);
+        text("MIN: TN - 3000 | Other - 5000 | North - 10,000", boxX + 2.5, boxY + 15);
+
+        y = 26;
+
         doc.setFontSize(7.5);
-        doc.setTextColor(70);
-
-        doc.text(
-            "No Home Delivery",
-            noticeX + 3,
-            noticeY + 10
-        );
-
-        doc.text(
-            "Transport Office Pickup",
-            noticeX + 3,
-            noticeY + 14
-        );
-
-        doc.text(
-            "Min Order: TN 3K | Other 5K | North 10K",
-            noticeX + 3,
-            noticeY + 18
-        );
-
-
+        doc.setTextColor(...COLORS.dark);
         if (config?.adminMobile) {
-            doc.text(`Mobile : +91 ${config.adminMobile}`, 14, infoY);
-            infoY += 4;
+
+            text(
+                `☎ +91 ${config.adminMobile}`,
+                LEFT,
+                y
+            );
         }
 
         if (config?.adminEmail) {
-            doc.text(`Email   : ${config.adminEmail}`, 14, infoY);
-            infoY += 4;
+
+            text(
+                `✉ ${config.adminEmail}`,
+                80,
+                y
+            );
         }
+
+        y += 4;
 
         if (config?.adminAddress) {
-            doc.text(`Address : ${config.adminAddress}`, 14, infoY);
-            infoY += 4;
+
+            const address = doc.splitTextToSize(
+                config.adminAddress,
+                175
+            );
+
+            text(address, LEFT, y);
+
+            y += address.length * 3.4;
         }
 
-        infoY += 4;
+        y += 2;
+
+        line(y);
+
+        y += 5;
 
         doc.setFont("helvetica", "bold");
-        doc.text("Customer", 14, infoY);
+        doc.setFontSize(8);
+        doc.setTextColor(0);
 
-        infoY += 5;
+        text("CUSTOMER", LEFT, y);
+
+        y += 5;
 
         doc.setFont("helvetica", "normal");
-        doc.text(`Name    : ${customer.customerName}`, 14, infoY);
+        doc.setFontSize(8);
 
-        infoY += 4;
+        text(
+            `Name : ${customer.customerName}`,
+            LEFT,
+            y
+        );
 
-        doc.text(`Mobile  : ${customer.mobile}`, 14, infoY);
+        text(
+            `Mobile : ${customer.mobile}`,
+            110,
+            y
+        );
 
         if (customer.email) {
-            infoY += 4;
-            doc.text(`Email   : ${customer.email}`, 14, infoY);
+
+            y += 4;
+
+            const email = doc.splitTextToSize(
+                customer.email,
+                90
+            );
+
+            text(
+                `Email :`,
+                LEFT,
+                y
+            );
+
+            text(
+                email,
+                24,
+                y
+            );
+
+            y += (email.length - 1) * 3;
         }
 
-        infoY += 3;
-        doc.line(14, infoY + 2, 196, infoY + 2);
+        y += 4;
 
+        line(y);
+
+        const tableStartY = y + 3;
 
         autoTable(doc, {
-            startY: infoY + 6,
 
-            head: [["Product", "Qty", "MRP", "Offer Price", "Total"]],
+            startY: tableStartY,
+
+            head: [[
+                "Product",
+                "Qty",
+                "MRP",
+                "Offer",
+                "Total"
+            ]],
 
             body: products.map((product) => [
+
                 product.isComboPackage
-                    ? `${product.name}\n(Combo Package)`
+                    ? `${product.name}  • Combo`
                     : product.name,
 
                 String(product.quantity),
 
-                product.originalPrice ? formatMoney(product.originalPrice) : "-",
+                product.originalPrice
+                    ? formatMoney(product.originalPrice)
+                    : "-",
 
                 formatMoney(product.price),
 
-                formatMoney(product.price * product.quantity),
+                formatMoney(
+                    product.price * product.quantity
+                ),
             ]),
-
             theme: "grid",
 
             tableLineWidth: 0,
 
-            alternateRowStyles: {
-                fillColor: [250, 250, 250],
-            },
-
             styles: {
+                font: "helvetica",
+                fontStyle: "normal",
+                fontSize: 8,
+                overflow: "linebreak",
+                cellPadding: {
+                    top: 1.2,
+                    bottom: 1.2,
+                    left: 2.2,
+                    right: 2.2,
+                },
+                minCellHeight: 6,
                 lineWidth: 0.08,
-                lineColor: [235, 235, 235],
+                lineColor: COLORS.border,
+                valign: "middle",
+                textColor: COLORS.dark,
             },
 
+            alternateRowStyles: {
+                fillColor: COLORS.alternate,
+            },
             headStyles: {
-                fillColor: [15, 23, 42],
-                textColor: 255,
+                font: "helvetica",
                 fontStyle: "bold",
+                fontSize: 8,
+                fillColor: COLORS.primary,
+                textColor: [255, 255, 255],
                 halign: "center",
-            },
-
-            bodyStyles: {
-                fontSize: 10,
+                valign: "middle",
+                cellPadding: {
+                    top: 2,
+                    bottom: 2,
+                    left: 2,
+                    right: 2,
+                },
             },
 
             columnStyles: {
                 0: {
-                    cellWidth: 80,
+                    cellWidth: 88,
+                    halign: "left",
                 },
 
                 1: {
-                    cellWidth: 16,
+                    cellWidth: 14,
                     halign: "center",
                 },
 
                 2: {
-                    cellWidth: 28,
+                    cellWidth: 26,
                     halign: "right",
                 },
 
                 3: {
-                    cellWidth: 34,
+                    cellWidth: 28,
                     halign: "right",
                 },
 
@@ -254,205 +374,441 @@ export default function QuickEstimateModal({
                     halign: "right",
                 },
             },
+
             didParseCell: (data) => {
-                if (data.section === "body" && data.column.index === 2) {
-                    data.cell.styles.fillColor = [245, 245, 245];
-                    data.cell.styles.textColor = [120, 120, 120];
+
+                if (data.section === "head") {
+
+                    data.cell.styles.lineColor = COLORS.primary;
+
+                    return;
                 }
 
-                if (data.section === "body" && data.column.index === 3) {
+                //-----------------------------------------
+                // Combo Package Highlight
+                //-----------------------------------------
+
+                if (
+                    data.section === "body" &&
+                    data.column.index === 0
+                ) {
+
+                    const product = products[data.row.index];
+
+                    if (product?.isComboPackage) {
+
+                        data.cell.styles.fontStyle = "bold";
+
+                        data.cell.styles.textColor = [
+                            25,
+                            70,
+                            140,
+                        ];
+                    }
+                }
+
+                //-----------------------------------------
+                // MRP
+                //-----------------------------------------
+
+                if (
+                    data.section === "body" &&
+                    data.column.index === 2
+                ) {
+
+                    data.cell.styles.textColor = [
+                        120,
+                        120,
+                        120,
+                    ];
+
+                    data.cell.styles.fillColor = [
+                        248,
+                        248,
+                        248,
+                    ];
+                }
+
+                //-----------------------------------------
+                // Offer Price
+                //-----------------------------------------
+
+                if (
+                    data.section === "body" &&
+                    data.column.index === 3
+                ) {
+
                     data.cell.styles.fontStyle = "bold";
-                    data.cell.styles.textColor = [15, 23, 42];
+
+                    data.cell.styles.textColor =
+                        COLORS.primary;
                 }
 
-                if (data.section === "body" && data.column.index === 4) {
+                //-----------------------------------------
+                // Total
+                //-----------------------------------------
+
+                if (
+                    data.section === "body" &&
+                    data.column.index === 4
+                ) {
+
                     data.cell.styles.fontStyle = "bold";
 
-                    // Remove the extra right border
-                    data.cell.styles.lineWidth = {
-                        top: 0.08,
-                        left: 0.08,
-                        bottom: 0.08,
-                        right: 0,
-                    };
-                }
-
-                // Remove the extra header border too
-                if (data.section === "head" && data.column.index === 4) {
-                    data.cell.styles.lineWidth = {
-                        top: 0.08,
-                        left: 0.08,
-                        bottom: 0.08,
-                        right: 0,
-                    };
+                    data.cell.styles.textColor =
+                        COLORS.primary;
                 }
             },
         });
+        const summaryStartY =
+            (doc as any).lastAutoTable.finalY + 2;
+        const summaryWidth = RIGHT - LEFT;
 
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFillColor(...COLORS.primary);
+
+        doc.rect(
+            LEFT,
+            summaryStartY,
+            summaryWidth,
+            6,
+            "F"
+        );
 
         doc.setFont("helvetica", "bold");
-
-        doc.setFontSize(13);
-        doc.setFillColor(15, 23, 42);
-        doc.rect(14, finalY - 5, 70, 8, "F");
-
+        doc.setFontSize(9);
         doc.setTextColor(255);
-        doc.setFont("helvetica", "bold");
-        doc.text("Estimate Summary", 17, finalY);
+
+        text(
+            "Estimate Summary",
+            LEFT + summaryWidth / 2,
+            summaryStartY + 4,
+            {
+                align: "center",
+            }
+        );
 
         doc.setTextColor(0);
 
         const summaryRows: string[][] = [
-            ["Products", String(products.length)],
 
-            ["Quantity", String(totalQty)],
+            [
+                "Products",
+                String(products.length),
+            ],
 
-            ["MRP Total", formatMoney(originalTotal)],
+            [
+                "Quantity",
+                String(totalQty),
+            ],
 
-            ["Discount", formatMoney(savings)],
+            [
+                "MRP Total",
+                formatMoney(originalTotal),
+            ],
 
-            ["Sub Total", formatMoney(totalAmount)],
+            [
+                "Discount",
+                "- " + formatMoney(savings),
+            ],
 
+            [
+                "Sub Total",
+                formatMoney(totalAmount),
+            ],
         ];
+
         if (comboAmount > 0) {
+
             summaryRows.push([
-                "Combo Package Amount",
+                "Combo Amount",
                 formatMoney(comboAmount),
             ]);
 
             summaryRows.push([
-                "Chargeable Amount",
-                formatMoney(eligibleChargeAmount),
+                "GST Eligible",
+                formatMoney(
+                    eligibleChargeAmount
+                ),
             ]);
         }
 
-        if (packagingPercent > 0 && packagingCharge > 0) {
+        if (
+            packagingPercent > 0 &&
+            packagingCharge > 0
+        ) {
+
             summaryRows.push([
                 `Packaging (${packagingPercent}%)`,
-
                 formatMoney(packagingCharge),
             ]);
         }
 
-        if (gstPercent > 0 && gstAmount > 0) {
-            summaryRows.push([`GST (${gstPercent}%)`, formatMoney(gstAmount)]);
+        if (
+            gstPercent > 0 &&
+            gstAmount > 0
+        ) {
+
+            summaryRows.push([
+                `GST (${gstPercent}%)`,
+                formatMoney(gstAmount),
+            ]);
         }
 
-        summaryRows.push(["Grand Total", formatMoney(grandTotal)]);
-
+        summaryRows.push([
+            "Grand Total",
+            formatMoney(grandTotal),
+        ]);
         autoTable(doc, {
-            startY: finalY + 4,
+
+            startY: summaryStartY + 5.8,
 
             theme: "grid",
 
             body: summaryRows,
 
             styles: {
-                fontSize: 11,
+                font: "helvetica",
+                fontSize: 8,
+                overflow: "linebreak",
 
-                cellPadding: 3,
+                cellPadding: {
+                    top: 1.3,
+                    bottom: 1.3,
+                    left: 3,
+                    right: 3,
+                },
+
+                minCellHeight: 6,
+
+                lineWidth: 0.08,
+
+                lineColor: COLORS.border,
             },
 
             columnStyles: {
-                0: {
-                    fontStyle: "bold",
 
-                    cellWidth: 70,
+                0: {
+                    cellWidth: 62,
+                    fontStyle: "bold",
                 },
 
                 1: {
+                    cellWidth: 124,
                     halign: "right",
                 },
             },
-
             didParseCell: (data) => {
+
                 if (data.section !== "body") return;
 
-                if (summaryRows[data.row.index]?.[0] === "Discount") {
-                    data.cell.styles.textColor = [22, 163, 74];
+                const label =
+                    summaryRows[data.row.index][0];
+
+                //-------------------------------------
+                // Discount
+                //-------------------------------------
+
+                if (label === "Discount") {
+
+                    data.cell.styles.textColor =
+                        COLORS.success;
+
                     data.cell.styles.fontStyle = "bold";
                 }
 
-                if (summaryRows[data.row.index]?.[0] === "Grand Total") {
-                    data.cell.styles.fillColor = [15, 23, 42];
-                    data.cell.styles.textColor = [255, 255, 255];
+                //-------------------------------------
+                // Combo Amount
+                //-------------------------------------
+
+                if (label === "Combo Amount") {
+
+                    data.cell.styles.fillColor = [
+                        247,
+                        249,
+                        255,
+                    ];
+                }
+
+                //-------------------------------------
+                // GST Eligible
+                //-------------------------------------
+
+                if (label === "GST Eligible") {
+
+                    data.cell.styles.fillColor = [
+                        252,
+                        252,
+                        252,
+                    ];
+                }
+
+                //-------------------------------------
+                // Grand Total
+                //-------------------------------------
+
+                if (label === "Grand Total") {
+
+                    data.cell.styles.fillColor =
+                        COLORS.primary;
+
+                    data.cell.styles.textColor = [
+                        255,
+                        255,
+                        255,
+                    ];
+                    data.cell.styles.font = "helvetica";
                     data.cell.styles.fontStyle = "bold";
-                    data.cell.styles.fontSize = 12;
+
+                    data.cell.styles.fontSize = 10;
                 }
             },
         });
 
-        const generatedDate = new Date().toLocaleString("en-IN", {
-            dateStyle: "medium",
-            timeStyle: "short",
-        });
+        //------------------------------------------------------------------
+        // FOOTER
+        //------------------------------------------------------------------
 
-        const summaryEndY = (doc as any).lastAutoTable.finalY + 12;
+        let footerY =
+            (doc as any).lastAutoTable.finalY + 6;
 
-        let footerY = summaryEndY;
+        line(footerY);
+
+        footerY += 5;
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(100);
 
-        doc.text(`Generated On : ${generatedDate}`, 14, footerY);
-        footerY += 8;
+        doc.setFontSize(7.5);
 
+        doc.setTextColor(...COLORS.gray);
 
         if (comboAmount > 0) {
-            doc.text(
-                `GST and Packaging charges are calculated only on eligible products.`,
-                14,
+
+            text(
+                "GST & Packaging charges are calculated only for eligible products.",
+                LEFT,
                 footerY
             );
-            footerY += 6;
+
+            footerY += 4;
+
         } else {
-            if (packagingPercent > 0) {
-                doc.text(
-                    `Packaging Charges (${packagingPercent}%) Included`,
-                    14,
-                    footerY
+
+            const notes: string[] = [];
+
+            if (
+                packagingPercent > 0 &&
+                packagingCharge > 0
+            ) {
+
+                notes.push(
+                    `Packaging (${packagingPercent}%) Included`
                 );
-                footerY += 6;
             }
 
-            if (gstPercent > 0) {
-                doc.text(
-                    `GST (${gstPercent}%) Included`,
-                    14,
+            if (
+                gstPercent > 0 &&
+                gstAmount > 0
+            ) {
+
+                notes.push(
+                    `GST (${gstPercent}%) Included`
+                );
+            }
+
+            if (notes.length > 0) {
+
+                text(
+                    notes.join("   •   "),
+                    LEFT,
                     footerY
                 );
-                footerY += 6;
+
+                footerY += 4;
             }
         }
 
-        doc.text(
-            "This quotation is an estimate only. Final billing is subject to stock availability.",
-            14,
+        text(
+            "Estimate only. Final billing depends on stock availability.",
+            LEFT,
             footerY
         );
 
-        footerY += 6;
+        footerY += 4;
+
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(15, 23, 42);
-        doc.text("Thank you for choosing Sivakasi Pyro Park!", 14, footerY);
+
+        doc.setFontSize(8);
+
+        doc.setTextColor(...COLORS.primary);
+
+        text(
+            "Thank you for choosing Sivakasi Pyro Park!",
+            LEFT,
+            footerY
+        );
+
+        footerY += 5;
+
+        doc.setFont("helvetica", "normal");
+
+        doc.setFontSize(7);
+
+        doc.setTextColor(...COLORS.gray);
+
+        const generatedDate =
+            new Date().toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+            });
+
+        text(
+            `Generated : ${generatedDate}`,
+            LEFT,
+            footerY
+        );
+
+        //------------------------------------------------------------------
+        // PAGE NUMBERS
+        //------------------------------------------------------------------
+
         const pageCount = doc.getNumberOfPages();
 
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
+        for (let page = 1; page <= pageCount; page++) {
 
-            doc.setFontSize(9);
-            doc.setTextColor(120);
-            const pageHeight = doc.internal.pageSize.getHeight();
+            doc.setPage(page);
 
-            doc.text(
-                `Page ${i} of ${pageCount}`,
-                196,
-                pageHeight - 6,
-                { align: "right" }
+            const pageHeight =
+                doc.internal.pageSize.getHeight();
+
+            doc.setDrawColor(...COLORS.border);
+
+            doc.line(
+                LEFT,
+                pageHeight - 8,
+                RIGHT,
+                pageHeight - 8
+            );
+
+            doc.setFont("helvetica", "normal");
+
+            doc.setFontSize(7);
+
+            doc.setTextColor(...COLORS.gray);
+
+            text(
+                `Page ${page} of ${pageCount}`,
+                RIGHT,
+                pageHeight - 4,
+                {
+                    align: "right",
+                }
             );
         }
+
+        //------------------------------------------------------------------
+        // EXPORT PDF
+        //------------------------------------------------------------------
+
         const pdfBlob = doc.output("blob");
 
         const arrayBuffer = doc.output("arraybuffer");
@@ -461,19 +817,28 @@ export default function QuickEstimateModal({
 
         let binary = "";
 
-        bytes.forEach((b) => {
-            binary += String.fromCharCode(b);
-        });
+        for (const byte of bytes) {
+            binary += String.fromCharCode(byte);
+        }
 
         const pdfBase64 = btoa(binary);
 
-        doc.save(`quick-estimate-${Date.now()}.pdf`);
+        doc.save(
+            `quick-estimate-${Date.now()}.pdf`
+        );
 
         return {
+
             pdfBlob,
+
             pdfBase64,
         };
-    }; useEffect(() => {
+    };
+
+
+
+
+    useEffect(() => {
         if (!open) return;
 
         const html = document.documentElement;
@@ -494,16 +859,27 @@ export default function QuickEstimateModal({
     if (!open) {
         return null;
     }
+
     const handleDownload = async (customer: {
         customerName: string;
         mobile: string;
         email?: string;
     }) => {
+
+        if (downloading) return;
+        setDownloading(true);
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        setShowDownloadDialog(false);
+
         try {
-            setDownloading(true);
-            setShowDownloadDialog(false);
+            await new Promise((resolve) =>
+                requestAnimationFrame(resolve)
+            );
 
             const { pdfBase64 } = downloadPdf(customer);
+
             if (isEstimateEmailSend) {
                 await apiFetch("/estimates/email", {
                     method: "POST",
@@ -515,7 +891,6 @@ export default function QuickEstimateModal({
                 });
             }
 
-            setShowDownloadDialog(false);
         } finally {
             setDownloading(false);
         }
@@ -810,7 +1185,7 @@ export default function QuickEstimateModal({
 
                         <Button
                             onClick={addAllToCart}
-                            disabled={isEstimateEmpty}
+                            disabled={isEstimateEmpty || downloading}
                             className="
                                 w-full
                                 h-12
@@ -825,11 +1200,11 @@ export default function QuickEstimateModal({
 
                             <Button
                                 variant="outline"
-                                disabled={isEstimateEmpty}
+                                disabled={isEstimateEmpty || downloading}
                                 onClick={() => setShowDownloadDialog(true)}
                                 className="h-11 whitespace-nowrap"
                             >
-                                Download PDF
+                                {downloading ? "Generating PDF..." : "Download PDF"}
                             </Button>
 
                             <Button
@@ -846,6 +1221,45 @@ export default function QuickEstimateModal({
                 </div>
             </div>
             <div onClick={(e) => e.stopPropagation()}>
+                {downloading && (
+                    <div className="fixed inset-0 z-[99999] bg-black/30 backdrop-blur-sm flex items-center justify-center">
+
+                        <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center">
+
+                            <svg
+                                className="h-10 w-10 animate-spin text-[var(--color-accent)]"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-20"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                />
+
+                                <path
+                                    className="opacity-100"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                />
+                            </svg>
+
+                            <p className="mt-4 text-lg font-semibold">
+                                Generating Estimate...
+                            </p>
+
+                            <p className="mt-1 text-sm text-gray-500">
+                                Please wait...
+                            </p>
+
+                        </div>
+
+                    </div>
+                )}
                 <EstimateDownloadDialog
                     open={showDownloadDialog}
                     loading={downloading}

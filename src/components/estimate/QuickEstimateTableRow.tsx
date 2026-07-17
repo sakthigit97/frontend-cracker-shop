@@ -19,7 +19,6 @@ function QuickEstimateTableRow({
     onChange,
 }: Props) {
     const availableQty = product.qty || 0;
-
     const total = product.price * quantity;
 
     return (

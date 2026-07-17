@@ -107,6 +107,7 @@ export default function AdminCreateProduct() {
                 isActive: form.isActive ? "true" : "false",
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
+                
             });
 
             showAlert({

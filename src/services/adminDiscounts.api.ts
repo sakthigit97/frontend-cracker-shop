@@ -33,3 +33,9 @@ export const listAdminBrands = async () => {
 export const listAdminProducts = async () => {
     return apiFetch("/admin/products");
 };
+
+export async function deleteDiscount(discountId: string) {
+    return apiFetch(`/admin/discounts/${discountId}`, {
+        method: "DELETE",
+    });
+}

@@ -4,6 +4,7 @@ import ProductForm from "../../components/admin/AdminProductForm";
 import type { ProductFormData } from "../../components/admin/AdminProductForm";
 import { useMetaStore } from "../../store/meta.store";
 import { useAlert } from "../../store/alert.store";
+import { useAdminProductsStore } from "../../store/adminProducts.store";
 
 import {
     getAdminProduct,
@@ -232,6 +233,7 @@ export default function AdminEditProduct() {
                 message: "Product updated successfully",
             });
 
+            useAdminProductsStore.getState().clearCache();
             navigate("/admin/products");
         } catch (err: any) {
             showAlert({
