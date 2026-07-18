@@ -115,12 +115,15 @@ export default function Checkout() {
         const res: ProfileResponse = await apiFetch("/user/profile");
         if (!mounted || !res?.data) return;
         setMobile(res.data.mobile);
-        const formatted = `
-        ${res.data.name}
-        ${res.data.mobile}
-        ${res.data.address}
-        ${res.data.city}, ${res.data.state} - ${res.data.pincode}
-        `.trim();
+        const formatted = [
+          res.data.name?.trim(),
+          res.data.mobile?.trim(),
+          res.data.address?.trim(),
+          `${res.data.city?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+
         setWalletCredit(res.data.walletCredit || 0);
         setProfileAddress(formatted);
         setProfilePicode(res.data.pincode);
@@ -205,13 +208,16 @@ export default function Checkout() {
         });
         return;
       }
-
       const addressParts = [
-        line1,
-        line2,
-        `${city}, ${stateValue} - ${pincode}`,
+        line1.trim(),
+        line2.trim(),
+        `${city.trim()}, ${stateValue.trim()} - ${pincode.trim()}`,
       ];
-      finalAddress = addressParts.filter(Boolean).join("\n");
+
+      finalAddress = addressParts
+        .filter(Boolean)
+        .join("\n");
+
     }
     if (!finalAddress.trim()) {
       showAlert({
@@ -273,11 +279,16 @@ export default function Checkout() {
         paymentStatus = "SUCCESS";
         transactionId = paymentResult.transactionId;
       }
+      const normalizedAddress = finalAddress
+        .split("\n")
+        .map(line => line.trim())
+        .filter(Boolean)
+        .join("\n");
 
       const res = await apiFetch("/orders", {
         method: "POST",
         body: JSON.stringify({
-          address: finalAddress,
+          address: normalizedAddress,
           paymentMode,
           paymentStatus,
           transactionId,

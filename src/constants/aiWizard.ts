@@ -19,28 +19,16 @@ export const AUDIENCE_OPTIONS: AiOption[] = [
         description: "Safe & colourful crackers",
     },
     {
+        id: "party",
+        title: "Party",
+        icon: "🎉",
+        description: "Party, events & wedding celebrations"
+    },
+    {
         id: "friends",
         title: "Friends",
         icon: "👥",
         description: "Fun celebration packs",
-    },
-    {
-        id: "wedding",
-        title: "Wedding",
-        icon: "💍",
-        description: "Grand celebration",
-    },
-    {
-        id: "party",
-        title: "Party / Function",
-        icon: "🎉",
-        description: "Events & functions",
-    },
-    {
-        id: "office",
-        title: "Office",
-        icon: "🏢",
-        description: "Corporate celebrations",
     }, {
         id: "no-preference",
         title: "Let AI Decide",
@@ -75,16 +63,22 @@ export const CRACKER_TYPE_OPTIONS: AiOption[] = [
         description: "Ground spinning effects",
     },
     {
-        id: "sparkler",
-        title: "Sparklers",
+        id: "handheld",
+        title: "Handheld",
         icon: "✨",
-        description: "Hand-held sparkles",
+        description: "Sparklers and handheld fireworks",
     },
     {
         id: "mixed",
         title: "Mixed Package",
         icon: "🎁",
         description: "Best combination",
+    },
+    {
+        id: "low-smoke",
+        title: "Low Smoke",
+        icon: "🌫️",
+        description: "Prefer low smoke crackers"
     },
     {
         id: "no-preference",
@@ -101,14 +95,15 @@ export const NOISE_OPTIONS: AiOption[] = [
         icon: "🔇",
     },
     {
-        id: "medium",
-        title: "Medium Noise",
-        icon: "🔉",
-    },
-    {
         id: "high",
         title: "High Noise",
         icon: "🔊",
+    },
+    {
+        id: "both",
+        title: "Both",
+        icon: "🔊",
+        description: "Low and High noise crackers"
     },
     {
         id: "no-preference",
@@ -160,8 +155,8 @@ export const WIZARD_STEPS = [
     },
     {
         id: 2,
-        title: "What type of crackers do you prefer?",
-        field: "crackerType",
+        title: "When will you use them?",
+        field: "timePreference",
     },
     {
         id: 3,
@@ -170,8 +165,8 @@ export const WIZARD_STEPS = [
     },
     {
         id: 4,
-        title: "When will you use them?",
-        field: "timePreference",
+        title: "What type of crackers do you prefer?",
+        field: "crackerType",
     },
     {
         id: 5,

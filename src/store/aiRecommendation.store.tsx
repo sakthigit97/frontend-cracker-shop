@@ -63,12 +63,7 @@ export function AiRecommendationProvider({
         request: AiRecommendationRequest
     ) => {
 
-        const cacheKey =
-            JSON.stringify(request);
-
-        /*
-         * Cache
-         */
+        const cacheKey = JSON.stringify(request);
 
         if (
             cache[cacheKey]

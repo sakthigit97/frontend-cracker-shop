@@ -7,7 +7,7 @@ import logo from '../../assets/icon-new.png'
 import {
   FaShoppingCart,
   FaBoxOpen,
-  // FaRobot,
+  FaRobot,
   FaCalculator,
   FaPhoneAlt,
   FaUserCircle,
@@ -129,11 +129,11 @@ export default function Header() {
       to: "/quick-estimate",
       icon: <FaCalculator />,
     },
-    // {
-    //   label: "AI Assistant",
-    //   to: "/ai-assistant",
-    //   icon: <FaRobot />,
-    // },
+    {
+      label: "AI Assistant",
+      to: "/ai-assistant",
+      icon: <FaRobot />,
+    },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -184,11 +184,11 @@ export default function Header() {
       to: "/quick-estimate",
       icon: <FaCalculator />,
     },
-    // {
-    //   label: "AI Assistant",
-    //   to: "/ai-assistant",
-    //   icon: <FaRobot />,
-    // },
+    {
+      label: "AI Assistant",
+      to: "/ai-assistant",
+      icon: <FaRobot />,
+    },
   ];
 
   const mobileSupport: MobileAccordionItem[] = [
@@ -239,11 +239,7 @@ export default function Header() {
 
           <div className="leading-tight">
             <div className="text-sm sm:text-base font-bold">
-              Sivakasi
-            </div>
-
-            <div className="text-[10px] sm:text-xs text-white/70">
-              Pyro Park
+              Sivakasi Pyro Park
             </div>
           </div>
         </Link>
@@ -396,38 +392,42 @@ export default function Header() {
                 ? "..."
                 : formatCartAmount(cartPricing.grandTotal)}
             </div>
-            <div
-              className="
-              absolute
-              top-full
-              right-0
-              mt-2
-              w-64
-              rounded-xl
-              border
-              border-gray-200
-              bg-white
-              p-3
-              shadow-xl
-              text-gray-700
-              text-sm
-              opacity-0
-              invisible
-              transition-all
-              duration-200
-              group-hover:opacity-100
-              group-hover:visible
-              z-50
-            "
-            >
-              <p className="font-semibold text-gray-900">
-                Estimated Total
-              </p>
 
-              <p className="mt-1 text-xs text-gray-500">
-                Includes applicable GST and Packaging Charges.
-              </p>
-            </div>
+            {cartCount > 0 && (
+              <div
+                className="
+                  absolute
+                  top-full
+                  right-0
+                  mt-2
+                  w-64
+                  rounded-xl
+                  border
+                  border-gray-200
+                  bg-white
+                  p-3
+                  shadow-xl
+                  text-gray-700
+                  text-sm
+                  opacity-0
+                  invisible
+                  transition-all
+                  duration-200
+                  group-hover:opacity-100
+                  group-hover:visible
+                  z-50
+                "
+              >
+                <p className="font-semibold text-gray-900">
+                  Estimated Total
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Includes applicable GST and Packaging Charges.
+                </p>
+              </div>
+            )}
+
           </Link>
 
 

@@ -5,12 +5,15 @@ import { useAlert } from "../store/alert.store";
 import { useNavigate } from "react-router-dom";
 import { FaWhatsapp, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { useConfigStore } from "../store/config.store";
+import { getMobileNumbers } from "../utils/contact";
+
 
 export default function Contact() {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const config = useConfigStore((s) => s.config);
+  const mobileNumbers = getMobileNumbers(config?.displayMobile);
 
   const [form, setForm] = useState({
     name: "",
@@ -135,38 +138,6 @@ export default function Contact() {
               )}
             </a>
 
-            {config?.adminMobile && (
-              <a
-                href={`tel:+91${config.adminMobile}`}
-                className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
-              >
-                <FaPhoneAlt className="text-blue-500" />
-                <span>+91 {config.adminMobile}</span>
-              </a>
-            )}
-
-            {config?.adminWhatsapp && (
-              <a
-                href={`https://wa.me/91${config.adminWhatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 text-green-600 font-medium hover:underline"
-              >
-                <FaWhatsapp className="text-xl" />
-                <span>+91 {config.adminWhatsapp}</span>
-              </a>
-            )}
-
-            {config?.additionalContact && (
-              <a
-                href={`tel:+91${config.additionalContact}`}
-                className="flex items-center justify-center gap-2 hover:text-[var(--color-primary)]"
-              >
-                <FaPhoneAlt className="text-purple-500" />
-                <span>+91 {config.additionalContact}</span>
-              </a>
-            )}
-
             {config?.adminEmail && (
               <a
                 href={`mailto:${config.adminEmail}`}
@@ -176,26 +147,54 @@ export default function Contact() {
               </a>
             )}
 
-            {config?.gmapLink && (
-              <li>
-                <a
-                  href={config.gmapLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:underline text-red-300"
-                >
-                  <FaMapMarkerAlt />
-                  <span>View on Google Maps</span>
-                </a>
-              </li>
+
+            {mobileNumbers.length > 0 && (
+              <>
+                <div className="flex items-center justify-center gap-2">
+                  <FaPhoneAlt className="text-blue-500 shrink-0" />
+                  <span className="flex flex-wrap justify-center">
+                    {mobileNumbers.map((mobile, index) => (
+                      <span key={mobile}>
+                        <a
+                          href={`tel:${mobile}`}
+                          className="hover:text-[var(--color-primary)]"
+                        >
+                          +91 {mobile}
+                        </a>
+                        {index < mobileNumbers.length - 1 && ", "}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-center gap-2">
+                  <FaWhatsapp className="text-green-600 text-xl shrink-0" />
+                  <span className="flex flex-wrap justify-center">
+                    {mobileNumbers.map((mobile, index) => (
+                      <span key={mobile}>
+                        <a
+                          href={`https://wa.me/91${mobile}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 font-medium hover:underline"
+                        >
+                          +91 {mobile}
+                        </a>
+                        {index < mobileNumbers.length - 1 && ", "}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              </>
             )}
 
-            <div className="pt-4 flex justify-center">
-              <a
-                href="https://maps.app.goo.gl/2TDNyJzyhDA1V9wAA?g_st=ipc"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="
+            {config?.gmapLink && (
+              <div className="pt-4 flex justify-center">
+                <a
+                  href={config?.gmapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
                   flex items-center gap-2
                   bg-[var(--color-primary)]
                   text-white
@@ -206,11 +205,12 @@ export default function Contact() {
                   active:scale-95
                   transition-all
                 "
-              >
-                <FaMapMarkerAlt />
-                Open in Google Maps
-              </a>
-            </div>
+                >
+                  <FaMapMarkerAlt />
+                  Open in Google Maps
+                </a>
+              </div>
+            )}
           </div>
 
         </div>

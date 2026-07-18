@@ -130,15 +130,12 @@ export default function QuickEstimateModal({
         };
 
         let y = 10;
-
         doc.addImage(Icon, "PNG", LEFT, y - 1, 14, 14);
-
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
         doc.setTextColor(0);
 
         text("SIVAKASI PYRO PARK", LEFT + 17, y + 4);
-
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(...COLORS.gray);
@@ -156,7 +153,6 @@ export default function QuickEstimateModal({
 
         doc.setFillColor(...COLORS.warningBg);
         doc.setDrawColor(...COLORS.warning);
-
         doc.roundedRect(
             boxX,
             boxY,
@@ -172,51 +168,42 @@ export default function QuickEstimateModal({
         doc.setTextColor(146, 64, 14);
 
         text("IMPORTANT", boxX + 2.5, boxY + 4);
-
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7);
         doc.setTextColor(...COLORS.dark);
 
         text("No Home Delivery", boxX + 2.5, boxY + 8);
-
         text("Transportation fee should be paid by customer", boxX + 2.5, boxY + 11.5);
         text("MIN: TN - 3000 | Other - 5000 | North - 10,000", boxX + 2.5, boxY + 15);
 
-        y = 26;
 
+        y = 26;
         doc.setFontSize(7.5);
         doc.setTextColor(...COLORS.dark);
-        if (config?.adminMobile) {
 
-            text(
-                `☎ +91 ${config.adminMobile}`,
-                LEFT,
-                y
-            );
+        if (config?.displayMobile) {
+            text(config.displayMobile, LEFT, y);
+            y += 4;
         }
 
         if (config?.adminEmail) {
-
-            text(
-                `✉ ${config.adminEmail}`,
-                80,
-                y
-            );
+            text(config.adminEmail, LEFT, y);
+            y += 4;
         }
-        y += 4;
 
         if (config?.adminAddress) {
-
             const address = doc.splitTextToSize(
                 config.adminAddress,
                 175
             );
 
             text(address, LEFT, y);
+
             y += address.length * 3.4;
         }
 
         y += 2;
+
         line(y);
         y += 5;
 
@@ -226,46 +213,29 @@ export default function QuickEstimateModal({
         text("CUSTOMER", LEFT, y);
         y += 5;
 
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
 
-        text(
-            `Name : ${customer.customerName}`,
-            LEFT,
-            y
-        );
+        text(customer.customerName, LEFT, y);
+        y += 4;
 
-        text(
-            `Mobile : ${customer.mobile}`,
-            110,
-            y
-        );
+        text(customer.mobile, LEFT, y);
+        y += 4;
 
-        if (customer.email) {
-
-            y += 4;
-
+        if (customer.email?.trim()) {
             const email = doc.splitTextToSize(
-                customer.email,
-                90
+                customer.email.trim(),
+                175
             );
 
-            text(
-                `Email :`,
-                LEFT,
-                y
-            );
+            text(email, LEFT, y);
 
-            text(
-                email,
-                24,
-                y
-            );
-
-            y += (email.length - 1) * 3;
+            y += email.length * 3.4;
         }
 
-        y += 4;
+        y += 2;
+
 
         line(y);
 
@@ -290,13 +260,8 @@ export default function QuickEstimateModal({
                     : product.name,
 
                 String(product.quantity),
-
-                product.originalPrice
-                    ? formatMoney(product.originalPrice)
-                    : "-",
-
+                product.originalPrice ? formatMoney(product.originalPrice) : "-",
                 formatMoney(product.price),
-
                 formatMoney(
                     product.price * product.quantity
                 ),
@@ -474,7 +439,6 @@ export default function QuickEstimateModal({
                 align: "center",
             }
         );
-
         doc.setTextColor(0);
 
         const summaryRows: string[][] = [
@@ -547,10 +511,23 @@ export default function QuickEstimateModal({
             formatMoney(grandTotal),
         ]);
         autoTable(doc, {
+            startY: summaryStartY,
+            theme: "plain",
 
-            startY: summaryStartY + 5.8,
-
-            theme: "grid",
+            head: [[
+                {
+                    content: "Estimate Summary",
+                    colSpan: 2,
+                    styles: {
+                        halign: "center",
+                        fillColor: COLORS.primary,
+                        textColor: [255, 255, 255],
+                        fontStyle: "bold",
+                        fontSize: 9,
+                        lineWidth: 0,
+                    },
+                },
+            ]],
 
             body: summaryRows,
 
@@ -567,7 +544,6 @@ export default function QuickEstimateModal({
                 },
 
                 minCellHeight: 6,
-
                 lineWidth: 0.08,
 
                 lineColor: COLORS.border,

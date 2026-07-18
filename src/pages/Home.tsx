@@ -9,6 +9,7 @@ import { useAuth } from "../store/auth.store";
 import { useMemo } from "react";
 import { usePackageStore } from "../store/package.store";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
+import { FaArrowUp } from "react-icons/fa";
 
 export default function Home() {
   const {
@@ -37,6 +38,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [showCartAlert, setShowCartAlert] = useState(false);
   const [prevAuth, setPrevAuth] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   type HomeTab =
     | "products"
     | "popular"
@@ -78,6 +80,17 @@ export default function Home() {
     setPrevAuth(isAuthenticated);
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 350);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
 
   const bestSellingProducts =
@@ -168,6 +181,12 @@ export default function Home() {
     }
   }, [tabs]);
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -315,6 +334,37 @@ export default function Home() {
             </div>
           )}
       </div>
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="
+            fixed
+            bottom-6
+            right-6
+            z-50
+            flex
+            h-11 
+            w-11 
+            md:h-12
+            md:w-12
+            items-center
+            justify-center
+            rounded-full
+            bg-[var(--color-primary)]
+            text-white
+            shadow-lg
+            transition-all
+            duration-300
+            hover:-translate-y-1
+            hover:scale-110
+            hover:shadow-2xl
+            active:scale-95
+          "
+          aria-label="Back to Top"
+        >
+          <FaArrowUp size={16} />
+        </button>
+      )}
     </div>
   );
 }

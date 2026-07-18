@@ -10,7 +10,7 @@ import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 import QuickEstimateProductModal from "../components/product/QuickEstimateProductModal";
-
+import { FaArrowUp } from "react-icons/fa";
 
 export default function QuickEstimate() {
 
@@ -25,6 +25,7 @@ export default function QuickEstimate() {
     const [search, setSearch] = useState("");
     const items = quickEstimateStore((s) => s.items);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+    const [showScrollTop, setShowScrollTop] = useState(false);
 
     useEffect(() => {
         fetchAll();
@@ -57,6 +58,18 @@ export default function QuickEstimate() {
         [products, items]
     );
 
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 350);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
     const { config } = useConfigStore();
     const packagingPercent = Number(config?.packagingPercent || 0);
     const gstPercent = Number(config?.gstPercent || 0);
@@ -85,7 +98,12 @@ export default function QuickEstimate() {
             config,
         ]
     );
-
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    };
     return (
 
         <div className="space-y-4">
@@ -240,8 +258,50 @@ export default function QuickEstimate() {
                                 {selectedProducts} Item{selectedProducts > 1 ? "s" : ""}
 
                             </div>
-                            <div className="text-xs text-gray-300">
-                                Estimate ₹{grandTotal.toLocaleString("en-IN")}
+                            <div className="flex items-center gap-2 text-xs text-gray-300">
+                                <span>
+                                    Estimate ₹{grandTotal.toLocaleString("en-IN")}
+                                </span>
+
+                                <div className="relative group">
+                                    <span className="cursor-help text-blue-300 font-semibold">
+                                        ⓘ
+                                    </span>
+
+                                    <div
+                                        className="
+                                            absolute
+                                            bottom-full
+                                            left-1/2
+                                            -translate-x-1/2
+                                            mb-2
+                                            w-64
+                                            rounded-xl
+                                            border
+                                            border-gray-200
+                                            bg-white
+                                            p-3
+                                            shadow-xl
+                                            text-gray-700
+                                            text-sm
+                                            opacity-0
+                                            invisible
+                                            transition-all
+                                            duration-200
+                                            group-hover:opacity-100
+                                            group-hover:visible
+                                            z-50
+                                        "
+                                    >
+                                        <p className="font-semibold text-gray-900">
+                                            Estimated Total
+                                        </p>
+
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Includes applicable GST and Packaging Charges.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -264,9 +324,40 @@ export default function QuickEstimate() {
                             Review ({selectedProducts}) →
                         </button>
                     </div>
-
                 </div>
-
+            )}
+            {showScrollTop && (
+                <button
+                    onClick={scrollToTop}
+                    className="
+                    fixed
+                    bottom-24
+                    right-4
+                    md:bottom-6
+                    md:right-6
+                    z-50
+                    flex
+                    h-11
+                    w-11
+                    md:h-12
+                    md:w-12
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[var(--color-primary)]
+                    text-white
+                    shadow-lg
+                    transition-all
+                    duration-300
+                    hover:-translate-y-1
+                    hover:scale-110
+                    hover:shadow-2xl
+                    active:scale-95
+                    "
+                    aria-label="Back to Top"
+                >
+                    <FaArrowUp size={16} />
+                </button>
             )}
 
         </div>

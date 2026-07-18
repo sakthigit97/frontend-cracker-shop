@@ -1,43 +1,23 @@
-import { useEffect, useMemo } from "react";
-import { useCartProductsStore } from "../store/cartProducts.store";
+import { useMemo } from "react";
 import { quickEstimateStore } from "../store/quickEstimate.store";
-
+import { useHomeProducts } from "../store/homeProduct.store";
 
 export function useQuickEstimateProducts() {
     const items = quickEstimateStore((s) => s.items);
-    const { products, fetchProducts, loading } = useCartProductsStore();
-    const productIds = useMemo(
-        () => Object.keys(items),
-        [items]
-    );
 
-    useEffect(() => {
-        if (productIds.length === 0) {
-            return;
-        }
-
-        fetchProducts(productIds);
-    }, [fetchProducts, productIds.join(",")]);
+    const { products } = useHomeProducts();
 
     const merged = useMemo(() => {
-        return productIds
-            .map((id) => {
-                const qty = Number(items[id] ?? 0);
+        return products
+            .filter((p) => (items[p.id] ?? 0) > 0)
+            .map((p) => ({
+                ...p,
+                quantity: items[p.id],
+            }));
+    }, [products, items]);
 
-                if (qty <= 0) return null;
-
-                const p = products[id];
-                if (!p) return null;
-
-                return {
-                    ...p,
-                    quantity: qty,
-                };
-            })
-            .filter(
-                (p): p is NonNullable<typeof p> => p !== null
-            );
-    }, [products, items, productIds]);
-
-    return { products: merged, loading };
+    return {
+        products: merged,
+        loading: false,
+    };
 }

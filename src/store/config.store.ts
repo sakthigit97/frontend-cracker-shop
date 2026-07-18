@@ -17,12 +17,19 @@ export const useConfigStore = create<ConfigState>()(
             config: null,
             configReady: false,
             loadConfig: async () => {
-                if (get().configReady && get().config) return;
-                const config = await fetchGlobalConfig();
-                set({
-                    config,
-                    configReady: true,
-                });
+                try {
+                    const config = await fetchGlobalConfig();
+                    set({
+                        config,
+                        configReady: true,
+                    });
+                } catch (err) {
+                    if (get().config) {
+                        set({ configReady: true });
+                        return;
+                    }
+                    throw err;
+                }
             },
             clearConfig: () => {
                 set({
@@ -31,8 +38,10 @@ export const useConfigStore = create<ConfigState>()(
                 });
             },
             setConfig: (data) => {
-                localStorage.setItem("adminConfig", JSON.stringify(data));
-                set({ config: data });
+                set({
+                    config: data,
+                    configReady: true,
+                });
             },
         }),
         {

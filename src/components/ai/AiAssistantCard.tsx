@@ -1,6 +1,5 @@
 import AiWizard from "./AiWizard";
 import AiPackageResult from "./AiPackageResult";
-
 import { useAiRecommendation } from "../../store/aiRecommendation.store";
 
 export default function AiAssistantCard() {
@@ -15,29 +14,22 @@ export default function AiAssistantCard() {
             budget: Number(form.budget),
 
             audiences:
-                form.audience &&
-                    form.audience !== "no-preference"
-                    ? [form.audience]
-                    : [],
+                form.audience.filter(
+                    (x: string) => x !== "no-preference"
+                ),
 
             crackerTypes:
-                form.crackerType &&
-                    form.crackerType !== "no-preference"
-                    ? [form.crackerType]
-                    : [],
-
+                form.crackerType.filter(
+                    (x: string) => x !== "no-preference"
+                ),
             noiseLevels:
-                form.noiseLevel &&
-                    form.noiseLevel !== "no-preference"
-                    ? [form.noiseLevel]
-                    : [],
-
+                form.noiseLevel.filter(
+                    (x: string) => x !== "no-preference"
+                ),
             timePreferences:
-                form.timePreference &&
-                    form.timePreference !== "no-preference"
-                    ? [form.timePreference]
-                    : [],
-
+                form.timePreference.filter(
+                    (x: string) => x !== "no-preference"
+                ),
             features: [],
         });
     };
@@ -50,13 +42,11 @@ export default function AiAssistantCard() {
                 space-y-8
             "
         >
-            {/* Wizard */}
             <AiWizard
                 loading={loading}
                 onGenerate={generatePackage}
             />
 
-            {/* Validation Error */}
             {response?.status === "INVALID_BUDGET" && (
                 <div
                     className="

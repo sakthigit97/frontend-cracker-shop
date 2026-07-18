@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
 import { FaWhatsapp, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { useConfigStore } from "../../store/config.store";
+import { getMobileNumbers } from "../../utils/contact";
+
 
 export default function Footer() {
   const config = useConfigStore((s) => s.config);
+  const mobileNumbers = getMobileNumbers(config?.displayMobile);
 
   return (
     <footer className="bg-[var(--color-primary)] text-white mt-12">
@@ -45,43 +48,6 @@ export default function Footer() {
             {config?.adminAddress && (
               <li>{config.adminAddress}</li>
             )}
-            {config?.adminMobile && (
-              <li>
-                <a
-                  href={`tel:+91${config.adminMobile}`}
-                  className="flex items-center gap-2 hover:underline"
-                >
-                  <FaPhoneAlt />
-                  <span>+91 {config.adminMobile}</span>
-                </a>
-              </li>
-            )}
-
-            {config?.adminWhatsapp && (
-              <li>
-                <a
-                  href={`https://wa.me/91${config.adminWhatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:underline text-green-300"
-                >
-                  <FaWhatsapp />
-                  <span>+91 {config.adminWhatsapp}</span>
-                </a>
-              </li>
-            )}
-
-            {config?.additionalContact && (
-              <li>
-                <a
-                  href={`tel:+91${config.additionalContact}`}
-                  className="flex items-center gap-2 hover:underline"
-                >
-                  <FaPhoneAlt />
-                  <span>+91 {config.additionalContact}</span>
-                </a>
-              </li>
-            )}
 
             {config?.adminEmail && (
               <li>
@@ -91,6 +57,43 @@ export default function Footer() {
                 >
                   📧 {config.adminEmail}
                 </a>
+              </li>
+            )}
+
+            {mobileNumbers.length > 0 && (
+              <li className="flex items-center gap-2">
+                <FaPhoneAlt className="shrink-0 mt-0.5" />
+                <span className="flex flex-wrap gap-1">
+                  {mobileNumbers.map((mobile, index) => (
+                    <span key={mobile}>
+                      <a href={`tel:${mobile}`} className="hover:underline">
+                        +91 {mobile}
+                      </a>
+                      {index < mobileNumbers.length - 1 && ", "}
+                    </span>
+                  ))}
+                </span>
+              </li>
+            )}
+
+            {mobileNumbers.length > 0 && (
+              <li className="flex items-center gap-2">
+                <FaWhatsapp className="text-green-300 shrink-0 mt-0.5" />
+                <span className="flex flex-wrap gap-1">
+                  {mobileNumbers.map((mobile, index) => (
+                    <span key={mobile}>
+                      <a
+                        href={`https://wa.me/91${mobile}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline text-green-300"
+                      >
+                        +91 {mobile}
+                      </a>
+                      {index < mobileNumbers.length - 1 && ", "}
+                    </span>
+                  ))}
+                </span>
               </li>
             )}
 

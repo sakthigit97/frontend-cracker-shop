@@ -13,6 +13,8 @@ import {
 import {
     INITIAL_AI_WIZARD_STATE,
     type AiWizardProps,
+    type AiWizardState,
+    type MultiSelectField,
 } from "../../types/aiWizard";
 
 export default function AiWizard({
@@ -24,7 +26,7 @@ export default function AiWizard({
         useState(1);
 
     const [form, setForm] =
-        useState(
+        useState<AiWizardState>(
             INITIAL_AI_WIZARD_STATE
         );
 
@@ -49,21 +51,58 @@ export default function AiWizard({
 
     };
 
+    const toggleSelection = (
+        field: MultiSelectField,
+        value: string
+    ) => {
+
+        const current = form[field];
+        if (value === "no-preference") {
+            updateField(field, ["no-preference"]);
+            return;
+        }
+
+        const filtered = current.filter(
+            item => item !== "no-preference"
+        );
+
+        if (filtered.includes(value)) {
+
+            if (filtered.length === 1) {
+                return;
+            }
+
+            updateField(
+                field,
+                filtered.filter(item => item !== value)
+            );
+
+            return;
+        }
+
+        updateField(
+            field,
+            [...filtered, value]
+        );
+    };
+
+    const hasSelection = (values: string[]) =>
+        values.length > 0;
+
     const validateCurrentStep = () => {
 
         switch (step) {
-
             case 1:
-                return !!form.audience;
+                return hasSelection(form.audience);
 
             case 2:
-                return !!form.crackerType;
+                return hasSelection(form.timePreference);
 
             case 3:
-                return !!form.noiseLevel;
+                return hasSelection(form.noiseLevel);
 
             case 4:
-                return !!form.timePreference;
+                return hasSelection(form.crackerType);
 
             case 5:
                 return (
@@ -107,46 +146,44 @@ export default function AiWizard({
     };
 
     const generate = async () => {
-
         await onGenerate(form);
-
     };
 
     return (
 
         <div
             className="
-        w-full
-        max-w-5xl
-        mx-auto
-        rounded-3xl
-        bg-white
-        border
-        shadow-xl
-        overflow-hidden
-    "
+                w-full
+                max-w-5xl
+                mx-auto
+                rounded-3xl
+                bg-white
+                border
+                shadow-xl
+                overflow-hidden
+            "
         >
             <div
                 className="
-        bg-gradient-to-r
-        from-white
-        to-gray-50
-        border-b
-        border-gray-200
-        p-5
-        sm:p-6
-        lg:p-8
-    "
+                    bg-gradient-to-r
+                    from-white
+                    to-gray-50
+                    border-b
+                    border-gray-200
+                    p-5
+                    sm:p-6
+                    lg:p-8
+                "
             >
                 <div
                     className="
-            flex
-            flex-col
-            md:flex-row
-            md:items-center
-            md:justify-between
-            gap-5
-        "
+                        flex
+                        flex-col
+                        md:flex-row
+                        md:items-center
+                        md:justify-between
+                        gap-5
+                    "
                 >
 
                     <div>
@@ -268,11 +305,10 @@ export default function AiWizard({
                                             option
                                         }
                                         selected={
-                                            form.audience ===
-                                            option.id
+                                            form.audience.includes(option.id)
                                         }
                                         onClick={() =>
-                                            updateField(
+                                            toggleSelection(
                                                 "audience",
                                                 option.id
                                             )
@@ -288,7 +324,7 @@ export default function AiWizard({
 
                 )}
 
-                {step === 2 && (
+                {step === 4 && (
 
                     <div
                         className="
@@ -342,11 +378,10 @@ export default function AiWizard({
                                             option
                                         }
                                         selected={
-                                            form.crackerType ===
-                                            option.id
+                                            form.crackerType.includes(option.id)
                                         }
                                         onClick={() =>
-                                            updateField(
+                                            toggleSelection(
                                                 "crackerType",
                                                 option.id
                                             )
@@ -415,11 +450,10 @@ export default function AiWizard({
                                             option
                                         }
                                         selected={
-                                            form.noiseLevel ===
-                                            option.id
+                                            form.noiseLevel.includes(option.id)
                                         }
                                         onClick={() =>
-                                            updateField(
+                                            toggleSelection(
                                                 "noiseLevel",
                                                 option.id
                                             )
@@ -433,9 +467,10 @@ export default function AiWizard({
 
                     </div>
 
+
                 )}
 
-                {step === 4 && (
+                {step === 2 && (
 
                     <div className="space-y-5">
 
@@ -478,11 +513,10 @@ export default function AiWizard({
                                         key={option.id}
                                         option={option}
                                         selected={
-                                            form.timePreference ===
-                                            option.id
+                                            form.timePreference.includes(option.id)
                                         }
                                         onClick={() =>
-                                            updateField(
+                                            toggleSelection(
                                                 "timePreference",
                                                 option.id
                                             )
