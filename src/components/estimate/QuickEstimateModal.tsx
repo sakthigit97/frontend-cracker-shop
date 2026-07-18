@@ -191,14 +191,17 @@ export default function QuickEstimateModal({
             y += 4;
         }
 
+        if (config?.website) {
+            text(config.website, LEFT, y);
+            y += 4;
+        }
+
         if (config?.adminAddress) {
             const address = doc.splitTextToSize(
                 config.adminAddress,
-                175
+                110
             );
-
             text(address, LEFT, y);
-
             y += address.length * 3.4;
         }
 
@@ -249,22 +252,27 @@ export default function QuickEstimateModal({
                 "Product",
                 "Qty",
                 "MRP",
+                "Discount",
                 "Offer",
                 "Total"
             ]],
 
             body: products.map((product) => [
-
                 product.isComboPackage
-                    ? `${product.name}  • Combo`
+                    ? `${product.name} • Combo`
                     : product.name,
 
                 String(product.quantity),
-                product.originalPrice ? formatMoney(product.originalPrice) : "-",
+
+                product.originalPrice
+                    ? formatMoney(product.originalPrice)
+                    : "-",
+
+                product.discountText ?? "-",
+
                 formatMoney(product.price),
-                formatMoney(
-                    product.price * product.quantity
-                ),
+
+                formatMoney(product.price * product.quantity),
             ]),
             theme: "grid",
 
@@ -306,32 +314,13 @@ export default function QuickEstimateModal({
                     right: 2,
                 },
             },
-
             columnStyles: {
-                0: {
-                    cellWidth: 88,
-                    halign: "left",
-                },
-
-                1: {
-                    cellWidth: 14,
-                    halign: "center",
-                },
-
-                2: {
-                    cellWidth: 26,
-                    halign: "right",
-                },
-
-                3: {
-                    cellWidth: 28,
-                    halign: "right",
-                },
-
-                4: {
-                    cellWidth: 30,
-                    halign: "right",
-                },
+                0: { cellWidth: 72, halign: "left" },     // Product
+                1: { cellWidth: 12, halign: "center" },   // Qty
+                2: { cellWidth: 24, halign: "right" },    // MRP
+                3: { cellWidth: 24, halign: "center" },   // Discount
+                4: { cellWidth: 24, halign: "right" },    // Offer
+                5: { cellWidth: 28, halign: "right" },    // Total
             },
 
             didParseCell: (data) => {
@@ -363,10 +352,6 @@ export default function QuickEstimateModal({
                     }
                 }
 
-                //-----------------------------------------
-                // MRP
-                //-----------------------------------------
-
                 if (
                     data.section === "body" &&
                     data.column.index === 2
@@ -385,13 +370,18 @@ export default function QuickEstimateModal({
                     ];
                 }
 
-                //-----------------------------------------
-                // Offer Price
-                //-----------------------------------------
-
                 if (
                     data.section === "body" &&
                     data.column.index === 3
+                ) {
+                    data.cell.styles.textColor = [22, 163, 74];
+                    data.cell.styles.fontStyle = "bold";
+                    data.cell.styles.halign = "center";
+                }
+
+                if (
+                    data.section === "body" &&
+                    data.column.index === 4
                 ) {
 
                     data.cell.styles.fontStyle = "bold";
@@ -403,7 +393,7 @@ export default function QuickEstimateModal({
 
                 if (
                     data.section === "body" &&
-                    data.column.index === 4
+                    data.column.index === 5
                 ) {
 
                     data.cell.styles.fontStyle = "bold";

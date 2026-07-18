@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
 import { calculateOrderAmounts } from "../../utils/pricing";
 import logo from '../../assets/icon-new.png'
-
 import {
   FaShoppingCart,
   FaBoxOpen,
@@ -17,6 +16,7 @@ import {
   FaHome,
   FaBars,
   FaTimes,
+  FaPalette,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -134,6 +134,16 @@ export default function Header() {
       to: "/ai-assistant",
       icon: <FaRobot />,
     },
+    {
+      label: "Arts & Crafts",
+      icon: <FaPalette />,
+      onClick: () =>
+        window.open(
+          "https://knotwhatnot.com/",
+          "_blank",
+          "noopener,noreferrer"
+        ),
+    },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -146,6 +156,20 @@ export default function Header() {
       label: "Privacy Policy",
       to: "/privacy-policy",
       icon: <FaShieldAlt />,
+    },
+  ];
+
+  const lifestyleMenu: HeaderDropdownItem[] = [
+    {
+      label: "Arts & Crafts",
+      icon: <FaPalette />,
+      onClick: () => {
+        window.open(
+          "https://knotwhatnot.com/",
+          "_blank",
+          "noopener,noreferrer"
+        );
+      },
     },
   ];
 
@@ -201,6 +225,21 @@ export default function Header() {
       label: "Privacy Policy",
       to: "/privacy-policy",
       icon: <FaShieldAlt />,
+    },
+  ];
+
+  const mobileLifestyle: MobileAccordionItem[] = [
+    {
+      label: "Arts & Crafts",
+      icon: <FaPalette />,
+      onClick: () => {
+        window.open(
+          "https://knotwhatnot.com/",
+          "_blank",
+          "noopener,noreferrer"
+        );
+        closeMobile();
+      },
     },
   ];
 
@@ -271,6 +310,12 @@ export default function Header() {
             title="Support"
             items={supportMenu}
           />
+
+          <HeaderDropdown
+            title="Lifestyle"
+            items={lifestyleMenu}
+          />
+
 
           {isAuthenticated && (
             <HeaderDropdown
@@ -538,15 +583,11 @@ export default function Header() {
               Home
             </Link>
 
-            {/* Products */}
-
             <MobileAccordion
               title="Products"
               items={mobileProducts}
               onNavigate={closeMobile}
             />
-
-            {/* Support */}
 
             <MobileAccordion
               title="Support"
@@ -554,7 +595,12 @@ export default function Header() {
               onNavigate={closeMobile}
             />
 
-            {/* Account */}
+
+            <MobileAccordion
+              title="Lifestyle"
+              items={mobileLifestyle}
+              onNavigate={closeMobile}
+            />
 
             {isAuthenticated && (
               <MobileAccordion
@@ -563,8 +609,6 @@ export default function Header() {
                 onNavigate={closeMobile}
               />
             )}
-
-            {/* Login */}
 
             {!isAuthenticated && (
               <Link
@@ -587,8 +631,6 @@ export default function Header() {
                 Login
               </Link>
             )}
-
-            {/* Cart Summary */}
 
             <Link
               to="/cart"

@@ -11,6 +11,7 @@ export interface Product {
   discountText?: string;
   categoryId?: string;
   isComboPackage?: boolean;
+  productFamily?: string;
 }
 
 export type ProductDetails = {

@@ -32,6 +32,7 @@ export type GlobalConfig = {
     isCartUpdateSMSEnabled: boolean;
     gmapLink: string;
     displayMobile: string;
+    website: string;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {
