@@ -12,24 +12,18 @@ import type {
 } from "../types/aiRecommendation.types";
 
 interface AiRecommendationState {
-
     loading: boolean;
-
     response:
     AiRecommendationResponse | null;
-
     cache:
     Record<
         string,
         AiRecommendationResponse
     >;
-
     askAi: (
         request: AiRecommendationRequest
     ) => Promise<void>;
-
     clear: () => void;
-
 }
 
 const AiRecommendationContext =

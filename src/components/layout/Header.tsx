@@ -134,16 +134,6 @@ export default function Header() {
       to: "/ai-assistant",
       icon: <FaRobot />,
     },
-    {
-      label: "Arts & Crafts",
-      icon: <FaPalette />,
-      onClick: () =>
-        window.open(
-          "https://knotwhatnot.com/",
-          "_blank",
-          "noopener,noreferrer"
-        ),
-    },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [

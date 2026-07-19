@@ -62,24 +62,24 @@ export default function AiPackageResult() {
         setPackageAdded(true);
     };
 
+    const backendTotal = response.recommendedPackage.total;
     const totalAmount =
-        packageItems.reduce(
-            (sum, item) =>
-                sum +
-                (Number(item.price) *
-                    Number(item.qty)),
-            0
-        );
+        packageItems.length ===
+            response.recommendedPackage.items.length
+            ? backendTotal
+            : packageItems.reduce(
+                (sum, item) =>
+                    sum +
+                    Number(item.price) * Number(item.qty),
+                0
+            );
 
-    const recommendedBudget =
-        response.recommendedPackage.total;
 
-    const remainingBudget =
-        Math.max(
-            0,
-            recommendedBudget -
-            totalAmount
-        );
+    const budget = response?.budget;
+    const remainingBudget = Math.max(
+        0,
+        budget - totalAmount
+    );
 
 
     const totalItems = packageItems.length;

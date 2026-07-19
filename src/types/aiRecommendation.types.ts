@@ -18,21 +18,14 @@ export interface AiRecommendationResponse {
         items: any[];
     };
     additionalProducts?: any[];
+    budget: number;
 }
 
-
 export interface AiRecommendationRequest {
-
     budget: number;
-
     audiences: string[];
-
     crackerTypes: string[];
-
     noiseLevels: string[];
-
     timePreferences: string[];
-
     features: string[];
-
 }
