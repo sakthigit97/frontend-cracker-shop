@@ -2,17 +2,24 @@ import { quickEstimateStore } from "../../store/quickEstimate.store";
 import type { Product } from "../../types/product";
 import QuickEstimateTableRow from "./QuickEstimateTableRow";
 import defaultImage from "../../assets/default-image.png";
+import { Fragment } from "react";
+
+interface ProductGroup {
+    categoryId: string;
+    categoryName: string;
+    sortOrder: number;
+    products: Product[];
+}
 
 interface Props {
-    products: Product[];
-    onProductClick: (productId: string) => void;
+    groupedProducts: ProductGroup[];
+    onProductClick: (id: string) => void;
 }
 
 export default function QuickEstimateTable({
-    products,
+    groupedProducts,
     onProductClick,
 }: Props) {
-
     const items = quickEstimateStore((s) => s.items);
     const addItem = quickEstimateStore((s) => s.addItem);
     const removeItem = quickEstimateStore((s) => s.removeItem);
@@ -57,89 +64,174 @@ export default function QuickEstimateTable({
                     </thead>
 
                     <tbody>
+                        {groupedProducts.map((group) => (
+                            <Fragment key={group.categoryId}>
+                                <tr>
+                                    <td colSpan={6} className="pt-2 pb-1">
 
-                        {products.map((product) => {
-                            const qty = Number(items[product.id] ?? 0);
-                            return (
+                                        <div
+                                            className="
+                                                relative
+                                                bg-slate-800
+                                                text-white
+                                                rounded-md
+                                                py-2
+                                                px-4
+                                                shadow-sm
+                                            "
+                                        >
 
-                                <QuickEstimateTableRow
-                                    onProductClick={() => onProductClick(product.id)}
-                                    key={product.id}
-                                    product={product}
-                                    quantity={qty}
-                                    onIncrease={() =>
-                                        addItem(product.id, 1)
-                                    }
-                                    onDecrease={() => {
+                                            <span
+                                                className="
+                                                absolute
+                                                left-4
+                                                top-1/2
+                                                -translate-y-1/2
+                                                text-orange-400
+                                                text-lg
+                                            "
+                                            >
+                                                ✦
+                                            </span>
 
-                                        if (qty <= 1)
-                                            removeItem(product.id);
-                                        else
-                                            addItem(product.id, -1);
+                                            <div className="flex justify-center">
+                                                <span
+                                                    className="
+                                                    uppercase
+                                                    font-bold
+                                                    tracking-wider
+                                                    text-[15px]
+                                                "
+                                                >
+                                                    {group.categoryName}
+                                                </span>
+                                            </div>
 
-                                    }}
-                                    onChange={(newQty) => {
+                                            <span
+                                                className="
+                                                absolute
+                                                right-4
+                                                top-1/2
+                                                -translate-y-1/2
+                                                text-xs
+                                                text-slate-300
+                                            "
+                                            >
+                                                {group.products.length} Items
+                                            </span>
 
-                                        if (newQty <= 0) {
-                                            removeItem(product.id);
-                                            return;
-                                        }
+                                        </div>
 
-                                        const diff =
-                                            newQty - qty;
+                                    </td>
+                                </tr>
+                                {group.products.map((product) => {
+                                    console.log(product)
+                                    const qty = Number(items[product.id] ?? 0);
+                                    return (
+                                        <QuickEstimateTableRow
+                                            key={product.id}
+                                            product={product}
+                                            quantity={qty}
+                                            onProductClick={() =>
+                                                onProductClick(product.id)
+                                            }
+                                            onIncrease={() =>
+                                                addItem(product.id, 1)
+                                            }
+                                            onDecrease={() => {
+                                                if (qty <= 1)
+                                                    removeItem(product.id);
+                                                else
+                                                    addItem(product.id, -1);
+                                            }}
+                                            onChange={(newQty) => {
+                                                if (newQty <= 0) {
+                                                    removeItem(product.id);
+                                                    return;
+                                                }
 
-                                        addItem(product.id, diff);
-
-                                    }}
-                                />
-
-                            );
-
-                        })}
-
+                                                addItem(product.id, newQty - qty);
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </Fragment>
+                        ))}
                     </tbody>
 
                 </table>
 
             </div>
-            <div className="lg:hidden space-y-3">
+            <div className="lg:hidden space-y-5">
 
-                {products.map((product) => {
-
-                    const qty =
-                        items[product.id] || 0;
-
-                    return (
-
+                {groupedProducts.map((group) => (
+                    <Fragment key={group.categoryId}>
                         <div
-                            key={product.id}
                             className="
+        bg-slate-800
+        rounded-xl
+        px-4
+        py-3
+        mb-3
+        shadow
+    "
+                        >
+                            <h3
+                                className="
+            text-center
+            text-white
+            font-bold
+            uppercase
+            tracking-wider
+            text-sm
+        "
+                            >
+                                {group.categoryName}
+                            </h3>
+
+                            <p className="text-center text-slate-300 text-xs mt-1">
+                                {group.products.length} Products
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+
+                            {group.products.map((product) => {
+
+                                const qty = Number(items[product.id] ?? 0);
+
+                                return (
+
+                                    <div
+                                        key={product.id}
+                                        className="
                                 bg-white
                                 rounded-xl
                                 border
                                 shadow-sm
                                 p-3
                             "
-                        >
-                            <div
-                                className="
+                                    >
+
+                                        <div
+                                            className="
                                     flex
                                     gap-3
                                     cursor-pointer
                                 "
-                                onClick={() => onProductClick(product.id)}
-                            >
+                                            onClick={() => onProductClick(product.id)}
+                                        >
 
-                                <img
-                                    src={product.image || defaultImage}
-                                    className="h-14 w-14 object-contain border rounded-md"
-                                />
+                                            <img
+                                                src={product.image || defaultImage}
+                                                alt={product.name}
+                                                className="h-11 w-11 object-contain border rounded-md"
+                                            />
 
-                                <div className="flex-1">
+                                            <div className="flex-1">
 
-                                    <span
-                                        onClick={() => onProductClick(product.id)}
-                                        className="
+                                                <span
+                                                    className="
                                             inline-block
                                             text-sm
                                             font-semibold
@@ -149,119 +241,120 @@ export default function QuickEstimateTable({
                                             cursor-pointer
                                             transition-colors
                                         "
-                                    >
-                                        {product.name}
-                                    </span>
+                                                >
+                                                    {product.name}
+                                                </span>
 
-                                    <div className="mt-1">
+                                                {product.discountText && (
+                                                    <span className="
+                                                        mt-1
+                                                        inline-block
+                                                        rounded-full
+                                                        bg-green-100
+                                                        text-green-700
+                                                        text-[11px]
+                                                        px-2
+                                                        py-0.5
+                                                    ">
+                                                        {product.discountText}
+                                                    </span>
+                                                )}
 
-                                        <span className="font-bold">
+                                                <div className="mt-2">
+                                                    <span className="font-bold text-[var(--color-primary)]">
+                                                        ₹{product.price}
+                                                    </span>
 
-                                            ₹{product.price}
+                                                    {product.originalPrice && (
+                                                        <span className="ml-2 text-xs line-through text-gray-400">
+                                                            ₹{product.originalPrice}
+                                                        </span>
+                                                    )}
 
-                                        </span>
+                                                </div>
 
-                                        {product.originalPrice && (
+                                            </div>
 
-                                            <span className="ml-2 text-xs line-through text-gray-400">
+                                        </div>
 
-                                                ₹{product.originalPrice}
+                                        <div className="flex justify-between items-center mt-3">
 
-                                            </span>
-
-                                        )}
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="flex justify-between items-center mt-3">
-
-                                <div
-                                    className="
+                                            <div
+                                                className="
                                         inline-flex
                                         border
                                         rounded-lg
                                         overflow-hidden
                                     "
-                                >
+                                            >
 
-                                    <button
-                                        className="w-10 h-10 bg-gray-100"
-                                        onClick={() => {
+                                                <button
+                                                    className="w-10 h-10 bg-gray-100"
+                                                    onClick={() => {
 
-                                            if (qty <= 1)
-                                                removeItem(product.id);
-                                            else
-                                                addItem(product.id, -1);
+                                                        if (qty <= 1)
+                                                            removeItem(product.id);
+                                                        else
+                                                            addItem(product.id, -1);
 
-                                        }}
-                                    >
-                                        −
-                                    </button>
+                                                    }}
+                                                >
+                                                    −
+                                                </button>
 
-                                    <input
-                                        className="w-12 text-center border-x"
-                                        value={qty}
-                                        onChange={(e) => {
+                                                <input
+                                                    className="w-12 text-center border-x"
+                                                    value={qty}
+                                                    onChange={(e) => {
 
-                                            const value =
-                                                Number(
-                                                    e.target.value
-                                                );
+                                                        const value = Number(e.target.value);
 
-                                            if (
-                                                Number.isNaN(value)
-                                            )
-                                                return;
+                                                        if (Number.isNaN(value))
+                                                            return;
 
-                                            if (value <= 0) {
+                                                        if (value <= 0) {
+                                                            removeItem(product.id);
+                                                            return;
+                                                        }
 
-                                                removeItem(product.id);
+                                                        addItem(
+                                                            product.id,
+                                                            value - qty
+                                                        );
 
-                                                return;
-                                            }
+                                                    }}
+                                                />
 
-                                            addItem(
-                                                product.id,
-                                                value - qty
-                                            );
-
-                                        }}
-                                    />
-
-                                    <button
-                                        className="
+                                                <button
+                                                    className="
                                             w-10
                                             h-10
                                             bg-[var(--color-primary)]
                                             text-white
                                         "
-                                        onClick={() =>
-                                            addItem(product.id, 1)
-                                        }
-                                    >
-                                        +
-                                    </button>
+                                                    onClick={() =>
+                                                        addItem(product.id, 1)
+                                                    }
+                                                >
+                                                    +
+                                                </button>
 
-                                </div>
+                                            </div>
 
-                                <div className="font-bold">
+                                            <div className="font-bold">
+                                                ₹{product.price * qty}
+                                            </div>
 
-                                    ₹{product.price * qty}
+                                        </div>
 
-                                </div>
+                                    </div>
 
-                            </div>
+                                );
 
+                            })}
                         </div>
-
-                    );
-
-                })}
-
+                    </Fragment>
+                ))}
             </div>
         </div>
     );

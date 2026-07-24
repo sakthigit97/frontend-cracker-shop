@@ -74,7 +74,7 @@ const ProductImage = memo(function ProductImage({
     return (
         <div className="relative w-full">
 
-            <div className="relative rounded-2xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 shadow-inner p-5 flex justify-center items-center">
+            <div className="relative rounded-2xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 shadow-inner p-3 md:p-5 flex justify-center items-center">
 
                 <img
                     src={images[activeImage] || defaultImage}
@@ -83,7 +83,8 @@ const ProductImage = memo(function ProductImage({
                     onMouseLeave={() => setHovered(false)}
                     className={`
                         w-full
-                        max-h-[360px]
+                        max-h-[220px]
+md:max-h-[360px]
                         object-contain
                         transition-all
                         duration-300
@@ -270,35 +271,47 @@ export default function QuickEstimateProductModal({
 
     return (
         <div
-            className="
-            fixed
-            inset-0
-            z-[100]
-            bg-black/60
-            flex
-            items-center
-            justify-center
-            p-0
-            md:p-6
-        "
+      className="
+    fixed
+    inset-0
+    z-[100]
+    bg-black/60
+
+    flex
+    items-center
+    justify-center
+
+    p-3
+    md:p-6
+"
             onClick={onClose}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="
+              className="
     relative
     bg-white
-    w-full
-    h-screen
+
+    w-[94vw]
+    max-w-[94vw]
+
+    h-[88vh]
+    max-h-[88vh]
+
+    md:w-full
+    md:max-w-6xl
     md:h-auto
     md:max-h-[95vh]
-    md:max-w-6xl
-    rounded-none
+
+    rounded-2xl
     md:rounded-3xl
+
     shadow-2xl
     overflow-hidden
+
     flex
     flex-col
+
     animate-in
     fade-in
     zoom-in-95
@@ -308,24 +321,26 @@ export default function QuickEstimateProductModal({
 
                 <div
                     className="
-                    sticky
-                    top-0
-                    z-20
-                    bg-white
-                    border-b
-                    px-5
-                    py-4
-                    flex
-                    items-center
-                    justify-between
-                "
+    sticky
+    top-0
+    z-20
+    bg-white
+    border-b
+    px-3
+    py-2
+    md:px-5
+    md:py-4
+    flex
+    items-center
+    justify-between
+"
                 >
                     <div>
-                        <h2 className="text-xl font-semibold text-[var(--color-primary)]">
+                        <h2 className="text-lg md:text-xl font-semibold text-[var(--color-primary)]">
                             Product Details
                         </h2>
 
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs md:text-sm text-gray-500">
                             {product.categoryName}
                         </p>
                     </div>
@@ -333,12 +348,19 @@ export default function QuickEstimateProductModal({
                     <button
                         onClick={onClose}
                         className="
-                        w-10
-                        h-10
-                        rounded-full
-                        hover:bg-gray-100
-                        text-2xl
-                    "
+    flex
+    items-center
+    justify-center
+    w-8
+    h-8
+    md:w-10
+    md:h-10
+    rounded-full
+    hover:bg-gray-100
+    text-xl
+    md:text-2xl
+    shrink-0
+"
                     >
                         ×
                     </button>
@@ -348,18 +370,19 @@ export default function QuickEstimateProductModal({
 
                 <div
                     className="
-        flex-1
-        overflow-y-auto
-        p-5
-        md:p-8
-                "
+    flex-1
+    overflow-y-auto
+    p-3
+    md:p-8
+"
                 >
                     <div
                         className="
-                        grid
-                        grid-cols-1
-                        lg:grid-cols-2
-                        gap-10
+                          grid
+    grid-cols-1
+    lg:grid-cols-2
+    gap-4
+    md:gap-8
                     "
                     >
 

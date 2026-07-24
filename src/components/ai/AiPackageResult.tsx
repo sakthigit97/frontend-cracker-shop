@@ -455,7 +455,6 @@ export default function AiPackageResult() {
                                                     }
 
                                                 }}
-                                                hideCartControls
                                             />
 
                                         </div>
@@ -657,7 +656,6 @@ export default function AiPackageResult() {
                                                     );
                                                 }
                                             }}
-                                            hideCartControls
                                         />
                                     </div>
                                 );

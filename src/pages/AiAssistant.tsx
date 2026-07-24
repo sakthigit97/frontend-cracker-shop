@@ -5,68 +5,66 @@ export default function AiAssistant() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div
+        <div className="space-y-4">
+
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-3">
+                <button
+                    onClick={() => navigate(-1)}
                     className="
-                        bg-white
-                        rounded-3xl
-                        border
+                        flex
+                        items-center
+                        justify-center
+                        w-8
+                        h-8
+                        ml-3
+                        md:ml-4
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        text-white
                         shadow-sm
-                        p-6
-                        mb-8
+                        hover:scale-105
+                        active:scale-95
+                        transition-all
                     "
                 >
-                    <button
-                        onClick={() => navigate(-1)}
+                    ←
+                </button>
+
+                <div>
+                    <h1
                         className="
-                            w-11
-                            h-11
-                            flex
-                            items-center
-                            justify-center
-                            rounded-full
-                            bg-[var(--color-primary)]
-                            text-white
-                            shadow-md
-                            hover:scale-105
-                            transition
+                            text-lg
+                            md:text-xl
+                            font-semibold
+                            text-[var(--color-primary)]
                         "
                     >
-                        ←
-                    </button>
+                        AI Cracker Assistant
+                    </h1>
 
-                    <div className="mt-5">
-
-                        <h1
-                            className="
-                                mt-4
-                                text-3xl
-                                md:text-4xl
-                                font-bold
-                                text-gray-900
-                            "
-                        >
-                            AI Cracker Assistant
-                        </h1>
-
-                        <p
-                            className="
-                                mt-3
-                                text-gray-600
-                                max-w-3xl
-                                leading-7
-                            "
-                        >
-                            Answer a few simple questions and our AI will
-                            prepare the best cracker package based on your
-                            audience, preferences and budget.
-                        </p>
-                    </div>
+                    <p className="text-xs text-gray-500">
+                        Build your perfect cracker package with AI.
+                    </p>
                 </div>
+            </div>
 
+            {/* Disclaimer */}
+            <div className="mx-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="text-sm text-amber-800 leading-6">
+                    <span className="font-semibold">Disclaimer:</span>{" "}
+                    AI recommendations are generated based on the information
+                    you provide. Suggestions are intended as guidance and may
+                    vary depending on your preferences and product availability.
+                    Please review the recommended products before placing your
+                    order.
+                </p>
+            </div>
+
+            <div className="px-3">
                 <AiAssistantCard />
             </div>
+
         </div>
     );
 }

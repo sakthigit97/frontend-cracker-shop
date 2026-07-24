@@ -49,7 +49,6 @@ import AiAssistant from "../pages/AiAssistant";
 import QuickEstimate from "../pages/QuickEstimate";
 import ScrollToTop from "../components/ui/ScrollToTop";
 
-
 export default function AppRoutes() {
   return (
     <BrowserRouter>

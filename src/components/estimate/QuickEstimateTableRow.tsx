@@ -25,69 +25,78 @@ function QuickEstimateTableRow({
     return (
         <tr className="border-b hover:bg-gray-50">
 
-            <td className="p-2 w-24">
+            <td className="py-2 px-3 w-24">
                 <img
                     src={product.image || defaultImage}
                     alt={product.name}
                     className="
-                        h-14
-                        w-14
+                        h-11
+                        w-11
                         object-contain
                         rounded-md
                         border
                         bg-white
+                        p-0.5
                     "
                 />
             </td>
+            <td className="py-2 px-3">
 
-            <td className="p-2">
+                <div className="flex flex-col justify-center">
 
-                <div className="flex flex-col">
-
-                    <span
+                    <button
+                        type="button"
                         onClick={onProductClick}
                         className="
-                            inline-block
-                            w-fit
-                            cursor-pointer
-                            text-blue-600
-                            hover:text-blue-700
-                            hover:underline
-                            font-semibold
-                            transition-colors
-                        "
+                w-fit
+                text-left
+                text-[17px]
+                font-semibold
+                text-blue-600
+                hover:text-blue-700
+                hover:underline
+                transition-colors
+                leading-5
+            "
                     >
                         {product.name}
-                    </span>
+                    </button>
 
-                    {product.brand && (
-                        <div className="text-xs text-gray-500 mt-1">
-                            {product.brand}
-                        </div>
-                    )}
-                    {(product.discountText || !product.isComboPackage) && (
-                        <span
-                            className="
-                                inline-block
-                                mt-2
-                                px-2
-                                py-1
-                                rounded-full
-                                text-xs
-                                bg-green-100
-                                text-green-700
-                                w-fit
-                        "
-                        >
-                            {product.discountText || "NET RATE"}
-                        </span>
-                    )}
+                    <div className="flex items-center gap-2 mt-1">
+
+                        {(product.discountText || !product.isComboPackage) && (
+                            <span
+                                className="
+                                    inline-flex
+                                    items-center
+                                    rounded-full
+                                    bg-green-50
+                                    border
+                                    border-green-200
+                                    px-2
+                                    py-0.5
+                                    text-[11px]
+                                    font-semibold
+                                    text-green-700
+                                "
+                            >
+                                {product.discountText || "NET RATE"}
+                            </span>
+                        )}
+
+                        {product.brand && (
+                            <span className="text-[11px] text-gray-500">
+                                {product.brand}
+                            </span>
+                        )}
+
+                    </div>
 
                 </div>
 
             </td>
 
-            <td className="text-center p-2">
+            <td className="text-center py-2 px-3">
 
                 {product.originalPrice ? (
                     <span className="line-through text-gray-400">
@@ -99,15 +108,20 @@ function QuickEstimateTableRow({
 
             </td>
 
-            <td className="text-center p-2">
-
-                <span className="font-bold text-[var(--color-primary)]">
+            <td className="text-center py-2 px-3">
+                <span
+                    className="
+        text-lg
+        font-extrabold
+        text-[var(--color-primary)]
+    "
+                >
                     ₹{product.price}
                 </span>
 
             </td>
 
-            <td className="text-center p-2">
+            <td className="text-center py-2 px-3">
 
                 {availableQty === 0 ? (
 
@@ -131,7 +145,7 @@ function QuickEstimateTableRow({
                             onClick={onDecrease}
                             className="
                                 w-10
-                                h-10
+                                h-8
                                 bg-gray-100
                                 hover:bg-gray-200
                                 text-lg
@@ -154,7 +168,7 @@ function QuickEstimateTableRow({
                             }}
                             className="
                                 w-14
-                                h-10
+                                h-8
                                 text-center
                                 outline-none
                                 border-x
@@ -165,7 +179,7 @@ function QuickEstimateTableRow({
                             onClick={onIncrease}
                             className="
                                 w-10
-                                h-10
+                                h-8
                                 bg-[var(--color-primary)]
                                 text-white
                             "
@@ -179,7 +193,7 @@ function QuickEstimateTableRow({
 
             </td>
 
-            <td className="text-right p-2">
+            <td className="text-right py-2 px-3">
 
                 <span className="font-bold">
                     ₹{total}

@@ -10,6 +10,11 @@ import { useMemo } from "react";
 import { usePackageStore } from "../store/package.store";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 import { FaArrowUp } from "react-icons/fa";
+import { useCategoryProducts } from "../store/categoryProduct.store";
+import { useBrandProducts } from "../store/brandProduct.store";
+import { useCatalog } from "../store/catalog.store";
+import EmptyState from "../components/ui/EmptyState";
+
 
 export default function Home() {
   const {
@@ -30,6 +35,13 @@ export default function Home() {
     fetchPackageProducts,
   } = usePackageStore();
 
+  const {
+    categories,
+    brands,
+    fetchCategories,
+    fetchBrands,
+  } = useCatalog();
+
   const items = cartStore((s) => s.items);
   const addItem = cartStore((s) => s.addItem);
   const removeItem = cartStore((s) => s.removeItem);
@@ -39,20 +51,55 @@ export default function Home() {
   const [showCartAlert, setShowCartAlert] = useState(false);
   const [prevAuth, setPrevAuth] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+
   type HomeTab =
     | "products"
     | "popular"
     | "bestSelling"
-    | "newArrival";
+    | "newArrival"
+    | "categories"
+    | "brands";
 
   const [activeTab, setActiveTab] =
     useState<HomeTab>("products");
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedBrandId, setSelectedBrandId] = useState("");
+  const categoryProducts = useCategoryProducts(selectedCategoryId);
+  const brandProducts = useBrandProducts(selectedBrandId);
 
   useEffect(() => {
     fetchAll();
     fetchPopular();
     fetchPackages();
+    fetchCategories();
+    fetchBrands();
   }, []);
+
+  useEffect(() => {
+    if (
+      activeTab === "categories" &&
+      selectedCategoryId
+    ) {
+      categoryProducts.fetchInitial();
+    }
+  }, [
+    activeTab,
+    selectedCategoryId,
+  ]);
+
+  useEffect(() => {
+    if (
+      activeTab === "brands" &&
+      selectedBrandId
+    ) {
+      brandProducts.fetchInitial();
+    }
+  }, [
+    activeTab,
+    selectedBrandId,
+  ]);
 
   useEffect(() => {
     if (bestSellingPackage) {
@@ -116,7 +163,17 @@ export default function Home() {
         ? popularProducts
         : activeTab === "bestSelling"
           ? bestSellingProducts
-          : newArrivalProducts;
+          : activeTab === "newArrival"
+            ? newArrivalProducts
+            : activeTab === "categories"
+              ? selectedCategoryId
+                ? categoryProducts.items
+                : products
+              : activeTab === "brands"
+                ? selectedBrandId
+                  ? brandProducts.items
+                  : products
+                : [];
 
   const query = search.trim().toLowerCase();
   let displayProducts = isSearching
@@ -162,6 +219,16 @@ export default function Home() {
       });
     }
 
+    items.push({
+      key: "categories",
+      label: "📂 Categories By Product",
+    });
+
+    items.push({
+      key: "brands",
+      label: "🏷 Brands By Product",
+    });
+
     return items;
   }, [
     products.length,
@@ -170,23 +237,48 @@ export default function Home() {
     newArrivalProducts,
   ]);
 
-  useEffect(() => {
-    if (
-      !tabs.some(
-        (tab) => tab.key === activeTab
-      ) &&
-      tabs.length > 0
-    ) {
-      setActiveTab(tabs[0].key);
-    }
-  }, [tabs]);
-
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
+
+  const currentLoading =
+    activeTab === "products"
+      ? loading
+      : activeTab === "categories"
+        ? categoryProducts.loading
+        : activeTab === "brands"
+          ? brandProducts.loading
+          : loading;
+
+  const currentItems =
+    activeTab === "products"
+      ? products
+      : activeTab === "categories"
+        ? categoryProducts.items
+        : activeTab === "brands"
+          ? brandProducts.items
+          : currentProducts;
+
+  const currentNextCursor =
+    activeTab === "products"
+      ? nextCursor
+      : activeTab === "categories"
+        ? categoryProducts.nextCursor
+        : activeTab === "brands"
+          ? brandProducts.nextCursor
+          : null;
+
+  const loadMoreCurrent =
+    activeTab === "products"
+      ? fetchMore
+      : activeTab === "categories"
+        ? categoryProducts.fetchMore
+        : activeTab === "brands"
+          ? brandProducts.fetchMore
+          : undefined;
 
   return (
     <div className="space-y-6">
@@ -256,7 +348,6 @@ export default function Home() {
             font-medium
             transition-all
             border
-
             ${activeTab === tab.key
                     ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
                     : "bg-white border-gray-200 hover:border-[var(--color-primary)]"
@@ -269,6 +360,48 @@ export default function Home() {
           </div>
         )}
 
+        {activeTab === "categories" && (
+          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+            {categories.map((category: any) => (
+              <button
+                key={category.id}
+                onClick={() => {
+                  setSelectedCategoryId(category.id);
+                  setSearch("");
+                }}
+                className={`px-3 py-1.5 text-sm gap-1.5 rounded-full border whitespace-nowrap transition
+          ${selectedCategoryId === category.id
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+                    : "bg-white border-gray-300"
+                  }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "brands" && (
+          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+            {brands.map((brand: any) => (
+              <button
+                key={brand.id}
+                onClick={() => {
+                  setSelectedBrandId(brand.id);
+                  setSearch("");
+                }}
+                className={`px-3 py-1.5 text-sm gap-1.5 rounded-full border whitespace-nowrap transition
+          ${selectedBrandId === brand.id
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+                    : "bg-white border-gray-300"
+                  }`}
+              >
+                {brand.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <h2 className="text-lg font-semibold mb-4">
           {isSearching
             ? `Search Results (${displayProducts.length})`
@@ -276,9 +409,8 @@ export default function Home() {
             "All Products"}
         </h2>
 
-        {loading &&
-          activeTab === "products" &&
-          products.length === 0 &&
+        {currentLoading &&
+          currentItems.length === 0 &&
           !isSearching && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -287,17 +419,27 @@ export default function Home() {
             </div>
           )}
 
+        {!currentLoading &&
+          displayProducts.length === 0 && (
+            <EmptyState
+              title="No products found"
+              description="Try another category or brand."
+            />
+          )}
+
         {(activeTab === "products" ||
           activeTab === "popular" ||
           activeTab === "bestSelling" ||
-          activeTab === "newArrival") && (
+          activeTab === "newArrival" ||
+          activeTab === "categories" ||
+          activeTab === "brands") && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
               {
                 displayProducts.map((product) => {
                   const qty = items[product.id] || 0;
                   return (
                     <ProductCard
-                      key={product.sequenceNumber}
+                      key={product.id}
                       product={product}
                       quantityInCart={qty}
                       onAddToCart={() =>
@@ -321,15 +463,14 @@ export default function Home() {
           )}
 
         {!isSearching &&
-          activeTab === "products" &&
-          nextCursor && (
+          currentNextCursor && (
             <div className="flex justify-center py-6">
               <button
-                onClick={fetchMore}
-                disabled={loading}
+                onClick={() => loadMoreCurrent?.()}
+                disabled={currentLoading}
                 className="px-6 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm disabled:opacity-60"
               >
-                {loading ? "Loading..." : "Load More"}
+                {currentLoading ? "Loading..." : "Load More"}
               </button>
             </div>
           )}

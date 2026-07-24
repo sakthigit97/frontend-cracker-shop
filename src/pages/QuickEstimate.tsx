@@ -11,6 +11,7 @@ import { calculateOrderAmounts } from "../utils/pricing";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 import QuickEstimateProductModal from "../components/product/QuickEstimateProductModal";
 import { FaArrowUp } from "react-icons/fa";
+import { useCategoryStore } from "../store/category.store";
 
 export default function QuickEstimate() {
 
@@ -26,12 +27,17 @@ export default function QuickEstimate() {
     const items = quickEstimateStore((s) => s.items);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const {
+        items: categories,
+        fetchAllCategory,
+    } = useCategoryStore();
 
     useEffect(() => {
         fetchAll();
+        fetchAllCategory();
     }, []);
-    const query = search.trim().toLowerCase();
 
+    const query = search.trim().toLowerCase();
     let displayProducts: any =
         query.length > 0
             ? products.filter((p) =>
@@ -41,7 +47,6 @@ export default function QuickEstimate() {
             )
             : products;
     displayProducts = sortProductsBySequence(displayProducts);
-
     const selectedProducts = Object.values(items).reduce(
         (sum, qty) => sum + Math.max(0, Number(qty) || 0),
         0
@@ -104,6 +109,49 @@ export default function QuickEstimate() {
             behavior: "smooth",
         });
     };
+
+    const categoryMap = useMemo(() => {
+        return Object.fromEntries(
+            categories.map((c) => [
+                c.id,
+                {
+                    name: c.name,
+                    sortOrder: c.sortOrder,
+                },
+            ])
+        );
+    }, [categories]);
+
+    const groupedProducts = useMemo(() => {
+        const groups: Record<
+            string,
+            {
+                categoryId: string;
+                categoryName: string;
+                sortOrder: number;
+                products: any;
+            }
+        > = {};
+
+        displayProducts.forEach((product: any) => {
+            const category = categoryMap[product.categoryId ?? ""];
+            const categoryId = product.categoryId ?? "others";
+            if (!groups[categoryId]) {
+                groups[categoryId] = {
+                    categoryId,
+                    categoryName: category?.name ?? "Others",
+                    sortOrder: category?.sortOrder ?? Number.MAX_SAFE_INTEGER,
+                    products: [],
+                };
+            }
+            groups[categoryId].products.push(product);
+        });
+
+        return Object.values(groups).sort(
+            (a, b) => a.sortOrder - b.sortOrder
+        );
+    }, [products, categoryMap]);
+
     return (
 
         <div className="space-y-4">
@@ -224,7 +272,7 @@ export default function QuickEstimate() {
                 ) : (
 
                     <QuickEstimateTable
-                        products={displayProducts}
+                        groupedProducts={groupedProducts}
                         onProductClick={(id) => setSelectedProductId(id)}
                     />
 

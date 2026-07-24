@@ -13,6 +13,7 @@ import {
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import EmptyState from "../../components/ui/EmptyState";
+import { sortCategoryBySequence } from "../../utils/sequncerUtil";
 export default function AdminCategories() {
     const { fetchPage, loading, clearCache } = useAdminCategoriesStore();
     const { showAlert } = useAlert();
@@ -37,7 +38,7 @@ export default function AdminCategories() {
 
     const query = filters.search.trim().toLowerCase();
     const filteredCategories = useMemo(() => {
-        return (data?.items ?? []).filter((c: any) => {
+        return sortCategoryBySequence(data?.items ?? []).filter((c: any) => {
             const matchesSearch =
                 !query ||
                 (`${c.name} ${c.categoryId}`)

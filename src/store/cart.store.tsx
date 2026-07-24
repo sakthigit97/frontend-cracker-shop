@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type CartItems = Record<string, any>;
+const CART_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface CartState {
   items: CartItems;
@@ -20,6 +21,11 @@ export interface CartState {
   unlock: () => void;
   resetToGuest: () => void;
 }
+
+type PersistedCartState = {
+  items?: CartItems;
+  savedAt?: number;
+};
 
 export const cartStore = create<CartState>()(
   persist(
@@ -118,7 +124,6 @@ export const cartStore = create<CartState>()(
       markDirty: () => set({ dirty: true }),
       clearDirty: () => set({ dirty: false }),
       clearDirtyItems: () => set({ dirtyItems: {} }),
-
       lock: () => set({ locked: true }),
       unlock: () => set({ locked: false }),
     }),
@@ -126,11 +131,22 @@ export const cartStore = create<CartState>()(
       name: "guest_cart",
       partialize: (state) => ({
         items: state.items,
+        savedAt: Date.now(),
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.items) {
-          state.hydrate(state.items);
+      onRehydrateStorage: () => (state?: PersistedCartState & CartState) => {
+        if (!state) return;
+
+        const savedAt = state?.savedAt ?? 0;
+        const expired =
+          !savedAt ||
+          Date.now() - savedAt > CART_EXPIRY_MS;
+
+        if (expired) {
+          state.resetToGuest();
+          return;
         }
+
+        state.hydrate(state.items || {});
       },
     }
   )
