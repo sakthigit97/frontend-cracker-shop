@@ -23,6 +23,7 @@ export default function AdminCreateProduct() {
         brandId: "",
         categoryId: "",
         isActive: true,
+        isComboPackage: false,
         images: [],
         videoUrl: "",
         description: "",
@@ -104,6 +105,7 @@ export default function AdminCreateProduct() {
                 description: form.description,
                 searchText,
                 isActive: form.isActive ? "true" : "false",
+                isComboPackage: form.isComboPackage,
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
 

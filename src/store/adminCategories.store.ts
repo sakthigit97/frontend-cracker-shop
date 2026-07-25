@@ -33,7 +33,6 @@ export const useAdminCategoriesStore = create<CategoryState>((set, get) => ({
 
         const cached = get().cache[fKey]?.[cKey];
         if (cached) return cached;
-
         set({ loading: true });
 
         try {

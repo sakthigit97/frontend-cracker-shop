@@ -7,6 +7,7 @@ import {
 const HOME_PACKAGE_IDS = {
     BEST_SELLING: "best-selling",
     NEW_ARRIVALS: "new-arrivals",
+    PARTY: 'party',
 };
 
 interface PackageItem {
@@ -31,6 +32,7 @@ interface PackageStore {
     loading: boolean;
     bestSellingPackage?: PackageItem;
     newArrivalPackage?: PackageItem;
+    partyPackage?: PackageItem;
     fetchPackages: () => Promise<void>;
     loadingPackages: Record<string, boolean>;
     fetchPackageProducts: (
@@ -46,6 +48,7 @@ export const usePackageStore =
         loadingPackages: {},
         bestSellingPackage: undefined,
         newArrivalPackage: undefined,
+        partyPackage: undefined,
         async fetchPackages() {
             const { packages } = get();
             if (packages.length > 0) {
@@ -70,6 +73,12 @@ export const usePackageStore =
                             (p: PackageItem) =>
                                 p.id ===
                                 HOME_PACKAGE_IDS.NEW_ARRIVALS
+                        ),
+                    partyPackage:
+                        packagesList.find(
+                            (p: PackageItem) =>
+                                p.id ===
+                                HOME_PACKAGE_IDS.PARTY
                         ),
                 });
             } finally {

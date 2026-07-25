@@ -329,8 +329,8 @@ export default function AdjustOrder() {
                 </div>
             )}
 
-            <div className="bg-white rounded-2xl border shadow-sm flex flex-col h-[70vh]">
-                <div className="flex-1 overflow-y-auto divide-y">
+            <div className="bg-white rounded-2xl border shadow-sm">
+                <div className="divide-y">
                     {items.map((item) => (
                         <div
                             key={item.productId}
@@ -415,92 +415,138 @@ export default function AdjustOrder() {
                         </div>
                     ))}
                 </div>
-                <div className="border-t px-4 py-4 bg-white">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <Button
-                            variant="outline"
-                            disabled={!canAdjust}
-                            onClick={() => setShowAddItem(true)}
-                            className="w-full sm:w-auto"
-                        >
-                            + Add Item
-                        </Button>
+                <div className="border-t bg-white p-6">
 
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
-                            <div className="text-center sm:text-left">
-                                <p className="text-sm text-gray-500">Updated Total</p>
-                                <div className="text-sm space-y-1 text-right sm:text-left">
-                                    <p>Subtotal: ₹{subtotal}</p>
+                    <div className="grid lg:grid-cols-[160px_1fr] gap-8 items-start">
+
+                        {/* Left */}
+                        <div>
+                            <Button
+                                variant="outline"
+                                disabled={!canAdjust}
+                                onClick={() => setShowAddItem(true)}
+                                className="w-full"
+                            >
+                                + Add Item
+                            </Button>
+                        </div>
+
+                        <div className="flex-1 flex flex-col items-end gap-5">
+                            {/* Summary */}
+                            <div className="w-full max-w-[420px] rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
+                                <h3 className="text-lg font-semibold text-[var(--color-primary)] mb-4">
+                                    Updated Order Summary
+                                </h3>
+
+                                <div className="space-y-3 text-sm">
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-600">Subtotal</span>
+                                        <span className="font-semibold">₹{subtotal}</span>
+                                    </div>
 
                                     {pricingBreakdown.comboAmount > 0 && (
                                         <>
-                                            <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
-                                                <div>
-                                                    <span className="font-medium">Combo Package Amount</span>
-                                                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
-                                                        No GST & Packaging
+                                            <div className="border-t pt-3 space-y-3">
+
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <p className="font-medium text-gray-800">
+                                                            Combo Package
+                                                        </p>
+
+                                                        <span className="inline-block mt-1 rounded-full bg-blue-100 px-2 py-1 text-[11px] font-medium text-blue-700">
+                                                            No GST & Packaging
+                                                        </span>
+                                                    </div>
+
+                                                    <span className="font-semibold">
+                                                        ₹{pricingBreakdown.comboAmount}
                                                     </span>
                                                 </div>
-                                                <span>₹{pricingBreakdown.comboAmount}</span>
-                                            </div>
 
-                                            <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
-                                                <span>GST / Packaging Eligible Amount</span>
-                                                <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">
+                                                        GST / Packaging Eligible
+                                                    </span>
+
+                                                    <span className="font-medium">
+                                                        ₹{pricingBreakdown.eligibleChargeAmount}
+                                                    </span>
+                                                </div>
+
                                             </div>
                                         </>
                                     )}
+
                                     {packagingCharge > 0 && (
-                                        <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
-                                            <span>
-                                                {pricingBreakdown.comboAmount > 0
-                                                    ? `Packaging (${packagingPercent}% - Eligible Items)`
-                                                    : `Packaging (${packagingPercent}%)`}
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">
+                                                Packaging ({packagingPercent}%)
                                             </span>
-                                            <span>₹{packagingCharge}</span>
+
+                                            <span className="font-medium">
+                                                ₹{packagingCharge}
+                                            </span>
                                         </div>
                                     )}
 
                                     {gstAmount > 0 && (
-                                        <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
-                                            <span>
-                                                {pricingBreakdown.comboAmount > 0
-                                                    ? `GST (${gstPercent}% - Eligible Items)`
-                                                    : `GST (${gstPercent}%)`}
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">
+                                                GST ({gstPercent}%)
                                             </span>
-                                            <span>₹{gstAmount}</span>
+
+                                            <span className="font-medium">
+                                                ₹{gstAmount}
+                                            </span>
                                         </div>
                                     )}
 
-                                    <p className="text-xl font-bold text-[var(--color-primary)]">
-                                        ₹{grandTotal}
-                                    </p>
+                                    <div className="border-t pt-4 flex items-center justify-between">
+
+                                        <span className="text-lg font-bold text-gray-900">
+                                            Grand Total
+                                        </span>
+
+                                        <span className="text-2xl font-bold text-[var(--color-primary)]">
+                                            ₹{grandTotal}
+                                        </span>
+
+                                    </div>
+
                                 </div>
                             </div>
 
-                            <div
-                                onClick={() => {
-                                    if (!hasChanges && canAdjust && !saving) {
-                                        triggerShake();
-                                    }
-                                }}
-                                className={shakeSave ? "animate-shake" : ""}
-                            >
-                                <Button
-                                    disabled={!canAdjust || !hasChanges || isEmpty || saving}
-                                    className="px-8 py-3 text-base w-full sm:w-auto"
-                                    onClick={() => setShowSaveConfirm(true)}
+                            {/* Save */}
+                            <div className="w-full max-w-[420px] flex flex-col items-center gap-2">
+                                <div
+                                    onClick={() => {
+                                        if (!hasChanges && canAdjust && !saving) {
+                                            triggerShake();
+                                        }
+                                    }}
+                                    className={shakeSave ? "animate-shake" : ""}
                                 >
-                                    {saving ? "Saving…" : "Save Changes"}
-                                </Button>
+                                    <Button
+                                        disabled={!canAdjust || !hasChanges || isEmpty || saving}
+                                        className="w-full py-3 text-base"
+                                        onClick={() => setShowSaveConfirm(true)}
+                                    >
+                                        {saving ? "Saving..." : "Save Changes"}
+                                    </Button>
+                                </div>
+
+                                {!hasChanges && canAdjust && (
+                                    <p className="text-xs text-gray-400">
+                                        No changes to save
+                                    </p>
+                                )}
+
                             </div>
 
-                            {!hasChanges && canAdjust && (
-                                <p className="text-xs text-gray-400 text-center sm:text-right mt-1">
-                                    No changes to save
-                                </p>
-                            )}
                         </div>
+
                     </div>
                 </div>
             </div>

@@ -13,6 +13,7 @@ export interface ProductFormData {
     brandId: string;
     categoryId: string;
     isActive: boolean;
+    isComboPackage: boolean;
     images: File[];
     videoUrl: string;
     description: string;
@@ -347,6 +348,35 @@ export default function ProductForm({
                     </button>
                     <span className="text-sm font-medium">
                         {value.isActive ? "Active" : "Inactive"}
+                    </span>
+                </div>
+            </div>
+
+            <div className="bg-white border rounded-xl p-5 flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                        Combo Package
+                    </p>
+                    <p className="text-xs text-gray-500">
+                        Mark this product as a combo package
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => update("isComboPackage", !value.isComboPackage)}
+                        className={`w-11 h-6 rounded-full p-1 transition ${value.isComboPackage ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                    >
+                        <div
+                            className={`w-4 h-4 bg-white rounded-full transition ${value.isComboPackage ? "translate-x-5" : ""
+                                }`}
+                        />
+                    </button>
+
+                    <span className="text-sm font-medium">
+                        {value.isComboPackage ? "Yes" : "No"}
                     </span>
                 </div>
             </div>

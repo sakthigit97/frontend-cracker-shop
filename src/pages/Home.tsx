@@ -30,6 +30,7 @@ export default function Home() {
   const {
     bestSellingPackage,
     newArrivalPackage,
+    partyPackage,
     packageProducts,
     fetchPackages,
     fetchPackageProducts,
@@ -58,6 +59,7 @@ export default function Home() {
     | "popular"
     | "bestSelling"
     | "newArrival"
+    | "Party/Functions"
     | "categories"
     | "brands";
 
@@ -109,9 +111,16 @@ export default function Home() {
     if (newArrivalPackage) {
       fetchPackageProducts(newArrivalPackage.id);
     }
+
+    if (partyPackage) {
+      fetchPackageProducts(partyPackage.id);
+    }
+
+
   }, [
     bestSellingPackage,
     newArrivalPackage,
+    partyPackage,
     fetchPackageProducts,
   ]);
 
@@ -154,6 +163,12 @@ export default function Home() {
       ]?.products ?? []
       : [];
 
+  const partyProducts =
+    partyPackage
+      ? packageProducts[
+        partyPackage.id
+      ]?.products ?? []
+      : [];
 
   const isSearching = search.trim().length > 0;
   const currentProducts =
@@ -165,15 +180,17 @@ export default function Home() {
           ? bestSellingProducts
           : activeTab === "newArrival"
             ? newArrivalProducts
-            : activeTab === "categories"
-              ? selectedCategoryId
-                ? categoryProducts.items
-                : products
-              : activeTab === "brands"
-                ? selectedBrandId
-                  ? brandProducts.items
+            : activeTab === "Party/Functions"
+              ? partyProducts
+              : activeTab === "categories"
+                ? selectedCategoryId
+                  ? categoryProducts.items
                   : products
-                : [];
+                : activeTab === "brands"
+                  ? selectedBrandId
+                    ? brandProducts.items
+                    : products
+                  : [];
 
   const query = search.trim().toLowerCase();
   let displayProducts = isSearching
@@ -222,6 +239,13 @@ export default function Home() {
       });
     }
 
+    if (partyProducts && partyProducts.length > 0) {
+      items.push({
+        key: "Party/Functions",
+        label: "🎉 Party / Functions",
+      });
+    }
+
     items.push({
       key: "categories",
       label: "📂 Categories By Product",
@@ -238,6 +262,7 @@ export default function Home() {
     popularProducts.length,
     bestSellingProducts,
     newArrivalProducts,
+    partyProducts,
   ]);
 
   const scrollToTop = () => {
@@ -434,6 +459,7 @@ export default function Home() {
           activeTab === "popular" ||
           activeTab === "bestSelling" ||
           activeTab === "newArrival" ||
+          activeTab === "Party/Functions" ||
           activeTab === "categories" ||
           activeTab === "brands") && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-6">

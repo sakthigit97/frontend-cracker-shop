@@ -54,6 +54,7 @@ export const updateAdminProduct = async (
         description?: string;
         searchText?: string;
         isActive?: "true" | "false";
+        isComboPackage: boolean;
         packageTagIds?: string[];
         aiTags?: string[];
     }

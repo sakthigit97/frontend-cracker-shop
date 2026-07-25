@@ -155,7 +155,7 @@ export default function QuickEstimate() {
         return Object.values(groups).sort(
             (a, b) => a.sortOrder - b.sortOrder
         );
-    }, [products, categoryMap]);
+    }, [displayProducts, categoryMap, search]);
 
     return (
 

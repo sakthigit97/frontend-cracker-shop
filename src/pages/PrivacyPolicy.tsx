@@ -8,7 +8,7 @@ export default function PrivacyPolicy() {
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border p-6 md:p-8">
 
 
-        <button
+        {/* <button
           onClick={() => navigate(-1)}
           className="
           flex items-center justify-center
@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
         "
         >
           ←
-        </button>
+        </button> */}
 
         <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 text-center">
           Privacy Policy

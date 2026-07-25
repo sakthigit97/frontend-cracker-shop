@@ -188,6 +188,7 @@ export default function Checkout() {
       return;
     }
 
+
     const cartItems = cartStore.getState().items;
     if (Object.keys(cartItems).length === 0) {
       showAlert({
@@ -686,8 +687,7 @@ export default function Checkout() {
                 placingOrder ||
                 !acceptedTerms ||
                 !acceptedTransport ||
-                products.length === 0 ||
-                !minOrderValid
+                products.length === 0
               }
               className={`w-full py-3 text-base transition-all ${placingOrder ||
                 !acceptedTerms ||

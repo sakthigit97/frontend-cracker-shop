@@ -253,7 +253,7 @@ export default function QuickEstimateModal({
                 "Qty",
                 "MRP",
                 "Discount",
-                "Offer",
+                "Offer Price",
                 "Total"
             ]],
 

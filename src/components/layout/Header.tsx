@@ -234,11 +234,10 @@ export default function Header() {
 
   return (
     <header className="bg-[var(--color-primary)] text-white">
-      <div className="max-w-7xl mx-auto h-16 px-4 flex items-center justify-between">
-
+      <div className="h-16 w-full px-3 sm:px-4 lg:px-5 flex items-center justify-between">
         <Link
           to="/"
-          className="flex items-center gap-2 shrink-0"
+          className="flex items-center gap-2 flex-shrink-0"
         >
           <img
             src={logo}
@@ -253,8 +252,7 @@ export default function Header() {
           </div>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-2">
-
+        <nav className="hidden lg:flex flex-1 justify-center items-center gap-2 px-8">
           <Link
             to="/"
             className="
@@ -331,8 +329,7 @@ export default function Header() {
 
         {/* ================= Right Section ================= */}
 
-        <div className="flex items-center gap-3">
-
+        <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
           {isAuthenticated && (
             <div
               className="

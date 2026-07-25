@@ -60,6 +60,7 @@ export default function AdminEditProduct() {
                     categoryId: data.categoryId || "",
                     description: data.description || "",
                     isActive: data.isActive === "true",
+                    isComboPackage: data.isComboPackage ?? false,
                     images: [],
                     videoUrl: data.videoUrl || "",
                     packageTagIds: data.packageTagIds || [],
@@ -123,6 +124,7 @@ export default function AdminEditProduct() {
             initialData.brandId !== form.brandId ||
             initialData.categoryId !== form.categoryId ||
             initialData.description !== form.description ||
+            initialData.isComboPackage !== form.isComboPackage ||
             initialData.videoUrl !== form.videoUrl ||
             initialData.isActive !== form.isActive
         ) {
@@ -267,6 +269,7 @@ export default function AdminEditProduct() {
                 videoUrl: form.videoUrl,
                 isActive: form.isActive ? "true" : "false",
                 searchText,
+                isComboPackage: form.isComboPackage,
                 imageUrls: finalImageUrls,
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
