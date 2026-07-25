@@ -166,32 +166,36 @@ export default function AdminCategories() {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-
-                <div className="flex items-center gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate(-1)}
                         className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
-
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
-                                "
+            flex items-center justify-center
+            w-9 h-9
+            rounded-full
+            bg-[var(--color-primary)]
+            text-white
+            shadow-sm
+            hover:scale-105
+            active:scale-95
+            transition-all
+        "
                     >
                         ←
                     </button>
+
                     <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
                         Categories
                     </h1>
                 </div>
-                <Link to="/admin/categories/create">
-                    <Button>Add Category</Button>
+                <Link
+                    to="/admin/categories/create"
+                    className="w-full sm:w-auto"
+                >
+                    <Button className="w-full sm:w-auto">
+                        Add Category
+                    </Button>
                 </Link>
             </div>
 

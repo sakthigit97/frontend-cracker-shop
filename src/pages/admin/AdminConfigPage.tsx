@@ -38,13 +38,19 @@ export default function AdminConfigPage() {
                     adminWhatsapp: res.adminWhatsapp || "",
                     adminEmail: res.adminEmail || "",
                     adminAddress: res.adminAddress || "",
+                    gmapLink: res.gmapLink || "",
+                    displayMobile: res.displayMobile || "",
+                    website: res.website || "",
                     disableGstForTN: res.disableGstForTN || false,
                     sliderImages: fixedSliderImages,
                     packageTags: (res.packageTags || []).map((p: any) => ({
                         ...p,
                         productId: p.productId || "",
                     })),
-                    aiTags: res.aiTags || [],
+                    aiTags: (res.aiTags || []).map((category: any) => ({
+                        ...category,
+                        options: category.options || [],
+                    })),
                 });
             } catch {
                 showAlert({ type: "error", message: "Failed to load config" });
@@ -121,18 +127,94 @@ export default function AdminConfigPage() {
                 {
                     id: crypto.randomUUID(),
                     name: "",
-                },
-            ],
+                    options: [
+                        {
+                            id: crypto.randomUUID(),
+                            name: "",
+                        },
+                    ]
+                }
+            ]
         }));
-    };
+    }
 
     const removeAiTag = (index: number) => {
         setForm((prev: any) => ({
             ...prev,
-            aiTags: prev.aiTags.filter(
-                (_: any, i: number) => i !== index
-            ),
+            aiTags: prev.aiTags.filter((_: any, i: number) => i !== index),
         }));
+    };
+
+    const removeAiTagOption = (
+        categoryIndex: number,
+        optionIndex: number
+    ) => {
+        setForm((prev: any) => {
+            const updated = [...prev.aiTags];
+
+            updated[categoryIndex].options =
+                updated[categoryIndex].options.filter(
+                    (_: any, i: number) => i !== optionIndex
+                );
+
+            return {
+                ...prev,
+                aiTags: updated,
+            };
+        });
+    };
+
+    const updateAiTagName = (
+        categoryIndex: number,
+        value: string
+    ) => {
+        setForm((prev: any) => {
+            const updated = [...prev.aiTags];
+
+            updated[categoryIndex].name = value;
+
+            return {
+                ...prev,
+                aiTags: updated,
+            };
+        });
+    };
+
+
+    const updateAiTagOption = (
+        categoryIndex: number,
+        optionIndex: number,
+        value: string
+    ) => {
+        setForm((prev: any) => {
+            const updated = [...prev.aiTags];
+
+            updated[categoryIndex].options[optionIndex].name = value;
+
+            return {
+                ...prev,
+                aiTags: updated,
+            };
+        });
+    };
+
+    const addAiTagOption = (categoryIndex: number) => {
+        setForm((prev: any) => {
+            const updated = [...prev.aiTags];
+
+            updated[categoryIndex].options = [
+                ...(updated[categoryIndex].options || []),
+                {
+                    id: crypto.randomUUID(),
+                    name: "",
+                },
+            ];
+
+            return {
+                ...prev,
+                aiTags: updated,
+            };
+        });
     };
 
     const handleUploadPackageImage = async (e: any) => {
@@ -200,6 +282,12 @@ export default function AdminConfigPage() {
         }));
     };
 
+    const slug = (value: string) =>
+        value
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, "-");
+
     const handleSave = async () => {
         try {
             const isValidMobile = /^[6-9]\d{9}$/.test(form.adminMobile);
@@ -242,6 +330,22 @@ export default function AdminConfigPage() {
                 return;
             }
 
+            if (form.website && !/^https?:\/\/.+/i.test(form.website)) {
+                showAlert({
+                    type: "error",
+                    message: "Enter a valid website URL",
+                });
+                return;
+            }
+
+            if (form.gmapLink && !/^https?:\/\/.+/i.test(form.gmapLink)) {
+                showAlert({
+                    type: "error",
+                    message: "Enter a valid Google Maps URL",
+                });
+                return;
+            }
+
             const names = (form.packageTags || []).map(
                 (p: any) => p.name.trim().toLowerCase()
             );
@@ -254,53 +358,91 @@ export default function AdminConfigPage() {
                 return;
             }
 
-            const invalidAiTag = (form.aiTags || []).some(
-                (t: any) => !t.name?.trim()
+
+            const aiCategories = form.aiTags || [];
+            const invalidCategory = aiCategories.some(
+                (c: any) => !c.name?.trim()
             );
 
-            if (invalidAiTag) {
+            if (invalidCategory) {
                 showAlert({
                     type: "error",
-                    message: "AI Tag name is required",
+                    message: "Category name is required",
                 });
                 return;
             }
-            const aiNames = (form.aiTags || []).map(
-                (t: any) => t.name.trim().toLowerCase()
+
+            // Duplicate category names
+            const categoryNames = aiCategories.map(
+                (c: any) => c.name.trim().toLowerCase()
             );
 
-            if (new Set(aiNames).size !== aiNames.length) {
+            if (new Set(categoryNames).size !== categoryNames.length) {
                 showAlert({
                     type: "error",
-                    message: "Duplicate AI Tags are not allowed",
+                    message: "Duplicate category names are not allowed",
                 });
                 return;
+            }
+
+            for (const category of aiCategories) {
+                if (!category.options?.length) {
+                    showAlert({
+                        type: "error",
+                        message: `Category "${category.name}" must have at least one option`,
+                    });
+                    return;
+                }
+
+                const invalidOption = category.options.some(
+                    (o: any) => !o.name?.trim()
+                );
+
+                if (invalidOption) {
+                    showAlert({
+                        type: "error",
+                        message: `Option name is required in "${category.name}"`,
+                    });
+                    return;
+                }
+
+                const optionNames = category.options.map(
+                    (o: any) => o.name.trim().toLowerCase()
+                );
+
+                if (new Set(optionNames).size !== optionNames.length) {
+                    showAlert({
+                        type: "error",
+                        message: `Duplicate options found in "${category.name}"`,
+                    });
+                    return;
+                }
             }
 
             setLoading(true);
-
             const payload = {
                 ...form,
                 packageTags: (form.packageTags || []).map(
                     (p: any) => ({
-                        id: p.name
-                            .trim()
-                            .toLowerCase()
-                            .replace(/\s+/g, "-"),
+                        id: slug(p.name),
                         name: p.name.trim(),
                         imageUrl: p.imageUrl || "",
                         productId: p.productId.trim(),
                     }),
                 ),
-                aiTags: (form.aiTags || []).map(
-                    (t: any) => ({
-                        id: t.name
-                            .trim()
-                            .toLowerCase()
-                            .replace(/\s+/g, "-"),
-                        name: t.name.trim(),
-                    })
-                ),
+                aiTags: (form.aiTags || []).map((category: any) => {
+                    const categoryId = slug(category.name);
+                    return {
+                        id: categoryId,
+                        name: category.name.trim(),
+                        options: (category.options || []).map((option: any) => ({
+                            id: `${categoryId}:${slug(option.name)}`,
+                            name: option.name.trim(),
+
+                        })),
+                    };
+
+                }),
             };
 
             const updated = await updateAdminConfig(payload);
@@ -605,6 +747,62 @@ export default function AdminConfigPage() {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Display Mobile Number
+                            </label>
+
+                            <input
+                                type="tel"
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.displayMobile || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        displayMobile: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Website
+                            </label>
+
+                            <input
+                                type="url"
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                placeholder="https://example.com"
+                                value={form.website || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        website: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Google Maps Link
+                            </label>
+
+                            <input
+                                type="url"
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                placeholder="https://maps.app.goo.gl/..."
+                                value={form.gmapLink || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        gmapLink: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
                         <label className="flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
@@ -820,51 +1018,95 @@ export default function AdminConfigPage() {
                             AI Tags
                         </p>
 
-                        {(form.aiTags || []).map(
-                            (tag: any, index: number) => (
-                                <div
-                                    key={tag.id}
-                                    className="border rounded-xl p-4 space-y-3 bg-gray-50"
-                                >
+                        {(form.aiTags || []).map((tag: any, categoryIndex: number) => (
 
-                                    <input
-                                        className="border border-gray-300 rounded-lg p-3 w-full"
-                                        placeholder="AI Tag Name"
-                                        value={tag.name || ""}
-                                        onChange={(e) => {
+                            <div
+                                key={tag.id}
+                                className="border rounded-xl p-4 space-y-4 bg-gray-50"
+                            >
 
-                                            const value = e.target.value;
+                                <input
+                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                    placeholder="Category Name"
+                                    value={tag.name || ""}
+                                    onChange={(e) =>
+                                        updateAiTagName(categoryIndex, e.target.value)
+                                    }
+                                />
 
-                                            setForm((prev: any) => {
+                                <div className="space-y-2">
 
-                                                const updated = [...prev.aiTags];
+                                    {(tag.options || []).map(
+                                        (option: any, optionIndex: number) => (
 
-                                                updated[index].name = value;
+                                            <div
+                                                key={option.id}
+                                                className="flex gap-2"
+                                            >
 
-                                                return {
-                                                    ...prev,
-                                                    aiTags: updated,
-                                                };
-                                            });
-                                        }}
-                                    />
+                                                <input
+                                                    className="border border-gray-300 rounded-lg p-3 flex-1"
+                                                    placeholder="Option Name"
+                                                    value={option.name || ""}
+                                                    onChange={(e) =>
+                                                        updateAiTagOption(
+                                                            categoryIndex,
+                                                            optionIndex,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        removeAiTagOption(
+                                                            categoryIndex,
+                                                            optionIndex
+                                                        )
+                                                    }
+                                                >
+                                                    Remove
+                                                </Button>
+
+                                            </div>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                                <div className="flex gap-2">
 
                                     <Button
                                         variant="outline"
-                                        onClick={() => removeAiTag(index)}
+                                        onClick={() =>
+                                            addAiTagOption(categoryIndex)
+                                        }
                                     >
-                                        Remove
+                                        + Add Option
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            removeAiTag(categoryIndex)
+                                        }
+                                    >
+                                        Remove Category
                                     </Button>
 
                                 </div>
-                            )
-                        )}
+
+                            </div>
+
+                        ))}
 
                         <Button
                             variant="outline"
                             onClick={addAiTag}
                         >
-                            + Add AI Tag
+                            + Add AI Tag Category
                         </Button>
 
                     </div>

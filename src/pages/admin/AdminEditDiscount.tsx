@@ -154,9 +154,32 @@ export default function AdminEditDiscount() {
 
     return (
         <div className="max-w-2xl mx-auto p-6 space-y-6">
-            <h1 className="text-2xl font-bold">Edit Discount</h1>
+            <div className="flex items-center gap-3 mb-2">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="
+                        w-9 h-9
+                        flex items-center justify-center
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        text-white
+                        hover:scale-105
+                        active:scale-95
+                        transition
+                    "
+                >
+                    ←
+                </button>
 
-            {/* Readonly Info */}
+                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+                    Edit Discount
+                </h1>
+            </div>
+
+            <p className="text-sm text-gray-500">
+                Update discount details
+            </p>
+
             <div className="border rounded-xl p-4 bg-gray-50 text-sm space-y-1">
                 <p>
                     <b>Discount Type:</b> {readonlyInfo.discountType}

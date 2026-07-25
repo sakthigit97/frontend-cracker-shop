@@ -17,3 +17,38 @@ export function sortCategoryBySequence<T extends { sortOrder?: number }>(
         return aSeq - bSeq;
     });
 }
+
+
+export function sortProductsByCategoryAndSequence<
+    T extends {
+        categoryId?: string;
+        sequenceNumber?: number;
+    }
+>(
+    products: T[],
+    categories: {
+        id: string;
+        sortOrder?: number;
+    }[]
+): T[] {
+    const categoryMap = new Map(
+        categories.map((c) => [
+            c.id,
+            c.sortOrder ?? Number.MAX_SAFE_INTEGER,
+        ])
+    );
+
+    return [...products].sort((a, b) => {
+        const categoryDiff =
+            (categoryMap.get(a.categoryId ?? "") ??
+                Number.MAX_SAFE_INTEGER) -
+            (categoryMap.get(b.categoryId ?? "") ??
+                Number.MAX_SAFE_INTEGER);
+
+        if (categoryDiff !== 0) {
+            return categoryDiff;
+        }
+
+        return (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0);
+    });
+}

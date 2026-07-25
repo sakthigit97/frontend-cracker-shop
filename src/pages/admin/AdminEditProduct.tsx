@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ProductForm from "../../components/admin/AdminProductForm";
+import EditProductForm from "../../components/admin/EditProductForm";
 import type { ProductFormData } from "../../components/admin/AdminProductForm";
 import { useMetaStore } from "../../store/meta.store";
 import { useAlert } from "../../store/alert.store";
 import { useAdminProductsStore } from "../../store/adminProducts.store";
 
+type EditableImage = {
+    id: string;
+    preview: string;
+    url?: string;
+    file?: File;
+};
+
 import {
     getAdminProduct,
     updateAdminProduct,
     getPresignedUrls,
+    deleteProductImages,
 } from "../../services/adminProducts.api";
 
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
@@ -22,7 +30,7 @@ export default function AdminEditProduct() {
     const { brands, categories, load, packageTags, aiTags } = useMetaStore();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
-    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [images, setImages] = useState<EditableImage[]>([]);
     const [form, setForm] = useState<ProductFormData | null>(null);
     const [initialData, setInitialData] = useState<any>(null);
 
@@ -36,7 +44,13 @@ export default function AdminEditProduct() {
         const loadProduct = async () => {
             try {
                 const data = await getAdminProduct(productId);
-                setExistingImages(data.imageUrls || []);
+                setImages(
+                    (data.imageUrls || []).map((url: string, index: number) => ({
+                        id: `existing-${index}`,
+                        url,
+                        preview: url,
+                    }))
+                );
 
                 const formData: ProductFormData = {
                     name: data.name || "",
@@ -115,9 +129,10 @@ export default function AdminEditProduct() {
             return true;
         }
 
+        const currentImageState = images.map(i => i.url ?? i.id);
         if (
             JSON.stringify(initialData.imageUrls) !==
-            JSON.stringify(existingImages)
+            JSON.stringify(currentImageState)
         ) {
             return true;
         }
@@ -136,10 +151,12 @@ export default function AdminEditProduct() {
             return true;
         }
 
-        if (form.images.length > 0) return true;
+        if (images.some(i => i.file))
+            return true;
 
         return false;
     };
+
 
     const handleSubmit = async () => {
         if (!productId) return;
@@ -190,7 +207,7 @@ export default function AdminEditProduct() {
             return;
         }
 
-        if (existingImages.length + form.images.length === 0) {
+        if (images.length === 0) {
             showAlert({
                 type: "error",
                 message: "At least one product image is required",
@@ -201,13 +218,40 @@ export default function AdminEditProduct() {
         try {
             setLoading(true);
 
+            const existingImageUrls = images
+                .filter(i => i.url)
+                .map(i => i.url!);
+
+            const removedImages = initialData.imageUrls.filter(
+                (url: string) => !existingImageUrls.includes(url)
+            );
+
             let newImageUrls: string[] = [];
 
-            if (form.images.length > 0) {
-                const presign = await getPresignedUrls(form.images, productId);
-                await uploadFilesToS3(presign.uploads, form.images);
-                newImageUrls = presign.uploads.map((u: any) => u.fileUrl);
+            const newFiles = images
+                .filter(i => i.file)
+                .map(i => i.file!);
+
+            if (newFiles.length > 0) {
+                const presign = await getPresignedUrls(newFiles, productId);
+
+                await uploadFilesToS3(
+                    presign.uploads,
+                    newFiles
+                );
+
+                newImageUrls = presign.uploads.map(
+                    (u: any) => u.fileUrl
+                );
             }
+
+            let uploadedIndex = 0;
+            const finalImageUrls = images.map(image => {
+                if (image.url) {
+                    return image.url;
+                }
+                return newImageUrls[uploadedIndex++];
+            });
 
             const searchText = [form.name, brandName, categoryName]
                 .join(" ")
@@ -223,10 +267,14 @@ export default function AdminEditProduct() {
                 videoUrl: form.videoUrl,
                 isActive: form.isActive ? "true" : "false",
                 searchText,
-                imageUrls: [...existingImages, ...newImageUrls],
+                imageUrls: finalImageUrls,
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
             });
+
+            if (removedImages.length > 0) {
+                await deleteProductImages(removedImages);
+            }
 
             showAlert({
                 type: "success",
@@ -277,19 +325,15 @@ export default function AdminEditProduct() {
                     </div>
 
                     {/* Form */}
-                    <ProductForm
+                    <EditProductForm
                         value={form}
                         brands={brands}
                         categories={categories}
                         loading={loading}
                         packageTags={packageTags}
                         aiTags={aiTags}
-                        existingImages={existingImages}
-                        onRemoveImage={(url) =>
-                            setExistingImages((imgs) =>
-                                imgs.filter((i) => i !== url)
-                            )
-                        }
+                        images={images}
+                        setImages={setImages}
                         onChange={setForm}
                         onSubmit={handleSubmit}
                         onCancel={() => navigate("/admin/products")}

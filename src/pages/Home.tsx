@@ -8,7 +8,7 @@ import ProductSkeleton from "../components/product/ProductSkeleton";
 import { useAuth } from "../store/auth.store";
 import { useMemo } from "react";
 import { usePackageStore } from "../store/package.store";
-import { sortProductsBySequence } from "../utils/sequncerUtil";
+import { sortProductsByCategoryAndSequence } from "../utils/sequncerUtil";
 import { FaArrowUp } from "react-icons/fa";
 import { useCategoryProducts } from "../store/categoryProduct.store";
 import { useBrandProducts } from "../store/brandProduct.store";
@@ -183,8 +183,11 @@ export default function Home() {
         .includes(query)
     )
     : currentProducts;
-  displayProducts = sortProductsBySequence(displayProducts);
 
+  displayProducts = sortProductsByCategoryAndSequence(
+    displayProducts,
+    categories
+  );
   const tabs = useMemo(() => {
     const items: {
       key: HomeTab;

@@ -20,14 +20,22 @@ export interface ProductFormData {
     aiTags: string[];
 }
 
+type EditableImage = {
+    id: string;
+    preview: string;
+    url?: string;
+    file?: File;
+};
+
+
 interface Props {
     value: ProductFormData;
     brands: any[];
     categories: any[];
     loading?: boolean;
-    existingImages?: string[];
-    onRemoveImage?: (url: string) => void;
     onChange: (v: ProductFormData) => void;
+    images: EditableImage[];
+    setImages: React.Dispatch<React.SetStateAction<EditableImage[]>>;
     onSubmit: () => void;
     onCancel?: () => void;
     packageTags?: {
@@ -48,24 +56,22 @@ interface Props {
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
-export default function ProductForm({
+export default function EditProductForm({
     value,
     brands,
     categories,
     packageTags = [],
     aiTags = [],
     loading,
-    existingImages = [],
-    onRemoveImage,
+    images,
+    setImages,
     onChange,
     onSubmit,
     onCancel,
 }: Props) {
     const { showAlert } = useAlert();
 
-    const update = (key: keyof ProductFormData, v: any) =>
-        onChange({ ...value, [key]: v });
-
+    const update = (key: keyof ProductFormData, v: any) => onChange({ ...value, [key]: v });
     const togglePackageTag = (tagId: string) => {
         const current = value.packageTagIds || [];
 
@@ -76,6 +82,7 @@ export default function ProductForm({
         update("packageTagIds", next);
     };
 
+
     const toggleAiTag = (tag: string) => {
         const current = value.aiTags || [];
 
@@ -85,37 +92,29 @@ export default function ProductForm({
 
         update("aiTags", next);
     };
-
     const moveUp = (index: number) => {
         if (index === 0) return;
 
-        const images = [...value.images];
-
-        [images[index - 1], images[index]] =
-            [images[index], images[index - 1]];
-
-        update("images", images);
+        setImages(prev => {
+            const arr = [...prev];
+            [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+            return arr;
+        });
     };
 
     const moveDown = (index: number) => {
-        if (index === value.images.length - 1) return;
+        setImages(prev => {
+            if (index === prev.length - 1) return prev;
 
-        const images = [...value.images];
-
-        [images[index + 1], images[index]] =
-            [images[index], images[index + 1]];
-
-        update("images", images);
+            const arr = [...prev];
+            [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+            return arr;
+        });
     };
 
     const removeImage = (index: number) => {
-        update(
-            "images",
-            value.images.filter((_, i) => i !== index)
-        );
+        setImages(prev => prev.filter((_, i) => i !== index));
     };
-
-
 
     return (
         <div className="space-y-8">
@@ -256,13 +255,13 @@ export default function ProductForm({
                         ) : (
                             <div
                                 className="
-                                    space-y-4
-                                    border
-                                    border-gray-200
-                                    rounded-xl
-                                    p-4
-                                    bg-gray-50/50
-                                "
+        space-y-4
+        border
+        border-gray-200
+        rounded-xl
+        p-4
+        bg-gray-50/50
+    "
                             >
                                 {aiTags.map((category) => (
 
@@ -351,42 +350,6 @@ export default function ProductForm({
                 </div>
             </div>
 
-            {existingImages && existingImages.length > 0 && (
-                <div className="bg-white border rounded-xl p-5 space-y-3">
-                    <h2 className="text-sm font-semibold text-gray-700">
-                        Existing Images
-                    </h2>
-
-                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-                        {existingImages.map((url) => (
-                            <div
-                                key={url}
-                                className="relative border rounded-lg overflow-hidden"
-                            >
-                                <img
-                                    src={url}
-                                    alt="Product"
-                                    className="w-full h-28 object-cover"
-                                    loading="lazy"
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={() => onRemoveImage?.(url)}
-                                    className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded shadow hover:bg-red-700 transition"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    <p className="text-xs text-gray-500">
-                        Images will be removed after you save the product
-                    </p>
-                </div>
-            )}
-
             <div className="bg-white border rounded-xl p-5 space-y-3">
                 <h2 className="text-sm font-semibold text-gray-700">
                     Upload New Product Images
@@ -407,9 +370,8 @@ export default function ProductForm({
                         hover:file:opacity-90"
                     onChange={(e) => {
                         const files = Array.from(e.target.files || []);
-                        const allImages = [...value.images, ...files];
-                        const totalImages = (existingImages?.length || 0) + allImages.length;
-                        if (totalImages > MAX_IMAGES) {
+
+                        if (images.length + files.length > MAX_IMAGES) {
                             showAlert({
                                 type: "error",
                                 message: `You can upload up to ${MAX_IMAGES} images only`,
@@ -418,126 +380,88 @@ export default function ProductForm({
                             return;
                         }
 
-                        const oversized = allImages.find(
+                        const oversized = files.find(
                             (f) => f.size > MAX_IMAGE_SIZE
                         );
 
                         if (oversized) {
                             showAlert({
                                 type: "error",
-                                message: `Each image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)
-                                    } MB`,
+                                message: `Each image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)} MB`,
                             });
                             e.target.value = "";
                             return;
                         }
 
-                        update("images", allImages);
+                        const newImages = files.map(file => ({
+                            id: crypto.randomUUID(),
+                            preview: URL.createObjectURL(file),
+                            file,
+                        }));
+
+                        setImages(prev => [...prev, ...newImages]);
                         e.target.value = "";
                     }}
                 />
-                {value.images.length > 0 && (
-                    <div className="mt-4">
+
+                {images.length > 0 && (
+                    <div className="mt-5">
                         <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-medium text-gray-700">
-                                Selected Images ({value.images.length}/{MAX_IMAGES})
+                            <p className="text-sm font-semibold">
+                                Product Images ({images.length}/{MAX_IMAGES})
                             </p>
 
                             <span className="text-xs text-gray-500">
-                                First image will be used as the product thumbnail
+                                First image is the thumbnail
                             </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                            {value.images.map((file, index) => (
+
+                            {images.map((image, index) => (
                                 <div
-                                    key={index}
-                                    className="
-                        rounded-xl
-                        border
-                        border-gray-200
-                        bg-white
-                        shadow-sm
-                        overflow-hidden
-                    "
+                                    key={image.id}
+                                    className="rounded-xl border bg-white overflow-hidden shadow-sm"
                                 >
+
                                     <div className="relative">
+
                                         <img
-                                            src={URL.createObjectURL(file)}
-                                            alt={`Preview ${index + 1}`}
-                                            className="
-                                w-full
-                                h-52
-                                object-cover
-                            "
+                                            src={image.preview}
+                                            alt=""
+                                            className="w-full h-52 object-cover"
                                         />
 
                                         {index === 0 && (
                                             <span
-                                                className="
-                                    absolute
-                                    top-2
-                                    left-2
-                                    bg-amber-500
-                                    text-white
-                                    text-xs
-                                    px-2
-                                    py-1
-                                    rounded-full
-                                    font-medium
-                                "
+                                                className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full"
                                             >
                                                 Primary
                                             </span>
                                         )}
+
                                     </div>
 
                                     <div className="p-3">
 
                                         <p className="text-xs text-gray-500 truncate mb-3">
-                                            {file.name}
+                                            {image.file?.name ?? "Existing Image"}
                                         </p>
 
-                                        <div className="flex justify-between items-center gap-2">
+                                        <div className="flex justify-between">
 
                                             <button
                                                 type="button"
-                                                onClick={() => moveUp(index)}
                                                 disabled={index === 0}
-                                                className="
-                                    h-9
-                                    w-9
-                                    rounded-lg
-                                    border
-                                    border-gray-300
-                                    flex
-                                    items-center
-                                    justify-center
-                                    hover:bg-gray-100
-                                    disabled:opacity-40
-                                    disabled:cursor-not-allowed
-                                "
+                                                onClick={() => moveUp(index)}
                                             >
                                                 <FaArrowUp />
                                             </button>
 
                                             <button
                                                 type="button"
+                                                disabled={index === images.length - 1}
                                                 onClick={() => moveDown(index)}
-                                                disabled={index === value.images.length - 1}
-                                                className="
-                                    h-9
-                                    w-9
-                                    rounded-lg
-                                    border
-                                    border-gray-300
-                                    flex
-                                    items-center
-                                    justify-center
-                                    hover:bg-gray-100
-                                    disabled:opacity-40
-                                    disabled:cursor-not-allowed
-                                "
                                             >
                                                 <FaArrowDown />
                                             </button>
@@ -545,28 +469,17 @@ export default function ProductForm({
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(index)}
-                                                className="
-                                    flex
-                                    items-center
-                                    gap-2
-                                    px-3
-                                    h-9
-                                    rounded-lg
-                                    bg-red-500
-                                    text-white
-                                    text-sm
-                                    hover:bg-red-600
-                                "
                                             >
                                                 <FaTrash />
-                                                Remove
                                             </button>
 
                                         </div>
 
                                     </div>
+
                                 </div>
                             ))}
+
                         </div>
                     </div>
                 )}

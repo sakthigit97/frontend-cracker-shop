@@ -153,7 +153,7 @@ export default function AdminBrands() {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3 mb-4">
                     <button
                         onClick={() => navigate(-1)}
@@ -177,8 +177,13 @@ export default function AdminBrands() {
                     </h1>
                 </div>
 
-                <Link to="/admin/brands/create">
-                    <Button>Add Brand</Button>
+                <Link
+                    to="/admin/brands/create"
+                    className="w-full sm:w-auto"
+                >
+                    <Button className="w-full sm:w-auto">
+                        Add Brand
+                    </Button>
                 </Link>
             </div>
 

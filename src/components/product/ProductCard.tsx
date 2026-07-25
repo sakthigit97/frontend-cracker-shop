@@ -58,7 +58,10 @@ function ProductCard({
 
       <div className="relative bg-white aspect-[4/3] flex items-center justify-center">
         <img
-          src={product.image || defaultImage}
+          src={product.image?.trim() || defaultImage}
+          onError={(e) => {
+            e.currentTarget.src = defaultImage;
+          }}
           loading="lazy"
           decoding="async"
           className="

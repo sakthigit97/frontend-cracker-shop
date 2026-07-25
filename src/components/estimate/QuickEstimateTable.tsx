@@ -125,7 +125,6 @@ export default function QuickEstimateTable({
                                     </td>
                                 </tr>
                                 {group.products.map((product) => {
-                                    console.log(product)
                                     const qty = Number(items[product.id] ?? 0);
                                     return (
                                         <QuickEstimateTableRow

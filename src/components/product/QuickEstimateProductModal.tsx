@@ -224,10 +224,6 @@ export default function QuickEstimateProductModal({
     if (!open) return null;
 
     const availableQty = product?.qty ?? 0;
-
-    console.log("youtubeUrl", product?.youtubeUrl);
-    console.log("videoId", videoId);
-
     if (loading && !product) {
         return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">

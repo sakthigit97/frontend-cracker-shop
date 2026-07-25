@@ -16,45 +16,252 @@ function getYouTubeId(url: string) {
   const match = url.match(regExp);
   return match ? match[1] : null;
 }
+type MediaItem =
+  | {
+    type: "image";
+    src: string;
+  }
+  | {
+    type: "video";
+    src: string;
+  };
 
 const ProductImage = memo(function ProductImage({
-  images,
+  media,
   name,
 }: {
-  images: string[];
+  media: MediaItem[];
   name: string;
 }) {
-  const [activeImage, setActiveImage] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFading, setIsFading] = useState(false);
+
+  const [showViewer, setShowViewer] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
-    if (!images || images.length <= 1 || isHovered) return;
+    media.forEach((item) => {
+      if (item.type === "image") {
+        const img = new Image();
+        img.src = item.src;
+      }
+    });
+  }, [media]);
+
+  useEffect(() => {
+    if (!media.length || media.length <= 1) return;
+    if (media[activeIndex]?.type === "video") return;
 
     const interval = setInterval(() => {
-      setIsFading(true);
-      setTimeout(() => {
-        setActiveImage((prev) =>
-          prev === images.length - 1 ? 0 : prev + 1
-        );
-        setIsFading(false);
-      }, 300);
+      setActiveIndex(prev => (prev + 1) % media.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [images, isHovered]);
+  }, [media, activeIndex]);
+
+  const viewerPrev = () => {
+    let i = viewerIndex;
+
+    do {
+      i = i === 0 ? media.length - 1 : i - 1;
+    } while (media[i].type === "video");
+
+    setViewerIndex(i);
+  };
+
+  const viewerNext = () => {
+    let i = viewerIndex;
+
+    do {
+      i = (i + 1) % media.length;
+    } while (media[i].type === "video");
+
+    setViewerIndex(i);
+  };
+
+  const prev = () =>
+    setActiveIndex(prev =>
+      prev === 0 ? media.length - 1 : prev - 1
+    );
+
+  const next = () =>
+    setActiveIndex(prev =>
+      (prev + 1) % media.length
+    );
 
   return (
-    <div className="relative rounded-2xl p-6 flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 border shadow-inner">
+    <div
+      className="
+        relative
+        w-full
+        aspect-[4/3]
+        max-h-[450px]
+        rounded-2xl
+        overflow-hidden
+        bg-white
+        border
+        border-gray-200
+        shadow-sm
+        flex
+        items-center
+        justify-center
+        "
+    >
+
       <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5" />
-      <img
-        src={images[activeImage] || defaultImage}
-        alt={name}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`relative max-h-[340px] object-contain transition-all duration-300 hover:scale-105 ${isFading ? "opacity-0" : "opacity-100"
-          }`}
-      />
+
+      {/* Previous */}
+      <button
+        onClick={prev}
+        className="
+        absolute
+        top-1/2
+        -translate-y-1/2
+        z-20
+        left-3
+        w-9
+        h-9
+        md:w-11
+        md:h-11
+        rounded-full
+        bg-white/90
+        backdrop-blur-sm
+        shadow-lg
+        hover:bg-white
+        hover:scale-105
+        transition-all
+        "
+      >
+        ❮
+      </button>
+
+      <button
+        onClick={next}
+        className="
+          absolute
+          top-1/2
+          -translate-y-1/2
+          z-20
+          right-3
+          w-9
+          h-9
+          md:w-11
+          md:h-11
+          rounded-full
+          bg-white/90
+          backdrop-blur-sm
+          shadow-lg
+          hover:bg-white
+          hover:scale-105
+          transition-all
+          "
+      >
+        ❯
+      </button>
+
+      {media.map((item, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-500 ${activeIndex === index
+            ? "opacity-100 z-10"
+            : "opacity-0 pointer-events-none"
+            }`}
+        >
+          {item.type === "image" ? (
+            <img
+              onClick={() => {
+                setViewerIndex(index);
+                setShowViewer(true);
+              }}
+              src={item.src || defaultImage}
+              alt={name}
+              loading="eager"
+              draggable={false}
+              className="
+              absolute
+              inset-0
+              w-full
+              h-full
+              object-contain
+              p-4
+              md:p-6
+              cursor-zoom-in
+              transition-transform
+              duration-300
+              hover:scale-105
+              "
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <iframe
+                src={`https://www.youtube.com/embed/${item.src}?rel=0`}
+                allowFullScreen
+                className="w-full aspect-video rounded-2xl"
+              />
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        {media.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setActiveIndex(index)}
+            className={`h-2 rounded-full transition-all ${activeIndex === index
+              ? "w-6 bg-[var(--color-primary)]"
+              : "w-2 bg-gray-300"
+              }`}
+          />
+        ))}
+      </div>
+      {showViewer && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+          onClick={() => setShowViewer(false)}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setShowViewer(false)}
+            className="absolute top-5 right-5 text-white text-4xl font-light"
+          >
+            ×
+          </button>
+
+          {/* Previous */}
+          {media.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                viewerPrev();
+              }}
+              className="absolute left-6 top-1/2 -translate-y-1/2 text-white text-5xl"
+            >
+              ❮
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={(media[viewerIndex] as { type: "image"; src: string }).src}
+            alt={name}
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-[95vw] max-h-[90vh] object-contain"
+          />
+
+          {/* Next */}
+          {media.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                viewerNext();
+              }}
+              className="absolute right-6 top-1/2 -translate-y-1/2 text-white text-5xl"
+            >
+              ❯
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 });
@@ -82,6 +289,7 @@ export default function ProductDetails() {
       </div>
     );
   }
+
   if (!product) {
     return (
       <div className="py-20 text-center text-sm text-gray-500">
@@ -95,6 +303,21 @@ export default function ProductDetails() {
 
   const videoId = product.youtubeUrl ? getYouTubeId(product.youtubeUrl) : null;
   const available_qty = product?.qty || 0;
+  const media = [
+    ...product.images.map((img) => ({
+      type: "image" as const,
+      src: img,
+    })),
+    ...(videoId
+      ? [
+        {
+          type: "video" as const,
+          src: videoId,
+        },
+      ]
+      : []),
+  ];
+
   return (
 
     <div className="p-4 max-w-6xl mx-auto space-y-10">
@@ -125,7 +348,10 @@ export default function ProductDetails() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
         {/* IMAGE */}
-        <ProductImage images={product.images} name={product.name} />
+        <ProductImage
+          media={media}
+          name={product.name}
+        />
 
         {/* INFO */}
         <div className="flex flex-col gap-5">
@@ -159,20 +385,16 @@ export default function ProductDetails() {
               className="
               min-w-[220px]
               h-[52px]
-
               flex
               items-center
               justify-center
-
               rounded-xl
               bg-[var(--color-primary)]
               text-white
               border
               border-[var(--color-primary)]
-
               text-base
               font-semibold
-
               hover:opacity-90
               transition-all
             "
@@ -224,21 +446,6 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* VIDEO */}
-      {videoId && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-[var(--color-primary)] mb-4">
-            Product Video
-          </h3>
-          <div className="relative w-full overflow-hidden rounded-xl aspect-video bg-black">
-            <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

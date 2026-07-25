@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useConfigStore } from "../store/config.store";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { calculateOrderAmounts } from "../utils/pricing";
-import { sortProductsBySequence } from "../utils/sequncerUtil";
+import { sortProductsByCategoryAndSequence } from "../utils/sequncerUtil";
 import QuickEstimateProductModal from "../components/product/QuickEstimateProductModal";
 import { FaArrowUp } from "react-icons/fa";
 import { useCategoryStore } from "../store/category.store";
@@ -46,7 +46,12 @@ export default function QuickEstimate() {
                     .includes(query)
             )
             : products;
-    displayProducts = sortProductsBySequence(displayProducts);
+
+    displayProducts = sortProductsByCategoryAndSequence(
+        displayProducts,
+        categories
+    );
+
     const selectedProducts = Object.values(items).reduce(
         (sum, qty) => sum + Math.max(0, Number(qty) || 0),
         0

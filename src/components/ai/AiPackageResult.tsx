@@ -304,9 +304,45 @@ export default function AiPackageResult() {
             <div>
                 <div>
 
-                    <h3 className="text-lg font-semibold mb-4">
-                        Package Preview
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">
+                            Package Preview
+                        </h3>
+
+                        {!packageAdded ? (
+                            <button
+                                onClick={addPackageToCart}
+                                className="
+                                    px-5
+                                    py-2
+                                    rounded-full
+                                    bg-[var(--color-primary)]
+                                    text-white
+                                    font-semibold
+                                    hover:opacity-90
+                                    transition
+                                "
+                            >
+                                Add Package To cart ({totalItems}) →
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => navigate("/cart")}
+                                className="
+                                    px-5
+                                    py-2
+                                    rounded-full
+                                    bg-green-600
+                                    text-white
+                                    font-semibold
+                                    hover:opacity-90
+                                    transition
+                                "
+                            >
+                                View Cart →
+                            </button>
+                        )}
+                    </div>
 
                     {packageItems.length === 0 ? (
 
@@ -473,89 +509,6 @@ export default function AiPackageResult() {
 
             </div>
 
-            <div
-                className="
-                    sticky
-                    bottom-0
-                    bg-white
-                    border-t
-                    p-3 sm:p-4
-                    rounded-xl
-                    shadow-lg
-                    left-0 right-0
-                "
-            >
-
-                <div
-                    className="
-                        flex
-                        flex-col
-                        md:flex-row
-                        md:items-center
-                        md:justify-between
-                        gap-3 sm:gap-4
-                    "
-                >
-
-                    <div className="flex-1">
-
-                        <div className="font-semibold text-base sm:text-lg">
-                            Total Amount: ₹{totalAmount}
-                        </div>
-
-                        <div className="text-xs sm:text-sm text-gray-500">
-                            {totalItems} Products
-                        </div>
-
-                    </div>
-
-                    {!packageAdded ? (
-
-                        <button
-                            onClick={addPackageToCart}
-                            className="
-                            w-full md:w-auto
-                            px-4 sm:px-6
-                            py-3 sm:py-3
-                            rounded-lg
-                            bg-[var(--color-primary)]
-                            text-white
-                            font-medium
-                            text-sm sm:text-base
-                            hover:opacity-90
-                            transition-opacity
-                        "
-                        >
-                            Add Package To Cart
-                        </button>
-
-                    ) : (
-
-                        <button
-                            onClick={() =>
-                                navigate("/cart")
-                            }
-                            className="
-                            w-full md:w-auto
-                            px-4 sm:px-6
-                            py-3 sm:py-3
-                            rounded-lg
-                            bg-green-600
-                            text-white
-                            font-medium
-                            text-sm sm:text-base
-                            hover:opacity-90
-                            transition-opacity
-                        "
-                        >
-                            View Cart
-                        </button>
-
-                    )}
-
-                </div>
-
-            </div>
 
             {additionalItems.length > 0 && (
 

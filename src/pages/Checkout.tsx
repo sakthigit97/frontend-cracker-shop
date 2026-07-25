@@ -332,8 +332,6 @@ export default function Checkout() {
     }
   };
 
-  console.log(products)
-
   async function startMockPayment(total: number) {
     console.log("Mock Payment Started:", total);
     await new Promise((res) => setTimeout(res, 1500));

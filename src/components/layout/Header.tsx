@@ -123,17 +123,7 @@ export default function Header() {
       label: "Combo Packages",
       to: "/combo-packages",
       icon: <FaBoxOpen />,
-    },
-    {
-      label: "Quick Estimate",
-      to: "/quick-estimate",
-      icon: <FaCalculator />,
-    },
-    {
-      label: "AI Assistant",
-      to: "/ai-assistant",
-      icon: <FaRobot />,
-    },
+    }
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -192,17 +182,7 @@ export default function Header() {
       label: "Combo Packages",
       to: "/combo-packages",
       icon: <FaBoxOpen />,
-    },
-    {
-      label: "Quick Estimate",
-      to: "/quick-estimate",
-      icon: <FaCalculator />,
-    },
-    {
-      label: "AI Assistant",
-      to: "/ai-assistant",
-      icon: <FaRobot />,
-    },
+    }
   ];
 
   const mobileSupport: MobileAccordionItem[] = [
@@ -291,10 +271,44 @@ export default function Header() {
             Home
           </Link>
 
+          <Link
+            to="/quick-estimate"
+            className="
+              rounded-xl
+              px-4
+              py-2
+              text-sm
+              font-medium
+              transition-all
+              duration-200
+              hover:bg-white/10
+            "
+          >
+            Quick Estimate
+          </Link>
+
+          <Link
+            to="/ai-assistant"
+            className="
+            rounded-xl
+            px-4
+            py-2
+            text-sm
+            font-medium
+            transition-all
+            duration-200
+            hover:bg-white/10
+          "
+          >
+            AI Assistant
+          </Link>
+
+
           <HeaderDropdown
             title="Products"
             items={productMenu}
           />
+
 
           <HeaderDropdown
             title="Support"
@@ -318,8 +332,6 @@ export default function Header() {
         {/* ================= Right Section ================= */}
 
         <div className="flex items-center gap-3">
-
-          {/* Welcome Chip */}
 
           {isAuthenticated && (
             <div
@@ -372,18 +384,18 @@ export default function Header() {
           <Link
             to="/cart"
             className="
-    group
-    relative
-    flex
-    items-center
-    gap-2
-    rounded-full
-    bg-white/10
-    hover:bg-white/20
-    px-3
-    py-1.5
-    transition-all
-  "
+              group
+              relative
+              flex
+              items-center
+              gap-2
+              rounded-full
+              bg-white/10
+              hover:bg-white/20
+              px-3
+              py-1.5
+              transition-all
+            "
           >
             <div className="relative">
 
@@ -512,7 +524,6 @@ export default function Header() {
             </button>
           )}
 
-          {/* Mobile Menu Button */}
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -534,7 +545,6 @@ export default function Header() {
 
         </div>
       </div>
-      {/* ================= Mobile Navigation ================= */}
 
       {mobileOpen && (
         <div
@@ -547,8 +557,6 @@ export default function Header() {
           "
         >
           <div className="space-y-4 p-4">
-
-            {/* Home */}
 
             <Link
               to="/"
@@ -571,6 +579,46 @@ export default function Header() {
               <FaHome />
 
               Home
+            </Link>
+
+            <Link
+              to="/quick-estimate"
+              onClick={closeMobile}
+              className="
+                flex
+                items-center
+                gap-3
+                rounded-2xl
+                bg-white/5
+                px-4
+                py-3
+                text-sm
+                font-medium
+                hover:bg-white/10
+              "
+            >
+              <FaCalculator />
+              Quick Estimate
+            </Link>
+
+            <Link
+              to="/ai-assistant"
+              onClick={closeMobile}
+              className="
+                flex
+                items-center
+                gap-3
+                rounded-2xl
+                bg-white/5
+                px-4
+                py-3
+                text-sm
+                font-medium
+                hover:bg-white/10
+              "
+            >
+              <FaRobot />
+              AI Assistant
             </Link>
 
             <MobileAccordion

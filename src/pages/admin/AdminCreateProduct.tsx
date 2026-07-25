@@ -16,7 +16,6 @@ export default function AdminCreateProduct() {
     const { brands, categories, load, packageTags, aiTags } = useMetaStore();
     const [loading, setLoading] = useState(false);
     const { showAlert } = useAlert();
-
     const [form, setForm] = useState<ProductFormData>({
         name: "",
         price: "",
@@ -107,7 +106,7 @@ export default function AdminCreateProduct() {
                 isActive: form.isActive ? "true" : "false",
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
-                
+
             });
 
             showAlert({

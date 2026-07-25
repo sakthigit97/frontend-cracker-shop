@@ -21,6 +21,15 @@ export const getPresignedUrls = async (
     });
 };
 
+export async function deleteProductImages(imageUrls: string[]) {
+    return apiFetch("/admin/products/delete-images", {
+        method: "POST",
+        body: JSON.stringify({
+            imageUrls,
+        }),
+    });
+}
+
 export const createProduct = async (payload: any) => {
     return apiFetch("/admin/product", {
         method: "POST",

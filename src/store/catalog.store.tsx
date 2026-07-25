@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 
 type CatalogItem = {
@@ -21,30 +21,37 @@ const CatalogContext = createContext<CatalogState | null>(null);
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const [categories, setCategories] = useState<CatalogItem[]>([]);
     const [brands, setBrands] = useState<CatalogItem[]>([]);
-
+    const categoryRequestRef = useRef(false);
+    const brandRequestRef = useRef(false);
     const [loadingCategory, setLoadingCategory] = useState(false);
     const [loadingBrand, setLoadingBrand] = useState(false);
 
     const fetchCategories = async () => {
-        if (categories.length > 0) return;
+        if (categoryRequestRef.current || categories.length > 0) return;
 
+        categoryRequestRef.current = true;
         setLoadingCategory(true);
+
         try {
             const res = await apiFetch("/categories");
             setCategories(res.data.items);
         } finally {
+            categoryRequestRef.current = false;
             setLoadingCategory(false);
         }
     };
 
     const fetchBrands = async () => {
-        if (brands.length > 0) return;
+        if (brandRequestRef.current || brands.length > 0) return;
 
+        brandRequestRef.current = true;
         setLoadingBrand(true);
+
         try {
             const res = await apiFetch("/brands");
             setBrands(res.data.items);
         } finally {
+            brandRequestRef.current = false;
             setLoadingBrand(false);
         }
     };

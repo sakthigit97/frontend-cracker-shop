@@ -86,33 +86,43 @@ export default function Contact() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="
-          flex items-center justify-center
-          w-9 h-9
-          rounded-full
-          bg-[var(--color-primary)]
-          text-white
-          shadow-sm
 
-          hover:scale-105
-          active:scale-95
-          transition-all
-        "
-        >
-          ←
-        </button>
+      <div className="mb-10">
 
-        <h1 className="text-3xl font-bold text-[var(--color-primary)]">
-          Contact Us
-        </h1>
-        <p className="text-[var(--color-muted)] mt-2">
-          Please drop a message to know more details.
-        </p>
+        <div className="flex items-center gap-3 sm:justify-center relative">
+
+          <button
+            onClick={() => navigate(-1)}
+            className="
+        shrink-0
+        w-9 h-9
+        flex items-center justify-center
+        rounded-full
+        bg-[var(--color-primary)]
+        text-white
+        shadow-sm
+        hover:scale-105
+        active:scale-95
+        transition-all
+        sm:absolute sm:left-0
+      "
+          >
+            ←
+          </button>
+
+          <div className="flex-1 sm:flex-none text-center">
+            <h1 className="text-3xl font-bold text-[var(--color-primary)]">
+              Contact Us
+            </h1>
+
+            <p className="text-[var(--color-muted)] mt-2">
+              Please drop a message to know more details.
+            </p>
+          </div>
+
+        </div>
+
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
         <div className="flex flex-col justify-center items-center text-center gap-6">
           <img

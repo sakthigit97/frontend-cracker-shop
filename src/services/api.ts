@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export class ApiError extends Error {
   status: number;
   data: any;
@@ -10,6 +11,12 @@ export class ApiError extends Error {
   }
 }
 
+const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const MAX_RETRIES = 3;
+const RETRY_STATUS_CODES = [502, 503, 504];
+
 export const apiFetch = async (
   path: string,
   options: RequestInit = {}
@@ -17,29 +24,61 @@ export const apiFetch = async (
   const auth = localStorage.getItem("auth");
   const token = auth ? JSON.parse(auth).token : null;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-  });
+  let lastError: any;
 
-  let data: any = null;
-  try {
-    data = await res.json();
-  } catch {
-    data = null;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+          ...options.headers,
+        },
+      });
+
+      let data: any = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        // Ignore empty or non-JSON responses
+      }
+
+      if (!response.ok) {
+        const error = new ApiError(
+          data?.message || "Something went wrong",
+          response.status,
+          data
+        );
+
+        if (
+          RETRY_STATUS_CODES.includes(response.status) &&
+          attempt < MAX_RETRIES
+        ) {
+          await sleep(300 * Math.pow(2, attempt - 1));
+          continue;
+        }
+
+        throw error;
+      }
+
+      return data;
+    } catch (error: any) {
+      lastError = error;
+
+      const isNetworkError =
+        error instanceof TypeError ||
+        error?.name === "AbortError";
+
+      if (isNetworkError && attempt < MAX_RETRIES) {
+        await sleep(300 * Math.pow(2, attempt - 1));
+        continue;
+      }
+
+      throw error;
+    }
   }
 
-  if (!res.ok) {
-    throw new ApiError(
-      data?.message || "Something went wrong",
-      res.status,
-      data
-    );
-  }
-
-  return data;
+  throw lastError;
 };
