@@ -49,12 +49,19 @@ export default function AdminOrderDetails() {
         }
     }, [order]);
 
+
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
-    const canAdjust = !isTerminal;
-    const canDownloadInvoice =
-        STATUS_ORDER.indexOf(order?.status) >=
+    const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
+    const canDownloadInvoice = STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
+
+    const currentIndex = STATUS_ORDER.indexOf(order?.status);
+    const availableStatuses = STATUS_ORDER.filter((status, index) => {
+        if (status === "CANCELLED") return true;
+        return index >= currentIndex;
+    });
+
     async function handleDownloadInvoice() {
         if (downloading) return;
 
@@ -257,13 +264,13 @@ export default function AdminOrderDetails() {
                     <div>
                         <span className="text-gray-500">Total</span>{" "}
                         <span className="font-semibold text-gray-900">
-                            ₹{order.totalAmount}
+                            ₹{order.finalPayable}
                         </span>
                     </div>
 
                     {order.expectedDelivery && (
                         <div>
-                            <span className="text-gray-500">Expected</span>{" "}
+                            <span className="text-gray-500">Expected Delivery</span>{" "}
                             <span className="font-medium text-gray-800">
                                 {new Date(order.expectedDelivery).toLocaleDateString("en-IN")}
                             </span>
@@ -286,38 +293,43 @@ export default function AdminOrderDetails() {
                         />
 
                         <div className="flex-1">
-                            <p className="text-sm font-medium">{item.name}</p>
-                            <div className="text-xs mt-1 flex flex-col gap-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-semibold">{item.name}</p>
 
-                                {/* Discount */}
-                                {item.discountText && (
-                                    <span className="text-green-600 font-semibold">
-                                        {item.discountText}
+                                {item.isComboPackage && (
+                                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">
+                                        Combo
                                     </span>
                                 )}
+                            </div>
 
-                                {/* Price row */}
-                                <div className="flex items-center gap-2 flex-wrap text-gray-600">
+                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
 
-                                    {item.originalPrice && item.originalPrice > item.price && (
+                                {item.originalPrice &&
+                                    item.originalPrice > item.price && (
                                         <span className="line-through text-gray-400">
                                             ₹{item.originalPrice}
                                         </span>
                                     )}
 
-                                    <span className="font-medium text-[var(--color-primary)]">
-                                        ₹{item.price}
-                                    </span>
+                                <span className="font-semibold text-[var(--color-primary)]">
+                                    ₹{item.price}
+                                </span>
 
-                                    <span>
-                                        × {item.quantity}
+                                {item.discountText && (
+                                    <span className="rounded-full bg-green-100 text-green-700 px-2 py-0.5 font-semibold">
+                                        {item.discountText}
                                     </span>
-                                </div>
+                                )}
+                            </div>
+
+                            <div className="mt-1 text-xs text-gray-500">
+                                ₹{item.price} × {item.quantity}
                             </div>
                         </div>
 
                         <p className="text-sm font-medium">
-                            ₹{item.price * item.quantity}
+                            ₹{item.total}
                         </p>
                     </div>
                 ))}
@@ -354,7 +366,7 @@ export default function AdminOrderDetails() {
                                 className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
                             >
                                 <option value="">Status</option>
-                                {STATUS_ORDER.map((s) => (
+                                {availableStatuses.map((s) => (
                                     <option key={s} value={s}>
                                         {STATUS_LABELS[s]}
                                     </option>
@@ -416,7 +428,9 @@ export default function AdminOrderDetails() {
                             message: "Order updated successfully",
                             duration: 1500,
                         });
-                        setSelectedStatus("");
+                        setSelectedStatus(
+                            pendingPayload.status ?? selectedStatus
+                        );
                     } catch (err: any) {
                         showAlert({
                             type: "error",

@@ -37,9 +37,6 @@ export default function OrderDetails() {
       </div>
     );
   }
-  const eligibleAmount = order.eligibleChargeAmount ?? 0;
-  const hasEligibleItems = eligibleAmount > 0;
-
   const STATUS_KEYS = Object.keys(ORDER_STATUS_CONFIG);
   const currentIndex = STATUS_KEYS.indexOf(order.status);
   const isCancelled = order.status === TERMINAL_STATUS;
@@ -135,11 +132,14 @@ export default function OrderDetails() {
     }
   }
 
-  const formatDate = (ts: number) =>
-    new Date(ts).toLocaleDateString("en-IN", {
+  const formatDateTime = (ts: number) =>
+    new Date(ts).toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
 
   async function handleCancel() {
@@ -191,10 +191,17 @@ export default function OrderDetails() {
         </div>
 
         <p className="text-sm text-[var(--color-muted)]">
-          Order ID: {order.orderId}
+          <span className="font-semibold text-[var(--color-primary)]">
+            Order ID:
+          </span>{" "}
+          {order.orderId}
         </p>
-        <p className="text-xs text-[var(--color-muted)]">
-          Placed on {formatDate(order.createdAt)}
+
+        <p className="text-sm text-[var(--color-muted)]">
+          <span className="font-semibold text-[var(--color-primary)]">
+            Placed On:
+          </span>{" "}
+          {formatDateTime(order.createdAt)}
         </p>
       </div>
 
@@ -220,16 +227,18 @@ export default function OrderDetails() {
               const status = ORDER_STATUS_CONFIG[statusKey];
 
               let indicatorClass = "border-gray-300 text-gray-400";
+              let helperText = "";
 
-              if (isDispatched) {
+              if (isCancelled) {
+                indicatorClass = "border-gray-300 text-gray-400";
+              } else if (index <= currentIndex) {
                 indicatorClass =
                   "bg-green-500 border-green-500 text-white";
-              } else if (index < currentIndex) {
-                indicatorClass =
-                  "bg-green-500 border-green-500 text-white";
-              } else if (index === currentIndex) {
+              } else if (index === currentIndex + 1) {
                 indicatorClass =
                   "bg-yellow-400 border-yellow-400 text-black";
+
+                helperText = "Pending";
               }
 
               return (
@@ -250,9 +259,9 @@ export default function OrderDetails() {
                       {status.label}
                     </p>
 
-                    {index === currentIndex && !isDispatched && (
-                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                        Current status
+                    {helperText && (
+                      <p className="mt-0.5 text-[11px] font-medium text-amber-600">
+                        {helperText}
                       </p>
                     )}
                   </div>
@@ -357,81 +366,130 @@ export default function OrderDetails() {
         <hr className="my-3" />
 
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between text-gray-600">
-            <span>Subtotal</span>
-            <span>
-              ₹
-              {order.subtotal ??
-                order.items.reduce((sum: number, i: any) => sum + i.total, 0)}
-            </span>
+
+          {/* Products */}
+          <div className="flex justify-between">
+            <span>Products Total</span>
+            <span>₹{order.subtotal}</span>
           </div>
-          {(order.comboAmount ?? 0) > 0 && (
-            <>
-              <div className="flex justify-between text-gray-600">
-                <div>
-                  <span className="font-medium">Combo Package Amount</span>
-                  <span className="ml-2 text-xs text-blue-500">
-                    (GST &amp; Packaging Charges Not Applied)
-                  </span>
-                </div>
-                <span>₹{order.comboAmount}</span>
+
+          {(order.comboPackageTotal ?? 0) > 0 && (
+            <div className="flex justify-between items-center text-gray-600">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span>Combo Packages</span>
+
+                <span
+                  className="
+            rounded-full
+            bg-green-100
+            text-green-700
+            text-[10px]
+            font-medium
+            px-2
+            py-0.5
+          "
+                >
+                  Inclusive Of Packaging Charges
+                </span>
               </div>
-            </>
+
+              <span>₹{order.comboPackageTotal}</span>
+            </div>
           )}
 
-          {hasEligibleItems && (
+          {(order.nonComboProductTotal ?? 0) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>GST / Packaging Eligible Amount</span>
-              <span>₹{eligibleAmount}</span>
+              <span>Non Combo Products</span>
+              <span>₹{order.nonComboProductTotal}</span>
             </div>
           )}
 
           {(order.packagingCharge ?? 0) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>
-                Packaging Charges
-                {hasEligibleItems && " (Eligible Items Only)"}
-              </span>
-
+              <span>Packaging Charge</span>
               <span>₹{order.packagingCharge}</span>
             </div>
           )}
 
-          {(order.gstAmount ?? 0) > 0 && hasEligibleItems && (
+          {(order.couponDiscount ?? 0) > 0 && (
+            <>
+              <div className="flex justify-between font-medium pt-2 border-t">
+                <span>Amount Before Discount</span>
+                <span>₹{order.amountBeforeDiscount}</span>
+              </div>
+
+              <div className="flex justify-between text-green-600 font-medium">
+                <span>
+                  Coupon Savings{" "}
+                  {order.couponType === "PERCENTAGE"
+                    ? `(${order.couponValue}%)`
+                    : `(Flat ₹${order.couponValue})`}
+                </span>
+
+                <span>-₹{order.couponDiscount}</span>
+              </div>
+
+              <div className="flex justify-between font-medium">
+                <span>Amount After Discount</span>
+                <span>₹{order.amountAfterDiscount}</span>
+              </div>
+            </>
+          )}
+
+          {(order.gstAmount ?? 0) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>
-                GST (18%
-                {(order.comboAmount ?? 0) > 0
-                  ? " on Eligible Items"
-                  : ""}
-                )
-              </span>
+              <span>GST</span>
               <span>₹{order.gstAmount}</span>
             </div>
           )}
-          <hr />
 
-          <div className="flex justify-between font-semibold">
-            <span>Total Amount</span>
-            <span>₹{order.totalAmount}</span>
-          </div>
+          <div className="border-t my-4" />
 
-          {order.walletUsed > 0 && (
-            <div className="flex justify-between text-green-700 font-medium">
-              <span>Wallet Used</span>
-              <span>- ₹{order.walletUsed}</span>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="font-semibold text-[var(--color-primary)]">
+                Grand Total
+              </p>
+
+              <p className="text-xs text-gray-500">
+                Includes applicable GST & Packaging Charges
+              </p>
             </div>
-          )}
 
-          <div className="flex justify-between text-lg font-bold text-[var(--color-primary)]">
-            <span>Final Payable</span>
-            <span>
-              ₹
-              {order.finalPayable ??
-                order.totalAmount - (order.walletUsed || 0)}
+            <span className="text-xl font-bold text-[var(--color-primary)]">
+              ₹{order.grandTotal}
             </span>
           </div>
+
+          {(order.walletUsed ?? 0) > 0 && (
+            <>
+              <div className="border-t my-4" />
+
+              <div className="flex justify-between text-green-700 font-medium">
+                <span>Wallet Applied</span>
+                <span>-₹{order.walletUsed}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-[var(--color-primary)]">
+                    Amount Payable
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    Amount to be paid
+                  </p>
+                </div>
+
+                <span className="text-xl font-bold text-[var(--color-primary)]">
+                  ₹{order.finalPayable}
+                </span>
+              </div>
+            </>
+          )}
+
         </div>
+
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">

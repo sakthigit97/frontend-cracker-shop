@@ -1,41 +1,39 @@
-export interface OrderPricingProduct {
+export interface OrderPricingItem {
     price: number;
     quantity: number;
     isComboPackage?: boolean;
 }
+
 export interface OrderPricingBreakdown {
-    subtotal: number;
-    normalAmount: number;
-    comboAmount: number;
-    eligibleChargeAmount: number;
-    hasNormalItems: boolean;
-    hasComboItems: boolean;
+    productSubtotal: number;
+    nonComboProductTotal: number;
+    comboPackageTotal: number;
+    hasNonComboProducts: boolean;
+    hasComboPackages: boolean;
 }
 
 export function calculateOrderPricingBreakdown(
-    products: OrderPricingProduct[]
+    items: OrderPricingItem[]
 ): OrderPricingBreakdown {
 
-    let subtotal = 0;
-    let normalAmount = 0;
-    let comboAmount = 0;
+    let nonComboProductTotal = 0;
+    let comboPackageTotal = 0;
 
-    for (const product of products) {
-        const lineTotal = product.price * product.quantity;
-        subtotal += lineTotal;
-        if (product.isComboPackage) {
-            comboAmount += lineTotal;
+    for (const item of items) {
+        const lineTotal = item.price * item.quantity;
+
+        if (item.isComboPackage) {
+            comboPackageTotal += lineTotal;
         } else {
-            normalAmount += lineTotal;
+            nonComboProductTotal += lineTotal;
         }
     }
 
     return {
-        subtotal,
-        normalAmount,
-        comboAmount,
-        eligibleChargeAmount: normalAmount,
-        hasNormalItems: normalAmount > 0,
-        hasComboItems: comboAmount > 0,
+        productSubtotal: nonComboProductTotal + comboPackageTotal,
+        nonComboProductTotal,
+        comboPackageTotal,
+        hasNonComboProducts: nonComboProductTotal > 0,
+        hasComboPackages: comboPackageTotal > 0,
     };
 }

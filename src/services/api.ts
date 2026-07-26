@@ -42,7 +42,6 @@ export const apiFetch = async (
       try {
         data = await response.json();
       } catch {
-        // Ignore empty or non-JSON responses
       }
 
       if (!response.ok) {

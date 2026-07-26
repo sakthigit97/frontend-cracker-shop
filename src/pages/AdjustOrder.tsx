@@ -10,6 +10,7 @@ import { calculateOrderAmounts } from "../utils/pricing";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { useConfigStore } from "../store/config.store";
 import defaultImage from "../assets/default-image.png";
+import { calculateCouponDiscount } from "../utils/coupon";
 
 type AdjustOrderItem = {
     productId: string;
@@ -107,29 +108,94 @@ export default function AdjustOrder() {
         () => calculateOrderPricingBreakdown(items),
         [items]
     );
-    const subtotal = pricingBreakdown.subtotal;
-    const derivedState = order?.state || (order?.address?.includes("Tamil Nadu") ? "Tamil Nadu" : "Other");
-    const { packagingCharge, gstAmount, grandTotal } = useMemo(
-        () =>
-            calculateOrderAmounts({
-                totalAmount: pricingBreakdown.subtotal,
-                chargeableAmount: pricingBreakdown.eligibleChargeAmount,
-                packagingPercent,
-                gstPercent,
-                state: derivedState,
-                config,
-            }),
-        [
-            pricingBreakdown.subtotal,
-            pricingBreakdown.eligibleChargeAmount,
+
+
+    const subtotal = pricingBreakdown.productSubtotal;
+    const couponCode = order.couponCode ?? null;
+    const couponType = order.couponType ?? null;
+    const couponValue = Number(order.couponValue ?? 0);
+
+    const derivedState =
+        order?.state ||
+        (order?.address?.includes("Tamil Nadu")
+            ? "Tamil Nadu"
+            : "Other");
+
+    const pricing = useMemo(() => {
+
+        // No changes yet -> show exactly what is stored in the order
+        if (!hasChanges) {
+            return {
+                packagingCharge: order.packagingCharge,
+                amountBeforeDiscount: order.amountBeforeDiscount,
+                couponDiscount: order.couponDiscount,
+                amountAfterDiscount: order.amountAfterDiscount,
+                gstAmount: order.gstAmount,
+                grandTotal: order.grandTotal,
+            };
+        }
+
+        // User modified the order -> recalculate
+        const packagingCharge = Math.round(
+            (pricingBreakdown.nonComboProductTotal * packagingPercent) / 100
+        );
+
+        const amountBeforeDiscount =
+            pricingBreakdown.productSubtotal + packagingCharge;
+
+        const couponDiscount = calculateCouponDiscount({
+            amountBeforeDiscount,
+            couponType,
+            couponValue,
+        });
+
+        const {
+            gstAmount,
+            grandTotal,
+        } = calculateOrderAmounts({
+            nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+            comboPackageTotal: pricingBreakdown.comboPackageTotal,
+            couponDiscount,
             packagingPercent,
             gstPercent,
-            derivedState,
+            state: derivedState,
             config,
-        ]
-    );
-    const oldTotal = Number(order.totalAmount || 0);
+        });
+
+        return {
+            packagingCharge,
+            amountBeforeDiscount,
+            couponDiscount,
+            amountAfterDiscount:
+                amountBeforeDiscount - couponDiscount,
+            gstAmount,
+            grandTotal,
+        };
+
+    }, [
+        hasChanges,
+        order,
+        pricingBreakdown,
+        couponType,
+        couponValue,
+        packagingPercent,
+        gstPercent,
+        derivedState,
+        config,
+    ]);
+
+    const {
+        packagingCharge,
+        amountBeforeDiscount,
+        couponDiscount,
+        amountAfterDiscount,
+        gstAmount,
+        grandTotal,
+    } = pricing;
+
+    const oldTotal = Number(order.grandTotal || 0);
     const diffAmount = grandTotal - oldTotal;
+
     const updateQty = (productId: string, delta: number) => {
         if (!canAdjust) return;
         setDirty(true);
@@ -240,15 +306,30 @@ export default function AdjustOrder() {
 
         try {
             setSaving(true);
-
-            const updatedOrder = await adjustOrderApi(
-                mobile,
-                orderId,
-                items.map((i) => ({
-                    productId: i.productId,
-                    quantity: i.quantity,
-                }))
-            );
+            const updatedOrder = await
+                await adjustOrderApi(mobile, orderId, {
+                    items: items.map((i) => ({
+                        productId: i.productId,
+                        quantity: i.quantity,
+                    })),
+                    subtotal,
+                    nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+                    comboPackageTotal: pricingBreakdown.comboPackageTotal,
+                    couponCode,
+                    couponType,
+                    couponValue,
+                    couponDiscount,
+                    packagingCharge,
+                    amountBeforeDiscount,
+                    amountAfterDiscount,
+                    gstAmount,
+                    grandTotal,
+                    walletUsed: order.walletUsed ?? 0,
+                    finalPayable: Math.max(
+                        grandTotal - (order.walletUsed ?? 0),
+                        0
+                    ),
+                });
 
             clearOrdersCache();
 
@@ -438,84 +519,125 @@ export default function AdjustOrder() {
                                     Updated Order Summary
                                 </h3>
 
-                                <div className="space-y-3 text-sm">
+                                <div className="space-y-2 text-sm">
 
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-600">Subtotal</span>
-                                        <span className="font-semibold">₹{subtotal}</span>
+                                    <div className="flex justify-between">
+                                        <span>Products Total</span>
+                                        <span>₹{subtotal}</span>
                                     </div>
 
-                                    {pricingBreakdown.comboAmount > 0 && (
-                                        <>
-                                            <div className="border-t pt-3 space-y-3">
+                                    {pricingBreakdown.comboPackageTotal > 0 && (
+                                        <div className="flex justify-between items-center text-gray-600">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span>Combo Packages</span>
 
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <p className="font-medium text-gray-800">
-                                                            Combo Package
-                                                        </p>
-
-                                                        <span className="inline-block mt-1 rounded-full bg-blue-100 px-2 py-1 text-[11px] font-medium text-blue-700">
-                                                            No GST & Packaging
-                                                        </span>
-                                                    </div>
-
-                                                    <span className="font-semibold">
-                                                        ₹{pricingBreakdown.comboAmount}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-600">
-                                                        GST / Packaging Eligible
-                                                    </span>
-
-                                                    <span className="font-medium">
-                                                        ₹{pricingBreakdown.eligibleChargeAmount}
-                                                    </span>
-                                                </div>
-
+                                                <span
+                                                    className="
+                                                        rounded-full
+                                                        bg-green-100
+                                                        text-green-700
+                                                        text-[10px]
+                                                        font-medium
+                                                        px-2
+                                                        py-0.5
+                                                    "
+                                                >
+                                                    Inclusive Of Packaging Charges
+                                                </span>
                                             </div>
-                                        </>
+
+                                            <span>
+                                                ₹{pricingBreakdown.comboPackageTotal}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {pricingBreakdown.nonComboProductTotal > 0 && (
+                                        <div className="flex justify-between text-gray-600">
+                                            <span>Non Combo Products</span>
+
+                                            <span>
+                                                ₹{pricingBreakdown.nonComboProductTotal}
+                                            </span>
+                                        </div>
                                     )}
 
                                     {packagingCharge > 0 && (
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">
-                                                Packaging ({packagingPercent}%)
-                                            </span>
+                                        <div className="flex justify-between text-gray-600">
+                                            <span>Packaging Charge ({packagingPercent}%)</span>
 
-                                            <span className="font-medium">
+                                            <span>
                                                 ₹{packagingCharge}
                                             </span>
                                         </div>
                                     )}
 
-                                    {gstAmount > 0 && (
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">
-                                                GST ({gstPercent}%)
+                                    <div className="border-t pt-3 flex justify-between font-medium">
+                                        <span>Amount Before Discount</span>
+
+                                        <span>
+                                            ₹{amountBeforeDiscount}
+                                        </span>
+                                    </div>
+
+                                    {couponCode ? (
+                                        <div className="flex justify-between text-green-600">
+                                            <span>
+                                                Coupon Savings{" "}
+                                                {couponType === "PERCENTAGE"
+                                                    ? `(${couponValue}%)`
+                                                    : `(Flat ₹${couponValue})`}
                                             </span>
 
-                                            <span className="font-medium">
+                                            <span>
+                                                -₹{couponDiscount}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex justify-between text-gray-400">
+                                            <span>Coupon Savings</span>
+                                            <span>₹0</span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between font-medium">
+                                        <span>Amount After Discount</span>
+
+                                        <span>
+                                            ₹{amountAfterDiscount}
+                                        </span>
+                                    </div>
+
+                                    {gstAmount > 0 && (
+                                        <div className="flex justify-between text-gray-600">
+                                            <span>GST ({gstPercent}%)</span>
+
+                                            <span>
                                                 ₹{gstAmount}
                                             </span>
                                         </div>
                                     )}
 
-                                    <div className="border-t pt-4 flex items-center justify-between">
+                                    <div className="border-t my-3" />
 
-                                        <span className="text-lg font-bold text-gray-900">
-                                            Grand Total
-                                        </span>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="font-semibold text-[var(--color-primary)]">
+                                                Grand Total
+                                            </p>
+
+                                            <p className="text-xs text-gray-500">
+                                                Includes applicable GST & Packaging Charges
+                                            </p>
+                                        </div>
 
                                         <span className="text-2xl font-bold text-[var(--color-primary)]">
                                             ₹{grandTotal}
                                         </span>
-
                                     </div>
 
                                 </div>
+
                             </div>
 
                             {/* Save */}
@@ -570,44 +692,104 @@ export default function AdjustOrder() {
                 open={showSaveConfirm}
                 title="Confirm Order Adjustment"
                 message={
-                    <div className="space-y-1">
+                    <div className="space-y-2">
+
                         <p className="text-sm">
-                            Old Total: ₹{oldTotal}
+                            Previous Total:
+                            <span className="font-semibold">
+                                {" "}₹{oldTotal}
+                            </span>
                         </p>
 
-                        <p className="font-semibold">
-                            New Total: ₹{grandTotal}
+                        <p className="text-sm">
+                            Updated Total:
+                            <span className="font-semibold">
+                                {" "}₹{grandTotal}
+                            </span>
                         </p>
-                        {pricingBreakdown.comboAmount > 0 && (
-                            <>
-                                <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
-                                    <div>
-                                        <span className="font-medium">Combo Package Amount</span>
-                                        <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
-                                            No GST & Packaging
-                                        </span>
-                                    </div>
-
-                                    <span>₹{pricingBreakdown.comboAmount}</span>
-                                </div>
-
-                                <div className="grid grid-cols-[1fr_auto] gap-4 text-sm text-gray-600">
-                                    <span>GST / Packaging Eligible Amount</span>
-                                    <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
-                                </div>
-                            </>
-                        )}
 
                         {diffAmount !== 0 && (
                             <p
-                                className={`text-sm font-medium ${diffAmount > 0
+                                className={`text-sm font-semibold ${diffAmount > 0
                                     ? "text-green-600"
                                     : "text-red-600"
                                     }`}
                             >
-                                {diffAmount > 0 ? "+" : "−"}₹{Math.abs(diffAmount)}
+                                Difference:
+                                {" "}
+                                {diffAmount > 0 ? "+" : "-"}₹
+                                {Math.abs(diffAmount)}
                             </p>
                         )}
+
+                        <div className="border-t pt-3 space-y-2 text-sm">
+
+                            <div className="flex justify-between">
+                                <span>Products Total</span>
+                                <span>₹{subtotal}</span>
+                            </div>
+
+                            {pricingBreakdown.comboPackageTotal > 0 && (
+                                <div className="flex justify-between text-gray-600">
+                                    <span>Combo Packages</span>
+                                    <span>₹{pricingBreakdown.comboPackageTotal}</span>
+                                </div>
+                            )}
+
+                            {pricingBreakdown.nonComboProductTotal > 0 && (
+                                <div className="flex justify-between text-gray-600">
+                                    <span>Non Combo Products</span>
+                                    <span>₹{pricingBreakdown.nonComboProductTotal}</span>
+                                </div>
+                            )}
+
+                            {packagingCharge > 0 && (
+                                <div className="flex justify-between text-gray-600">
+                                    <span>Packaging Charge ({packagingPercent}%)</span>
+                                    <span>₹{packagingCharge}</span>
+                                </div>
+                            )}
+
+                            <div className="border-t pt-2 flex justify-between font-medium">
+                                <span>Amount Before Discount</span>
+                                <span>₹{amountBeforeDiscount}</span>
+                            </div>
+
+                            {couponCode ? (
+                                <div className="flex justify-between text-green-600">
+                                    <span>
+                                        Coupon Savings{" "}
+                                        {couponType === "PERCENTAGE"
+                                            ? `(${couponValue}%)`
+                                            : `(Flat ₹${couponValue})`}
+                                    </span>
+                                    <span>-₹{couponDiscount}</span>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between text-gray-400">
+                                    <span>Coupon Savings</span>
+                                    <span>₹0</span>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between font-medium">
+                                <span>Amount After Discount</span>
+                                <span>₹{amountAfterDiscount}</span>
+                            </div>
+
+                            {gstAmount > 0 && (
+                                <div className="flex justify-between text-gray-600">
+                                    <span>GST ({gstPercent}%)</span>
+                                    <span>₹{gstAmount}</span>
+                                </div>
+                            )}
+
+                            <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                                <span>Grand Total</span>
+                                <span>₹{grandTotal}</span>
+                            </div>
+
+                        </div>
                     </div>
                 }
                 confirmText="Confirm"

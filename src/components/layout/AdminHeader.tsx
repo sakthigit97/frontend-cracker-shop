@@ -17,6 +17,7 @@ import {
     FaSignOutAlt,
     FaFolderOpen,
     FaServer,
+    FaTicketAlt
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -28,9 +29,7 @@ import { useAuth } from "../../store/auth.store";
 
 export default function AdminHeader() {
     const navigate = useNavigate();
-
     const [mobileOpen, setMobileOpen] = useState(false);
-
     const { logout } = useAuth();
 
     const handleLogout = () => {
@@ -40,7 +39,6 @@ export default function AdminHeader() {
     };
 
     const closeMobile = () => setMobileOpen(false);
-
     const catalogMenu: HeaderDropdownItem[] = [
         {
             label: "Products",
@@ -62,6 +60,11 @@ export default function AdminHeader() {
             to: "/admin/discounts",
             icon: <FaPercentage />,
         },
+        {
+            label: "Coupons",
+            to: "/admin/coupons",
+            icon: <FaTicketAlt />,
+        }
     ];
 
     const salesMenu: HeaderDropdownItem[] = [
@@ -127,6 +130,11 @@ export default function AdminHeader() {
             to: "/admin/discounts",
             icon: <FaPercentage />,
         },
+        {
+            label: "Coupons",
+            to: "/admin/coupons",
+            icon: <FaTicketAlt />,
+        }
     ];
 
     const mobileSales: MobileAccordionItem[] = [

@@ -187,7 +187,7 @@ export default function MyOrders() {
 
                 <div className="flex flex-col sm:items-end gap-2">
                   <p className="text-lg font-bold text-[var(--color-primary)]">
-                    ₹{order.totalAmount}
+                    ₹{order.finalPayable}
                   </p>
 
                   <Button

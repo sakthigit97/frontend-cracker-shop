@@ -32,15 +32,40 @@ export async function restoreOrderApi(orderId: string) {
     });
 }
 
+interface AdjustOrderRequest {
+    items: {
+        productId: string;
+        quantity: number;
+    }[];
+    subtotal: number;
+    nonComboProductTotal: number;
+    comboPackageTotal: number;
+    couponCode?: string | null;
+    couponType?: "FLAT" | "PERCENTAGE" | null;
+    couponValue?: number | null;
+    couponDiscount: number;
+    packagingCharge: number;
+    amountBeforeDiscount: number;
+    amountAfterDiscount: number;
+    gstAmount: number;
+    grandTotal: number;
+    walletUsed: number;
+    finalPayable: number;
+}
+
 export async function adjustOrderApi(
     mobile: string,
     orderId: string,
-    items: { productId: string; quantity: number }[]
+    request: AdjustOrderRequest
 ) {
     const res = await apiFetch(`/orders/${orderId}/adjust`, {
         method: "PUT",
-        body: JSON.stringify({ items, mobile }),
+        body: JSON.stringify({
+            mobile,
+            ...request,
+        }),
     });
+
     const order =
         res?.order?.order ??
         res?.order ??
@@ -49,5 +74,6 @@ export async function adjustOrderApi(
     if (!order?.orderId) {
         throw new Error("Invalid adjust order response");
     }
+
     return order;
 }

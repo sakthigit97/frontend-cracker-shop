@@ -17,6 +17,9 @@ type Props = {
         price: number;
         quantity: number;
         image?: string;
+        originalPrice?: number;
+        discountText?: string;
+        isComboPackage?: boolean;
     }[]) => void;
 };
 
@@ -182,9 +185,34 @@ export default function AddOrderItemModal({
                                         <p className="text-sm font-medium text-[var(--color-primary)]">
                                             {p.name}
                                         </p>
-                                        <p className="text-xs text-gray-500">
-                                            ₹{p.price}
+
+                                        {p.isComboPackage && (
+                                            <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                                                Combo
+                                            </span>
+                                        )}
+
+                                        <p
+                                            className={`text-xs font-semibold mt-1 ${p.discountText
+                                                ? "text-green-600"
+                                                : "text-gray-500"
+                                                }`}
+                                        >
+                                            {p.discountText || "NET RATE"}
                                         </p>
+
+                                        <div className="flex items-center gap-2 mt-0.5 text-sm">
+                                            {p.originalPrice &&
+                                                p.originalPrice > p.price && (
+                                                    <span className="text-gray-400 line-through">
+                                                        ₹{p.originalPrice}
+                                                    </span>
+                                                )}
+
+                                            <span className="font-semibold text-[var(--color-primary)]">
+                                                ₹{p.price}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {isSelected ? (
@@ -230,14 +258,16 @@ export default function AddOrderItemModal({
                         <Button
                             disabled={selectedItems.length === 0}
                             onClick={() => {
-                                onAdd(
-                                    selectedItems.map((i) => ({
-                                        productId: i.id,
-                                        name: i.name,
-                                        price: i.price,
-                                        quantity: i.quantity,
-                                        image: i.image,
-                                    }))
+                                onAdd(selectedItems.map((i) => ({
+                                    productId: i.id,
+                                    name: i.name,
+                                    price: i.price,
+                                    quantity: i.quantity,
+                                    image: i.image,
+                                    originalPrice: i.originalPrice,
+                                    discountText: i.discountText,
+                                    isComboPackage: i.isComboPackage,
+                                }))
                                 );
                                 onClose();
                             }}

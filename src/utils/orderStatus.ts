@@ -8,7 +8,7 @@ export const ORDER_STATUS_CONFIG: any = {
         className: "bg-indigo-100 text-indigo-700",
     },
     PAYMENT_CONFIRMED: {
-        label: "Payment Confirmed",
+        label: "Payment Received",
         className: "bg-purple-100 text-purple-700",
     },
     ORDER_PACKED: {

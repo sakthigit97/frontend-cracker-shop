@@ -11,7 +11,8 @@ import { useAlert } from "../store/alert.store";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { useConfigStore } from "../store/config.store";
-
+import { useProfileStore } from "../store/profile.store";
+import { useEffect } from "react";
 
 export default function Cart() {
   const addItem = cartStore((s) => s.addItem);
@@ -25,11 +26,19 @@ export default function Cart() {
   const { config } = useConfigStore();
   const packagingPercent = Number(config?.packagingPercent || 0);
   const gstPercent = Number(config?.gstPercent || 0);
+  const profile = useProfileStore((s) => s.profile);
+  const loadProfile = useProfileStore((s) => s.loadProfile);
 
-  const pricingBreakdown = useMemo(
+  const pricingBreakdown: any = useMemo(
     () => calculateOrderPricingBreakdown(products),
     [products]
   );
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  const deliveryState = profile?.state;
 
   const {
     packagingCharge,
@@ -38,23 +47,24 @@ export default function Cart() {
   } = useMemo(
     () =>
       calculateOrderAmounts({
-        totalAmount: pricingBreakdown.subtotal,
-        chargeableAmount: pricingBreakdown.eligibleChargeAmount,
+        nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+        comboPackageTotal: pricingBreakdown.comboPackageTotal,
+        couponDiscount: 0,
         packagingPercent,
+        state: deliveryState,
         gstPercent,
         config,
       }),
     [
-      pricingBreakdown.subtotal,
-      pricingBreakdown.eligibleChargeAmount,
+      pricingBreakdown,
       packagingPercent,
+      deliveryState,
       gstPercent,
       config,
     ]
   );
 
   const { showAlert } = useAlert();
-
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -277,91 +287,98 @@ export default function Cart() {
 
         <div
           className="
-    border-t
-    px-4 md:px-6
-    py-6
-    flex
-    flex-col
-    lg:flex-row
-    lg:justify-between
-    lg:items-start
-    gap-6
-    bg-white
-"
+              border-t
+              px-4 md:px-6
+              py-6
+              flex
+              flex-col
+              lg:flex-row
+              lg:justify-between
+              lg:items-start
+              gap-6
+              bg-white
+          "
         >
           <div className="w-full lg:flex-1 lg:max-w-[620px]">
-            <div className="rounded-xl bg-gray-50 border p-5 w-full max-w-full">
-              <div className="grid grid-cols-[1fr_auto] gap-6 text-sm">
-                <span>Subtotal</span>
-                <span>₹{pricingBreakdown.subtotal}</span>
+
+            <div className="rounded-xl bg-gray-50 border p-5">
+
+              <h3 className="text-base font-semibold text-[var(--color-primary)] mb-4">
+                Order Summary
+              </h3>
+
+              <div className="flex justify-between text-sm">
+                <span>Products Total</span>
+                <span>₹{pricingBreakdown.productSubtotal}</span>
               </div>
 
-              {pricingBreakdown.comboAmount > 0 && (
+              {pricingBreakdown.hasNonComboProducts && (
+                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <span>Non Combo Products</span>
+                  <span>₹{pricingBreakdown.nonComboProductTotal}</span>
+                </div>
+              )}
+
+              {pricingBreakdown.hasComboPackages && (
                 <>
-                  <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">Combo Package Amount</span>
-                      <span className="ml-2 text-xs text-blue-500">
-                        (GST & Packaging Charges Not Applied)
+                  <div className="flex justify-between items-center text-sm mt-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>Combo Packages</span>
+
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                        Inclusive Of Packaging Charges
                       </span>
                     </div>
-                    <span>₹{pricingBreakdown.comboAmount}</span>
-                  </div>
 
-
-                  <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
-                    <span>GST / Packaging Eligible Amount</span>
-                    <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
+                    <span>₹{pricingBreakdown.comboPackageTotal}</span>
                   </div>
                 </>
               )}
 
-              <div className="grid grid-cols-[1fr_auto] gap-6 text-sm">
-                <span>
-                  {pricingBreakdown.comboAmount > 0
-                    ? "Packaging (Eligible Items)"
-                    : "Packaging"}
-                </span>
-                <span>₹{packagingCharge}</span>
-              </div>
+              {packagingCharge > 0 && (
+                <div className="flex justify-between text-sm mt-2">
+                  <span>Packaging Charge ({packagingPercent}%)</span>
+                  <span>₹{packagingCharge}</span>
+                </div>
+              )}
 
               {gstAmount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span>
-                    {pricingBreakdown.comboAmount > 0
-                      ? `GST (${gstPercent}% - Eligible Items)`
-                      : `GST (${gstPercent}%)`}
-                  </span>
+                <div className="flex justify-between text-sm mt-2">
+                  <span>GST ({gstPercent}%)</span>
                   <span>₹{gstAmount}</span>
                 </div>
               )}
 
-              <div className="border-t mt-3 pt-3">
-                <p className="text-xs text-gray-500">
-                  Estimated Total
-                </p>
+              <div className="border-t my-4" />
 
-                <p className="text-3xl font-bold text-[var(--color-primary)]">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-[var(--color-primary)]">
+                    Grand Total
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    Inclusive of GST & Packaging Charges
+                  </p>
+                </div>
+
+                <span className="text-3xl font-bold text-[var(--color-primary)]">
                   ₹{grandTotal}
-                </p>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  Includes GST & Packaging Charges
-                </p>
+                </span>
               </div>
-
             </div>
 
           </div>
+
           <div
             className="
-      w-full
-      lg:w-[340px]
-      flex
-      flex-col
-      gap-3
-      lg:self-center
-  "
+                w-full
+                lg:w-[340px]
+                flex
+                flex-col
+                gap-3
+                lg:self-center
+            "
           >
             <Button
               variant="secondary"

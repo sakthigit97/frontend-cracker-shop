@@ -155,7 +155,7 @@ export default function AdminOrders() {
 
                         {/* MIDDLE */}
                         <div className="hidden sm:block">
-                            <p className="text-sm font-medium">₹{o.totalAmount}</p>
+                            <p className="text-sm font-medium">₹{o.finalPayable}</p>
                             <p className="text-xs text-gray-500">
                                 {o.paymentMode || "OFFLINE"}
                             </p>

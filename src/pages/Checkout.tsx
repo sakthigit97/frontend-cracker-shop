@@ -10,6 +10,12 @@ import { INDIA_STATES } from "../utils/states";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import PrivacyPolicy from "./PrivacyPolicy";
+import {
+  FiChevronDown,
+  FiChevronUp
+} from "react-icons/fi";
+import { validateCoupon } from "../services/coupon.api";
+
 
 type ProfileResponse = {
   success: boolean;
@@ -22,6 +28,14 @@ type ProfileResponse = {
     pincode: string;
     walletCredit?: number;
   };
+};
+
+type AppliedCoupon = {
+  couponCode: string;
+  description?: string;
+  couponType: "FLAT" | "PERCENTAGE";
+  couponValue: number;
+  couponDiscount: number;
 };
 
 type AddressMode = "PROFILE" | "NEW";
@@ -46,39 +60,52 @@ export default function Checkout() {
   const [walletCredit, setWalletCredit] = useState(0);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showCouponSection, setShowCouponSection] = useState(false);
   const [minOrderValid, setMinOrderValid] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [mobile, setMobile] = useState("");
 
-  const pricingBreakdown = useMemo(
+
+  const pricingBreakdown: any = useMemo(
     () => calculateOrderPricingBreakdown(products),
     [products]
   );
 
-  const totalAmount = pricingBreakdown.subtotal;
+  const totalAmount = pricingBreakdown.productSubtotal;
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
   const currentState = addressMode === "PROFILE" ? profileAddress : stateValue;
 
-  const { packagingCharge, gstAmount, grandTotal } =
-    useMemo(
-      () =>
-        calculateOrderAmounts({
-          totalAmount: pricingBreakdown.subtotal,
-          chargeableAmount: pricingBreakdown.eligibleChargeAmount,
-          packagingPercent,
-          gstPercent,
-          state: currentState,
-          config,
-        }),
-      [
-        pricingBreakdown,
+  const {
+    packagingCharge,
+    grossTotal,
+    appliedCouponDiscount,
+    discountedGrossTotal,
+    gstAmount,
+    grandTotal,
+  } = useMemo(
+    () =>
+      calculateOrderAmounts({
+        nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+        comboPackageTotal: pricingBreakdown.comboPackageTotal,
+        couponDiscount: appliedCoupon?.couponDiscount ?? 0,
         packagingPercent,
         gstPercent,
-        currentState,
+        state: currentState,
         config,
-      ]
-    );
+      }),
+    [
+      pricingBreakdown,
+      appliedCoupon,
+      packagingPercent,
+      gstPercent,
+      currentState,
+      config,
+    ]
+  );
 
   const creditUsed = Math.min(walletCredit, grandTotal);
   const finalPayable = grandTotal - creditUsed;
@@ -94,7 +121,7 @@ export default function Checkout() {
     (async () => {
       const res = await validateMinimumOrder(
         currentPincode,
-        totalAmount
+        grandTotal
       );
 
       if (!active) return;
@@ -104,8 +131,12 @@ export default function Checkout() {
     return () => {
       active = false;
     };
-  }, [pincode, profilePincode, addressMode, totalAmount]);
+  }, [pincode, profilePincode, addressMode, grandTotal]);
 
+  useEffect(() => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  }, [products]);
 
   useEffect(() => {
     let mounted = true;
@@ -120,9 +151,7 @@ export default function Checkout() {
           res.data.mobile?.trim(),
           res.data.address?.trim(),
           `${res.data.city?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,
-        ]
-          .filter(Boolean)
-          .join("\n");
+        ].filter(Boolean).join("\n");
 
         setWalletCredit(res.data.walletCredit || 0);
         setProfileAddress(formatted);
@@ -227,11 +256,7 @@ export default function Checkout() {
       });
       return;
     }
-    const currentPincode =
-      addressMode === "PROFILE"
-        ? profilePincode
-        : pincode;
-
+    const currentPincode = addressMode === "PROFILE" ? profilePincode : pincode;
     if (!currentPincode) {
       showAlert({
         type: "error",
@@ -242,7 +267,7 @@ export default function Checkout() {
 
     const validation = await validateMinimumOrder(
       currentPincode,
-      totalAmount
+      grandTotal
     );
 
     if (!validation.valid) {
@@ -293,15 +318,21 @@ export default function Checkout() {
           paymentMode,
           paymentStatus,
           transactionId,
-          subtotal: totalAmount,
+          subtotal: pricingBreakdown.productSubtotal,
+          nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+          comboPackageTotal: pricingBreakdown.comboPackageTotal,
           packagingCharge,
+          amountBeforeDiscount: grossTotal,
+          couponCode: appliedCoupon?.couponCode ?? null,
+          couponType: appliedCoupon?.couponType ?? null,
+          couponValue: appliedCoupon?.couponValue ?? null,
+          couponDiscount: appliedCouponDiscount,
+          amountAfterDiscount: discountedGrossTotal,
           gstAmount,
-          eligibleChargeAmount: pricingBreakdown.eligibleChargeAmount,
-          comboAmount: pricingBreakdown.comboAmount,
-          totalAmount: grandTotal,
+          grandTotal,
           walletUsed: creditUsed,
           finalPayable,
-          mobile: mobile.trim()
+          mobile: mobile.trim(),
         }),
       });
 
@@ -355,6 +386,52 @@ export default function Checkout() {
         Your cart is empty
       </div>
     );
+  }
+
+  async function applyCoupon() {
+
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      showAlert({
+        type: "error",
+        message: "Please enter a coupon code.",
+      });
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+
+      const coupon = await validateCoupon(
+        code,
+        totalAmount
+      );
+
+      setAppliedCoupon(coupon);
+      showAlert({
+        type: "success",
+        message: "Coupon applied successfully.",
+      });
+    } catch (err: any) {
+      showAlert({
+        type: "error",
+        message:
+          err?.message ??
+          "Unable to validate coupon.",
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setShowCouponSection(false);
+    showAlert({
+      type: "success",
+      message: "Coupon removed.",
+    });
   }
 
   return (
@@ -545,80 +622,232 @@ export default function Checkout() {
             ))}
           </div>
 
+          <div className="pb-3 mb-3">
+            <button
+              type="button"
+              onClick={() => setShowCouponSection((v) => !v)}
+              className="w-full flex items-center justify-between py-2"
+            >
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800">
+                  🏷 Apply Coupon
+                </h3>
+
+                <p className="text-xs text-gray-500">
+                  Have a promo code?
+                </p>
+              </div>
+
+              {showCouponSection ? (
+                <FiChevronUp className="text-gray-500" size={18} />
+              ) : (
+                <FiChevronDown className="text-gray-500" size={18} />
+              )}
+            </button>
+
+            {showCouponSection && (
+              !appliedCoupon ? (
+                <div className="grid grid-cols-[1fr_auto] h-11 rounded-lg border overflow-hidden">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    disabled={couponLoading}
+                    onChange={(e) =>
+                      setCouponCode(
+                        e.target.value
+                          .toUpperCase()
+                          .replace(/\s/g, "")
+                      )
+                    }
+                    placeholder="Enter coupon code"
+                    maxLength={20}
+                    className="
+      w-full
+      border-0
+      bg-transparent
+      px-3
+      text-sm
+      outline-none
+      placeholder:text-gray-400
+    "
+                  />
+
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="
+                      min-w-[90px]
+                      border-l
+                      border-gray-200
+                      bg-[var(--color-primary)]
+                      text-white
+                      text-sm
+                      font-medium
+                      transition-colors
+                      hover:brightness-95
+                      disabled:bg-gray-200
+                      disabled:text-gray-500
+                    "
+                  >
+                    {couponLoading ? "Checking..." : "Apply"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-green-700">
+                        {appliedCoupon.couponCode}
+                      </div>
+
+                      {appliedCoupon.description && (
+                        <div className="text-xs text-gray-500">
+                          {appliedCoupon.description}
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="secondary"
+                      onClick={removeCoupon}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
           <div className="border-t pt-4 space-y-2 text-sm">
 
+            {/* Products */}
             <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>₹{totalAmount}</span>
+              <span>Products Total</span>
+              <span>₹{pricingBreakdown.productSubtotal}</span>
             </div>
 
-            {pricingBreakdown.hasComboItems && (
-              <>
-                <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
-                  <div>
-                    <span className="font-medium">Combo Package Amount</span>
-                    <span className="ml-2 text-xs text-blue-500">
-                      (GST & Packaging Charges Not Applied)
-                    </span>
-                  </div>
-                  <span>₹{pricingBreakdown.comboAmount}</span>
+            {pricingBreakdown.hasComboPackages && (
+              <div className="flex justify-between items-center text-gray-600">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span>Combo Packages</span>
+
+                  <span
+                    className="
+                      rounded-full
+                      bg-green-100
+                      text-green-700
+                      text-[10px]
+                      font-medium
+                      px-2
+                      py-0.5
+                    "
+                  >
+                    Inclusive Of Packaging Charges
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto] gap-6 text-sm text-gray-600">
-                  <span>GST / Packaging Eligible Amount</span>
-                  <span>₹{pricingBreakdown.eligibleChargeAmount}</span>
-                </div>
-              </>
+                <span>₹{pricingBreakdown.comboPackageTotal}</span>
+              </div>
             )}
 
+            {pricingBreakdown.hasNonComboProducts && (
+              <div className="flex justify-between text-gray-600">
+                <span>Non Combo Products</span>
+                <span>₹{pricingBreakdown.nonComboProductTotal}</span>
+              </div>
+            )}
 
             {packagingCharge > 0 && (
               <div className="flex justify-between text-gray-600">
-                <span>
-                  Packaging Charges
-                  {pricingBreakdown.hasComboItems
-                    ? ` (${packagingPercent}% on eligible items)`
-                    : ` (${packagingPercent}%)`}
-                </span>
+                <span>Packaging Charge ({packagingPercent}%)</span>
                 <span>₹{packagingCharge}</span>
               </div>
             )}
 
+            {appliedCouponDiscount > 0 && (
+              <>
+                <div className="flex justify-between font-medium pt-2 border-t">
+                  <span>Amount Before Discount</span>
+                  <span>₹{grossTotal}</span>
+                </div>
+
+                <div className="flex justify-between text-green-600 font-medium">
+                  <span>
+                    Coupon Savings{" "}
+                    {appliedCoupon?.couponType === "PERCENTAGE"
+                      ? `(${appliedCoupon.couponValue}%)`
+                      : `(Flat ₹${appliedCoupon?.couponValue})`}
+                  </span>
+                  <span>-₹{appliedCouponDiscount}</span>
+                </div>
+
+                <div className="flex justify-between font-medium">
+                  <span>Amount After Discount</span>
+                  <span>₹{discountedGrossTotal}</span>
+                </div>
+              </>
+            )}
+
+            {/* GST */}
             {gstAmount > 0 && (
               <div className="flex justify-between text-gray-600">
-                <span>
-                  GST
-                  {pricingBreakdown.hasComboItems
-                    ? ` (${gstPercent}% on eligible items)`
-                    : ` (${gstPercent}%)`}
-                </span>
+                <span>GST ({gstPercent}%)</span>
                 <span>₹{gstAmount}</span>
               </div>
             )}
 
-            <div className="flex justify-between font-semibold text-[var(--color-primary)] pt-2 border-t">
-              <span>Grand Total</span>
-              <span>₹{grandTotal}</span>
-            </div>
+            <div className="border-t my-4" />
 
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-semibold text-[var(--color-primary)]">
+                  Grand Total
+                </p>
+
+                <p className="text-xs text-gray-500">
+                  Includes applicable GST & Packaging Charges
+                </p>
+              </div>
+
+              <span className="text-2xl font-bold text-[var(--color-primary)]">
+                ₹{grandTotal}
+              </span>
+            </div>
           </div>
 
           {walletCredit > 0 && (
-            <div className="border-t pt-3 space-y-1 text-sm">
+            <div className="border-t pt-4 space-y-2 text-sm">
+
               <div className="flex justify-between text-gray-600">
-                <span>Wallet Credit Available</span>
+                <span>Wallet Balance</span>
                 <span>₹{walletCredit}</span>
               </div>
 
               <div className="flex justify-between text-green-700 font-medium">
-                <span>Credit Applied</span>
-                <span>- ₹{creditUsed}</span>
+                <span>Wallet Applied</span>
+                <span>-₹{creditUsed}</span>
               </div>
 
-              <div className="flex justify-between font-semibold text-[var(--color-primary)] pt-2">
-                <span>Final Payable</span>
-                <span>₹{finalPayable}</span>
+              <div className="border-t my-4" />
+
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-[var(--color-primary)]">
+                    Amount Payable
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    Amount to be paid
+                  </p>
+                </div>
+
+                <span className="text-2xl font-bold text-[var(--color-primary)]">
+                  ₹{finalPayable}
+                </span>
               </div>
+
             </div>
           )}
 

@@ -2,44 +2,65 @@ export function isTamilNadu(state?: string) {
     return state?.toLowerCase().includes("tamil nadu");
 }
 
-export function calculateOrderAmounts({
-    totalAmount,
-    chargeableAmount,
-    packagingPercent,
-    gstPercent,
-    state,
-    config,
-}: {
-    totalAmount: number;
-    chargeableAmount?: number;
+export interface OrderAmountCalculationInput {
+    nonComboProductTotal: number;
+    comboPackageTotal: number;
+    couponDiscount: number;
     packagingPercent: number;
     gstPercent: number;
     state?: string;
     config?: any;
-}) {
+}
 
-    const chargeableBaseAmount = chargeableAmount ?? totalAmount;
+export interface OrderAmountCalculation {
+    packagingCharge: number;
+    nonComboSubtotal: number;
+    grossTotal: number;
+    appliedCouponDiscount: number;
+    discountedGrossTotal: number;
+    gstAmount: number;
+    grandTotal: number;
+}
+
+export function calculateOrderAmounts({
+    nonComboProductTotal,
+    comboPackageTotal,
+    couponDiscount,
+    packagingPercent,
+    gstPercent,
+    state,
+    config,
+}: OrderAmountCalculationInput): OrderAmountCalculation {
+
     const packagingCharge = Math.round(
-        (chargeableBaseAmount * packagingPercent) / 100
+        (nonComboProductTotal * packagingPercent) / 100
     );
+
+    const nonComboSubtotal = nonComboProductTotal + packagingCharge;
+    const grossTotal = nonComboSubtotal + comboPackageTotal;
+    const appliedCouponDiscount = Math.min(
+        Math.max(couponDiscount, 0),
+        grossTotal
+    );
+
+    const discountedGrossTotal = grossTotal - appliedCouponDiscount;
     const disableGstForTN = config?.disableGstForTN ?? false;
     const isTN = isTamilNadu(state);
-
     let gstAmount = 0;
-
     if (!(isTN && disableGstForTN)) {
-        // Business Rule:
-        // Display GST as 18%
-        // Calculate GST as 9%
         const effectiveGstPercent = gstPercent / 2;
         gstAmount = Math.round(
-            (chargeableBaseAmount * effectiveGstPercent) / 100
+            (discountedGrossTotal * effectiveGstPercent) / 100
         );
     }
 
-    const grandTotal = totalAmount + packagingCharge + gstAmount;
+    const grandTotal = discountedGrossTotal + gstAmount;
     return {
         packagingCharge,
+        nonComboSubtotal,
+        grossTotal,
+        appliedCouponDiscount,
+        discountedGrossTotal,
         gstAmount,
         grandTotal,
     };

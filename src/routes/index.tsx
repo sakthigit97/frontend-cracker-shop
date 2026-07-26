@@ -48,6 +48,7 @@ import ComboPackageDetails from "../pages/ComboPackageDetails";
 import AiAssistant from "../pages/AiAssistant";
 import QuickEstimate from "../pages/QuickEstimate";
 import ScrollToTop from "../components/ui/ScrollToTop";
+import AdminCoupons from "../pages/admin/AdminCoupons";
 
 export default function AppRoutes() {
   return (
@@ -114,6 +115,7 @@ export default function AppRoutes() {
             <Route path="/admin/reports/revenue" element={<RevenueReport />} />
             <Route path="/admin/reports/products" element={<ProductReport />} />
             <Route path="/admin/queries" element={<AdminContacts />} />
+            <Route path="/admin/coupons" element={<AdminCoupons />} />
           </Route>
         </Route>
       </Routes>

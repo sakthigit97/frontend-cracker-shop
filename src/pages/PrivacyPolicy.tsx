@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 export default function PrivacyPolicy() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return (
     <div className="bg-[var(--color-background)] py-10 px-4">
