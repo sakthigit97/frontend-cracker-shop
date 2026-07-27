@@ -45,6 +45,7 @@ export default function AdjustOrder() {
     const originalItems = originalItemsRef.current;
     const isAdmin = location.state?.isAdmin === true;
     const canAdjust = isAdmin || order.status === "ORDER_PLACED";
+
     const [items, setItems] = useState<AdjustOrderItem[]>(() =>
         order.items.map((i: any) => ({
             productId: i.productId,
@@ -109,21 +110,17 @@ export default function AdjustOrder() {
         [items]
     );
 
-
     const subtotal = pricingBreakdown.productSubtotal;
     const couponCode = order.couponCode ?? null;
     const couponType = order.couponType ?? null;
     const couponValue = Number(order.couponValue ?? 0);
 
-    const derivedState =
-        order?.state ||
+    const derivedState = order?.state ||
         (order?.address?.includes("Tamil Nadu")
             ? "Tamil Nadu"
             : "Other");
 
     const pricing = useMemo(() => {
-
-        // No changes yet -> show exactly what is stored in the order
         if (!hasChanges) {
             return {
                 packagingCharge: order.packagingCharge,
@@ -135,14 +132,10 @@ export default function AdjustOrder() {
             };
         }
 
-        // User modified the order -> recalculate
         const packagingCharge = Math.round(
             (pricingBreakdown.nonComboProductTotal * packagingPercent) / 100
         );
-
-        const amountBeforeDiscount =
-            pricingBreakdown.productSubtotal + packagingCharge;
-
+        const amountBeforeDiscount = pricingBreakdown.productSubtotal + packagingCharge;
         const couponDiscount = calculateCouponDiscount({
             amountBeforeDiscount,
             couponType,
@@ -166,8 +159,7 @@ export default function AdjustOrder() {
             packagingCharge,
             amountBeforeDiscount,
             couponDiscount,
-            amountAfterDiscount:
-                amountBeforeDiscount - couponDiscount,
+            amountAfterDiscount: amountBeforeDiscount - couponDiscount,
             gstAmount,
             grandTotal,
         };
@@ -195,11 +187,9 @@ export default function AdjustOrder() {
 
     const oldTotal = Number(order.grandTotal || 0);
     const diffAmount = grandTotal - oldTotal;
-
     const updateQty = (productId: string, delta: number) => {
         if (!canAdjust) return;
         setDirty(true);
-
         setItems((prev) =>
             prev.map((item) =>
                 item.productId === productId
@@ -264,23 +254,20 @@ export default function AdjustOrder() {
         setItems((prev) => {
             const map = new Map<string, AdjustOrderItem>();
             prev.forEach((i) => map.set(i.productId, { ...i }));
-
             newItems.forEach((i) => {
                 const existing = map.get(i.productId);
                 if (existing) existing.quantity += i.quantity;
                 else map.set(i.productId, i);
             });
-
-            return Array.from(map.values());
+            const updatedItems = Array.from(map.values());
+            return updatedItems;
         });
     };
 
     async function handleSave() {
         if (!orderId) return;
 
-        const pincode =
-            order?.pincode ||
-            order?.address?.match(/\b\d{6}\b/)?.[0];
+        const pincode = order?.pincode || order?.address?.match(/\b\d{6}\b/)?.[0];
         const mobile = order.userId || 0;
 
         if (!pincode) {
@@ -306,31 +293,14 @@ export default function AdjustOrder() {
 
         try {
             setSaving(true);
-            const updatedOrder = await
-                await adjustOrderApi(mobile, orderId, {
-                    items: items.map((i) => ({
-                        productId: i.productId,
-                        quantity: i.quantity,
-                    })),
-                    subtotal,
-                    nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
-                    comboPackageTotal: pricingBreakdown.comboPackageTotal,
-                    couponCode,
-                    couponType,
-                    couponValue,
-                    couponDiscount,
-                    packagingCharge,
-                    amountBeforeDiscount,
-                    amountAfterDiscount,
-                    gstAmount,
-                    grandTotal,
-                    walletUsed: order.walletUsed ?? 0,
-                    finalPayable: Math.max(
-                        grandTotal - (order.walletUsed ?? 0),
-                        0
-                    ),
-                });
-
+            const updatedOrder = await adjustOrderApi(mobile, orderId, {
+                items: items.map(i => ({
+                    productId: i.productId,
+                    quantity: i.quantity,
+                })),
+                couponCode,
+                walletUsed: order.walletUsed ?? 0,
+            });
             clearOrdersCache();
 
             showAlert({
@@ -745,7 +715,7 @@ export default function AdjustOrder() {
 
                             {packagingCharge > 0 && (
                                 <div className="flex justify-between text-gray-600">
-                                    <span>Packaging Charge ({packagingPercent}%)</span>
+                                    <span>Packaging Charge</span>
                                     <span>₹{packagingCharge}</span>
                                 </div>
                             )}

@@ -32,10 +32,6 @@ export default function QuickEstimateModal({
     const isEstimateEmailSend = config?.isEstimateEmailEnabled || false;
     const packagingPercent = config?.packagingPercent ?? 0;
     const gstPercent = config?.gstPercent ?? 0;
-    const originalTotal = products.reduce(
-        (sum, p) => sum + (p.originalPrice || p.price) * p.quantity,
-        0
-    );
     const [showDownloadDialog, setShowDownloadDialog] = useState(false);
     const [downloading, setDownloading] = useState(false);
 
@@ -44,10 +40,10 @@ export default function QuickEstimateModal({
         [products]
     );
 
-    const totalAmount = pricingBreakdown.subtotal;
     const {
-        eligibleChargeAmount,
-        comboAmount,
+        productSubtotal,
+        nonComboProductTotal,
+        comboPackageTotal,
     } = pricingBreakdown;
 
     const {
@@ -57,22 +53,22 @@ export default function QuickEstimateModal({
     } = useMemo(
         () =>
             calculateOrderAmounts({
-                totalAmount,
-                chargeableAmount: eligibleChargeAmount,
+                nonComboProductTotal,
+                comboPackageTotal,
+                couponDiscount: 0,
                 packagingPercent,
                 gstPercent,
                 state: "Tamil Nadu",
                 config,
             }),
         [
-            totalAmount,
-            eligibleChargeAmount,
+            productSubtotal,
+            nonComboProductTotal,
             packagingPercent,
             gstPercent,
             config,
         ]
     );
-    const savings = originalTotal - totalAmount;
     const totalQty = products.reduce(
         (sum, p) => sum + Math.max(0, Number(p.quantity) || 0),
         0
@@ -431,45 +427,51 @@ export default function QuickEstimateModal({
         );
         doc.setTextColor(0);
 
+        // const summaryRows: string[][] = [
+
+        //     [
+        //         "Products",
+        //         String(products.length),
+        //     ],
+
+        //     [
+        //         "Quantity",
+        //         String(totalQty),
+        //     ],
+
+        //     [
+        //         "MRP Total",
+        //         formatMoney(originalTotal),
+        //     ],
+
+        //     [
+        //         "Discount",
+        //         "- " + formatMoney(savings),
+        //     ],
+
+        //     [
+        //         "Sub Total",
+        //         formatMoney(productSubtotal),
+        //     ],
+        // ];
         const summaryRows: string[][] = [
-
             [
-                "Products",
-                String(products.length),
-            ],
-
-            [
-                "Quantity",
-                String(totalQty),
-            ],
-
-            [
-                "MRP Total",
-                formatMoney(originalTotal),
-            ],
-
-            [
-                "Discount",
-                "- " + formatMoney(savings),
-            ],
-
-            [
-                "Sub Total",
-                formatMoney(totalAmount),
+                "Products Total",
+                formatMoney(productSubtotal),
             ],
         ];
 
-        if (comboAmount > 0) {
+        if (comboPackageTotal > 0) {
 
             summaryRows.push([
-                "Combo Amount (No GST & Packaging)",
-                formatMoney(comboAmount),
+                "Combo Packages (Incl Package Fee)",
+                formatMoney(comboPackageTotal),
             ]);
 
             summaryRows.push([
-                "GST Eligible",
+                "Non Combo Products",
                 formatMoney(
-                    eligibleChargeAmount
+                    nonComboProductTotal
                 ),
             ]);
         }
@@ -480,7 +482,7 @@ export default function QuickEstimateModal({
         ) {
 
             summaryRows.push([
-                `Packaging (${packagingPercent}%)`,
+                `Packaging Charge (${packagingPercent}%)`,
                 formatMoney(packagingCharge),
             ]);
         }
@@ -555,28 +557,8 @@ export default function QuickEstimateModal({
 
                 if (data.section !== "body") return;
 
-                const label =
-                    summaryRows[data.row.index][0];
-
-
-                if (label === "Discount") {
-
-                    data.cell.styles.textColor =
-                        COLORS.success;
-
-                    data.cell.styles.fontStyle = "bold";
-                }
-
-                if (label === "Combo Amount") {
-
-                    data.cell.styles.fillColor = [
-                        247,
-                        249,
-                        255,
-                    ];
-                }
-
-                if (label === "GST Eligible") {
+                const label = summaryRows[data.row.index][0];
+                if (label === "Non Combo Products") {
 
                     data.cell.styles.fillColor = [
                         252,
@@ -616,8 +598,7 @@ export default function QuickEstimateModal({
 
         doc.setTextColor(...COLORS.gray);
 
-        if (comboAmount > 0) {
-
+        if (comboPackageTotal > 0) {
             text(
                 "GST & Packaging charges are calculated only for eligible products.",
                 LEFT,
@@ -1035,51 +1016,38 @@ export default function QuickEstimateModal({
                     "
                 >
                     <div className="flex justify-between">
-                        <span>Products</span>
-                        <span>{products.length}</span>
+                        <span>Products Total</span>
+                        <span>₹{productSubtotal.toLocaleString()}</span>
                     </div>
 
-                    <div className="flex justify-between">
-                        <span>Quantity</span>
-                        <span>{totalQty}</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                        <span>MRP Total</span>
-                        <span>₹{originalTotal.toLocaleString()}</span>
-                    </div>
-
-                    <div className="flex justify-between text-green-600">
-                        <span>Discount</span>
-                        <span>- ₹{savings.toLocaleString()}</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                        <span>Sub Total</span>
-                        <span>₹{totalAmount.toLocaleString()}</span>
-                    </div>
-
-                    {comboAmount > 0 && (
+                    {comboPackageTotal > 0 && (
                         <>
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span>Combo Package Amount</span>
+                                    <span>Combo Packages</span>
+
                                     <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
-                                        No GST & Packaging
+                                        Inclusive Of Packaging Charges
                                     </span>
                                 </div>
 
-                                <span>₹{comboAmount.toLocaleString()}</span>
+                                <span>₹{comboPackageTotal.toLocaleString()}</span>
                             </div>
                         </>
                     )}
 
+                    {comboPackageTotal > 0 && (
+                        <div className="flex justify-between">
+                            <span>Non Combo Products</span>
+                            <span>₹{nonComboProductTotal.toLocaleString()}</span>
+                        </div>
+                    )}
+
+
                     {packagingPercent > 0 && packagingCharge > 0 && (
                         <div className="flex justify-between">
                             <span>
-                                {comboAmount > 0
-                                    ? `Packaging (${packagingPercent}% - Eligible Items)`
-                                    : `Packaging (${packagingPercent}%)`}
+                                Packaging Charge ({packagingPercent}%)
                             </span>
                             <span>₹{(packagingCharge)}</span>
                         </div>
@@ -1088,21 +1056,28 @@ export default function QuickEstimateModal({
                     {gstPercent > 0 && gstAmount > 0 && (
                         <div className="flex justify-between">
                             <span>
-                                {comboAmount > 0
-                                    ? `GST (${gstPercent}% - Eligible Items)`
-                                    : `GST (${gstPercent}%)`}
+                                GST ({gstPercent}%)
                             </span>
                             <span>₹{(gstAmount)}</span>
                         </div>
                     )}
 
-                    <div className="border-t pt-3 flex justify-between font-bold text-xl">
-                        <span>Grand Total</span>
+                    <div className="border-t pt-3 flex justify-between items-center">
+                        <div>
+                            <p className="font-semibold text-[var(--color-primary)]">
+                                Grand Total
+                            </p>
 
-                        <span>
+                            <p className="text-xs text-gray-500">
+                                Includes applicable GST & Packaging Charges
+                            </p>
+                        </div>
+
+                        <span className="text-2xl font-bold text-[var(--color-primary)]">
                             ₹{grandTotal.toLocaleString()}
                         </span>
                     </div>
+
                     <div className="mt-5 space-y-3">
 
                         <Button

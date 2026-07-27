@@ -32,25 +32,13 @@ export async function restoreOrderApi(orderId: string) {
     });
 }
 
-interface AdjustOrderRequest {
+export interface AdjustOrderRequest {
     items: {
         productId: string;
         quantity: number;
     }[];
-    subtotal: number;
-    nonComboProductTotal: number;
-    comboPackageTotal: number;
     couponCode?: string | null;
-    couponType?: "FLAT" | "PERCENTAGE" | null;
-    couponValue?: number | null;
-    couponDiscount: number;
-    packagingCharge: number;
-    amountBeforeDiscount: number;
-    amountAfterDiscount: number;
-    gstAmount: number;
-    grandTotal: number;
     walletUsed: number;
-    finalPayable: number;
 }
 
 export async function adjustOrderApi(
@@ -66,11 +54,7 @@ export async function adjustOrderApi(
         }),
     });
 
-    const order =
-        res?.order?.order ??
-        res?.order ??
-        res;
-
+    const order = res?.order?.order ?? res?.order ?? res;
     if (!order?.orderId) {
         throw new Error("Invalid adjust order response");
     }

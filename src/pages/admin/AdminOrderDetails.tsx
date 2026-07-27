@@ -13,6 +13,9 @@ import { useAlert } from "../../store/alert.store";
 import { useLocation } from "react-router-dom";
 import EmptyState from "../../components/ui/EmptyState";
 import defaultImage from "../../assets/default-image.png";
+import { downloadInvoice } from "../../utils/pdf/downloadInvoice";
+import { useConfigStore } from "../../store/config.store";
+
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -28,7 +31,7 @@ export default function AdminOrderDetails() {
         mobile: string;
         amount: string;
     } | null>(null);
-
+    const config = useConfigStore((s) => s.config);
     const [selectedStatus, setSelectedStatus] = useState("");
     const [comment, setComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -67,54 +70,21 @@ export default function AdminOrderDetails() {
 
         try {
             setDownloading(true);
+            await new Promise((resolve) => setTimeout(resolve, 0));
 
-            const auth = localStorage.getItem("auth");
-            const token = auth ? JSON.parse(auth).token : null;
-            const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
-            const res = await fetch(apiUrl, {
-                method: "GET",
-                headers: {
-                    ...(token && {
-                        Authorization: `Bearer ${token}`,
-                    }),
-                },
+            await downloadInvoice({
+                order,
+                config,
             });
-
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(
-                    errorText || "Invoice download failed"
-                );
-            }
-
-            const blob = await res.blob();
-            if (blob.type !== "application/pdf") {
-                throw new Error(
-                    "Invalid invoice file received"
-                );
-            }
-
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `invoice-${order.orderId}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
-
         } catch (err: any) {
             showAlert({
                 type: "error",
-                message:
-                    err.message ||
-                    "Unable to download invoice",
+                message: err.message || "Unable to download invoice",
             });
         } finally {
             setDownloading(false);
         }
     }
-
     if (!order && loading) {
         return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -362,7 +332,10 @@ export default function AdminOrderDetails() {
                         <div className="relative">
                             <select
                                 value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedStatus(e.target.value);
+                                    setComment("");
+                                }}
                                 className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
                             >
                                 <option value="">Status</option>

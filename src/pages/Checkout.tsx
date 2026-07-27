@@ -74,7 +74,6 @@ export default function Checkout() {
     [products]
   );
 
-  const totalAmount = pricingBreakdown.productSubtotal;
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
   const currentState = addressMode === "PROFILE" ? profileAddress : stateValue;
@@ -217,7 +216,6 @@ export default function Checkout() {
       return;
     }
 
-
     const cartItems = cartStore.getState().items;
     if (Object.keys(cartItems).length === 0) {
       showAlert({
@@ -227,7 +225,6 @@ export default function Checkout() {
       return;
     }
     let finalAddress = "";
-
     if (addressMode === "PROFILE") {
       finalAddress = profileAddress;
     } else {
@@ -265,15 +262,10 @@ export default function Checkout() {
       return;
     }
 
-    const validation = await validateMinimumOrder(
-      currentPincode,
-      grandTotal
-    );
-
-    if (!validation.valid) {
+    if (!minOrderValid) {
       showAlert({
         type: "error",
-        message: validation.message || "Minimum order not met",
+        message: "A minimum order value is required for your delivery location. Please add more items to continue with your order.",
       });
       return;
     }
@@ -318,22 +310,10 @@ export default function Checkout() {
           paymentMode,
           paymentStatus,
           transactionId,
-          subtotal: pricingBreakdown.productSubtotal,
-          nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
-          comboPackageTotal: pricingBreakdown.comboPackageTotal,
-          packagingCharge,
-          amountBeforeDiscount: grossTotal,
           couponCode: appliedCoupon?.couponCode ?? null,
-          couponType: appliedCoupon?.couponType ?? null,
-          couponValue: appliedCoupon?.couponValue ?? null,
-          couponDiscount: appliedCouponDiscount,
-          amountAfterDiscount: discountedGrossTotal,
-          gstAmount,
-          grandTotal,
           walletUsed: creditUsed,
-          finalPayable,
           mobile: mobile.trim(),
-        }),
+        })
       });
 
       lockCart();
@@ -404,7 +384,7 @@ export default function Checkout() {
 
       const coupon = await validateCoupon(
         code,
-        totalAmount
+        grossTotal
       );
 
       setAppliedCoupon(coupon);
@@ -662,14 +642,14 @@ export default function Checkout() {
                     placeholder="Enter coupon code"
                     maxLength={20}
                     className="
-      w-full
-      border-0
-      bg-transparent
-      px-3
-      text-sm
-      outline-none
-      placeholder:text-gray-400
-    "
+                    w-full
+                    border-0
+                    bg-transparent
+                    px-3
+                    text-sm
+                    outline-none
+                    placeholder:text-gray-400
+                  "
                   />
 
                   <button
@@ -890,16 +870,10 @@ export default function Checkout() {
               onClick={placeOrder}
               disabled={
                 placingOrder ||
-                !acceptedTerms ||
-                !acceptedTransport ||
-                products.length === 0 ||
-                !minOrderValid
+                products.length === 0
               }
               className={`w-full py-3 text-base transition-all ${placingOrder ||
-                !acceptedTerms ||
-                !acceptedTransport ||
-                products.length === 0 ||
-                !minOrderValid
+                products.length === 0
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-[var(--color-primary)] text-white hover:opacity-90"
                 }`}
@@ -914,15 +888,10 @@ export default function Checkout() {
               onClick={placeOrder}
               disabled={
                 placingOrder ||
-                !acceptedTerms ||
-                !acceptedTransport ||
                 products.length === 0
               }
               className={`w-full py-3 text-base transition-all ${placingOrder ||
-                !acceptedTerms ||
-                !acceptedTransport ||
-                products.length === 0 ||
-                !minOrderValid
+                products.length === 0
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-[var(--color-primary)] text-white hover:opacity-90"
                 }`}

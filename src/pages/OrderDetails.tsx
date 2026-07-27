@@ -6,6 +6,8 @@ import { useOrdersStore } from "../store/orders.store";
 import { useState } from "react";
 import { useAlert } from "../store/alert.store";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import { useConfigStore } from "../store/config.store";
+import { downloadInvoice } from "../utils/pdf/downloadInvoice";
 
 const TERMINAL_STATUS = "CANCELLED";
 const CANCELLABLE_STATUSES = ["ORDER_PLACED", "ORDER_CONFIRMED"];
@@ -20,10 +22,14 @@ export default function OrderDetails() {
   const { showAlert } = useAlert();
   const [downloading, setDownloading] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const config = useConfigStore((s) => s.config);
+  const packagingPercent = config?.packagingPercent ?? 0;
+  const gstPercent = config?.gstPercent ?? 0;
   const isTamilNadu = order.address?.toLowerCase().includes("tamil nadu");
   const deliveryText = isTamilNadu
     ? "3–5 working days"
     : "7–10 working days";
+
 
   if (!order) {
     return (
@@ -77,49 +83,11 @@ export default function OrderDetails() {
 
     try {
       setDownloading(true);
-
-      const auth = localStorage.getItem("auth");
-      const token = auth ? JSON.parse(auth).token : null;
-
-      const apiUrl =
-        `${import.meta.env.VITE_API_BASE_URL}/orders/${order.orderId}/invoice`;
-
-      const res = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          ...(token && {
-            Authorization: `Bearer ${token}`,
-          }),
-        },
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await downloadInvoice({
+        order,
+        config,
       });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(
-          errorText || "Invoice download failed"
-        );
-      }
-
-      const blob = await res.blob();
-
-      if (blob.type !== "application/pdf") {
-        throw new Error(
-          "Invalid invoice file received"
-        );
-      }
-
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `invoice-${order.orderId}.pdf`;
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.URL.revokeObjectURL(url);
-
     } catch (err: any) {
       showAlert({
         type: "error",
@@ -370,7 +338,7 @@ export default function OrderDetails() {
           {/* Products */}
           <div className="flex justify-between">
             <span>Products Total</span>
-            <span>₹{order.subtotal}</span>
+            <span>₹{order.totalProductAmount}</span>
           </div>
 
           {(order.comboPackageTotal ?? 0) > 0 && (
@@ -406,7 +374,7 @@ export default function OrderDetails() {
 
           {(order.packagingCharge ?? 0) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>Packaging Charge</span>
+              <span>Packaging Charge ({packagingPercent}%)</span>
               <span>₹{order.packagingCharge}</span>
             </div>
           )}
@@ -438,7 +406,7 @@ export default function OrderDetails() {
 
           {(order.gstAmount ?? 0) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>GST</span>
+              <span>GST ({gstPercent}%)</span>
               <span>₹{order.gstAmount}</span>
             </div>
           )}
@@ -508,6 +476,9 @@ export default function OrderDetails() {
             {downloading ? "Downloading...." : "Download Invoice"}
           </Button>
         )}
+
+
+
 
         {order.status === "ORDER_PLACED" && (
           <Button

@@ -104,11 +104,15 @@ export default function Header() {
       calculateOrderPricingBreakdown(cartProducts);
 
     return calculateOrderAmounts({
-      totalAmount: pricingBreakdown.subtotal,
-      chargeableAmount:
-        pricingBreakdown.eligibleChargeAmount,
-      packagingPercent: packagingPercent,
-      gstPercent: gstPercent,
+      nonComboProductTotal:
+        pricingBreakdown.nonComboProductTotal,
+      comboPackageTotal:
+        pricingBreakdown.comboPackageTotal,
+      couponDiscount: 0,
+      packagingPercent,
+      gstPercent,
+      state: undefined,
+      config,
     });
   }, [items, products]);
 

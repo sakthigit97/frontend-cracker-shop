@@ -14,7 +14,6 @@ import { FaArrowUp } from "react-icons/fa";
 import { useCategoryStore } from "../store/category.store";
 
 export default function QuickEstimate() {
-
     const {
         products,
         loading,
@@ -89,25 +88,26 @@ export default function QuickEstimate() {
         [estimateProducts]
     );
 
-    const {
-        grandTotal,
-    } = useMemo(
+    const { grandTotal } = useMemo(
         () =>
             calculateOrderAmounts({
-                totalAmount: pricingBreakdown.subtotal,
-                chargeableAmount: pricingBreakdown.eligibleChargeAmount,
+                nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+                comboPackageTotal: pricingBreakdown.comboPackageTotal,
+                couponDiscount: 0,
                 packagingPercent,
                 gstPercent,
+                state: "Tamil Nadu",
                 config,
             }),
         [
-            pricingBreakdown.subtotal,
-            pricingBreakdown.eligibleChargeAmount,
+            pricingBreakdown.nonComboProductTotal,
+            pricingBreakdown.comboPackageTotal,
             packagingPercent,
             gstPercent,
             config,
         ]
     );
+
     const scrollToTop = () => {
         window.scrollTo({
             top: 0,
