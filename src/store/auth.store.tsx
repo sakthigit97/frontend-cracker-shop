@@ -25,6 +25,7 @@ interface AuthContextType {
   login: (data: AuthUser) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  updateUser: (data: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -74,6 +75,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     clearConfig();
   }, [clearConfig]);
+
+  const updateUser = useCallback((data: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+
+      const updated = {
+        ...prev,
+        ...data,
+      };
+
+      localStorage.setItem("auth", JSON.stringify(updated));
+
+      return updated;
+    });
+  }, []);
 
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -198,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user,
       }}
     >

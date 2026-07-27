@@ -362,6 +362,7 @@ export default function QuickEstimate() {
                             onClick={() =>
                                 setShowEstimate(true)
                             }
+                            data-enter-submit="true"
                             className="
                                 bg-white
                                 text-slate-900

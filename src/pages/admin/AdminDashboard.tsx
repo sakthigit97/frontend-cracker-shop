@@ -40,7 +40,6 @@ export default function AdminDashboard() {
   if (!data) return null;
 
   const { stats, statusBreakdown, recentOrders } = data;
-
   const pieData = STATUS_ORDER.map((status) => ({
     name: STATUS_LABELS[status],
     value: statusBreakdown[status],
@@ -163,11 +162,21 @@ export default function AdminDashboard() {
               >
                 {/* LEFT */}
                 <div className="min-w-0">
-                  <p className="font-medium truncate">
+                  <button
+                    onClick={() => navigate(`/admin/orders/${o.orderId}`)}
+                    className="
+                      font-medium
+                      truncate
+                      text-[var(--color-primary)]
+                      hover:underline
+                      blue
+                      text-left
+                    "
+                  >
                     {o.orderId}
-                  </p>
+                  </button>
                   <p className="text-xs text-gray-500">
-                    ₹{o.totalAmount}
+                    ₹{o.grandTotal}
                   </p>
                 </div>
 

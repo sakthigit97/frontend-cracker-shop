@@ -337,6 +337,7 @@ export default function AdjustOrder() {
 
             <div className="flex items-center gap-3 mb-4">
                 <button
+                    data-enter-submit="true"
                     onClick={() => navigate(-1)}
                     className="
                     flex items-center justify-center

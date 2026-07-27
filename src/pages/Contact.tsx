@@ -282,6 +282,7 @@ export default function Contact() {
 
           <Button
             type="submit"
+            data-enter-submit="true"
             disabled={loading}
             className="w-full md:w-fit px-10"
           >

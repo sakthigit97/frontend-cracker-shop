@@ -329,6 +329,7 @@ export default function Home() {
                 Later
               </button>
               <button
+                data-enter-submit="true"
                 onClick={() => {
                   setShowCartAlert(false);
                   navigate("/cart");

@@ -18,7 +18,6 @@ export const useAdminDashboardStore = create<AdminDashboardState>(
         loading: false,
         error: null,
         lastFetched: null,
-
         fetch: async () => {
             const { data, lastFetched, loading } = get();
             if (loading) return;

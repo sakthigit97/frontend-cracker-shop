@@ -390,6 +390,7 @@ export default function Cart() {
 
             <Button
               className="w-full"
+              data-enter-submit="true"
               disabled={products.length === 0}
               onClick={() => navigate("/checkout")}
             >

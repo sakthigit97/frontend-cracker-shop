@@ -172,6 +172,9 @@ const ProductImage = memo(function ProductImage({
                 setViewerIndex(index);
                 setShowViewer(true);
               }}
+              onError={(e) => {
+                e.currentTarget.src = defaultImage;
+              }}
               src={item.src || defaultImage}
               alt={name}
               loading="eager"
@@ -303,11 +306,21 @@ export default function ProductDetails() {
 
   const videoId = product.youtubeUrl ? getYouTubeId(product.youtubeUrl) : null;
   const available_qty = product?.qty || 0;
+  const imageMedia =
+    product.images && product.images.length > 0
+      ? product.images.map((img) => ({
+        type: "image" as const,
+        src: img,
+      }))
+      : [
+        {
+          type: "image" as const,
+          src: defaultImage,
+        },
+      ];
+
   const media = [
-    ...product.images.map((img) => ({
-      type: "image" as const,
-      src: img,
-    })),
+    ...imageMedia,
     ...(videoId
       ? [
         {
@@ -317,6 +330,7 @@ export default function ProductDetails() {
       ]
       : []),
   ];
+
 
   return (
 

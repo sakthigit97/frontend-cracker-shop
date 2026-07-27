@@ -597,6 +597,7 @@ export default function AiWizard({
                         disabled={
                             !validateCurrentStep()
                         }
+                        data-enter-submit="true"
                         className="
                             px-6
                             py-3

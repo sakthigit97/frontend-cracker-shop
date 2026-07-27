@@ -472,7 +472,7 @@ export default function OrderDetails() {
         )}
 
         {canDownloadInvoice && (
-          <Button onClick={handleDownloadInvoice}>
+          <Button data-enter-submit="true" onClick={handleDownloadInvoice}>
             {downloading ? "Downloading...." : "Download Invoice"}
           </Button>
         )}

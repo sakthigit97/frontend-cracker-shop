@@ -6,10 +6,12 @@ import { useProfileStore } from "../store/profile.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { INDIA_STATES } from "../utils/states";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../store/auth.store";
 
 interface ProfileData {
   name: string;
   mobile: string;
+  email?: string;
   address: string;
   city: string;
   state: string;
@@ -28,6 +30,7 @@ export default function Profile() {
   const [form, setForm] = useState<ProfileData | null>(profile);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { updateUser } = useAuth();
 
   useEffect(() => {
     loadProfile();
@@ -38,10 +41,34 @@ export default function Profile() {
   }, [profile]);
 
   const handleSave = async () => {
-    if (!form?.name || !form.address) {
+    if (!form) return;
+
+    const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const email = form.email?.trim() || '';
+
+    if (!email) {
       showAlert({
         type: "error",
-        message: "Name and Address are required",
+        message: "Name is required",
+      });
+      return;
+    }
+
+    if (
+      email &&
+      !isValidEmail(email)
+    ) {
+      showAlert({
+        type: "error",
+        message: "Please enter a valid email address",
+      });
+      return;
+    }
+
+    if (!form.address.trim()) {
+      showAlert({
+        type: "error",
+        message: "Address is required",
       });
       return;
     }
@@ -53,6 +80,7 @@ export default function Profile() {
         method: "PUT",
         body: JSON.stringify({
           name: form.name.trim(),
+          email,
           address: form.address.trim(),
           city: form.city?.trim(),
           state: form.state?.trim(),
@@ -61,6 +89,9 @@ export default function Profile() {
       });
 
       await refreshProfile();
+      updateUser({
+        name: form.name.trim(),
+      });
       setIsEditing(false);
       showAlert({
         type: "success",
@@ -131,7 +162,7 @@ export default function Profile() {
 
 
           {!isEditing && (
-            <Button variant="secondary" onClick={() => setIsEditing(true)}>
+            <Button data-enter-submit="true" variant="secondary" onClick={() => setIsEditing(true)}>
               Edit Profile
             </Button>
           )}
@@ -181,6 +212,25 @@ export default function Profile() {
               value={form.mobile}
               disabled
               className="w-full border rounded-md p-2 bg-gray-100"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              Email Address
+            </label>
+
+            <input
+              type="email"
+              value={form.email}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  email: e.target.value,
+                })
+              }
+              placeholder="Enter email address"
+              className="w-full border rounded-md p-2"
             />
           </div>
 
@@ -254,7 +304,7 @@ export default function Profile() {
 
         {isEditing && (
           <div className="flex gap-3 mt-6">
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} data-enter-submit="true" disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}
             </Button>
 

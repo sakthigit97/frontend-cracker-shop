@@ -867,6 +867,7 @@ export default function Checkout() {
 
           {isPaymentEnabled ? (
             <Button
+              data-enter-submit="true"
               onClick={placeOrder}
               disabled={
                 placingOrder ||
@@ -885,6 +886,7 @@ export default function Checkout() {
             </Button>
           ) : (
             <Button
+              data-enter-submit="true"
               onClick={placeOrder}
               disabled={
                 placingOrder ||
@@ -908,15 +910,15 @@ export default function Checkout() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
 
           <div className="
-      bg-white
-      rounded-xl
-      w-full
-      max-w-4xl
-      max-h-[90vh]
-      flex
-      flex-col
-      overflow-hidden
-    ">
+              bg-white
+              rounded-xl
+              w-full
+              max-w-4xl
+              max-h-[90vh]
+              flex
+              flex-col
+              overflow-hidden
+            ">
 
             <div className="flex justify-between items-center border-b p-4">
 

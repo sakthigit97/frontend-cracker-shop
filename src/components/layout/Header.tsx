@@ -157,14 +157,14 @@ export default function Header() {
     },
   ];
 
-  const accountMenu: HeaderDropdownItem[] = [
+  const accountMenu = [
     {
-      label: "Orders",
+      label: "My Orders",
       to: "/orders",
       icon: <FaClipboardList />,
     },
     {
-      label: "Profile",
+      label: "My Profile",
       to: "/profile",
       icon: <FaUserCircle />,
     },
@@ -256,7 +256,7 @@ export default function Header() {
           </div>
         </Link>
 
-        <nav className="hidden lg:flex flex-1 justify-center items-center gap-2 px-8">
+        <nav className="hidden lg:flex flex-1 items-center gap-2 ml-6">
           <Link
             to="/"
             className="
@@ -322,66 +322,10 @@ export default function Header() {
             items={lifestyleMenu}
           />
 
-
-          {isAuthenticated && (
-            <HeaderDropdown
-              title="My Account"
-              items={accountMenu}
-            />
-          )}
         </nav>
 
-        {/* ================= Right Section ================= */}
-
         <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
-          {isAuthenticated && (
-            <div
-              className="
-                hidden
-                md:flex
-                items-center
-                gap-2
-                rounded-full
-                border
-                border-white/10
-                bg-white/10
-                px-4
-                py-2
-                backdrop-blur
-              "
-            >
-              <div
-                className="
-                  flex
-                  h-8
-                  w-8
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-white/20
-                "
-              >
-                <FaUserCircle />
-              </div>
 
-              <div className="leading-tight">
-                <div className="text-[11px] text-white/60">
-                  Welcome
-                </div>
-
-                <div
-                  className="
-                    max-w-[130px]
-                    truncate
-                    text-sm
-                    font-semibold
-                  "
-                >
-                  {user?.name ?? "User"}
-                </div>
-              </div>
-            </div>
-          )}
           <Link
             to="/cart"
             className="
@@ -479,6 +423,15 @@ export default function Header() {
           </Link>
 
 
+          {isAuthenticated && (
+            <div className="hidden lg:block">
+              <HeaderDropdown
+                title={`Hi, ${user?.name?.split(" ")[0] ?? "User"}`}
+                items={accountMenu}
+              />
+            </div>
+          )}
+
           {!isAuthenticated ? (
             <Link
               to="/login"
@@ -501,28 +454,7 @@ export default function Header() {
               Login
             </Link>
           ) : (
-            <button
-              onClick={handleLogout}
-              className="
-                hidden
-                lg:inline-flex
-                items-center
-                rounded-xl
-                border
-                border-white/10
-                bg-white/10
-                px-5
-                py-2.5
-                text-sm
-                font-semibold
-                transition-all
-                duration-200
-                hover:bg-red-500
-                hover:text-white
-              "
-            >
-              Logout
-            </button>
+            <></>
           )}
 
 
@@ -545,6 +477,7 @@ export default function Header() {
           </button>
 
         </div>
+
       </div>
 
       {mobileOpen && (
@@ -633,7 +566,6 @@ export default function Header() {
               items={mobileSupport}
               onNavigate={closeMobile}
             />
-
 
             <MobileAccordion
               title="Lifestyle"

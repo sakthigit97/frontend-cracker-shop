@@ -52,7 +52,13 @@ export default function AdminOrders() {
         [filters]
     );
 
-    const orders = data[key]?.items || [];
+    const orders = useMemo(() => {
+        return [...(data[key]?.items || [])].sort(
+            (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+        );
+    }, [data, key]);
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
 
@@ -173,7 +179,6 @@ export default function AdminOrders() {
                                 {STATUS_LABELS[o.status]}
                             </span>
 
-                            {/* ARROW ICON ONLY */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
