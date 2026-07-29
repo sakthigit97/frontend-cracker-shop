@@ -6,8 +6,6 @@ export default function AiAssistant() {
 
     return (
         <div className="space-y-4">
-
-            {/* Header */}
             <div className="flex items-center gap-4 mb-3">
                 <button
                     onClick={() => navigate(-1)}
@@ -49,7 +47,6 @@ export default function AiAssistant() {
                 </div>
             </div>
 
-            {/* Disclaimer */}
             <div className="mx-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                 <p className="text-sm text-amber-800 leading-6">
                     <span className="font-semibold">Disclaimer:</span>{" "}

@@ -6,7 +6,8 @@ export default function MainLayout() {
   return (
     <div className="h-full flex flex-col">
       <Header />
-      <main className="flex-1 overflow-y-auto bg-[var(--color-background)] pt-1">
+      {/* <main className="flex-1 overflow-y-auto bg-[var(--color-background)] pt-1"> */}
+      <main className="flex-1 overflow-y-auto bg-[var(--color-background)] pt-16">
         <Outlet />
       </main>
       <Footer />

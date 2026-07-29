@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import AiStepCard from "./AiStepCard";
 import AiBudgetSelector from "./AiBudgetSelector";
+import AiSelectionSummary from "./AiSelectionSummary";
 
 import {
     AUDIENCE_OPTIONS,
@@ -22,22 +23,18 @@ export default function AiWizard({
     loading,
 }: AiWizardProps) {
 
-    const [step, setStep] =
-        useState(1);
+    const [step, setStep] = useState(1);
+    const [form, setForm] = useState<AiWizardState>(
+        INITIAL_AI_WIZARD_STATE
+    );
 
-    const [form, setForm] =
-        useState<AiWizardState>(
-            INITIAL_AI_WIZARD_STATE
-        );
-
-    const progress =
-        useMemo(
-            () =>
-                (step /
-                    WIZARD_STEPS.length) *
-                100,
-            [step]
-        );
+    const progress = useMemo(
+        () =>
+            (step /
+                WIZARD_STEPS.length) *
+            100,
+        [step]
+    );
 
     const updateField = (
         field: keyof typeof form,
@@ -534,32 +531,24 @@ export default function AiWizard({
 
 
                 {step === 5 && (
+                    <div className="space-y-6">
 
-                    <AiBudgetSelector
-                        value={form.budget}
-                        customBudget={
-                            form.customBudget
-                        }
-                        onChange={(
-                            budget,
-                            customBudget
-                        ) => {
+                        <AiSelectionSummary
+                            form={form}
+                            onEdit={(step) => setStep(step)}
+                        />
 
-                            updateField(
-                                "budget",
-                                budget
-                            );
+                        <AiBudgetSelector
+                            value={form.budget}
+                            customBudget={form.customBudget}
+                            onChange={(budget, customBudget) => {
+                                updateField("budget", budget);
+                                updateField("customBudget", customBudget);
+                            }}
+                        />
 
-                            updateField(
-                                "customBudget",
-                                customBudget
-                            );
-
-                        }}
-                    />
-
+                    </div>
                 )}
-
 
             </div>
 

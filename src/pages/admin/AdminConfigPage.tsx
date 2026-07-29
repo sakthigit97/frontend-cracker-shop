@@ -357,7 +357,28 @@ export default function AdminConfigPage() {
                 });
                 return;
             }
+            const rewardAmount = Number(form.referralRewardAmount);
 
+            if (
+                form.referralRewardType === "PERCENT" &&
+                (rewardAmount < 0 || rewardAmount > 100)
+            ) {
+                showAlert({
+                    type: "error",
+                    message: "Referral reward percentage must be between 0 and 100",
+                });
+                return;
+            }
+            if (
+                form.referralRewardType === "FLAT" &&
+                rewardAmount < 0
+            ) {
+                showAlert({
+                    type: "error",
+                    message: "Referral reward amount cannot be negative",
+                });
+                return;
+            }
 
             const aiCategories = form.aiTags || [];
             const invalidCategory = aiCategories.some(
@@ -372,7 +393,6 @@ export default function AdminConfigPage() {
                 return;
             }
 
-            // Duplicate category names
             const categoryNames = aiCategories.map(
                 (c: any) => c.name.trim().toLowerCase()
             );
@@ -446,7 +466,6 @@ export default function AdminConfigPage() {
             };
 
             const updated = await updateAdminConfig(payload);
-
             setConfig(updated);
 
             showAlert({
@@ -620,10 +639,30 @@ export default function AdminConfigPage() {
                                 }
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Referral Reward Amount
+                                Referral Reward Type
+                            </label>
+
+                            <select
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.referralRewardType || "FLAT"}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        referralRewardType: e.target.value,
+                                    }))
+                                }
+                            >
+                                <option value="FLAT">Flat Amount</option>
+                                <option value="PERCENT">Percentage</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                {form.referralRewardType === "PERCENT"
+                                    ? "Referral Reward Percentage (%)"
+                                    : "Referral Reward Amount (₹)"}
                             </label>
 
                             <input

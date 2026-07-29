@@ -315,6 +315,7 @@ export default function Checkout() {
           mobile: mobile.trim(),
         })
       });
+      const orderId = res.OrderId;
 
       lockCart();
       clearCart();
@@ -323,12 +324,10 @@ export default function Checkout() {
 
       navigate("/order-success", {
         state: {
-          orderId: res.orderId,
+          orderId,
           address: finalAddress,
           total: finalPayable,
-          paymentMode: paymentMode === "ONLINE"
-            ? "Online Payment (Paid)"
-            : "Online Payment Required",
+          paymentMode: paymentMode === "ONLINE" ? "Online Payment (Paid)" : "Online Payment Required",
           estimatedDelivery: "Tamil Nadu: 3 to 5 working days, Other states: 7 to 10 working days",
         },
       });

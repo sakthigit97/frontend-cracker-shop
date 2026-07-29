@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import { useAlert } from "../store/alert.store";
@@ -19,6 +19,7 @@ export default function Register() {
   const config = useConfigStore((s) => s.config);
   const isRegisterOTPSend = config?.isRegisterOTPEnabled || true;
   const isReferralEnabled = config?.isReferralEnabled ?? false;
+  const captchaRef = useRef<ReCAPTCHA>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -81,7 +82,12 @@ export default function Register() {
       });
 
       setStep(2);
+      captchaRef.current?.reset();
+      setCaptchaToken(null);
     } catch (err: any) {
+      captchaRef.current?.reset();
+      setCaptchaToken(null);
+
       showAlert({
         type: "error",
         message: err.message || "Failed to send OTP",
@@ -207,12 +213,16 @@ export default function Register() {
             maxLength={10}
             className="w-full border rounded-md p-2 mb-4"
           />
+          <div className="my-5 flex justify-center overflow-hidden">
+            <div className="scale-[0.82] sm:scale-100 origin-top">
 
-          <div className="mb-4 flex justify-center">
-            <ReCAPTCHA
-              sitekey="6Ld4itMsAAAAAFotYg6ziCo1yb2HVlA8oJodr5M_"
-              onChange={(token) => setCaptchaToken(token)}
-            />
+              <ReCAPTCHA
+                ref={captchaRef}
+                sitekey="6Ld4itMsAAAAAFotYg6ziCo1yb2HVlA8oJodr5M_"
+                onChange={(token) => setCaptchaToken(token)}
+                onExpired={() => setCaptchaToken(null)}
+              />
+            </div>
           </div>
 
           <Button

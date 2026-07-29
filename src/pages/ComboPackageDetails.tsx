@@ -12,33 +12,19 @@ import { cartStore } from "../store/cart.store";
 
 export default function ComboPackageDetails() {
     const navigate = useNavigate();
-
     const { packageId = "" } = useParams();
-
-
     const {
         packageProducts,
         loading,
         fetchPackageProducts,
     } = usePackageStore();
 
-    const packageData = packageProducts[
-        packageId
-    ];
-
+    const packageData = packageProducts[packageId];
     const products = packageData?.products || [];
     const selectedPackage = packageData?.package;
-    const items = cartStore(
-        (s) => s.items
-    );
-
-    const addItem = cartStore(
-        (s) => s.addItem
-    );
-
-    const removeItem = cartStore(
-        (s) => s.removeItem
-    );
+    const items = cartStore((s) => s.items);
+    const addItem = cartStore((s) => s.addItem);
+    const removeItem = cartStore((s) => s.removeItem);
 
     const handleAddEntirePackage = () => {
         if (packageAdded) return;
@@ -47,9 +33,7 @@ export default function ComboPackageDetails() {
         addItem(comboProductId, 1);
     };
 
-    const comboQty = selectedPackage?.productId
-        ? items[selectedPackage.productId] || 0
-        : 0;
+    const comboQty = selectedPackage?.productId ? items[selectedPackage.productId] || 0 : 0;
     const packageAdded = comboQty > 0;
 
     useEffect(() => {

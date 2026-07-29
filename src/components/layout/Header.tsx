@@ -236,8 +236,32 @@ export default function Header() {
     },
   ];
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   return (
-    <header className="bg-[var(--color-primary)] text-white">
+    // <header className="bg-[var(--color-primary)] text-white">
+    <header
+      className="
+    fixed
+    top-0
+    left-0
+    right-0
+    z-50
+    bg-[var(--color-primary)]
+    text-white
+    shadow-md
+  "
+    >
       <div className="h-16 w-full px-3 sm:px-4 lg:px-5 flex items-center justify-between">
         <Link
           to="/"
@@ -483,14 +507,19 @@ export default function Header() {
       {mobileOpen && (
         <div
           className="
-            lg:hidden
-            border-t
-            border-white/10
-            bg-[var(--color-primary)]/95
-            backdrop-blur-xl
-          "
+      fixed
+      top-16
+      left-0
+      right-0
+      bottom-0
+      lg:hidden
+      bg-[var(--color-primary)]/95
+      backdrop-blur-xl
+      overflow-y-auto
+      z-40
+    "
         >
-          <div className="space-y-4 p-4">
+          <div className="space-y-4 p-4 pb-8">
 
             <Link
               to="/"

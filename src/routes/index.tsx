@@ -49,6 +49,10 @@ import AiAssistant from "../pages/AiAssistant";
 import QuickEstimate from "../pages/QuickEstimate";
 import ScrollToTop from "../components/ui/ScrollToTop";
 import AdminCoupons from "../pages/admin/AdminCoupons";
+import BulkOrder from "../pages/BulkOrder";
+import BulkOrderDetails from "../pages/BulkOrderDetails";
+import BulkOrders from "../pages/BulkOrders";
+import BulkOrderSuccess from "../pages/BulkOrderSuccess";
 
 export default function AppRoutes() {
   return (
@@ -88,6 +92,22 @@ export default function AppRoutes() {
             <Route path="/orders/:orderId" element={<OrderDetails />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders/:orderId/adjust" element={<AdjustOrder />} />
+            <Route path="/bulk-order" element={<BulkOrder />} />
+
+            <Route
+              path="/bulk-order/success/:orderId"
+              element={<BulkOrderSuccess />}
+            />
+
+            <Route
+              path="/bulk-orders"
+              element={<BulkOrders />}
+            />
+
+            <Route
+              path="/bulk-orders/:orderId"
+              element={<BulkOrderDetails />}
+            />
           </Route>
         </Route>
 

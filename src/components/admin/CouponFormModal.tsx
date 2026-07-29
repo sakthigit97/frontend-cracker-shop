@@ -230,8 +230,6 @@ focus:ring-orange-100
                 "
                 >
 
-                    {/* ================= HEADER ================= */}
-
                     <div
                         className="
                         shrink-0
