@@ -186,6 +186,16 @@ export default function Header() {
       label: "Combo Packages",
       to: "/combo-packages",
       icon: <FaBoxOpen />,
+    },
+    {
+      label: "Bulk Orders",
+      to: "/bulk-order",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "View Bulk Orders",
+      to: "/bulk-orders",
+      icon: <FaBoxOpen />,
     }
   ];
 

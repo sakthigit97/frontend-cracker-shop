@@ -65,3 +65,9 @@ export function calculateOrderAmounts({
         grandTotal,
     };
 }
+
+export function formatCurrency(amount?: number | null) {
+    return new Intl.NumberFormat("en-IN", {
+        maximumFractionDigits: 0,
+    }).format(amount ?? 0);
+}

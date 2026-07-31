@@ -1,0 +1,915 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+
+import {
+    STATUS_COLORS,
+    STATUS_LABELS,
+    STATUS_ORDER,
+} from "../../utils/orderStatus";
+
+import Button from "../../components/ui/Button";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import ProductSkeleton from "../../components/product/ProductSkeleton";
+import EmptyState from "../../components/ui/EmptyState";
+import defaultImage from "../../assets/default-image.png";
+import { useAlert } from "../../store/alert.store";
+import { useConfigStore } from "../../store/config.store";
+import { downloadBulkInvoice } from "../../utils/pdf/downloadBulkInvoice";
+import {
+    useAdminBulkOrderDetailsStore,
+} from "../../store/adminBulkOrderDetails.store";
+
+export default function AdminBulkOrderDetails() {
+
+    const { orderId = "" } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { showAlert } = useAlert();
+    const config = useConfigStore(s => s.config);
+
+    const {
+        cache,
+        loading,
+        loaded,
+        fetchOrder,
+        updateOrder,
+    } = useAdminBulkOrderDetailsStore();
+
+    const order = cache[orderId];
+    const [selectedStatus, setSelectedStatus] = useState("");
+    const [comment, setComment] = useState("");
+    const [downloading, setDownloading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [pendingPayload, setPendingPayload] =
+        useState<{
+            status?: string;
+            adminComment?: string;
+        } | null>(null);
+
+    useEffect(() => {
+
+        const shouldForce =
+            (location.state as any)
+                ?.forceRefresh === true;
+
+        fetchOrder(
+            orderId,
+            {
+                force: shouldForce,
+            }
+        );
+
+        if (shouldForce) {
+
+            navigate(
+                location.pathname,
+                {
+                    replace: true,
+                }
+            );
+
+        }
+
+    }, [
+        orderId,
+        fetchOrder,
+        navigate,
+        location.pathname,
+        location.state,]);
+
+    useEffect(() => {
+
+        if (!order) return;
+
+        setSelectedStatus(
+            order.status
+        );
+
+        setComment(
+            order.adminComment || ""
+        );
+
+    }, [order]);
+
+    const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
+    const canDownloadInvoice =
+        order &&
+        [
+            "ORDER_PLACED",
+            "ORDER_CONFIRMED",
+            "PAYMENT_CONFIRMED",
+            "ORDER_PACKED",
+            "DISPATCHED",
+        ].includes(order.status);
+    const currentIndex = order
+        ? STATUS_ORDER.indexOf(order.status)
+        : -1;
+    const availableStatuses =
+        STATUS_ORDER.filter(
+            (
+                status,
+                index
+            ) => {
+
+                if (
+                    status === "CANCELLED"
+                ) {
+
+                    return true;
+
+                }
+
+                return (
+                    index >=
+                    currentIndex
+                );
+
+            }
+        );
+
+
+    async function handleDownloadInvoice() {
+
+        if (
+            downloading ||
+            !order ||
+            !config
+        ) {
+
+            return;
+
+        }
+
+        try {
+
+            setDownloading(true);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            await downloadBulkInvoice(
+                order,
+                config
+            );
+
+        } catch (err: any) {
+
+            showAlert({
+
+                type: "error",
+
+                message:
+                    err.message ||
+                    "Unable to download invoice",
+
+            });
+
+        } finally {
+
+            setDownloading(false);
+
+        }
+
+    }
+
+    if (loading && !loaded) {
+
+        return (
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                {Array.from({
+                    length: 6,
+                }).map((_, i) => (
+
+                    <ProductSkeleton key={i} />
+
+                ))}
+
+            </div>
+
+        );
+
+    }
+
+    if (loaded && !order) {
+
+        return (
+
+            <div className="min-h-[60vh] flex items-center justify-center">
+
+                <div className="bg-white border rounded-xl p-8 text-center max-w-sm w-full">
+
+                    <>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="mb-5 ..."
+                        >
+                            ← Back
+                        </button>
+
+                        <EmptyState
+                            title="Bulk Order not found"
+                            description="Try another Bulk Order."
+                        />
+
+                    </>
+
+                </div>
+
+            </div>
+
+        );
+
+    }
+
+    const canSubmit =
+        !!order &&
+        (
+            selectedStatus !== order.status ||
+            comment !== (order.adminComment || "")
+        );
+
+    if (!order) return;
+
+    return (
+
+        <div className="space-y-6">
+
+            <div className="bg-white border rounded-xl p-4 space-y-3">
+
+                <div className="flex items-center gap-3 mb-4">
+
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="
+                            flex
+                            items-center
+                            justify-center
+                            w-9
+                            h-9
+                            rounded-full
+                            bg-[var(--color-primary)]
+                            text-white
+                            shadow-sm
+                            hover:scale-105
+                            active:scale-95
+                            transition-all
+                        "
+                    >
+                        ←
+                    </button>
+
+                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+
+                        Bulk Order Details
+
+                    </h1>
+
+                </div>
+
+                <div className="space-y-2">
+
+                    <div className="flex items-center gap-2">
+
+                        <h1 className="text-base font-semibold text-[var(--color-primary)] break-all">
+
+                            {order.orderId}
+
+                        </h1>
+
+                        <button
+                            onClick={() =>
+                                navigator.clipboard.writeText(
+                                    order.orderId
+                                )
+                            }
+                            className="p-1.5 rounded-md border hover:bg-gray-100"
+                        >
+
+
+
+                            📋
+
+                        </button>
+
+                    </div>
+
+                    <p className="text-xs text-gray-500">
+
+                        Created on{" "}
+
+                        {new Date(
+                            order.createdAt
+                        ).toLocaleString(
+                            "en-IN"
+                        )}
+
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+
+                        Scheme :{" "}
+
+                        <span className="font-semibold">
+
+                            {order.schemeId}
+
+                        </span>
+
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2">
+
+                        {canDownloadInvoice && (
+
+                            <Button
+                                variant="secondary"
+                                onClick={
+                                    handleDownloadInvoice
+                                }
+                            >
+
+                                {downloading
+
+                                    ? "Downloading..."
+
+                                    : "Download Invoice"}
+
+                            </Button>
+
+                        )}
+
+                        <span
+                            className="inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full"
+                            style={{
+                                backgroundColor:
+                                    `${STATUS_COLORS[order.status]}20`,
+                                color:
+                                    STATUS_COLORS[order.status],
+                            }}
+                        >
+
+                            {STATUS_LABELS[
+                                order.status
+                            ]}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div className="h-px bg-gray-100" />
+
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+
+                    <div>
+
+                        <span className="text-gray-500">
+
+                            Grand Total
+
+                        </span>{" "}
+
+                        <span className="font-semibold">
+
+                            ₹{order.pricing.grandTotal.toLocaleString("en-IN")}
+
+                        </span>
+
+                    </div>
+
+                    <div>
+
+                        <span className="text-gray-500">
+
+                            Products
+
+                        </span>{" "}
+
+                        <span className="font-semibold">
+
+                            {order.items.length}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+            {/* PRODUCTS */}
+
+            <div className="bg-white border rounded-xl divide-y max-h-[60vh] overflow-y-auto">
+
+                {order.items.map((item: any, index: number) => (
+
+                    <div
+                        key={item.productId || index}
+                        className="p-4 flex gap-4"
+                    >
+
+                        <img
+                            src={item.image || defaultImage}
+                            onError={(e) => {
+                                e.currentTarget.src = defaultImage;
+                            }}
+                            className="w-16 h-16 rounded-lg object-cover border"
+                            loading="lazy"
+                        />
+
+                        <div className="flex-1">
+
+                            <div className="flex items-center justify-between gap-3">
+
+                                <h3 className="font-semibold text-sm">
+
+                                    {item.name}
+
+                                </h3>
+
+                                <span className="text-sm font-bold text-[var(--color-primary)]">
+
+                                    ₹{Number(item.total).toLocaleString("en-IN")}
+
+                                </span>
+
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
+
+                                <div>
+
+                                    <p className="text-gray-500">
+
+                                        Carton Qty
+
+                                    </p>
+
+                                    <p className="font-semibold">
+
+                                        {item.cartonQty}
+
+                                    </p>
+
+                                </div>
+
+                                <div>
+
+                                    <p className="text-gray-500">
+
+                                        Boxes
+
+                                    </p>
+
+                                    <p className="font-semibold">
+
+                                        {item.quantity}
+
+                                    </p>
+
+                                </div>
+
+                                <div>
+
+                                    <p className="text-gray-500">
+
+                                        Rate / Box
+
+                                    </p>
+
+                                    <p className="font-semibold">
+
+                                        ₹{Number(item.schemePrice).toLocaleString("en-IN")}
+
+                                    </p>
+
+                                </div>
+
+                                <div>
+
+                                    <p className="text-gray-500">
+
+                                        Amount
+
+                                    </p>
+
+                                    <p className="font-semibold text-[var(--color-primary)]">
+
+                                        ₹{Number(item.total).toLocaleString("en-IN")}
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                ))}
+
+            </div>
+
+            {/* ADDRESS + PRICING */}
+
+            <div className="grid md:grid-cols-2 gap-4">
+
+                <div className="bg-white border rounded-xl p-4">
+
+                    <h3 className="font-semibold mb-3">
+
+                        Delivery Address
+
+                    </h3>
+
+                    <div className="text-sm space-y-1">
+
+                        <p className="font-medium">
+
+                            {order.address.fullName}
+
+                        </p>
+
+                        <p>
+
+                            {order.address.mobile}
+
+                        </p>
+
+                        <p>
+
+                            {order.address.addressLine1}
+
+                        </p>
+
+                        {order.address.addressLine2 && (
+
+                            <p>
+
+                                {order.address.addressLine2}
+
+                            </p>
+
+                        )}
+
+                        <p>
+
+                            {order.address.city},{" "}
+
+                            {order.address.state}
+
+                        </p>
+
+                        <p>
+
+                            {order.address.pincode}
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div className="bg-white border rounded-xl p-4">
+
+                    <h3 className="font-semibold mb-3">
+
+                        Pricing Summary
+
+                    </h3>
+
+                    <div className="space-y-3 text-sm">
+
+                        <div className="flex justify-between">
+
+                            <span>
+
+                                Product Total
+
+                            </span>
+
+                            <span>
+
+                                ₹{Number(order.pricing.productTotal).toLocaleString("en-IN")}
+
+                            </span>
+
+                        </div>
+
+                        <div className="flex justify-between">
+
+                            <span>
+
+                                Packaging ({order.pricing.packagingPercent}%)
+
+                            </span>
+
+                            <span>
+
+                                ₹{Number(order.pricing.packagingCharge).toLocaleString("en-IN")}
+
+                            </span>
+
+                        </div>
+
+                        <div className="flex justify-between">
+
+                            <span>
+
+                                GST ({order.pricing.gstPercent}%)
+
+                            </span>
+
+                            <span>
+
+                                ₹{Number(order.pricing.gstAmount).toLocaleString("en-IN")}
+
+                            </span>
+
+                        </div>
+
+                        <div className="border-t pt-3 flex justify-between font-bold text-[var(--color-primary)]">
+
+                            <span>
+
+                                Grand Total
+
+                            </span>
+
+                            <span>
+
+                                ₹{Number(order.pricing.grandTotal).toLocaleString("en-IN")}
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {order.remarks && (
+
+                <div className="bg-white border rounded-xl p-4">
+
+                    <h3 className="font-semibold mb-2">
+
+                        Remarks
+
+                    </h3>
+
+                    <p className="text-sm whitespace-pre-wrap">
+
+                        {order.remarks}
+
+                    </p>
+
+                </div>
+
+            )}
+
+            {/* ADMIN ACTIONS */}
+
+            {!isTerminal && (
+
+                <div className="bg-white border rounded-xl p-4 space-y-4">
+
+                    <h3 className="text-sm font-semibold">
+
+                        Admin Actions
+
+                    </h3>
+
+                    <div>
+
+                        <label className="text-xs text-gray-500 block mb-1">
+
+                            Update Status
+
+                        </label>
+
+                        <select
+                            value={selectedStatus}
+                            onChange={(e) => {
+
+                                setSelectedStatus(
+                                    e.target.value
+                                );
+
+                            }}
+                            className="
+                                w-full
+                                border
+                                rounded-lg
+                                px-3
+                                py-2
+                                text-sm
+                                bg-white
+                            "
+                        >
+
+                            {availableStatuses.map((status) => (
+
+                                <option
+                                    key={status}
+                                    value={status}
+                                >
+
+                                    {STATUS_LABELS[status]}
+
+                                </option>
+
+                            ))}
+
+                        </select>
+
+                    </div>
+
+                    <div>
+
+                        <label className="text-xs text-gray-500 block mb-1">
+
+                            Admin Comment
+
+                        </label>
+
+                        <textarea
+                            rows={4}
+                            value={comment}
+                            onChange={(e) =>
+                                setComment(
+                                    e.target.value
+                                )
+                            }
+                            className="
+                                w-full
+                                border
+                                rounded-lg
+                                px-3
+                                py-2
+                                text-sm
+                                resize-none
+                            "
+                            placeholder="Enter comment..."
+                        />
+
+                    </div>
+
+                    <div className="flex justify-end">
+
+                        <Button
+                            disabled={
+                                !canSubmit ||
+                                submitting
+                            }
+                            onClick={() => {
+
+                                setPendingPayload({
+
+                                    status:
+                                        selectedStatus,
+
+                                    adminComment:
+                                        comment,
+
+                                });
+
+                                setShowConfirm(
+                                    true
+                                );
+
+                            }}
+                        >
+
+                            {submitting
+                                ? "Updating..."
+                                : "Update Order"}
+
+                        </Button>
+
+                    </div>
+
+                </div>
+
+            )}
+
+            {isTerminal && (
+
+                <div className="bg-white border rounded-xl p-4">
+
+                    <p className="text-xs text-gray-500">
+
+                        This bulk order has reached a terminal state and cannot be modified.
+
+                    </p>
+
+                </div>
+
+            )}
+
+            <ConfirmDialog
+
+                open={showConfirm}
+
+                title="Update Bulk Order?"
+
+                description="Are you sure you want to update this bulk order?"
+
+                confirmText="Yes, Update"
+
+                cancelText="Cancel"
+
+                onConfirm={async () => {
+
+                    if (
+                        !pendingPayload ||
+                        submitting
+                    ) {
+
+                        return;
+
+                    }
+
+                    setShowConfirm(
+                        false
+                    );
+
+                    setSubmitting(
+                        true
+                    );
+
+                    try {
+                        if (!order) return;
+
+                        await updateOrder(
+                            order.orderId,
+                            pendingPayload
+                        );
+
+                        showAlert({
+
+                            type: "success",
+
+                            message:
+                                "Bulk Order updated successfully.",
+
+                            duration: 1500,
+
+                        });
+
+                        fetchOrder(
+                            order.orderId,
+                            {
+                                force: true,
+                            }
+                        );
+
+                    } catch (err: any) {
+
+                        showAlert({
+
+                            type: "error",
+
+                            message:
+                                err?.message ||
+                                "Failed to update bulk order.",
+
+                        });
+
+                    } finally {
+
+                        setSubmitting(
+                            false
+                        );
+
+                        setPendingPayload(
+                            null
+                        );
+
+                    }
+
+                }}
+
+                onCancel={() => {
+
+                    setShowConfirm(
+                        false
+                    );
+
+                    setPendingPayload(
+                        null
+                    );
+
+                }}
+
+            />
+
+        </div>
+
+    );
+
+}

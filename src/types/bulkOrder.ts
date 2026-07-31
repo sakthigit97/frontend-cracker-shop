@@ -16,19 +16,14 @@ export interface BulkScheme {
     requireAdminCode: boolean;
 }
 
-export interface BulkOrderResponse {
-    bulkOrderId: string;
-    status: string;
-    createdAt: string;
-}
-
 export interface BulkOrderDetailsResponse {
     orderId: string;
     createdAt: string;
     status: string;
     schemeName: string;
+    schemeId: string;
     address: BulkOrderAddress;
-    products: BulkOrderProduct[];
+    items: BulkOrderProduct[];
     pricing: BulkOrderPricing;
     remarks?: string;
 }
@@ -40,6 +35,7 @@ export interface BulkOrderProduct {
     brand?: string;
     categoryId?: string;
     cartonQty: number;
+    schemePrice: number;
     quantity: number;
     unitPrice: number;
     total: number;
@@ -86,11 +82,15 @@ export interface CreateBulkOrderRequest {
     schemeId: BulkSchemeId;
     adminCode?: string;
     address: BulkOrderAddress;
-    items: BulkOrderProduct[];
+    items: CreateBulkOrderItem[];
 }
 
 export interface BulkOrderResponse {
-    bulkOrderId: string;
-    status: string;
-    createdAt: string;
+    orderId: string;
+    pricing: BulkOrderPricing;
+}
+
+export interface CreateBulkOrderItem {
+    productId: string;
+    quantity: number;
 }

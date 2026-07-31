@@ -477,9 +477,6 @@ export default function OrderDetails() {
           </Button>
         )}
 
-
-
-
         {order.status === "ORDER_PLACED" && (
           <Button
             onClick={() =>

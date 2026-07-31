@@ -51,8 +51,10 @@ import ScrollToTop from "../components/ui/ScrollToTop";
 import AdminCoupons from "../pages/admin/AdminCoupons";
 import BulkOrder from "../pages/BulkOrder";
 import BulkOrderDetails from "../pages/BulkOrderDetails";
-import BulkOrders from "../pages/BulkOrders";
 import BulkOrderSuccess from "../pages/BulkOrderSuccess";
+import ListBulkOrders from "../pages/ListBulkOrders";
+import AdminBulkOrders from "../pages/admin/AdminBulkOrders";
+import AdminBulkOrderDetails from "../pages/admin/AdminBulkOrderDetails";
 
 export default function AppRoutes() {
   return (
@@ -93,21 +95,9 @@ export default function AppRoutes() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders/:orderId/adjust" element={<AdjustOrder />} />
             <Route path="/bulk-order" element={<BulkOrder />} />
-
-            <Route
-              path="/bulk-order/success/:orderId"
-              element={<BulkOrderSuccess />}
-            />
-
-            <Route
-              path="/bulk-orders"
-              element={<BulkOrders />}
-            />
-
-            <Route
-              path="/bulk-orders/:orderId"
-              element={<BulkOrderDetails />}
-            />
+            <Route path="/bulk-order/success/:orderId" element={<BulkOrderSuccess />} />
+            <Route path="/bulk-orders" element={<ListBulkOrders />} />
+            <Route path="/bulk-orders/:orderId" element={<BulkOrderDetails />} />
           </Route>
         </Route>
 
@@ -136,6 +126,8 @@ export default function AppRoutes() {
             <Route path="/admin/reports/products" element={<ProductReport />} />
             <Route path="/admin/queries" element={<AdminContacts />} />
             <Route path="/admin/coupons" element={<AdminCoupons />} />
+            <Route path="/admin/bulk-orders" element={<AdminBulkOrders />} />
+            <Route path="/admin/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
           </Route>
         </Route>
       </Routes>

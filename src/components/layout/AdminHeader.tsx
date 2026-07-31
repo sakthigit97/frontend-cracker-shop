@@ -72,6 +72,10 @@ export default function AdminHeader() {
       label: "Orders",
       to: "/admin/orders",
       icon: <FaShoppingBag />,
+    }, {
+      label: "Bulk Orders",
+      to: "/admin/bulk-orders",
+      icon: <FaShoppingBag />,
     },
     {
       label: "Revenue Report",
@@ -141,6 +145,10 @@ export default function AdminHeader() {
     {
       label: "Orders",
       to: "/admin/orders",
+      icon: <FaShoppingBag />,
+    }, {
+      label: "Bulk Orders",
+      to: "/admin/bulk-orders",
       icon: <FaShoppingBag />,
     },
     {
@@ -322,7 +330,7 @@ export default function AdminHeader() {
           </button>
         </div>
       </div>
-      
+
 
       {mobileOpen && (
         <div
