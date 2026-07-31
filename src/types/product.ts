@@ -12,6 +12,7 @@ export interface Product {
   categoryId?: string;
   isComboPackage?: boolean;
   productFamily?: string;
+  cartonQty?: number;
 }
 
 export type ProductDetails = {

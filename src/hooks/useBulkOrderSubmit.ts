@@ -2,12 +2,13 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { bulkOrderStore } from "../store/bulkOrder.store";
 import { useBulkOrderPricing } from "./useBulkOrderPricing";
-import { useBulkAddresses } from "./useBulkAddresses";
 import { createBulkOrder } from "../services/bulkOrder.api";
 
 export function useBulkOrderSubmit() {
 
     const navigate = useNavigate();
+    const { address: selectedAddress } = bulkOrderStore();
+
     const {
         clearAll,
         scheme,
@@ -16,10 +17,6 @@ export function useBulkOrderSubmit() {
     const {
         orderItems,
     } = useBulkOrderPricing();
-
-    const {
-        selectedAddress,
-    } = useBulkAddresses();
 
     const [loading, setLoading] =
         useState(false);

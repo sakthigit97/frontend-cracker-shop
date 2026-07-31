@@ -1,17 +1,12 @@
 import { memo } from "react";
 import { CheckCircle2, MapPin, Plus } from "lucide-react";
-
 import type { BulkOrderAddress } from "../../types/bulkOrder";
 
 interface AddressSelectorProps {
     addresses: BulkOrderAddress[];
-
     selectedAddressId?: string;
-
     loading?: boolean;
-
     onSelect: (address: BulkOrderAddress) => void;
-
     onAddNew: () => void;
 }
 

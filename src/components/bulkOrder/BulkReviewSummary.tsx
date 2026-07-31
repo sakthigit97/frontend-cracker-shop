@@ -62,7 +62,7 @@ function BulkReviewSummary({
 
                 </div>
 
-                <div className="divide-y">
+                <div className="max-h-[420px] overflow-y-auto divide-y">
 
                     {items.map((item) => (
 
@@ -78,7 +78,7 @@ function BulkReviewSummary({
                                 </div>
 
                                 <div className="mt-1 text-sm text-gray-500">
-                                    Box Qty : {item.bulkQty}
+                                    Carton Qty : {item.cartonQty}
                                 </div>
 
                                 <div className="mt-1 text-sm text-gray-500">

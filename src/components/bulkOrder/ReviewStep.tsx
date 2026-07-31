@@ -1,11 +1,8 @@
 import BulkStepLayout from "./BulkStepLayout";
 import BulkPricingCard from "./BulkPricingCard";
 import BulkReviewSummary from "./BulkReviewSummary";
-
 import { bulkOrderStore } from "../../store/bulkOrder.store";
-
 import { useBulkOrderPricing } from "../../hooks/useBulkOrderPricing";
-import { useBulkAddresses } from "../../hooks/useBulkAddresses";
 import { useBulkOrderSubmit } from "../../hooks/useBulkOrderSubmit";
 
 export default function ReviewStep() {
@@ -18,10 +15,7 @@ export default function ReviewStep() {
         pricing,
         orderItems,
     } = useBulkOrderPricing();
-
-    const {
-        selectedAddress,
-    } = useBulkAddresses();
+    const { address: selectedAddress } = bulkOrderStore();
 
     const {
         loading,
@@ -56,9 +50,10 @@ export default function ReviewStep() {
                 />
 
                 <div className="space-y-5 xl:sticky xl:top-24 xl:h-fit">
-
                     <BulkPricingCard
                         pricing={pricing}
+                        packagingPercent={pricing.packagingPercent}
+                        gstPercent={pricing.gstPercent}
                     />
 
                     {error && (

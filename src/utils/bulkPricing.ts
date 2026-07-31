@@ -4,11 +4,15 @@ import type {
     BulkScheme,
 } from "../types/bulkOrder";
 
+import { isTamilNadu } from "./pricing";
+
 export interface BulkPricingInput {
     items: BulkOrderProduct[];
     scheme: BulkScheme | null;
     packagingPercent?: number;
     gstPercent?: number;
+    state?: string;
+    config?: any;
 }
 
 export interface BulkValidationResult {
@@ -17,9 +21,9 @@ export interface BulkValidationResult {
 }
 
 export function calculateBulkProductTotal(
-    items: BulkOrderProduct[]
+    items?: BulkOrderProduct[]
 ): number {
-    return items.reduce(
+    return (items ?? []).reduce(
         (sum, item) => sum + Number(item.total || 0),
         0
     );
@@ -29,6 +33,8 @@ export function calculateBulkPricing({
     items,
     packagingPercent = 3,
     gstPercent = 18,
+    state,
+    config,
 }: BulkPricingInput): BulkOrderPricing {
 
     const productTotal = calculateBulkProductTotal(items);
@@ -37,18 +43,23 @@ export function calculateBulkPricing({
         (productTotal * packagingPercent) / 100
     );
 
-    const taxableAmount =
-        productTotal + packagingCharge;
+    const taxableAmount = productTotal + packagingCharge;
 
-    const gstAmount = Math.round(
-        (taxableAmount * gstPercent) / 100
-    );
+    const disableGstForTN = config?.disableGstForTN ?? false;
 
-    const grandTotal =
-        productTotal +
-        packagingCharge +
-        gstAmount;
+    const isTN = isTamilNadu(state);
 
+    let gstAmount = 0;
+
+    if (!(isTN && disableGstForTN)) {
+        const effectiveGstPercent = gstPercent / 2;
+        gstAmount = Math.round(
+            (taxableAmount * effectiveGstPercent) /
+            100
+        );
+    }
+
+    const grandTotal = productTotal + packagingCharge + gstAmount;
     return {
         productTotal,
         packagingPercent,
@@ -103,7 +114,6 @@ export function getSchemePrice(
 ): number {
 
     switch (schemeId) {
-
         case "SCHEME1":
             return Number(product.scheme1Price || 0);
 
@@ -119,7 +129,6 @@ export function getSchemePrice(
         default:
             return 0;
     }
-
 }
 
 export function createBulkOrderItem(
@@ -128,31 +137,28 @@ export function createBulkOrderItem(
     quantity: number
 ): BulkOrderProduct {
 
+    const cartonQty = Number(product.cartonQty || 0);
+    if (cartonQty <= 0) {
+        throw new Error(
+            `${product.name} has an invalid carton quantity.`
+        );
+    }
+
     const unitPrice = getSchemePrice(
         product,
         schemeId
     );
 
     return {
-
         productId: product.id,
-
         name: product.name,
-
         image: product.image,
-
         brand: product.brandName,
-
         categoryId: product.categoryId,
-
-        bulkQty: Number(product.bulkQty || 0),
-
+        cartonQty: Number(product.cartonQty || 0),
         quantity,
-
         unitPrice,
-
-        total: quantity * unitPrice,
-
+        total: quantity * cartonQty * unitPrice,
     };
 }
 
@@ -162,12 +168,9 @@ export function updateBulkOrderItem(
 ): BulkOrderProduct {
 
     return {
-
         ...item,
-
         quantity,
-
-        total: quantity * item.unitPrice,
-
+        total: quantity * item.cartonQty *
+            item.unitPrice,
     };
 }

@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 import { getBulkOrder } from "../services/bulkOrder.api";
-
 interface BulkOrderDetails {
     orderId: string;
     createdAt: string;
@@ -29,7 +28,7 @@ interface BulkOrderDetails {
         productId: string;
         name: string;
         quantity: number;
-        bulkQty: number;
+        cartonQty: number;
         unitPrice: number;
         total: number;
     }[];
@@ -237,11 +236,8 @@ export default function BulkOrderDetails() {
                                         </div>
 
                                         <div className="text-sm text-gray-500">
-
-                                            Box Qty : {item.bulkQty}
-
+                                            Carton Qty : {item.cartonQty}
                                         </div>
-
                                     </div>
 
                                     <div className="text-right">

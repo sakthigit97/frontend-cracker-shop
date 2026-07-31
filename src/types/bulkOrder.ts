@@ -26,15 +26,10 @@ export interface BulkOrderDetailsResponse {
     orderId: string;
     createdAt: string;
     status: string;
-
     schemeName: string;
-
     address: BulkOrderAddress;
-
     products: BulkOrderProduct[];
-
     pricing: BulkOrderPricing;
-
     remarks?: string;
 }
 
@@ -44,14 +39,14 @@ export interface BulkOrderProduct {
     image?: string;
     brand?: string;
     categoryId?: string;
-    bulkQty: number;
+    cartonQty: number;
     quantity: number;
     unitPrice: number;
     total: number;
 }
 
 export interface BulkOrderAddress {
-    id: string;
+    id?: string;
     fullName: string;
     mobile: string;
     addressLine1: string;
@@ -62,69 +57,40 @@ export interface BulkOrderAddress {
 }
 
 export interface BulkOrderPricing {
-
     productTotal: number;
-
     packagingPercent: number;
-
     packagingCharge: number;
-
     gstPercent: number;
-
     gstAmount: number;
-
     grandTotal: number;
-
 }
 
 export interface BulkOrderState {
-
     step: BulkOrderStep;
-
     scheme: BulkScheme | null;
-
     adminCode: string;
-
     adminCodeVerified: boolean;
-
     items: BulkOrderProduct[];
-
     address: BulkOrderAddress | null;
-
     pricing: BulkOrderPricing;
-
     loading: boolean;
-
     search: string;
-
 }
 
 export interface ValidateBulkCodeRequest {
-
     code: string;
-
     schemeId: BulkSchemeId;
-
 }
 
 export interface CreateBulkOrderRequest {
-
     schemeId: BulkSchemeId;
-
     adminCode?: string;
-
     address: BulkOrderAddress;
-
     items: BulkOrderProduct[];
-
 }
 
 export interface BulkOrderResponse {
-
     bulkOrderId: string;
-
     status: string;
-
     createdAt: string;
-
 }

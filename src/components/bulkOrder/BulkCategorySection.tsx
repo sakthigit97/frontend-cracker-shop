@@ -1,14 +1,11 @@
 import { memo, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-
 import BulkProductRow from "./BulkProductRow";
-
 import type { Product } from "../../types/product";
 import type {
     BulkOrderProduct,
     BulkSchemeId,
 } from "../../types/bulkOrder";
-import { getSchemePrice } from "../../utils/bulkPricing";
 
 interface BulkCategorySectionProps {
     categoryName: string;
@@ -31,43 +28,12 @@ function BulkCategorySection({
 
     const [expanded, setExpanded] = useState(true);
 
-    const categoryTotal = useMemo(() => {
-
-        return products.reduce((total, product) => {
-
-            const item = items.find(
-                (x) => x.productId === product.id
-            );
-
-            const qty = item?.quantity ?? 0;
-
-            if (qty === 0) {
-                return total;
-            }
-
-            const price = getSchemePrice(
-                product,
-                schemeId
-            );
-
-            return total + qty * price;
-
-        }, 0);
-
-    }, [
-        products,
-        items,
-        schemeId,
-    ]);
-
     const selectedItems = useMemo(() => {
 
         return products.reduce((count, product) => {
-
             const item = items.find(
                 (x) => x.productId === product.id
             );
-
             if ((item?.quantity ?? 0) > 0) {
                 return count + 1;
             }
@@ -86,38 +52,38 @@ function BulkCategorySection({
             <button
                 type="button"
                 onClick={() => setExpanded((prev) => !prev)}
-                className="flex w-full items-center justify-between bg-slate-800 px-5 py-3 text-white transition hover:bg-slate-700"
+                className="flex w-full items-center justify-between bg-slate-800 px-3 py-2 sm:px-4 sm:py-3 lg:px-5 lg:py-3 text-white transition hover:bg-slate-700"
             >
-                <div className="flex items-center gap-3">
-                    <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="h-2 w-2 rounded-full bg-yellow-400 sm:h-2.5 sm:w-2.5" />
 
                     <div>
-                        <h3 className="text-lg font-semibold uppercase tracking-wide">
+
+                        <h3 className="text-[15px] font-semibold uppercase leading-5 sm:text-base lg:text-lg">
                             {categoryName}
                         </h3>
 
-                        <p className="text-sm text-slate-300">
+                        <p className="mt-0.5 text-[11px] text-slate-300 sm:text-xs lg:text-sm">
                             {products.length} Products
                             {selectedItems > 0 &&
                                 ` • ${selectedItems} Selected`}
                         </p>
+
                     </div>
+
                 </div>
 
-                <div className="flex items-center gap-3">
-                    {expanded ? (
-                        <ChevronDown size={20} />
-                    ) : (
-                        <ChevronRight size={20} />
-                    )}
-                </div>
-            </button>   
+                {expanded ? (
+                    <ChevronDown className="h-5 w-5 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                ) : (
+                    <ChevronRight className="h-5 w-5 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                )}
+            </button>
             {expanded && (
 
                 <div>
 
                     {products.map((product) => {
-
                         const item = items.find(
                             (x) => x.productId === product.id
                         );

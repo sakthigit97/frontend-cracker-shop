@@ -1,48 +1,65 @@
-import { useCallback, useMemo } from "react";
-
+import { useCallback } from "react";
 import BulkStepLayout from "./BulkStepLayout";
 import BulkSearch from "./BulkSearch";
 import BulkProductTable from "./BulkProductTable";
-import BulkSummaryBar from "./BulkSummaryBar";
 import { bulkOrderStore } from "../../store/bulkOrder.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
-import { calculateBulkPricing } from "../../utils/bulkPricing";
+import { getSchemePrice } from "../../utils/bulkPricing";
 
 export default function ProductStep() {
+
     const {
         scheme,
         items,
         search,
         setSearch,
+        addItem,
         updateQuantity,
         previousStep,
         nextStep,
     } = bulkOrderStore();
 
     const { products = [] } = useHomeProducts();
-    const pricing = useMemo(
-        () =>
-            calculateBulkPricing({
-                items,
-                scheme,
-            }),
-        [items, scheme]
-    );
-
-    const totalBoxes = useMemo(
-        () =>
-            items.reduce(
-                (sum: number, item) => sum + item.quantity,
-                0
-            ),
-        [items]
-    );
 
     const handleQuantityChange = useCallback(
         (productId: string, quantity: number) => {
-            updateQuantity(productId, quantity);
+
+            const existing = items.find(
+                (x) => x.productId === productId
+            );
+
+            if (existing) {
+
+                updateQuantity(productId, quantity);
+                return;
+
+            }
+
+            const product = products.find(
+                (p) => p.id === productId
+            );
+
+            if (!product || quantity <= 0) {
+                return;
+            }
+
+            const unitPrice = getSchemePrice(
+                product,
+                scheme!.id
+            );
+
+            addItem({
+                productId: product.id,
+                name: product.name,
+                cartonQty: Number(product.cartonQty ?? 0),
+                quantity: 1,
+                unitPrice,
+                total: Number(product.cartonQty || 0) *
+                    unitPrice,
+            });
+
         },
-        [updateQuantity]
+        [items, products, scheme, addItem, updateQuantity]
     );
 
     const canContinue = items.length > 0;
@@ -62,7 +79,7 @@ export default function ProductStep() {
             onPrevious={previousStep}
             onNext={nextStep}
         >
-            <div className="space-y-6">
+            <div className="space-y-3 lg:space-y-4">
 
                 <BulkSearch
                     value={search}
@@ -73,8 +90,7 @@ export default function ProductStep() {
                     <button
                         type="button"
                         onClick={previousStep}
-                        className="rounded-lg border border-gray-300 px-5 py-2 font-medium transition hover:bg-gray-100"
-                    >
+                        className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium transition hover:bg-gray-100"                    >
                         Back
                     </button>
 
@@ -82,8 +98,7 @@ export default function ProductStep() {
                         type="button"
                         onClick={nextStep}
                         disabled={!canContinue}
-                        className={[
-                            "rounded-lg px-5 py-2 font-medium text-white transition",
+                        className={["rounded-lg px-4 py-1.5 text-sm font-medium text-white transition",
                             canContinue
                                 ? "bg-primary hover:opacity-90"
                                 : "cursor-not-allowed bg-gray-300",
@@ -100,15 +115,6 @@ export default function ProductStep() {
                     items={items}
                     onQuantityChange={handleQuantityChange}
                 />
-
-                <BulkSummaryBar
-                    selectedProducts={items.length}
-                    totalBoxes={totalBoxes}
-                    pricing={pricing}
-                    disabled={!canContinue}
-                    onContinue={nextStep}
-                />
-
             </div>
         </BulkStepLayout>
     );

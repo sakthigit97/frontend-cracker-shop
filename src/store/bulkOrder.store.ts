@@ -9,81 +9,52 @@ import type {
 import { BULK_ORDER_STEPS } from "../constants/bulkOrderSteps";
 
 interface BulkOrderStore {
-
     step: BulkOrderStep;
-
     scheme: BulkScheme | null;
-
     adminCode: string;
-
     adminCodeVerified: boolean;
-
     search: string;
-
     items: BulkOrderProduct[];
-
+    setQuantity: (
+        productId: string,
+        quantity: number
+    ) => void;
     address: BulkOrderAddress | null;
-
     loading: boolean;
-
     setStep: (step: BulkOrderStep) => void;
-
     nextStep: () => void;
-
     previousStep: () => void;
-
     setScheme: (scheme: BulkScheme | null) => void;
-
     setAdminCode: (code: string) => void;
-
     setAdminCodeVerified: (verified: boolean) => void;
-
     setSearch: (search: string) => void;
-
     setLoading: (loading: boolean) => void;
-
     setAddress: (address: BulkOrderAddress) => void;
-
     addItem: (item: BulkOrderProduct) => void;
-
     updateQuantity: (
         productId: string,
         quantity: number
     ) => void;
-
     removeItem: (productId: string) => void;
-
     clearItems: () => void;
-
     clearAll: () => void;
-
 }
 
 export const bulkOrderStore = create<BulkOrderStore>()(
     persist(
         (set, get) => ({
-
             step: BULK_ORDER_STEPS.SCHEME,
-
             scheme: null,
-
             adminCode: "",
-
             adminCodeVerified: false,
-
             search: "",
-
             items: [],
-
             address: null,
-
             loading: false,
-
             setStep: (step) =>
                 set({
                     step,
                 }),
-
             nextStep: () =>
                 set((state) => ({
                     step: Math.min(
@@ -102,6 +73,8 @@ export const bulkOrderStore = create<BulkOrderStore>()(
             setScheme: (scheme) =>
                 set({
                     scheme,
+                    items: [],
+                    search: "",
                 }),
 
             setAdminCode: (adminCode) =>
@@ -131,10 +104,43 @@ export const bulkOrderStore = create<BulkOrderStore>()(
                     address,
                 }),
 
+            setQuantity: (productId, quantity) =>
+                set((state) => {
+
+                    const items = [...state.items];
+
+                    const index = items.findIndex(
+                        (x) => x.productId === productId
+                    );
+
+                    if (quantity <= 0) {
+                        return {
+                            items: items.filter(
+                                (x) => x.productId !== productId
+                            ),
+                        };
+                    }
+
+                    if (index >= 0) {
+
+                        items[index] = {
+                            ...items[index],
+                            quantity,
+                            total: quantity *
+                                items[index].cartonQty *
+                                items[index].unitPrice,
+                        };
+
+                    } else {
+                        return { items };
+                    }
+                    return { items };
+                }),
+
+
             addItem: (item) => {
 
                 const items = get().items;
-
                 const exists = items.find(
                     (x) =>
                         x.productId === item.productId
@@ -191,17 +197,13 @@ export const bulkOrderStore = create<BulkOrderStore>()(
                             }
 
                             return {
-
                                 ...item,
-
                                 quantity,
-
                                 total:
                                     quantity *
+                                    item.cartonQty *
                                     item.unitPrice,
-
                             };
-
                         }
                     ),
 
