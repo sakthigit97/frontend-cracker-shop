@@ -17,6 +17,8 @@ import {
   FaBars,
   FaTimes,
   FaPalette,
+  FaTruckLoading,
+  FaBoxes,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -116,7 +118,6 @@ export default function Header() {
     });
   }, [items, products]);
 
-
   const productMenu: HeaderDropdownItem[] = [
     {
       label: "All Products",
@@ -127,7 +128,17 @@ export default function Header() {
       label: "Combo Packages",
       to: "/combo-packages",
       icon: <FaBoxOpen />,
-    }
+    },
+    {
+      label: "Bulk Order",
+      to: "/bulk-order",
+      icon: <FaTruckLoading />,
+    },
+    {
+      label: "View Bulk Orders",
+      to: "/bulk-orders",
+      icon: <FaBoxes />,
+    },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -188,15 +199,15 @@ export default function Header() {
       icon: <FaBoxOpen />,
     },
     {
-      label: "Bulk Orders",
+      label: "Bulk Order",
       to: "/bulk-order",
-      icon: <FaBoxOpen />,
+      icon: <FaTruckLoading />,
     },
     {
       label: "View Bulk Orders",
       to: "/bulk-orders",
-      icon: <FaBoxOpen />,
-    }
+      icon: <FaBoxes />,
+    },
   ];
 
   const mobileSupport: MobileAccordionItem[] = [

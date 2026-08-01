@@ -40,7 +40,7 @@ export default function SchemeSelector() {
 
                         <div className="font-semibold">
 
-                            {item.label}
+                            {item.name}
 
                         </div>
 
@@ -50,7 +50,7 @@ export default function SchemeSelector() {
 
             ))}
 
-            {scheme?.requiresCode && (
+            {scheme?.requireAdminCode && (
 
                 <div>
 

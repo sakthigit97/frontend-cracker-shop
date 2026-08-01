@@ -35,7 +35,7 @@ export interface BulkOrderProduct {
     brand?: string;
     categoryId?: string;
     cartonQty: number;
-    schemePrice: number;
+    schemePrice?: number;
     quantity: number;
     unitPrice: number;
     total: number;

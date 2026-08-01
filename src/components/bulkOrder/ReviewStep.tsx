@@ -19,7 +19,6 @@ export default function ReviewStep() {
 
     const {
         loading,
-        error,
         submitOrder,
     } = useBulkOrderSubmit();
 
@@ -55,12 +54,6 @@ export default function ReviewStep() {
                         packagingPercent={pricing.packagingPercent}
                         gstPercent={pricing.gstPercent}
                     />
-
-                    {error && (
-                        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                            {error}
-                        </div>
-                    )}
 
                     <div className="rounded-xl border border-green-200 bg-green-50 p-4">
 

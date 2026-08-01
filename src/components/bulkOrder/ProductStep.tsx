@@ -54,8 +54,7 @@ export default function ProductStep() {
                 cartonQty: Number(product.cartonQty ?? 0),
                 quantity: 1,
                 unitPrice,
-                total: Number(product.cartonQty || 0) *
-                    unitPrice,
+                total: Number(product.cartonQty || 0) * unitPrice,
             });
 
         },

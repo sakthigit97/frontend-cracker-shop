@@ -55,6 +55,7 @@ import BulkOrderSuccess from "../pages/BulkOrderSuccess";
 import ListBulkOrders from "../pages/ListBulkOrders";
 import AdminBulkOrders from "../pages/admin/AdminBulkOrders";
 import AdminBulkOrderDetails from "../pages/admin/AdminBulkOrderDetails";
+import AdminCodes from "../pages/admin/AdminCodes";
 
 export default function AppRoutes() {
   return (
@@ -128,6 +129,7 @@ export default function AppRoutes() {
             <Route path="/admin/coupons" element={<AdminCoupons />} />
             <Route path="/admin/bulk-orders" element={<AdminBulkOrders />} />
             <Route path="/admin/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
+            <Route path="/admin/admin-codes" element={<AdminCodes />} />
           </Route>
         </Route>
       </Routes>

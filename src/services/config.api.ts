@@ -33,6 +33,7 @@ export type GlobalConfig = {
     gmapLink: string;
     displayMobile: string;
     website: string;
+    bulkSchemes?: any;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

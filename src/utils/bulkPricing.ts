@@ -158,6 +158,7 @@ export function createBulkOrderItem(
         cartonQty: Number(product.cartonQty || 0),
         quantity,
         unitPrice,
+        schemePrice: unitPrice,
         total: quantity * cartonQty * unitPrice,
     };
 }

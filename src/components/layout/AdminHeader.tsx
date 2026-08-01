@@ -18,6 +18,7 @@ import {
   FaFolderOpen,
   FaServer,
   FaTicketAlt,
+  FaTruckLoading
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -65,6 +66,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
+    {
+      label: "Admin Bulk Order Codes",
+      to: "/admin/admin-codes",
+      icon: <FaTicketAlt />,
+    },
   ];
 
   const salesMenu: HeaderDropdownItem[] = [
@@ -75,7 +81,7 @@ export default function AdminHeader() {
     }, {
       label: "Bulk Orders",
       to: "/admin/bulk-orders",
-      icon: <FaShoppingBag />,
+      icon: <FaTruckLoading />,
     },
     {
       label: "Revenue Report",
@@ -139,6 +145,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
+    {
+      label: "Admin Bulk Order Codes",
+      to: "/admin/admin-codes",
+      icon: <FaTicketAlt />,
+    },
   ];
 
   const mobileSales: MobileAccordionItem[] = [
@@ -149,7 +160,7 @@ export default function AdminHeader() {
     }, {
       label: "Bulk Orders",
       to: "/admin/bulk-orders",
-      icon: <FaShoppingBag />,
+      icon: <FaTruckLoading />,
     },
     {
       label: "Revenue Report",
