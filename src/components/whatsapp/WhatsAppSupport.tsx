@@ -7,31 +7,43 @@ import { useConfigStore } from "../../store/config.store";
 export default function WhatsAppSupport() {
     const config = useConfigStore((s) => s.config);
     const contacts: WhatsAppContact[] = config?.whatsAppSupport?.contacts ?? [];
-
+    const support = config?.whatsAppSupport;
+    const openDelay = support?.autoOpenDelay ?? 1000;
+    const autoCloseDelay = support?.autoCloseAfter ?? 8000;
     const [open, setOpen] = useState(false);
 
-    useEffect(() => {
-        const alreadyShown = sessionStorage.getItem(
-            "whatsapp-popup-shown"
-        );
+useEffect(() => {
+    console.log("Support config:", support);
 
-        if (alreadyShown) return;
+    if (!support?.enabled) {
+        console.log("Support disabled or not loaded yet");
+        return;
+    }
 
-        sessionStorage.setItem(
-            "whatsapp-popup-shown",
-            "true"
-        );
+    if (sessionStorage.getItem("whatsapp-popup-shown")) {
+        console.log("Already shown");
+        return;
+    }
 
-        const openTimer = setTimeout(() => {
-            setOpen(true);
-            const closeTimer = setTimeout(() => {
-                setOpen(false);
-            }, 8000);
-            return () => clearTimeout(closeTimer);
-        }, 1000);
+    sessionStorage.setItem("whatsapp-popup-shown", "true");
 
-        return () => clearTimeout(openTimer);
-    }, []);
+    console.log("Scheduling popup...");
+
+    const openTimer = window.setTimeout(() => {
+        console.log("Opening popup");
+        setOpen(true);
+    }, openDelay);
+
+    const closeTimer = window.setTimeout(() => {
+        console.log("Closing popup");
+        setOpen(false);
+    }, openDelay + autoCloseDelay);
+
+    return () => {
+        clearTimeout(openTimer);
+        clearTimeout(closeTimer);
+    };
+}, [support, openDelay, autoCloseDelay]);
 
     return (
         <>
@@ -46,31 +58,31 @@ export default function WhatsAppSupport() {
                     onClick={() => setOpen((v) => !v)}
                     aria-label="WhatsApp Support"
                     className="
-                    fixed
-                    bottom-20
-                    right-6
-                    z-50
+                        fixed
+                        bottom-20
+                        right-6
+                        z-50
 
-                    flex
-                    items-center
-                    justify-center
+                        flex
+                        items-center
+                        justify-center
 
-                    w-14
-                    h-14
+                        w-14
+                        h-14
 
-                    rounded-full
+                        rounded-full
 
-                    bg-[#25D366]
-                    text-white
+                        bg-[#25D366]
+                        text-white
 
-                    shadow-xl
+                        shadow-xl
 
-                    transition-all
-                    duration-300
+                        transition-all
+                        duration-300
 
-                    hover:scale-110
-                    active:scale-95
-                    "
+                        hover:scale-110
+                        active:scale-95
+                        "
                 >
                     <FaWhatsapp size={32} />
                 </button>

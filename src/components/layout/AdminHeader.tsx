@@ -18,7 +18,7 @@ import {
   FaFolderOpen,
   FaServer,
   FaTicketAlt,
-  FaTruckLoading
+  // FaTruckLoading
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";

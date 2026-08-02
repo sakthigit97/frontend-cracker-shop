@@ -1308,7 +1308,7 @@ export default function AdminConfigPage() {
                                         className="border rounded-xl bg-gray-50 p-4 space-y-4 mb-5"
                                     >
 
-                                        {contact.image ? (
+                                        {contact.previewUrl || contact.image ? (
                                             <img
                                                 src={contact.previewUrl || contact.image}
                                                 alt={contact.name}
@@ -1432,7 +1432,7 @@ export default function AdminConfigPage() {
                         {form.sliderImages.map((img: any, index: number) => (
                             <div key={img.id} className="border rounded-xl p-4 space-y-3 bg-gray-50">
 
-                                {img.imageUrl ? (
+                                {img.previewUrl || img.imageUrl ? (
                                     <img
                                         src={img.previewUrl || img.imageUrl}
                                         className="h-24 w-full object-cover rounded-lg border"
@@ -1450,7 +1450,9 @@ export default function AdminConfigPage() {
                                         fileRef.current?.click();
                                     }}
                                 >
-                                    {img.imageUrl ? "Change Image" : "Upload Image"}
+                                    {img.previewUrl || img.imageUrl
+                                        ? "Change Image"
+                                        : "Upload Image"}
                                 </Button>
 
                                 <input
@@ -1506,7 +1508,7 @@ export default function AdminConfigPage() {
                                         bg-gray-50
                                     "
                                 >
-                                    {tag.imageUrl ? (
+                                    {tag.previewUrl || tag.imageUrl ? (
                                         <img
                                             src={tag.previewUrl || tag.imageUrl}
                                             className="
