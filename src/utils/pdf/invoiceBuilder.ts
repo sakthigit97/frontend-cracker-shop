@@ -241,7 +241,7 @@ export async function buildInvoicePdf(
             "Qty",
             "MRP",
             "Discount",
-            "Offer",
+            "Offer Price",
             "Total"
         ]],
         body: order.items.map((item: any) => [

@@ -26,6 +26,7 @@ export default function QuickEstimate() {
     const items = quickEstimateStore((s) => s.items);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [showEstimateInfo, setShowEstimateInfo] = useState(false);
     const {
         items: categories,
         fetchAllCategory,
@@ -315,36 +316,46 @@ export default function QuickEstimate() {
                                 <span>
                                     Estimate ₹{grandTotal.toLocaleString("en-IN")}
                                 </span>
-
-                                <div className="relative group">
-                                    <span className="cursor-help text-blue-300 font-semibold">
+                                <div
+                                    className="relative group"
+                                    onMouseLeave={() => setShowEstimateInfo(false)}
+                                >
+                                    <button
+                                        type="button"
+                                        className="cursor-help text-blue-300 font-semibold"
+                                        onClick={() => setShowEstimateInfo((v) => !v)}
+                                    >
                                         ⓘ
-                                    </span>
+                                    </button>
 
                                     <div
-                                        className="
-                                            absolute
-                                            bottom-full
-                                            left-1/2
-                                            -translate-x-1/2
-                                            mb-2
-                                            w-64
-                                            rounded-xl
-                                            border
-                                            border-gray-200
-                                            bg-white
-                                            p-3
-                                            shadow-xl
-                                            text-gray-700
-                                            text-sm
-                                            opacity-0
-                                            invisible
-                                            transition-all
-                                            duration-200
-                                            group-hover:opacity-100
-                                            group-hover:visible
-                                            z-50
-                                        "
+                                        className={`
+      absolute
+      bottom-full
+      left-1/2
+      -translate-x-1/2
+      mb-2
+      w-64
+      rounded-xl
+      border
+      border-gray-200
+      bg-white
+      p-3
+      shadow-xl
+      text-gray-700
+      text-sm
+      z-50
+      transition-all
+      duration-200
+
+      ${showEstimateInfo
+                                                ? "opacity-100 visible"
+                                                : "opacity-0 invisible"
+                                            }
+
+      md:group-hover:opacity-100
+      md:group-hover:visible
+    `}
                                     >
                                         <p className="font-semibold text-gray-900">
                                             Estimated Total

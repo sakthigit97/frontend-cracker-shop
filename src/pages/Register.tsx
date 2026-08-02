@@ -346,6 +346,7 @@ export default function Register() {
             className="w-full"
             onClick={verifyOtpAndRegister}
             disabled={loading}
+            data-enter-submit="true"
           >
             {loading ? "Registering..." : "Register"}
           </Button>

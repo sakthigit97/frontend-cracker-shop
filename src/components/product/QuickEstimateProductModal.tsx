@@ -6,7 +6,6 @@ import {
     useFetchProductDetails,
     useProductDetails,
 } from "../../store/productDetails.store";
-import { cartStore } from "../../store/cart.store";
 
 interface QuickEstimateProductModalProps {
     productId: string | null;
@@ -16,151 +15,251 @@ interface QuickEstimateProductModalProps {
 
 function getYouTubeId(url?: string) {
     if (!url) return null;
-
-    const regExp =
-        /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&?/]+)/;
-
+    const regExp = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&?/]+)/;
     const match = url.match(regExp);
-
     return match ? match[1] : null;
 }
+type MediaItem =
+    | {
+        type: "image";
+        src: string;
+    }
+    | {
+        type: "video";
+        src: string;
+    };
 
 const ProductImage = memo(function ProductImage({
-    images,
+    media,
     name,
 }: {
-    images: string[];
+    media: MediaItem[];
     name: string;
 }) {
-    const [activeImage, setActiveImage] = useState(0);
-    const [hovered, setHovered] = useState(false);
-    const [fade, setFade] = useState(false);
+    const [showViewer, setShowViewer] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [viewerIndex, setViewerIndex] = useState(0);
+
+    const viewerPrev = () => {
+        let i = viewerIndex;
+
+        do {
+            i = i === 0 ? media.length - 1 : i - 1;
+        } while (media[i].type === "video");
+
+        setViewerIndex(i);
+    };
+
+    const viewerNext = () => {
+        let i = viewerIndex;
+
+        do {
+            i = (i + 1) % media.length;
+        } while (media[i].type === "video");
+
+        setViewerIndex(i);
+    };
+
+    const prev = () =>
+        setActiveIndex((prev) => (prev === 0 ? media.length - 1 : prev - 1));
+
+    const next = () => setActiveIndex((prev) => (prev + 1) % media.length);
 
     useEffect(() => {
-        setActiveImage(0);
-    }, [images]);
+        if (!media.length || media.length <= 1) return;
+        if (media[activeIndex]?.type === "video") return;
 
-    useEffect(() => {
-        if (!images || images.length <= 1) return;
-        if (hovered) return;
-
-        const timer = setInterval(() => {
-            setFade(true);
-
-            setTimeout(() => {
-                setActiveImage((prev) =>
-                    prev === images.length - 1 ? 0 : prev + 1
-                );
-
-                setFade(false);
-            }, 250);
+        const interval = setInterval(() => {
+            setActiveIndex((prev) => (prev + 1) % media.length);
         }, 3000);
 
-        return () => clearInterval(timer);
-    }, [images, hovered]);
-
-    const prev = () => {
-        setActiveImage((p) =>
-            p === 0 ? images.length - 1 : p - 1
-        );
-    };
-
-    const next = () => {
-        setActiveImage((p) =>
-            p === images.length - 1 ? 0 : p + 1
-        );
-    };
+        return () => clearInterval(interval);
+    }, [media, activeIndex]);
 
     return (
         <div className="relative w-full">
+            <div
+                className="
+    relative
+    h-[260px]
+    sm:h-[340px]
+    md:h-[480px]
+    lg:h-[560px]
+    rounded-2xl
+    border
+    bg-gradient-to-br
+    from-gray-50
+    via-white
+    to-gray-100
+    shadow-inner
+    overflow-hidden
+"
+            >
+                <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5" />
 
-            <div className="relative rounded-2xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 shadow-inner p-3 md:p-5 flex justify-center items-center">
+                {/* Previous */}
+                <button
+                    onClick={prev}
+                    className="
+        absolute
+        top-1/2
+        -translate-y-1/2
+        z-20
+        left-3
+        w-9
+        h-9
+        md:w-11
+        md:h-11
+        rounded-full
+        bg-white/90
+        backdrop-blur-sm
+        shadow-lg
+        hover:bg-white
+        hover:scale-105
+        transition-all
+        "
+                >
+                    ❮
+                </button>
 
-                <img
-                    src={images[activeImage] || defaultImage}
-                    alt={name}
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
-                    className={`
-                        w-full
-                        max-h-[220px]
-md:max-h-[360px]
-                        object-contain
-                        transition-all
-                        duration-300
-                        hover:scale-105
-                        ${fade ? "opacity-0" : "opacity-100"}
-                    `}
-                />
+                <button
+                    onClick={next}
+                    className="
+          absolute
+          top-1/2
+          -translate-y-1/2
+          z-20
+          right-3
+          w-9
+          h-9
+          md:w-11
+          md:h-11
+          rounded-full
+          bg-white/90
+          backdrop-blur-sm
+          shadow-lg
+          hover:bg-white
+          hover:scale-105
+          transition-all
+          "
+                >
+                    ❯
+                </button>
 
-                {images.length > 1 && (
-                    <>
-                        <button
-                            onClick={prev}
-                            className="
-                                absolute
-                                left-3
-                                top-1/2
-                                -translate-y-1/2
-                                w-10
-                                h-10
-                                rounded-full
-                                bg-white/90
-                                shadow
-                                hover:bg-white
-                            "
-                        >
-                            ←
-                        </button>
+                {media.map((item, index) => (
+                    <div
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-500 ${activeIndex === index
+                                ? "opacity-100 z-10"
+                                : "opacity-0 pointer-events-none"
+                            }`}
+                    >
+                        {item.type === "image" ? (
+                            <img
+                                onClick={() => {
+                                    setViewerIndex(index);
+                                    setShowViewer(true);
+                                }}
+                                onError={(e) => {
+                                    const img = e.currentTarget;
 
-                        <button
-                            onClick={next}
-                            className="
-                                absolute
-                                right-3
-                                top-1/2
-                                -translate-y-1/2
-                                w-10
-                                h-10
-                                rounded-full
-                                bg-white/90
-                                shadow
-                                hover:bg-white
-                            "
-                        >
-                            →
-                        </button>
-                    </>
-                )}
-            </div>
+                                    if (img.src !== defaultImage) {
+                                        img.onerror = null;
+                                        img.src = defaultImage;
+                                    }
+                                }}
+                                src={item.src || defaultImage}
+                                alt={name}
+                                loading="eager"
+                                draggable={false}
+                                className="
+absolute
+inset-0
+w-full
+h-full
+object-contain
+p-6
+md:p-8
+cursor-zoom-in
+transition-all
+duration-300
+hover:scale-[1.03]
+select-none
+"
+                            />
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black">
+                                <iframe
+                                    src={`https://www.youtube.com/embed/${item.src}?rel=0`}
+                                    allowFullScreen
+                                    className="w-full aspect-video rounded-2xl"
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
 
-            {images.length > 1 && (
-                <div className="flex gap-2 justify-center mt-4 flex-wrap">
-
-                    {images.map((img, index) => (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                    {media.map((_, index) => (
                         <button
                             key={index}
-                            onClick={() => setActiveImage(index)}
-                            className={`
-                                rounded-lg
-                                overflow-hidden
-                                border-2
-                                transition-all
-                                ${index === activeImage
-                                    ? "border-[var(--color-primary)]"
-                                    : "border-gray-200"}
-                            `}
-                        >
-                            <img
-                                src={img}
-                                alt=""
-                                className="w-16 h-16 object-cover"
-                            />
-                        </button>
+                            onClick={() => setActiveIndex(index)}
+                            className={`h-2 rounded-full transition-all ${activeIndex === index
+                                    ? "w-6 bg-[var(--color-primary)]"
+                                    : "w-2 bg-gray-300"
+                                }`}
+                        />
                     ))}
-
                 </div>
-            )}
+                {showViewer && (
+                    <div
+                        className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+                        onClick={() => setShowViewer(false)}
+                    >
+                        {/* Close */}
+                        <button
+                            onClick={() => setShowViewer(false)}
+                            className="absolute top-5 right-5 text-white text-4xl font-light"
+                        >
+                            ×
+                        </button>
+
+                        {/* Previous */}
+                        {media.length > 1 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    viewerPrev();
+                                }}
+                                className="absolute left-6 top-1/2 -translate-y-1/2 text-white text-5xl"
+                            >
+                                ❮
+                            </button>
+                        )}
+
+                        {/* Image */}
+                        <img
+                            src={(media[viewerIndex] as { type: "image"; src: string }).src}
+                            alt={name}
+                            onClick={(e) => e.stopPropagation()}
+                            className="max-w-[95vw] max-h-[90vh] object-contain"
+                        />
+
+                        {/* Next */}
+                        {media.length > 1 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    viewerNext();
+                                }}
+                                className="absolute right-6 top-1/2 -translate-y-1/2 text-white text-5xl"
+                            >
+                                ❯
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 });
@@ -170,19 +269,8 @@ export default function QuickEstimateProductModal({
     productId,
     onClose,
 }: QuickEstimateProductModalProps) {
-
     const fetchProduct = useFetchProductDetails();
-
-    const {
-        data: product,
-        loading,
-    } = useProductDetails(productId ?? "");
-
-    const addItem = cartStore((s) => s.addItem);
-
-    const cartQty = cartStore((s) =>
-        product ? s.items[product.id] ?? 0 : 0
-    );
+    const { data: product, loading } = useProductDetails(productId ?? "");
 
     useEffect(() => {
         if (!open) return;
@@ -213,17 +301,15 @@ export default function QuickEstimateProductModal({
 
         window.addEventListener("keydown", esc);
 
-        return () =>
-            window.removeEventListener("keydown", esc);
+        return () => window.removeEventListener("keydown", esc);
     }, [open, onClose]);
 
     const videoId = useMemo(() => {
-        return getYouTubeId(product?.youtubeUrl || '');
+        return getYouTubeId(product?.youtubeUrl || "");
     }, [product]);
 
     if (!open) return null;
 
-    const availableQty = product?.qty ?? 0;
     if (loading && !product) {
         return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
@@ -236,6 +322,32 @@ export default function QuickEstimateProductModal({
             </div>
         );
     }
+    const validImages =
+        product?.images?.filter((img) => img && img.trim().length > 0) ?? [];
+
+    const imageMedia =
+        validImages.length > 0
+            ? validImages.map((img) => ({
+                type: "image" as const,
+                src: img,
+            }))
+            : [
+                {
+                    type: "image" as const,
+                    src: defaultImage,
+                },
+            ];
+    const media = [
+        ...imageMedia,
+        ...(videoId
+            ? [
+                {
+                    type: "video" as const,
+                    src: videoId,
+                },
+            ]
+            : []),
+    ];
 
     if (!product) {
         return (
@@ -267,7 +379,7 @@ export default function QuickEstimateProductModal({
 
     return (
         <div
-      className="
+            className="
     fixed
     inset-0
     z-[100]
@@ -284,7 +396,7 @@ export default function QuickEstimateProductModal({
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-              className="
+                className="
     relative
     bg-white
 
@@ -344,19 +456,19 @@ export default function QuickEstimateProductModal({
                     <button
                         onClick={onClose}
                         className="
-    flex
-    items-center
-    justify-center
-    w-8
-    h-8
-    md:w-10
-    md:h-10
-    rounded-full
-    hover:bg-gray-100
-    text-xl
-    md:text-2xl
-    shrink-0
-"
+                            flex
+                            items-center
+                            justify-center
+                            w-8
+                            h-8
+                            md:w-10
+                            md:h-10
+                            rounded-full
+                            hover:bg-gray-100
+                            text-xl
+                            md:text-2xl
+                            shrink-0
+                        "
                     >
                         ×
                     </button>
@@ -366,31 +478,26 @@ export default function QuickEstimateProductModal({
 
                 <div
                     className="
-    flex-1
-    overflow-y-auto
-    p-3
-    md:p-8
-"
+                        flex-1
+                        overflow-y-auto
+                        p-3
+                        md:p-8
+                    "
                 >
                     <div
                         className="
                           grid
-    grid-cols-1
-    lg:grid-cols-2
-    gap-4
-    md:gap-8
+                        grid-cols-1
+                        lg:grid-cols-2
+                        gap-4
+                        md:gap-8
                     "
                     >
-
-                        <ProductImage
-                            images={product.images}
-                            name={product.name}
-                        />
+                        <ProductImage media={media} name={product.name} />
 
                         {/* RIGHT */}
 
                         <div className="flex flex-col gap-6">
-
                             <div>
                                 <p className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                                     {product.categoryName}
@@ -402,7 +509,6 @@ export default function QuickEstimateProductModal({
                             </div>
 
                             <div className="flex flex-wrap items-center gap-4">
-
                                 <span className="text-4xl font-bold text-[var(--color-primary)]">
                                     ₹{product.price}
                                 </span>
@@ -428,92 +534,10 @@ export default function QuickEstimateProductModal({
                                         {product.discountText}
                                     </span>
                                 )}
-
                             </div>
-
-                            {/* CART */}
-
-                            <div className="pt-2">
-
-                                <div
-                                    className="
-                                    w-full
-                                    md:w-[260px]
-                                    h-[56px]
-                                    rounded-xl
-                                    bg-[var(--color-primary)]
-                                    text-white
-                                    flex
-                                    items-center
-                                    justify-center
-                                    border
-                                    border-[var(--color-primary)]
-                                "
-                                >
-
-                                    {cartQty === 0 ? (
-                                        <button
-                                            className={`
-                                             w-full
-                                                h-full
-                                                font-semibold
-                                                transition-all
-                                            ${availableQty === 0
-                                                    ? "cursor-not-allowed opacity-60"
-                                                    : "hover:opacity-90"}
-                                        `}
-                                            disabled={availableQty === 0}
-                                            onClick={() =>
-                                                addItem(product.id, 1)
-                                            }
-                                        >
-                                            {availableQty === 0
-                                                ? "Out of Stock"
-                                                : "Add to Cart"}
-                                        </button>
-                                    ) : (
-                                        <div
-                                            className="
-                                            flex
-                                            items-center
-                                            justify-between
-                                            w-full
-                                            px-6
-                                        "
-                                        >
-                                            <button
-                                                className="text-3xl"
-                                                onClick={() =>
-                                                    addItem(product.id, -1)
-                                                }
-                                            >
-                                                −
-                                            </button>
-
-                                            <span className="text-lg font-bold">
-                                                {cartQty}
-                                            </span>
-
-                                            <button
-                                                className="text-3xl"
-                                                onClick={() =>
-                                                    addItem(product.id, 1)
-                                                }
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    )}
-
-                                </div>
-
-                            </div>
-
-                            {/* DESCRIPTION */}
 
                             {product.description && (
                                 <div className="border-t pt-5">
-
                                     <h3 className="font-semibold text-lg text-[var(--color-primary)] mb-3">
                                         Description
                                     </h3>
@@ -527,7 +551,6 @@ export default function QuickEstimateProductModal({
                                     >
                                         {product.description}
                                     </p>
-
                                 </div>
                             )}
 
@@ -535,7 +558,6 @@ export default function QuickEstimateProductModal({
 
                             {videoId && (
                                 <div className="border-t pt-5">
-
                                     <h3 className="font-semibold text-lg text-[var(--color-primary)] mb-4">
                                         Product Video
                                     </h3>
@@ -561,18 +583,12 @@ export default function QuickEstimateProductModal({
                                             className="absolute inset-0 w-full h-full border-0"
                                         />
                                     </div>
-
                                 </div>
                             )}
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
     );
 }

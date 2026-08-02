@@ -32,8 +32,10 @@ export default function QuickEstimateModal({
     const isEstimateEmailSend = config?.isEstimateEmailEnabled || false;
     const packagingPercent = config?.packagingPercent ?? 0;
     const gstPercent = config?.gstPercent ?? 0;
+    const disableGstForTN = config?.disableGstForTN || false;
     const [showDownloadDialog, setShowDownloadDialog] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [deliveryRegion, setDeliveryRegion] = useState<"TN" | "OTHER">("TN");
 
     const pricingBreakdown = useMemo(
         () => calculateOrderPricingBreakdown(products),
@@ -58,7 +60,9 @@ export default function QuickEstimateModal({
                 couponDiscount: 0,
                 packagingPercent,
                 gstPercent,
-                state: "Tamil Nadu",
+                state: deliveryRegion === "TN"
+                    ? "Tamil Nadu"
+                    : "Other",
                 config,
             }),
         [
@@ -67,6 +71,7 @@ export default function QuickEstimateModal({
             packagingPercent,
             gstPercent,
             config,
+            deliveryRegion,
         ]
     );
     const totalQty = products.reduce(
@@ -335,11 +340,8 @@ export default function QuickEstimateModal({
                 ) {
 
                     const product = products[data.row.index];
-
                     if (product?.isComboPackage) {
-
                         data.cell.styles.fontStyle = "bold";
-
                         data.cell.styles.textColor = [
                             25,
                             70,
@@ -426,34 +428,6 @@ export default function QuickEstimateModal({
             }
         );
         doc.setTextColor(0);
-
-        // const summaryRows: string[][] = [
-
-        //     [
-        //         "Products",
-        //         String(products.length),
-        //     ],
-
-        //     [
-        //         "Quantity",
-        //         String(totalQty),
-        //     ],
-
-        //     [
-        //         "MRP Total",
-        //         formatMoney(originalTotal),
-        //     ],
-
-        //     [
-        //         "Discount",
-        //         "- " + formatMoney(savings),
-        //     ],
-
-        //     [
-        //         "Sub Total",
-        //         formatMoney(productSubtotal),
-        //     ],
-        // ];
         const summaryRows: string[][] = [
             [
                 "Products Total",
@@ -739,9 +713,6 @@ export default function QuickEstimateModal({
         };
     };
 
-
-
-
     useEffect(() => {
         if (!open) return;
 
@@ -882,6 +853,34 @@ export default function QuickEstimateModal({
                             </ul>
                         </li>
                     </ul>
+                </div>
+
+                <div className="mx-4 mt-4 rounded-xl border bg-white p-4">
+                    <p className="text-sm font-semibold mb-3">
+                        Delivery Region
+                    </p>
+
+                    <div className="flex gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="region"
+                                checked={deliveryRegion === "TN"}
+                                onChange={() => setDeliveryRegion("TN")}
+                            />
+                            <span>Tamil Nadu</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="region"
+                                checked={deliveryRegion === "OTHER"}
+                                onChange={() => setDeliveryRegion("OTHER")}
+                            />
+                            <span>Other States</span>
+                        </label>
+                    </div>
                 </div>
                 <div
                     className="
@@ -1069,7 +1068,7 @@ export default function QuickEstimateModal({
                             </p>
 
                             <p className="text-xs text-gray-500">
-                                Includes applicable GST & Packaging Charges
+                                {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                             </p>
                         </div>
 

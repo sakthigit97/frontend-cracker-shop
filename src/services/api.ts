@@ -11,9 +11,7 @@ export class ApiError extends Error {
   }
 }
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const MAX_RETRIES = 3;
 const RETRY_STATUS_CODES = [502, 503, 504];
 
@@ -25,10 +23,10 @@ export const apiFetch = async (
   const token = auth ? JSON.parse(auth).token : null;
 
   let lastError: any;
-
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(`${API_BASE_URL}${path}`, {
+        cache: "no-store",
         ...options,
         headers: {
           "Content-Type": "application/json",
@@ -38,7 +36,6 @@ export const apiFetch = async (
       });
 
       let data: any = null;
-
       try {
         data = await response.json();
       } catch {

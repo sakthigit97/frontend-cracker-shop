@@ -20,6 +20,7 @@ import { validateCoupon } from "../services/coupon.api";
 type ProfileResponse = {
   success: boolean;
   data: {
+    title: any;
     name: string;
     mobile: string;
     address: string;
@@ -51,6 +52,7 @@ export default function Checkout() {
   const [acceptedTransport, setAcceptedTransport] = useState(false);
   const [profileAddress, setProfileAddress] = useState("");
   const [profilePincode, setProfilePicode] = useState("");
+  const [profileState, setProfileState] = useState("");
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
@@ -67,7 +69,7 @@ export default function Checkout() {
   const [minOrderValid, setMinOrderValid] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [mobile, setMobile] = useState("");
-
+  const disableGstForTN = config?.disableGstForTN || false;
 
   const pricingBreakdown: any = useMemo(
     () => calculateOrderPricingBreakdown(products),
@@ -76,7 +78,10 @@ export default function Checkout() {
 
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
-  const currentState = addressMode === "PROFILE" ? profileAddress : stateValue;
+  const currentState =
+    addressMode === "PROFILE"
+      ? profileState
+      : stateValue.trim();
 
   const {
     packagingCharge,
@@ -145,16 +150,32 @@ export default function Checkout() {
         const res: ProfileResponse = await apiFetch("/user/profile");
         if (!mounted || !res?.data) return;
         setMobile(res.data.mobile);
-        const formatted = [
+        // const formatted = [
+        //   res.data.name?.trim(),
+        //   res.data.mobile?.trim(),
+        //   res.data.address?.trim(),
+        //   `${res.data.city?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,
+        // ].filter(Boolean).join("\n");
+
+        const customerName = [
+          res.data.title?.trim(),
           res.data.name?.trim(),
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        const formatted = [
+          customerName,
           res.data.mobile?.trim(),
           res.data.address?.trim(),
           `${res.data.city?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,
-        ].filter(Boolean).join("\n");
-
+        ]
+          .filter(Boolean)
+          .join("\n");
         setWalletCredit(res.data.walletCredit || 0);
         setProfileAddress(formatted);
         setProfilePicode(res.data.pincode);
+        setProfileState(res.data.state?.trim() || "");
       } catch {
         setAddressMode("NEW");
       } finally {
@@ -225,8 +246,10 @@ export default function Checkout() {
       return;
     }
     let finalAddress = "";
+    let deliveryState = "";
     if (addressMode === "PROFILE") {
       finalAddress = profileAddress;
+      deliveryState = profileState;
     } else {
       if (!line1 || !city || !stateValue || pincode.length !== 6) {
         showAlert({
@@ -244,12 +267,19 @@ export default function Checkout() {
       finalAddress = addressParts
         .filter(Boolean)
         .join("\n");
-
+      deliveryState = stateValue.trim();
     }
     if (!finalAddress.trim()) {
       showAlert({
         type: "error",
         message: "Delivery address is required",
+      });
+      return;
+    }
+    if (!deliveryState) {
+      showAlert({
+        type: "error",
+        message: "State is required",
       });
       return;
     }
@@ -302,11 +332,12 @@ export default function Checkout() {
         .map(line => line.trim())
         .filter(Boolean)
         .join("\n");
-
+      
       const res = await apiFetch("/orders", {
         method: "POST",
         body: JSON.stringify({
           address: normalizedAddress,
+          deliveryState,
           paymentMode,
           paymentStatus,
           transactionId,
@@ -344,15 +375,8 @@ export default function Checkout() {
   };
 
   async function startMockPayment(total: number) {
-    console.log("Mock Payment Started:", total);
     await new Promise((res) => setTimeout(res, 1500));
-
-    // Future:
-    // 1. Create Razorpay Order API
-    // 2. Open Razorpay Checkout
-    // 3. Verify payment
-    // 4. Place order only after success
-
+    console.log(total);
     return {
       success: true,
       transactionId: `MOCK-${Date.now()}`,
@@ -786,7 +810,7 @@ export default function Checkout() {
                 </p>
 
                 <p className="text-xs text-gray-500">
-                  Includes applicable GST & Packaging Charges
+                  {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                 </p>
               </div>
 

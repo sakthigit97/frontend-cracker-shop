@@ -26,6 +26,7 @@ export default function Cart() {
   const { config } = useConfigStore();
   const packagingPercent = Number(config?.packagingPercent || 0);
   const gstPercent = Number(config?.gstPercent || 0);
+  const disableGstForTN = config?.disableGstForTN || false;
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
 
@@ -100,7 +101,6 @@ export default function Cart() {
       </div>
     );
   }
-
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -358,7 +358,7 @@ export default function Cart() {
                   </p>
 
                   <p className="text-xs text-gray-500">
-                    Inclusive of GST & Packaging Charges
+                    {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                   </p>
                 </div>
 

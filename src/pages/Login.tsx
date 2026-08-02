@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth.store";
 import { useAlert } from "../store/alert.store";
@@ -13,20 +13,18 @@ export default function Login() {
   const { showAlert } = useAlert();
   const navigate = useNavigate();
   const { config } = useConfigStore();
-
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [isForgot, setIsForgot] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [otp, setOtp] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-
   const cleanMobile = mobile.trim();
   const isMobileValid = /^[6-9]\d{9}$/.test(cleanMobile);
   const isForgotOTPSend = config?.isForgotOTPEnabled || true;
+  const captchaRef = useRef<ReCAPTCHA>(null);
 
   const validateForm = () => {
     if (!cleanMobile) {
@@ -160,6 +158,8 @@ export default function Login() {
         message: err.message || "Failed to send OTP",
       });
     } finally {
+      captchaRef.current?.reset();
+      setCaptchaToken(null);
       setLoading(false);
     }
   };
@@ -212,8 +212,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-[var(--color-surface)] p-6 rounded-xl shadow-sm space-y-4">
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
+      <div className="w-full max-w-md bg-[var(--color-surface)] p-6 rounded-xl shadow-sm space-y-4">
 
         {isForgot && (
 
@@ -277,6 +277,7 @@ export default function Login() {
               onClick={handleLogin}
               className="w-full"
               disabled={loading}
+              data-enter-submit="true"
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
@@ -315,11 +316,17 @@ export default function Login() {
               placeholder="Mobile Number"
               className="w-full border p-2"
             />
-
-            <ReCAPTCHA
-              sitekey="6Ld4itMsAAAAAFotYg6ziCo1yb2HVlA8oJodr5M_"
-              onChange={(token) => setCaptchaToken(token)}
-            />
+            <div className="my-5 flex justify-center overflow-hidden">
+              <div className="scale-[0.82] sm:scale-100 origin-top">
+                <ReCAPTCHA
+                  ref={captchaRef}
+                  size="compact"
+                  sitekey="6Ld4itMsAAAAAFotYg6ziCo1yb2HVlA8oJodr5M_"
+                  onChange={(token) => setCaptchaToken(token)}
+                  onExpired={() => setCaptchaToken(null)}
+                />
+              </div>
+            </div>
 
             <Button onClick={sendForgotOtp} className="w-full">
               Send OTP
@@ -350,7 +357,7 @@ export default function Login() {
               placeholder="Confirm Password"
               className="w-full border p-2"
             />
-            <Button onClick={resetPassword} className="w-full">
+            <Button onClick={resetPassword} data-enter-submit="true" className="w-full">
               Reset Password
             </Button>
           </>

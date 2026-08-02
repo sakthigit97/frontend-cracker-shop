@@ -78,11 +78,12 @@ export default function AdminHeader() {
       label: "Orders",
       to: "/admin/orders",
       icon: <FaShoppingBag />,
-    }, {
-      label: "Bulk Orders",
-      to: "/admin/bulk-orders",
-      icon: <FaTruckLoading />,
-    },
+    }, 
+    // {
+    //   label: "Bulk Orders",
+    //   to: "/admin/bulk-orders",
+    //   icon: <FaTruckLoading />,
+    // },
     {
       label: "Revenue Report",
       to: "/admin/reports/revenue",
@@ -145,11 +146,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-    {
-      label: "Admin Bulk Order Codes",
-      to: "/admin/admin-codes",
-      icon: <FaTicketAlt />,
-    },
+    // {
+    //   label: "Admin Bulk Order Codes",
+    //   to: "/admin/admin-codes",
+    //   icon: <FaTicketAlt />,
+    // },
   ];
 
   const mobileSales: MobileAccordionItem[] = [
@@ -157,11 +158,12 @@ export default function AdminHeader() {
       label: "Orders",
       to: "/admin/orders",
       icon: <FaShoppingBag />,
-    }, {
-      label: "Bulk Orders",
-      to: "/admin/bulk-orders",
-      icon: <FaTruckLoading />,
-    },
+    }, 
+    // {
+    //   label: "Bulk Orders",
+    //   to: "/admin/bulk-orders",
+    //   icon: <FaTruckLoading />,
+    // },
     {
       label: "Revenue Report",
       to: "/admin/reports/revenue",

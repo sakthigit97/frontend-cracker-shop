@@ -1,7 +1,9 @@
+import { useState } from "react";
 import type { Coupon } from "../../services/coupon.api";
 import { useAdminCouponStore } from "../../store/adminCoupon.store";
 import { useAlert } from "../../store/alert.store";
 import { FaTrash, FaTicketAlt } from "react-icons/fa";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 interface Props {
     coupons: Coupon[];
@@ -10,22 +12,30 @@ interface Props {
 export default function CouponTable({ coupons }: Props) {
     const { deleteCoupon } = useAdminCouponStore();
     const { showAlert } = useAlert();
-
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [selectedCoupon, setSelectedCoupon] = useState<string | null>(null);
     const handleDelete = async (couponCode: string) => {
-        if (!window.confirm(`Delete coupon "${couponCode}"?`)) {
-            return;
-        }
+        setShowLeaveConfirm(true);
+        setSelectedCoupon(couponCode);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedCoupon) return;
 
         try {
-            await deleteCoupon(couponCode);
+            await deleteCoupon(selectedCoupon);
+
             showAlert({
                 type: "success",
                 message: "Coupon deleted successfully",
             });
+
+            setShowLeaveConfirm(false);
+            setSelectedCoupon(null);
         } catch (err: any) {
             showAlert({
                 type: "error",
-                message: err.message || "Failed to delete coupon"
+                message: err.message || "Failed to delete coupon",
             });
         }
     };
@@ -138,6 +148,18 @@ export default function CouponTable({ coupons }: Props) {
                     </tbody>
                 </table>
             </div>
+            <ConfirmDialog
+                open={showLeaveConfirm}
+                title="Delete coupon?"
+                description="Are you sure you want to delete this coupon?"
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setShowLeaveConfirm(false);
+                    setSelectedCoupon(null);
+                }}
+            />
         </div>
     );
 }

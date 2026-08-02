@@ -20,6 +20,9 @@ type DateRange = "all" | "today" | "7" | "30";
 
 export default function AdminOrders() {
     const [status, setStatus] = useState("ORDER_PLACED");
+    const [stateFilter, setStateFilter] = useState<
+        "ALL" | "TN" | "OTHER"
+    >("ALL");
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
     const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
@@ -52,13 +55,48 @@ export default function AdminOrders() {
         [filters]
     );
 
+    const formatDateTime = (ts: number) =>
+        new Date(ts).toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+
+    function getCustomerName(address?: string) {
+        if (!address) return "-";
+
+        const firstLine = address.split("\n")[0]?.trim() ?? "";
+
+        return firstLine;
+    }
+
     const orders = useMemo(() => {
-        return [...(data[key]?.items || [])].sort(
+        let list = [...(data[key]?.items || [])];
+
+        if (stateFilter === "TN") {
+            list = list.filter(
+                (o) =>
+                    o.deliveryState?.toLowerCase() ===
+                    "tamil nadu"
+            );
+        }
+
+        if (stateFilter === "OTHER") {
+            list = list.filter(
+                (o) => o.deliveryState && o.deliveryState.toLowerCase() !== "tamil nadu"
+            );
+        }
+
+        return list.sort(
             (a, b) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
+                Number(b.createdAt) -
+                Number(a.createdAt)
         );
-    }, [data, key]);
+    }, [data, key, stateFilter]);
+
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
 
@@ -122,6 +160,22 @@ export default function AdminOrders() {
                         </option>
                     ))}
                 </select>
+
+
+                <select
+                    value={stateFilter}
+                    onChange={(e) =>
+                        setStateFilter(
+                            e.target.value as "ALL" | "TN" | "OTHER"
+                        )
+                    }
+                    className="border px-3 py-2 rounded text-sm"
+                >
+                    <option value="ALL">All States</option>
+                    <option value="TN">Tamil Nadu</option>
+                    <option value="OTHER">Other States</option>
+                </select>
+
             </div>
 
             {/* STATUS FILTER */}
@@ -146,59 +200,104 @@ export default function AdminOrders() {
                 {orders.map((o) => (
                     <div
                         key={o.orderId}
-                        className="p-4 flex items-center justify-between gap-4"
+                        className="p-4 hover:bg-gray-50 transition"
                     >
-                        {/* LEFT */}
-                        <div className="min-w-[160px]">
-                            <p className="font-medium text-sm">{o.orderId}</p>
-                            <p className="text-xs text-gray-500">
-                                {new Date(o.createdAt).toLocaleDateString("en-IN")}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                {o.items?.length ?? 0} items
-                            </p>
-                        </div>
+                        <div className="flex items-start gap-3">
 
-                        {/* MIDDLE */}
-                        <div className="hidden sm:block">
-                            <p className="text-sm font-medium">₹{o.finalPayable}</p>
-                            <p className="text-xs text-gray-500">
-                                {o.paymentMode || "OFFLINE"}
-                            </p>
-                        </div>
+                            {/* LEFT CONTENT */}
+                            <div className="flex-1 min-w-0">
 
-                        {/* RIGHT */}
-                        <div className="flex items-center gap-3">
-                            <span
-                                className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                                style={{
-                                    backgroundColor: `${STATUS_COLORS[o.status]}20`,
-                                    color: STATUS_COLORS[o.status],
-                                }}
-                            >
-                                {STATUS_LABELS[o.status]}
-                            </span>
+                                <div className="space-y-2">
 
+                                    <p
+                                        className="
+      font-semibold
+      text-sm
+      whitespace-nowrap
+      overflow-x-auto
+      scrollbar-hide
+    "
+                                    >
+                                        {o.orderId}
+                                    </p>
+
+                                    <span
+                                        className="inline-flex text-xs font-semibold px-2.5 py-1 rounded-full"
+                                        style={{
+                                            backgroundColor: `${STATUS_COLORS[o.status]}20`,
+                                            color: STATUS_COLORS[o.status],
+                                        }}
+                                    >
+                                        {STATUS_LABELS[o.status]}
+                                    </span>
+
+                                </div>
+
+                                {/* Customer */}
+                                <p className="text-sm mt-2 font-medium">
+                                    👤 {getCustomerName(o.address)}
+                                </p>
+
+                                {/* Mobile */}
+                                <p className="text-xs text-gray-500 mt-1">
+                                    📱 {o.userId}
+                                </p>
+
+                                {/* State */}
+                                <p className="text-xs text-gray-500 mt-1">
+                                    📍 {o.deliveryState || "-"}
+                                </p>
+
+                                {/* Bottom Row */}
+                                <div className="flex justify-between items-center mt-3">
+
+                                    <div>
+
+                                        <p className="text-xs text-gray-500">
+                                            {formatDateTime(o.createdAt)}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            🛒 {o.items?.length ?? 0} Items
+                                        </p>
+
+                                    </div>
+
+                                    <div className="text-right">
+
+                                        <p className="font-semibold">
+                                            ₹{o.finalPayable}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                            {o.paymentMode}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            {/* Arrow */}
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.location.href = `/admin/orders/${o.orderId}`;
-                                }}
+                                onClick={() => navigate(`/admin/orders/${o.orderId}`)}
                                 className="
-                                    flex items-center justify-center
-                                    h-8 w-8 sm:h-9 sm:w-9
-                                    rounded-full
-                                    border sm:border
-                                    border-gray-200
-                                    hover:bg-gray-100
-                                    shrink-0
-                                "
-                                aria-label="View order details"
+          shrink-0
+          w-9
+          h-9
+          rounded-full
+          border
+          flex
+          items-center
+          justify-center
+          hover:bg-gray-100
+          mt-1
+        "
                             >
-
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500"
+                                    className="w-5 h-5 text-gray-500"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -211,6 +310,7 @@ export default function AdminOrders() {
                                     />
                                 </svg>
                             </button>
+
                         </div>
                     </div>
                 ))}

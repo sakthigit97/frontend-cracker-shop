@@ -4,6 +4,8 @@ import Button from "../components/ui/Button";
 import { ORDER_STATUS_CONFIG, STATUS_ORDER } from "../utils/orderStatus";
 import { useOrdersStore } from "../store/orders.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
+import { useConfigStore } from "../store/config.store";
+
 
 export default function MyOrders() {
   const navigate = useNavigate();
@@ -15,14 +17,20 @@ export default function MyOrders() {
     fetchMore,
   } = useOrdersStore();
 
+  const config = useConfigStore((s) => s.config);
+  const companyName = config?.companyName ?? "Sivakaasi Pyro Park";
   const [sortBy, setSortBy] = useState("latest");
-  function formatDate(ts: number) {
-    return new Date(ts).toLocaleDateString("en-IN", {
+
+  const formatDateTime = (ts: number) =>
+    new Date(ts).toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
-  }
+
 
   useEffect(() => {
     fetchInitial();
@@ -120,7 +128,7 @@ export default function MyOrders() {
 
       <div className="mb-6 p-4 rounded-xl bg-yellow-50 border border-yellow-200">
         <p className="text-sm text-yellow-800">
-          Orders can be adjusted until they are confirmed by Sivakasi Crackers.
+          Orders can be adjusted until they are confirmed by {companyName}.
         </p>
       </div>
 
@@ -166,7 +174,7 @@ export default function MyOrders() {
                   <p className="font-semibold">{order.orderId}</p>
 
                   <p className="text-xs text-[var(--color-muted)] mt-1">
-                    Placed on {formatDate(order.createdAt)}
+                    Placed on {formatDateTime(order.createdAt)}
                   </p>
                 </div>
 

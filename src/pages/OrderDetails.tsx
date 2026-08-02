@@ -25,6 +25,7 @@ export default function OrderDetails() {
   const config = useConfigStore((s) => s.config);
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
+  const disableGstForTN = config?.disableGstForTN || false;
   const isTamilNadu = order.address?.toLowerCase().includes("tamil nadu");
   const deliveryText = isTamilNadu
     ? "3–5 working days"
@@ -54,6 +55,14 @@ export default function OrderDetails() {
     STATUS_ORDER.indexOf(order.status) >=
     STATUS_ORDER.indexOf(invoiceAvailableFrom) &&
     order.status !== "CANCELLED";
+
+  const hideCancelled =
+    order.status === "ORDER_PACKED" ||
+    order.status === "DISPATCHED";
+
+  const trackingStatuses = hideCancelled
+    ? STATUS_KEYS.filter((s) => s !== "CANCELLED")
+    : STATUS_KEYS;
 
   async function handleRestore() {
     try {
@@ -191,7 +200,7 @@ export default function OrderDetails() {
           </h3>
 
           <div className="flex flex-col gap-4">
-            {STATUS_KEYS.map((statusKey, index) => {
+            {trackingStatuses.map((statusKey, index) => {
               const status = ORDER_STATUS_CONFIG[statusKey];
 
               let indicatorClass = "border-gray-300 text-gray-400";
@@ -251,6 +260,8 @@ export default function OrderDetails() {
         </div>
       )}
 
+
+
       <div className="bg-[var(--color-surface)] border rounded-xl p-4">
         <div className="flex justify-between text-sm mb-2">
           <span>Status</span>
@@ -276,6 +287,64 @@ export default function OrderDetails() {
           </p>
         </div>
       </div>
+
+      {order.statusHistory?.length > 0 && (
+        <div className="bg-[var(--color-surface)] border rounded-xl p-5">
+          <h3 className="font-semibold text-[var(--color-primary)] mb-4">
+            Order History
+          </h3>
+
+          <div className="space-y-4">
+            {[...(order.statusHistory || [])]
+              .sort((a, b) => (b.changedAt ?? b.at) - (a.changedAt ?? a.at))
+              .map((history: any, index: number) => {
+
+                const status = history.toStatus ?? history.status;
+                const updatedBy = history.changedBy ?? history.by;
+                const updatedAt = history.changedAt ?? history.at;
+
+                return (
+                  <div
+                    key={index}
+                    className="flex gap-4 items-start border-l-2 border-gray-200 pl-4 relative"
+                  >
+                    <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-[var(--color-primary)]" />
+
+                    <div className="flex-1">
+
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+
+                        <p className="font-medium">
+                          {ORDER_STATUS_CONFIG[status]?.label ??
+                            status.replaceAll("_", " ")}
+                        </p>
+
+                        <span className="text-xs text-gray-500">
+                          {formatDateTime(updatedAt)}
+                        </span>
+
+                      </div>
+
+                      <p className="text-sm text-gray-500 mt-1">
+                        Updated By :{" "}
+                        {updatedBy.startsWith("ADMIN")
+                          ? "Admin"
+                          : updatedBy.replace("USER#", "")}
+                      </p>
+
+                      {history.comment && (
+                        <div className="mt-2 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                          {history.comment}
+                        </div>
+                      )}
+
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       <div className="bg-[var(--color-surface)] border rounded-xl p-4">
         <h3 className="font-semibold text-[var(--color-primary)] mb-3">
@@ -420,7 +489,7 @@ export default function OrderDetails() {
               </p>
 
               <p className="text-xs text-gray-500">
-                Includes applicable GST & Packaging Charges
+                {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
               </p>
             </div>
 

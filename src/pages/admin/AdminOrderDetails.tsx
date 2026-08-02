@@ -212,7 +212,7 @@ export default function AdminOrderDetails() {
                                 className="px-3 py-1.5 text-xs"
                                 onClick={handleDownloadInvoice}
                             >
-                                {downloading ? " Downloading Invoice" : " Download Invoice"}
+                                {downloading ? " Downloading Invoice..." : " Download Invoice"}
                             </Button>
                         )}
 

@@ -34,6 +34,8 @@ export type GlobalConfig = {
     displayMobile: string;
     website: string;
     bulkSchemes?: any;
+    companyName: string;
+    whatsAppSupport: any;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

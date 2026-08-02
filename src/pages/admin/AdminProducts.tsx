@@ -16,6 +16,9 @@ export default function AdminProducts() {
     const [data, setData] = useState<any>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+    const [selectedDeactivateProduct, setSelectedDeactivateProduct] =
+        useState<any>(null);
     const { showAlert } = useAlert();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(
@@ -93,12 +96,13 @@ export default function AdminProducts() {
         setData(res);
     };
 
-    const handleToggleStatus = async (
+    const toggleProductStatus = async (
         productId: string,
         current: string
     ) => {
         if (!data || togglingId) return;
         const next = current === "true" ? "false" : "true";
+
         setData((prev: any) => ({
             ...prev,
             items: prev.items.map((p: any) =>
@@ -131,6 +135,22 @@ export default function AdminProducts() {
         }
     };
 
+    const handleToggleStatus = (product: any) => {
+        if (
+            product.isActive === "true" &&
+            product.packageTagIds &&
+            product.packageTagIds.length > 0
+        ) {
+            setSelectedDeactivateProduct(product);
+            setShowDeactivateConfirm(true);
+            return;
+        }
+
+        toggleProductStatus(
+            product.productId,
+            product.isActive
+        );
+    };
 
     const handleDeleteClick = (productId: string) => {
         setSelectedProductId(productId);
@@ -161,6 +181,20 @@ export default function AdminProducts() {
             setShowDeleteConfirm(false);
             setSelectedProductId(null);
         }
+    };
+
+    const confirmDeactivate = async () => {
+
+        if (!selectedDeactivateProduct) return;
+
+        setShowDeactivateConfirm(false);
+
+        await toggleProductStatus(
+            selectedDeactivateProduct.productId,
+            selectedDeactivateProduct.isActive
+        );
+
+        setSelectedDeactivateProduct(null);
     };
 
     useEffect(() => {
@@ -303,7 +337,7 @@ export default function AdminProducts() {
                                                 <Toggle
                                                     checked={p.isActive === "true"}
                                                     disabled={togglingId === p.productId}
-                                                    onChange={() => handleToggleStatus(p.productId, p.isActive)}
+                                                    onChange={() => handleToggleStatus(p)}
                                                 />
 
                                                 <span
@@ -398,6 +432,32 @@ export default function AdminProducts() {
                 loading={!!deletingId}
                 onCancel={() => setShowDeleteConfirm(false)}
                 onConfirm={confirmDelete}
+            />
+
+            <ConfirmDialog
+                open={showDeactivateConfirm}
+                title="Deactivate Product?"
+                message={
+                    <>
+                        This product is currently mapped to one or more
+                        <strong> Combo Packages</strong>.
+                        <br />
+                        <br />
+                        Deactivating it may affect those combo packages and
+                        customers may not be able to purchase them.
+                        <br />
+                        <br />
+                        Are you sure you want to deactivate this product?
+                    </>
+                }
+                confirmText="Deactivate"
+                cancelText="Cancel"
+                loading={!!togglingId}
+                onCancel={() => {
+                    setShowDeactivateConfirm(false);
+                    setSelectedDeactivateProduct(null);
+                }}
+                onConfirm={confirmDeactivate}
             />
         </div>
     );

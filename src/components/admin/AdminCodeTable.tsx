@@ -46,10 +46,9 @@ export default function AdminCodeTable({
         code: string
     ) {
 
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to delete this Admin Code?"
-            );
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this Admin Code?"
+        );
 
         if (!confirmed) {
             return;

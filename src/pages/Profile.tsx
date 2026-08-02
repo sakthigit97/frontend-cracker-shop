@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth.store";
 
 interface ProfileData {
+  title: "Mr" | "Mrs" | "Ms";
   name: string;
   mobile: string;
   email?: string;
@@ -43,10 +44,25 @@ export default function Profile() {
   const handleSave = async () => {
     if (!form) return;
 
-    const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const email = form.email?.trim() || '';
+    const isValidEmail = (email: string) =>
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-    if (!email) {
+    const name = form.name?.trim() || "";
+    const email = form.email?.trim() || "";
+    const address = form.address?.trim() || "";
+    const city = form.city?.trim() || "";
+    const state = form.state?.trim() || "";
+    const pincode = form.pincode?.trim() || "";
+
+    const VALID_TITLES = ["Mr", "Mrs", "Ms"];
+    if (!VALID_TITLES.includes(form.title)) {
+      throw {
+        statusCode: 400,
+        message: "Invalid title",
+      };
+    }
+
+    if (!name) {
       showAlert({
         type: "error",
         message: "Name is required",
@@ -54,10 +70,7 @@ export default function Profile() {
       return;
     }
 
-    if (
-      email &&
-      !isValidEmail(email)
-    ) {
+    if (email && !isValidEmail(email)) {
       showAlert({
         type: "error",
         message: "Please enter a valid email address",
@@ -65,10 +78,34 @@ export default function Profile() {
       return;
     }
 
-    if (!form.address.trim()) {
+    if (!address) {
       showAlert({
         type: "error",
         message: "Address is required",
+      });
+      return;
+    }
+
+    if (!city) {
+      showAlert({
+        type: "error",
+        message: "City is required",
+      });
+      return;
+    }
+
+    if (!state) {
+      showAlert({
+        type: "error",
+        message: "State is required",
+      });
+      return;
+    }
+
+    if (!/^\d{6}$/.test(pincode)) {
+      showAlert({
+        type: "error",
+        message: "Please enter a valid 6-digit pincode",
       });
       return;
     }
@@ -79,20 +116,24 @@ export default function Profile() {
       await apiFetch("/user/profile", {
         method: "PUT",
         body: JSON.stringify({
-          name: form.name.trim(),
-          email,
-          address: form.address.trim(),
-          city: form.city?.trim(),
-          state: form.state?.trim(),
-          pincode: form.pincode?.trim(),
+          title: form.title,
+          name,
+          email: email || undefined,
+          address,
+          city,
+          state,
+          pincode,
         }),
       });
 
       await refreshProfile();
+
       updateUser({
-        name: form.name.trim(),
+        name,
       });
+
       setIsEditing(false);
+
       showAlert({
         type: "success",
         message: "Profile updated successfully",
@@ -234,6 +275,27 @@ export default function Profile() {
             />
           </div>
 
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              Title
+            </label>
+
+            <select
+              value={form.title || "Mr"}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  title: e.target.value as "Mr" | "Mrs" | "Ms",
+                })
+              }
+              className="w-full border rounded-md p-2"
+            >
+              <option value="Mr">Mr</option>
+              <option value="Mrs">Mrs</option>
+              <option value="Ms">Ms</option>
+            </select>
+          </div>
           <div>
             <label className="text-sm text-[var(--color-muted)]">Name</label>
             <input

@@ -1,35 +1,13 @@
-// import { useNavigate } from "react-router-dom";
 
 export default function PrivacyPolicy() {
-  // const navigate = useNavigate();
 
   return (
     <div className="bg-[var(--color-background)] py-10 px-4">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border p-6 md:p-8">
 
-
-        {/* <button
-          onClick={() => navigate(-1)}
-          className="
-          flex items-center justify-center
-          w-9 h-9
-          rounded-full
-          bg-[var(--color-primary)]
-          text-white
-          shadow-sm
-
-          hover:scale-105
-          active:scale-95
-          transition-all
-        "
-        >
-          ←
-        </button> */}
-
         <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 text-center">
           Privacy Policy
         </h1>
-
 
         <section className="space-y-8 text-sm text-gray-700 leading-relaxed">
 
@@ -241,10 +219,25 @@ export default function PrivacyPolicy() {
             </ul>
           </div>
 
+
           {/* 7 */}
           <div>
             <h3 className="font-semibold text-lg text-[var(--color-primary)]">
-              7. Prohibited Website Use & Indemnity
+              7. Product Images, Descriptions & Variations
+            </h3>
+
+            <ul className="list-disc pl-6 mt-3 space-y-2">
+              <li>
+                Product images are for reference only. The actual product packaging, colour, design, or appearance may vary depending on the manufacturer's latest production and availability. Rest assured, the product quality, specifications, and quantity will remain the same or an equivalent approved variant.
+              </li>
+            </ul>
+          </div>
+
+
+          {/* 8 */}
+          <div>
+            <h3 className="font-semibold text-lg text-[var(--color-primary)]">
+              8. Prohibited Website Use & Indemnity
             </h3>
 
             <ul className="list-disc pl-6 mt-3 space-y-2">

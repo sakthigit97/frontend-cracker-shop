@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { apiFetch } from "../services/api";
 
 type ProfileData = {
+    title: "Mr" | "Mrs" | "Ms";
     name: string;
     mobile: string;
     address: string;
@@ -53,9 +54,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
         try {
             const res = await apiFetch("/user/profile");
-
             set({ profile: res.data });
-
             localStorage.setItem(CACHE_KEY, JSON.stringify(res.data));
             localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
         } catch (err) {

@@ -28,76 +28,120 @@ export default function OrderSuccess() {
   } = state;
 
   return (
-    <div className="px-4 py-8 sm:py-12">
-      <div className="max-w-lg mx-auto bg-white rounded-2xl border shadow-sm p-6 sm:p-8 text-center">
+    <div className="bg-[var(--color-background)] min-h-screen py-6 px-4">
 
-        {/* Success Icon */}
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 text-3xl">
-          ✓
+      <div className="max-w-xl mx-auto rounded-3xl bg-white shadow-lg border overflow-hidden">
+
+        {/* Header */}
+        <div className="bg-green-50 border-b px-6 py-8 text-center">
+
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 text-5xl shadow-sm">
+            ✓
+          </div>
+
+          <h1 className="mt-5 text-2xl md:text-3xl font-bold text-[var(--color-primary)]">
+            Order Placed Successfully
+          </h1>
+
+          <p className="mt-3 text-sm md:text-base text-gray-600 leading-6">
+            Thank you for shopping with us.
+            <br />
+            We'll notify you once your order is confirmed by us.
+          </p>
+
         </div>
 
-        {/* Title */}
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-primary)] mb-2">
-          Order Placed Successfully
-        </h1>
+        <div className="p-5 md:p-6 space-y-5">
 
-        <p className="text-sm text-[var(--color-muted)] mb-6">
-          Thank you for your order. Your crackers will be delivered soon 🎆
-        </p>
+          {/* Order Information */}
+          <div className="rounded-2xl border p-5">
 
-        {/* Order Summary Card */}
-        <div className="text-left border rounded-xl p-4 sm:p-5 space-y-3 mb-6">
+            <h2 className="font-semibold text-lg mb-4">
+              📦 Order Information
+            </h2>
 
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Order ID</span>
-            <span className="font-medium">{orderId}</span>
+            <div className="space-y-4">
+
+              <div className="border-b pb-3">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Order ID
+                </p>
+
+                <p className="mt-1 font-semibold text-[15px] break-words">
+                  {orderId}
+                </p>
+              </div>
+
+
+              <div className="border-b pb-3">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Payment
+                </p>
+
+                <p className="mt-1 font-semibold text-[15px] break-words">
+                  {paymentMode}
+                </p>
+              </div>
+
+
+
+              <div className="border-b pb-3">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Amount
+                </p>
+
+                <p className="mt-1 font-semibold text-[15px] break-words">
+                  ₹{total}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-3 text-sm leading-6 text-gray-700">
+                  <b>Expected Delivery:</b> 🚚 {estimatedDelivery}
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Payment Mode</span>
-            <span>{paymentMode}</span>
-          </div>
+          <div className="rounded-2xl border p-5">
 
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Total Amount</span>
-            <span className="font-semibold">₹{total}</span>
-          </div>
+            <h2 className="font-semibold text-lg mb-4">
+              📍 Delivery Address
+            </h2>
 
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Delivery</span>
-            <span className="text-right">{estimatedDelivery}</span>
-          </div>
-
-          <hr className="my-3" />
-          {/* Address */}
-          <div>
-            <p className="text-sm text-gray-500 mb-1">
-              Delivery Address
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-line">
+            <div className="whitespace-pre-line leading-7 text-gray-700">
               {address}
-            </p>
+            </div>
+
           </div>
+
+          {/* Buttons */}
+
+          <div className="pt-2 flex flex-col sm:flex-row gap-3">
+
+            <Button
+              className="w-full h-12 text-base"
+              onClick={() => navigate("/")}
+            >
+              Continue Shopping
+            </Button>
+
+            <Button
+              variant="secondary"
+              className="w-full h-12 text-base"
+              onClick={() => navigate("/orders")}
+            >
+              View My Orders
+            </Button>
+
+          </div>
+
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            className="w-full"
-            onClick={() => navigate("/")}
-          >
-            Continue Shopping
-          </Button>
-
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={() => navigate("/orders")}
-          >
-            View My Orders
-          </Button>
-        </div>
       </div>
+
     </div>
   );
 }

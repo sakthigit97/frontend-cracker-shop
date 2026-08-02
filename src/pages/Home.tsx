@@ -14,6 +14,7 @@ import { useCategoryProducts } from "../store/categoryProduct.store";
 import { useBrandProducts } from "../store/brandProduct.store";
 import { useCatalog } from "../store/catalog.store";
 import EmptyState from "../components/ui/EmptyState";
+import WhatsAppSupport from "../components/whatsapp/WhatsAppSupport";
 
 
 export default function Home() {
@@ -505,6 +506,8 @@ export default function Home() {
             </div>
           )}
       </div>
+      <WhatsAppSupport />
+
       {showScrollTop && (
         <button
           onClick={scrollToTop}

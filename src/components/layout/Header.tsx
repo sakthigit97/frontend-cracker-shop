@@ -17,15 +17,14 @@ import {
   FaBars,
   FaTimes,
   FaPalette,
-  FaTruckLoading,
-  FaBoxes,
+  // FaTruckLoading,
+  // FaBoxes,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
-import type { HeaderDropdownItem } from "./HeaderDropdown";
 import MobileAccordion from "./MobileAccordion";
+import type { HeaderDropdownItem } from "./HeaderDropdown";
 import type { MobileAccordionItem } from "./MobileAccordion";
-
 import { useAuth } from "../../store/auth.store";
 import { cartStore } from "../../store/cart.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
@@ -42,7 +41,6 @@ function formatCartAmount(amount: number) {
 export default function Header() {
   const navigate = useNavigate();
   const { config } = useConfigStore();
-
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, logout, user } = useAuth();
   const items = cartStore((s) => s.items);
@@ -102,9 +100,7 @@ export default function Header() {
         (p): p is NonNullable<typeof p> => p !== null
       );
 
-    const pricingBreakdown =
-      calculateOrderPricingBreakdown(cartProducts);
-
+    const pricingBreakdown = calculateOrderPricingBreakdown(cartProducts);
     return calculateOrderAmounts({
       nonComboProductTotal:
         pricingBreakdown.nonComboProductTotal,
@@ -129,16 +125,16 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    {
-      label: "Bulk Order",
-      to: "/bulk-order",
-      icon: <FaTruckLoading />,
-    },
-    {
-      label: "View Bulk Orders",
-      to: "/bulk-orders",
-      icon: <FaBoxes />,
-    },
+    // {
+    //   label: "Bulk Order",
+    //   to: "/bulk-order",
+    //   icon: <FaTruckLoading />,
+    // },
+    // {
+    //   label: "View Bulk Orders",
+    //   to: "/bulk-orders",
+    //   icon: <FaBoxes />,
+    // },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -198,16 +194,16 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    {
-      label: "Bulk Order",
-      to: "/bulk-order",
-      icon: <FaTruckLoading />,
-    },
-    {
-      label: "View Bulk Orders",
-      to: "/bulk-orders",
-      icon: <FaBoxes />,
-    },
+    // {
+    //   label: "Bulk Order",
+    //   to: "/bulk-order",
+    //   icon: <FaTruckLoading />,
+    // },
+    // {
+    //   label: "View Bulk Orders",
+    //   to: "/bulk-orders",
+    //   icon: <FaBoxes />,
+    // },
   ];
 
   const mobileSupport: MobileAccordionItem[] = [

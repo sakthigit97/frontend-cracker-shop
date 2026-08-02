@@ -20,6 +20,8 @@ export default function AdminConfigPage() {
     const [uploadIndex, setUploadIndex] = useState<number | null>(null);
     const packageFileRef = useRef<HTMLInputElement | null>(null);
     const [packageUploadIndex, setPackageUploadIndex] = useState<number | null>(null);
+    const whatsAppFileRef = useRef<HTMLInputElement | null>(null);
+    const [whatsAppUploadIndex, setWhatsAppUploadIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -28,7 +30,10 @@ export default function AdminConfigPage() {
                 const fixedSliderImages = (res.sliderImages || []).map((s: any) => ({
                     id: s.id || crypto.randomUUID(),
                     imageUrl: s.imageUrl || "",
-                    title: s.title || ""
+                    title: s.title || "",
+                    imageFile: null,
+                    previewUrl: "",
+                    imageChanged: false,
                 }));
 
                 setConfig(res);
@@ -46,11 +51,27 @@ export default function AdminConfigPage() {
                     packageTags: (res.packageTags || []).map((p: any) => ({
                         ...p,
                         productId: p.productId || "",
+                        imageFile: null,
+                        previewUrl: "",
+                        imageChanged: false,
                     })),
                     aiTags: (res.aiTags || []).map((category: any) => ({
                         ...category,
                         options: category.options || [],
                     })),
+                    whatsAppSupport: {
+                        enabled: res.whatsAppSupport?.enabled ?? true,
+                        autoOpenDelay: res.whatsAppSupport?.autoOpenDelay ?? 1000,
+                        autoCloseAfter: res.whatsAppSupport?.autoCloseAfter ?? 8000,
+                        title: res.whatsAppSupport?.title ?? "WhatsApp Support",
+                        subtitle: res.whatsAppSupport?.subtitle ?? "Choose an expert to chat",
+                        contacts: (res.whatsAppSupport?.contacts || []).map((c: any) => ({
+                            ...c,
+                            imageFile: null,
+                            previewUrl: "",
+                            imageChanged: false
+                        })),
+                    },
                 });
             } catch {
                 showAlert({ type: "error", message: "Failed to load config" });
@@ -62,37 +83,74 @@ export default function AdminConfigPage() {
         load();
     }, []);
 
-    const handleUploadSlider = async (e: any) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const createPreview = (file: File) => URL.createObjectURL(file);
 
-        if (file.size > MAX_IMAGE_SIZE) {
+    const validateImage = (
+        file: File
+    ) => {
+
+        if (!file.type.startsWith("image/")) {
             showAlert({
                 type: "error",
-                message: "Image must be under 3MB",
+                message: "Please select an image."
             });
+            return false;
+        }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+
+            showAlert({
+
+                type: "error",
+
+                message: "Image must be under 3MB",
+
+            });
+
+            return false;
+
+        }
+        return true;
+    };
+
+    const handleUploadSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        if (!validateImage(file)) {
             return;
         }
 
-        try {
-            if (uploadIndex === null) return;
-            const presign = await getSliderPresign({
-                fileName: file.name,
-                contentType: file.type,
-            });
+        if (uploadIndex === null) return;
 
-            await uploadFilesToS3([{ uploadUrl: presign.uploadUrl }], [file]);
-            setForm((prev: any) => {
-                const updated = [...prev.sliderImages];
-                updated[uploadIndex].imageUrl = presign.fileUrl;
-                return { ...prev, sliderImages: updated };
-            });
-        } catch {
-            showAlert({
-                type: "error",
-                message: "Upload failed",
-            });
-        }
+        const previewUrl = createPreview(file);
+
+        setForm((prev: any) => {
+
+            const sliderImages = [...prev.sliderImages];
+
+            sliderImages[uploadIndex] = {
+
+                ...sliderImages[uploadIndex],
+
+                imageFile: file,
+
+                previewUrl,
+
+                imageChanged: true,
+
+            };
+
+            return {
+                ...prev,
+                sliderImages,
+            };
+
+        });
+
+        e.target.value = "";
     };
 
     const addPackageTag = () => {
@@ -105,8 +163,47 @@ export default function AdminConfigPage() {
                     name: "",
                     imageUrl: "",
                     productId: "",
-                },
+                    imageFile: null,
+                    previewUrl: "",
+                    imageChanged: false,
+                }
             ],
+        }));
+    };
+
+    const addWhatsAppContact = () => {
+        setForm((prev: any) => ({
+            ...prev,
+            whatsAppSupport: {
+                ...prev.whatsAppSupport,
+                contacts: [
+                    ...(prev.whatsAppSupport?.contacts || []),
+                    {
+                        id: crypto.randomUUID(),
+                        name: "",
+                        role: "",
+                        phone: "",
+                        image: "",
+                        message: "",
+                        imageFile: null,
+                        previewUrl: "",
+                        imageChanged: false,
+                    }
+                ],
+            },
+        }));
+    };
+
+    const removeWhatsAppContact = (index: number) => {
+        setForm((prev: any) => ({
+            ...prev,
+            whatsAppSupport: {
+                ...prev.whatsAppSupport,
+                contacts:
+                    prev.whatsAppSupport.contacts.filter(
+                        (_: any, i: number) => i !== index
+                    ),
+            },
         }));
     };
 
@@ -217,48 +314,101 @@ export default function AdminConfigPage() {
         });
     };
 
-    const handleUploadPackageImage = async (e: any) => {
+    const handleUploadPackageImage = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
         const file = e.target.files?.[0];
+
         if (!file) return;
 
-        if (file.size > MAX_IMAGE_SIZE) {
-            showAlert({
-                type: "error",
-                message: "Image must be under 3MB",
-            });
+
+        if (!validateImage(file)) {
             return;
         }
 
-        try {
-            if (packageUploadIndex === null) return;
+        if (packageUploadIndex === null) return;
 
-            const presign = await getSliderPresign({
-                fileName: file.name,
-                contentType: file.type,
-            });
+        const previewUrl = createPreview(file);
 
-            await uploadFilesToS3(
-                [{ uploadUrl: presign.uploadUrl }],
-                [file]
-            );
+        setForm((prev: any) => {
 
-            setForm((prev: any) => {
-                const updated = [...(prev.packageTags || [])];
+            const packageTags = [...prev.packageTags];
 
-                updated[packageUploadIndex].imageUrl =
-                    presign.fileUrl;
+            packageTags[packageUploadIndex] = {
 
-                return {
-                    ...prev,
-                    packageTags: updated,
-                };
-            });
-        } catch {
-            showAlert({
-                type: "error",
-                message: "Upload failed",
-            });
+                ...packageTags[packageUploadIndex],
+
+                imageFile: file,
+
+                previewUrl,
+
+                imageChanged: true,
+
+            };
+
+            return {
+                ...prev,
+                packageTags,
+            };
+
+        });
+
+        e.target.value = "";
+    };
+
+    const handleUploadWhatsAppImage = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        if (!validateImage(file)) {
+            return;
         }
+
+        if (whatsAppUploadIndex === null) return;
+
+        const previewUrl = createPreview(file);
+
+        setForm((prev: any) => {
+
+            const contacts = [
+                ...(prev.whatsAppSupport?.contacts || []),
+            ];
+
+            contacts[whatsAppUploadIndex] = {
+
+                ...contacts[whatsAppUploadIndex],
+
+                imageFile: file,
+
+                previewUrl,
+
+                imageChanged: true,
+
+            };
+
+            return {
+
+                ...prev,
+
+                whatsAppSupport: {
+
+                    ...prev.whatsAppSupport,
+
+                    contacts,
+
+                },
+
+            };
+
+        });
+
+        e.target.value = "";
+
     };
 
     const addSlider = () => {
@@ -270,7 +420,10 @@ export default function AdminConfigPage() {
                     id: crypto.randomUUID(),
                     imageUrl: "",
                     title: "",
-                },
+                    imageFile: null,
+                    previewUrl: "",
+                    imageChanged: false,
+                }
             ],
         }));
     };
@@ -287,6 +440,54 @@ export default function AdminConfigPage() {
             .trim()
             .toLowerCase()
             .replace(/\s+/g, "-");
+
+
+    const uploadPendingImages = async (
+        items: any[],
+        imageKey: "imageUrl" | "image",
+    ) => {
+
+        const updated = [...items];
+
+        for (let i = 0; i < updated.length; i++) {
+
+            const item = updated[i];
+
+            if (!item.imageChanged || !item.imageFile) {
+                continue;
+            }
+
+            const presign = await getSliderPresign({
+                fileName: item.imageFile.name,
+                contentType: item.imageFile.type,
+            });
+
+            await uploadFilesToS3(
+                [
+                    {
+                        uploadUrl: presign.uploadUrl,
+                    },
+                ],
+                [item.imageFile]
+            );
+
+            updated[i] = {
+                ...item,
+
+                [imageKey]: presign.fileUrl,
+
+                imageFile: null,
+
+                previewUrl: "",
+
+                imageChanged: false,
+
+                oldImageUrl: item[imageKey] || "",
+            };
+        }
+
+        return updated;
+    };
 
     const handleSave = async () => {
         try {
@@ -346,8 +547,8 @@ export default function AdminConfigPage() {
                 return;
             }
 
-            const names = (form.packageTags || []).map(
-                (p: any) => p.name.trim().toLowerCase()
+            const names = (form.packageTags || []).map((p: any) =>
+                p.name.trim().toLowerCase()
             );
 
             if (new Set(names).size !== names.length) {
@@ -357,6 +558,7 @@ export default function AdminConfigPage() {
                 });
                 return;
             }
+
             const rewardAmount = Number(form.referralRewardAmount);
 
             if (
@@ -365,22 +567,26 @@ export default function AdminConfigPage() {
             ) {
                 showAlert({
                     type: "error",
-                    message: "Referral reward percentage must be between 0 and 100",
+                    message:
+                        "Referral reward percentage must be between 0 and 100",
                 });
                 return;
             }
+
             if (
                 form.referralRewardType === "FLAT" &&
                 rewardAmount < 0
             ) {
                 showAlert({
                     type: "error",
-                    message: "Referral reward amount cannot be negative",
+                    message:
+                        "Referral reward amount cannot be negative",
                 });
                 return;
             }
 
             const aiCategories = form.aiTags || [];
+
             const invalidCategory = aiCategories.some(
                 (c: any) => !c.name?.trim()
             );
@@ -393,19 +599,23 @@ export default function AdminConfigPage() {
                 return;
             }
 
-            const categoryNames = aiCategories.map(
-                (c: any) => c.name.trim().toLowerCase()
+            const categoryNames = aiCategories.map((c: any) =>
+                c.name.trim().toLowerCase()
             );
 
-            if (new Set(categoryNames).size !== categoryNames.length) {
+            if (
+                new Set(categoryNames).size !== categoryNames.length
+            ) {
                 showAlert({
                     type: "error",
-                    message: "Duplicate category names are not allowed",
+                    message:
+                        "Duplicate category names are not allowed",
                 });
                 return;
             }
 
             for (const category of aiCategories) {
+
                 if (!category.options?.length) {
                     showAlert({
                         type: "error",
@@ -426,11 +636,13 @@ export default function AdminConfigPage() {
                     return;
                 }
 
-                const optionNames = category.options.map(
-                    (o: any) => o.name.trim().toLowerCase()
+                const optionNames = category.options.map((o: any) =>
+                    o.name.trim().toLowerCase()
                 );
 
-                if (new Set(optionNames).size !== optionNames.length) {
+                if (
+                    new Set(optionNames).size !== optionNames.length
+                ) {
                     showAlert({
                         type: "error",
                         message: `Duplicate options found in "${category.name}"`,
@@ -439,34 +651,125 @@ export default function AdminConfigPage() {
                 }
             }
 
+            const contacts =
+                form.whatsAppSupport?.contacts || [];
+
+            for (const contact of contacts) {
+
+                if (!contact.name?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: "WhatsApp contact name is required",
+                    });
+                    return;
+                }
+
+                if (!contact.phone?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: "WhatsApp number is required",
+                    });
+                    return;
+                }
+
+                if (!/^\d{12}$/.test(contact.phone)) {
+                    showAlert({
+                        type: "error",
+                        message:
+                            "WhatsApp number must include country code. Example: 91999....",
+                    });
+                    return;
+                }
+            }
+
             setLoading(true);
+            const uploadedSliderImages =
+                await uploadPendingImages(
+                    form.sliderImages,
+                    "imageUrl"
+                );
+
+            const uploadedPackageTags =
+                await uploadPendingImages(
+                    form.packageTags,
+                    "imageUrl"
+                );
+
+            const uploadedWhatsAppContacts =
+                await uploadPendingImages(
+                    form.whatsAppSupport?.contacts || [],
+                    "image"
+                );
+
             const payload = {
                 ...form,
-                packageTags: (form.packageTags || []).map(
-                    (p: any) => ({
-                        id: slug(p.name),
-                        name: p.name.trim(),
-                        imageUrl: p.imageUrl || "",
-                        productId: p.productId.trim(),
-                    }),
+
+                sliderImages: uploadedSliderImages.map(
+                    (img: any) => ({
+                        id: img.id,
+                        title: img.title,
+                        imageUrl: img.imageUrl,
+                    })
                 ),
-                aiTags: (form.aiTags || []).map((category: any) => {
-                    const categoryId = slug(category.name);
-                    return {
-                        id: categoryId,
-                        name: category.name.trim(),
-                        options: (category.options || []).map((option: any) => ({
-                            id: `${categoryId}:${slug(option.name)}`,
-                            name: option.name.trim(),
 
-                        })),
-                    };
+                packageTags:
+                    (uploadedPackageTags || []).map(
+                        (p: any) => ({
+                            id: slug(p.name),
+                            name: p.name.trim(),
+                            imageUrl: p.imageUrl || "",
+                            productId: p.productId.trim(),
+                        })
+                    ),
 
-                }),
+                aiTags: (form.aiTags || []).map(
+                    (category: any) => {
+
+                        const categoryId = slug(category.name);
+
+                        return {
+                            id: categoryId,
+                            name: category.name.trim(),
+
+                            options: (
+                                category.options || []
+                            ).map((option: any) => ({
+                                id: `${categoryId}:${slug(
+                                    option.name
+                                )}`,
+                                name: option.name.trim(),
+                            })),
+                        };
+                    }
+                ),
+
+                whatsAppSupport: {
+                    ...form.whatsAppSupport,
+                    contacts: uploadedWhatsAppContacts.map(
+                        ({
+                            imageFile,
+                            previewUrl,
+                            imageChanged,
+                            ...contact
+                        }: any) => contact
+                    ),
+
+                },
             };
 
             const updated = await updateAdminConfig(payload);
+
             setConfig(updated);
+
+            setForm((prev: any) => ({
+                ...prev,
+                sliderImages: uploadedSliderImages,
+                packageTags: uploadedPackageTags,
+                whatsAppSupport: {
+                    ...prev.whatsAppSupport,
+                    contacts: uploadedWhatsAppContacts,
+                },
+            }));
 
             showAlert({
                 type: "success",
@@ -474,6 +777,7 @@ export default function AdminConfigPage() {
             });
 
             navigate("/admin/configs");
+
         } catch {
             showAlert({
                 type: "error",
@@ -858,6 +1162,269 @@ export default function AdminConfigPage() {
                         </label>
                     </div>
 
+                    {/* WhatsApp Support */}
+                    <div className="space-y-5 border border-gray-200 rounded-xl p-4">
+
+                        <p className="text-sm font-medium">
+                            WhatsApp Support
+                        </p>
+
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={!!form.whatsAppSupport?.enabled}
+                                onChange={(e) =>
+                                    setForm((prev: any) => ({
+                                        ...prev,
+                                        whatsAppSupport: {
+                                            ...prev.whatsAppSupport,
+                                            enabled: e.target.checked,
+                                        },
+                                    }))
+                                }
+                            />
+                            Enable WhatsApp Support
+                        </label>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Popup Title
+                            </label>
+
+                            <input
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.whatsAppSupport?.title || ""}
+                                onChange={(e) =>
+                                    setForm((prev: any) => ({
+                                        ...prev,
+                                        whatsAppSupport: {
+                                            ...prev.whatsAppSupport,
+                                            title: e.target.value,
+                                        },
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Popup Subtitle
+                            </label>
+
+                            <input
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                value={form.whatsAppSupport?.subtitle || ""}
+                                onChange={(e) =>
+                                    setForm((prev: any) => ({
+                                        ...prev,
+                                        whatsAppSupport: {
+                                            ...prev.whatsAppSupport,
+                                            subtitle: e.target.value,
+                                        },
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Auto Open Delay
+                                </label>
+
+                                <select
+                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                    value={form.whatsAppSupport?.autoOpenDelay ?? 1000}
+                                    onChange={(e) =>
+                                        setForm((prev: any) => ({
+                                            ...prev,
+                                            whatsAppSupport: {
+                                                ...prev.whatsAppSupport,
+                                                autoOpenDelay: Number(e.target.value),
+                                            },
+                                        }))
+                                    }
+                                >
+                                    <option value={1000}>1 Second</option>
+                                    <option value={2000}>2 Seconds</option>
+                                    <option value={3000}>3 Seconds</option>
+                                    <option value={5000}>5 Seconds</option>
+                                    <option value={10000}>10 Seconds</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Auto Close After
+                                </label>
+
+                                <select
+                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                    value={form.whatsAppSupport?.autoCloseAfter ?? 8000}
+                                    onChange={(e) =>
+                                        setForm((prev: any) => ({
+                                            ...prev,
+                                            whatsAppSupport: {
+                                                ...prev.whatsAppSupport,
+                                                autoCloseAfter: Number(e.target.value),
+                                            },
+                                        }))
+                                    }
+                                >
+                                    <option value={0}>Never</option>
+                                    <option value={5000}>5 Seconds</option>
+                                    <option value={8000}>8 Seconds</option>
+                                    <option value={10000}>10 Seconds</option>
+                                    <option value={15000}>15 Seconds</option>
+                                    <option value={20000}>20 Seconds</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div className="border-t pt-4">
+
+                            <div className="flex items-center justify-between mb-4">
+
+                                <h3 className="font-medium">
+                                    WhatsApp Contacts
+                                </h3>
+
+                                <Button
+                                    variant="outline"
+                                    onClick={addWhatsAppContact}
+                                >
+                                    + Add Contact
+                                </Button>
+
+                            </div>
+
+                            {(form.whatsAppSupport?.contacts || []).map(
+                                (contact: any, index: number) => (
+
+                                    <div
+                                        key={contact.id}
+                                        className="border rounded-xl bg-gray-50 p-4 space-y-4 mb-5"
+                                    >
+
+                                        {contact.image ? (
+                                            <img
+                                                src={contact.previewUrl || contact.image}
+                                                alt={contact.name}
+                                                className="w-20 h-20 rounded-full object-cover border"
+                                            />
+                                        ) : (
+                                            <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                                                No Image
+                                            </div>
+                                        )}
+
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                setWhatsAppUploadIndex(index);
+                                                whatsAppFileRef.current?.click();
+                                            }}
+                                        >
+                                            {
+                                                contact.previewUrl || contact.image
+                                                    ? "Change Image"
+                                                    : "Upload Image"
+                                            }
+                                        </Button>
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            placeholder="Name"
+                                            value={contact.name}
+                                            onChange={(e) => {
+                                                const updated = [...form.whatsAppSupport.contacts];
+                                                updated[index].name = e.target.value;
+
+                                                setForm((prev: any) => ({
+                                                    ...prev,
+                                                    whatsAppSupport: {
+                                                        ...prev.whatsAppSupport,
+                                                        contacts: updated,
+                                                    },
+                                                }));
+                                            }}
+                                        />
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            placeholder="Role"
+                                            value={contact.role}
+                                            onChange={(e) => {
+                                                const updated = [...form.whatsAppSupport.contacts];
+                                                updated[index].role = e.target.value;
+
+                                                setForm((prev: any) => ({
+                                                    ...prev,
+                                                    whatsAppSupport: {
+                                                        ...prev.whatsAppSupport,
+                                                        contacts: updated,
+                                                    },
+                                                }));
+                                            }}
+                                        />
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            placeholder="Phone (918838913161)"
+                                            value={contact.phone}
+                                            onChange={(e) => {
+                                                const updated = [...form.whatsAppSupport.contacts];
+                                                updated[index].phone = e.target.value.replace(/\D/g, "");
+
+                                                setForm((prev: any) => ({
+                                                    ...prev,
+                                                    whatsAppSupport: {
+                                                        ...prev.whatsAppSupport,
+                                                        contacts: updated,
+                                                    },
+                                                }));
+                                            }}
+                                        />
+
+                                        <textarea
+                                            rows={3}
+                                            className="border border-gray-300 rounded-lg p-3 w-full resize-none"
+                                            placeholder="Default Message"
+                                            value={contact.message}
+                                            onChange={(e) => {
+                                                const updated = [...form.whatsAppSupport.contacts];
+                                                updated[index].message = e.target.value;
+
+                                                setForm((prev: any) => ({
+                                                    ...prev,
+                                                    whatsAppSupport: {
+                                                        ...prev.whatsAppSupport,
+                                                        contacts: updated,
+                                                    },
+                                                }));
+                                            }}
+                                        />
+
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                removeWhatsAppContact(index)
+                                            }
+                                        >
+                                            Remove Contact
+                                        </Button>
+
+                                    </div>
+                                )
+                            )}
+
+                        </div>
+
+                    </div>
+
+
                     {/* Slider */}
                     <div className="space-y-4 border border-gray-200 rounded-xl p-4">
                         <p className="text-sm font-medium">Slider Images</p>
@@ -867,7 +1434,7 @@ export default function AdminConfigPage() {
 
                                 {img.imageUrl ? (
                                     <img
-                                        src={img.imageUrl}
+                                        src={img.previewUrl || img.imageUrl}
                                         className="h-24 w-full object-cover rounded-lg border"
                                     />
                                 ) : (
@@ -916,6 +1483,7 @@ export default function AdminConfigPage() {
                         <input
                             ref={fileRef}
                             type="file"
+                            accept="image/*"
                             className="hidden"
                             onChange={handleUploadSlider}
                         />
@@ -940,7 +1508,7 @@ export default function AdminConfigPage() {
                                 >
                                     {tag.imageUrl ? (
                                         <img
-                                            src={tag.imageUrl}
+                                            src={tag.previewUrl || tag.imageUrl}
                                             className="
                                                 h-24
                                                 w-full
@@ -962,9 +1530,11 @@ export default function AdminConfigPage() {
                                             packageFileRef.current?.click();
                                         }}
                                     >
-                                        {tag.imageUrl
-                                            ? "Change Image"
-                                            : "Upload Image"}
+                                        {
+                                            tag.previewUrl || tag.imageUrl
+                                                ? "Change Image"
+                                                : "Upload Image"
+                                        }
                                     </Button>
 
                                     <input
@@ -1047,6 +1617,7 @@ export default function AdminConfigPage() {
                             ref={packageFileRef}
                             type="file"
                             className="hidden"
+                            accept="image/*"
                             onChange={handleUploadPackageImage}
                         />
                     </div>
@@ -1171,6 +1742,13 @@ export default function AdminConfigPage() {
 
                 </div>
             </div>
+            <input
+                ref={whatsAppFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadWhatsAppImage}
+            />
         </div>
     );
 }

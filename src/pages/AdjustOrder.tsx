@@ -33,7 +33,7 @@ export default function AdjustOrder() {
     const config = useConfigStore((s) => s.config);
     const packagingPercent = config?.packagingPercent ?? 0;
     const gstPercent = config?.gstPercent ?? 0;
-
+    const disableGstForTN = config?.disableGstForTN || false;
 
     const originalItemsRef = useRef(
         order.items.map((i: any) => ({
@@ -185,6 +185,12 @@ export default function AdjustOrder() {
         grandTotal,
     } = pricing;
 
+    const walletUsed = Number(order.walletUsed ?? 0);
+    const finalPayable = Math.max(
+        grandTotal - walletUsed,
+        0
+    );
+
     const oldTotal = Number(order.grandTotal || 0);
     const diffAmount = grandTotal - oldTotal;
     const updateQty = (productId: string, delta: number) => {
@@ -280,7 +286,7 @@ export default function AdjustOrder() {
 
         const validation = await validateMinimumOrder(
             pincode,
-            subtotal
+            grandTotal
         );
 
         if (!validation.valid) {
@@ -301,13 +307,14 @@ export default function AdjustOrder() {
                 couponCode,
                 walletUsed: order.walletUsed ?? 0,
             });
-            clearOrdersCache();
-
             showAlert({
                 type: "success",
                 message: "Order updated successfully",
                 duration: 1500,
             });
+
+            clearOrdersCache();
+
             navigate(
                 isAdmin
                     ? `/admin/orders/${orderId}`
@@ -565,10 +572,7 @@ export default function AdjustOrder() {
                                             </span>
                                         </div>
                                     ) : (
-                                        <div className="flex justify-between text-gray-400">
-                                            <span>Coupon Savings</span>
-                                            <span>₹0</span>
-                                        </div>
+                                        <></>
                                     )}
 
                                     <div className="flex justify-between font-medium">
@@ -591,20 +595,56 @@ export default function AdjustOrder() {
 
                                     <div className="border-t my-3" />
 
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="font-semibold text-[var(--color-primary)]">
-                                                Grand Total
-                                            </p>
+                                    <div className="space-y-2">
 
-                                            <p className="text-xs text-gray-500">
-                                                Includes applicable GST & Packaging Charges
-                                            </p>
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="font-semibold text-[var(--color-primary)]">
+                                                    Grand Total
+                                                </p>
+
+                                                <p className="text-xs text-gray-500">
+                                                    {disableGstForTN
+                                                        ? "Inclusive of Packaging Charges"
+                                                        : "Inclusive of GST & Packaging Charges"}
+                                                </p>
+                                            </div>
+
+                                            <span className="text-2xl font-bold text-[var(--color-primary)]">
+                                                ₹{grandTotal}
+                                            </span>
                                         </div>
 
-                                        <span className="text-2xl font-bold text-[var(--color-primary)]">
-                                            ₹{grandTotal}
-                                        </span>
+                                        {walletUsed > 0 && (
+                                            <>
+                                                <div className="border-t pt-3 flex justify-between text-green-600">
+                                                    <span className="font-medium">
+                                                        Wallet Applied
+                                                    </span>
+
+                                                    <span className="font-semibold">
+                                                        -₹{walletUsed}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex justify-between items-center border-t pt-3">
+                                                    <div>
+                                                        <p className="font-semibold text-[var(--color-primary)]">
+                                                            Amount Payable
+                                                        </p>
+
+                                                        <p className="text-xs text-gray-500">
+                                                            Amount to be paid
+                                                        </p>
+                                                    </div>
+
+                                                    <span className="text-2xl font-bold">
+                                                        ₹{finalPayable}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
+
                                     </div>
 
                                 </div>
@@ -642,6 +682,7 @@ export default function AdjustOrder() {
 
                     </div>
                 </div>
+
             </div>
             <AddOrderItemModal
                 open={showAddItem}
@@ -716,7 +757,7 @@ export default function AdjustOrder() {
 
                             {packagingCharge > 0 && (
                                 <div className="flex justify-between text-gray-600">
-                                    <span>Packaging Charge</span>
+                                    <span>Packaging Charge ({packagingPercent}%)</span>
                                     <span>₹{packagingCharge}</span>
                                 </div>
                             )}
@@ -737,10 +778,7 @@ export default function AdjustOrder() {
                                     <span>-₹{couponDiscount}</span>
                                 </div>
                             ) : (
-                                <div className="flex justify-between text-gray-400">
-                                    <span>Coupon Savings</span>
-                                    <span>₹0</span>
-                                </div>
+                                <></>
                             )}
 
                             <div className="flex justify-between font-medium">
