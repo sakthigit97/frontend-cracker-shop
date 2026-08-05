@@ -17,8 +17,6 @@ import {
   FaBars,
   FaTimes,
   FaPalette,
-  // FaTruckLoading,
-  // FaBoxes,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -128,16 +126,6 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    // {
-    //   label: "Bulk Order",
-    //   to: "/bulk-order",
-    //   icon: <FaTruckLoading />,
-    // },
-    // {
-    //   label: "View Bulk Orders",
-    //   to: "/bulk-orders",
-    //   icon: <FaBoxes />,
-    // },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -197,16 +185,6 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    // {
-    //   label: "Bulk Order",
-    //   to: "/bulk-order",
-    //   icon: <FaTruckLoading />,
-    // },
-    // {
-    //   label: "View Bulk Orders",
-    //   to: "/bulk-orders",
-    //   icon: <FaBoxes />,
-    // },
   ];
 
   const mobileSupport: MobileAccordionItem[] = [
@@ -459,7 +437,7 @@ export default function Header() {
                 </p>
 
                 <p className="mt-1 text-xs text-gray-500">
-                  Includes applicable GST and Packaging Charges.
+                  Includes of All Charges.
                 </p>
               </div>
             )}

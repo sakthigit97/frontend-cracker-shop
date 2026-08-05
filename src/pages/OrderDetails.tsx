@@ -131,6 +131,11 @@ export default function OrderDetails() {
     }
   }
 
+  const totalQuantity = order.items.reduce(
+    (total: number, item: any) => total + item.quantity,
+    0
+  );
+
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
       <div>
@@ -396,9 +401,15 @@ export default function OrderDetails() {
 
         <div className="space-y-2 text-sm">
 
-          {/* Products */}
-          <div className="flex justify-between">
-            <span>Products Total</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <p>Products Total</p>
+
+              <p className="text-xs text-gray-500">
+                {order.items.length} Products • {totalQuantity} Qty
+              </p>
+            </div>
+
             <span>₹{order.totalProductAmount}</span>
           </div>
 

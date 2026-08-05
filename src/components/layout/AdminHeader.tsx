@@ -18,7 +18,6 @@ import {
   FaFolderOpen,
   FaServer,
   FaTicketAlt,
-  // FaTruckLoading
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -78,12 +77,7 @@ export default function AdminHeader() {
       label: "Orders",
       to: "/admin/orders",
       icon: <FaShoppingBag />,
-    }, 
-    // {
-    //   label: "Bulk Orders",
-    //   to: "/admin/bulk-orders",
-    //   icon: <FaTruckLoading />,
-    // },
+    },
     {
       label: "Revenue Report",
       to: "/admin/reports/revenue",
@@ -158,12 +152,7 @@ export default function AdminHeader() {
       label: "Orders",
       to: "/admin/orders",
       icon: <FaShoppingBag />,
-    }, 
-    // {
-    //   label: "Bulk Orders",
-    //   to: "/admin/bulk-orders",
-    //   icon: <FaTruckLoading />,
-    // },
+    },
     {
       label: "Revenue Report",
       to: "/admin/reports/revenue",

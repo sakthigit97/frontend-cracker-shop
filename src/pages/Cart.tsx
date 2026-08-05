@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import defaultImage from "../assets/default-image.png";
 import { useMemo, useState, useEffect } from "react";
 import ProductSkeleton from "../components/product/ProductSkeleton";
-
 import { cartStore } from "../store/cart.store";
 import { useCartProducts } from "../hooks/useCartProducts";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
@@ -30,6 +29,15 @@ export default function Cart() {
   const disableGstForTN = config?.disableGstForTN || false;
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
+
+  const totalQuantity = useMemo(
+    () =>
+      products.reduce(
+        (total, item) => total + item.quantity,
+        0
+      ),
+    [products]
+  );
 
   const pricingBreakdown = useMemo(
     () => calculateOrderPricingBreakdown(products),
@@ -314,7 +322,9 @@ export default function Cart() {
               </h3>
 
               <div className="flex justify-between text-sm">
-                <span>Products Total</span>
+                <span>
+                  Products Total ({products.length} Products / {totalQuantity} Qty)
+                </span>
                 <span>₹{pricingBreakdown.productSubtotal}</span>
               </div>
 

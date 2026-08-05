@@ -586,7 +586,7 @@ export async function buildInvoicePdf(
 
     text(
         doc,
-        "The tax invoice will be sent separately by email or included with your parcel.",
+        "This is not tax invoice – The tax invoice will be sent separately by email or included with your parcel.",
         LEFT,
         summaryStartY
     );

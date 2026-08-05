@@ -97,7 +97,7 @@ export default function AdminOrders() {
     const isLoading = loading[key];
 
     useEffect(() => {
-        fetchInitial();
+        fetchInitial(true);
     }, [key, fetchInitial]);
 
     if (orders.length === 0 && isLoading) {

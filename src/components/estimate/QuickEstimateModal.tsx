@@ -1011,11 +1011,17 @@ export default function QuickEstimateModal({
                         space-y-2
                     "
                 >
-                    <div className="flex justify-between">
-                        <span>Products Total</span>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p>Products Total</p>
+
+                            <p className="text-xs text-gray-500">
+                                {products.length} Products • {totalQty} Qty
+                            </p>
+                        </div>
+
                         <span>₹{productSubtotal.toLocaleString()}</span>
                     </div>
-
                     {comboPackageTotal > 0 && (
                         <>
                             <div className="flex justify-between">

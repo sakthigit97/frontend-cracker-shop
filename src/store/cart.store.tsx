@@ -4,6 +4,14 @@ import { persist } from "zustand/middleware";
 export type CartItems = Record<string, number>;
 const CART_EXPIRY_MS = 3 * 24 * 60 * 60 * 1000;
 
+export interface CartItemView {
+  productId: string;
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
+}
+
 export interface CartState {
   items: CartItems;
   hydrated: boolean;
@@ -58,7 +66,6 @@ export const cartStore = create<CartState>()(
             dirty: true,
           };
         }),
-
       removeItem: (productId) =>
         set((state) => {
           if (state.locked) return state;

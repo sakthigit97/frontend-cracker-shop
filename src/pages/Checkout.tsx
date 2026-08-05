@@ -79,6 +79,14 @@ export default function Checkout() {
     () => calculateOrderPricingBreakdown(products),
     [products]
   );
+  const totalQuantity = useMemo(
+    () =>
+      products.reduce(
+        (total, item) => total + item.quantity,
+        0
+      ),
+    [products]
+  );
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
   const currentState = addressMode === "PROFILE"
@@ -740,9 +748,15 @@ export default function Checkout() {
 
           <div className="border-t pt-4 space-y-2 text-sm">
 
-            {/* Products */}
-            <div className="flex justify-between">
-              <span>Products Total</span>
+            <div className="flex justify-between items-start">
+              <div>
+                <p>Products Total</p>
+
+                <p className="text-xs text-gray-500">
+                  {products.length} Products • {totalQuantity} Qty
+                </p>
+              </div>
+
               <span>₹{pricingBreakdown.productSubtotal}</span>
             </div>
 
@@ -938,7 +952,7 @@ export default function Checkout() {
 
             >
               {placingOrder
-                ? "Placing Order…"
+                ? "Placing Order Enquiry…"
                 : "Place Order Enquiry"}
             </Button>
           )}
