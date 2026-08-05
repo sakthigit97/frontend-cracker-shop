@@ -253,7 +253,9 @@ export default function AdminCategories() {
                                             className="border-t"
                                         >
                                             <td className="p-3">{c.name}</td>
-                                            <td className="p-3">{c.categoryId}</td>
+                                            <td className="p-3 font-mono text-xs break-all">
+                                                {c.categoryId}
+                                            </td>
                                             <td className="p-3">
                                                 <div className="flex items-center gap-2">
                                                     <Toggle
@@ -277,10 +279,8 @@ export default function AdminCategories() {
                                                     </span>
                                                 </div>
                                             </td>
-
                                             <td className="p-3">
-                                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
-
+                                                <div className="flex flex-nowrap gap-2">
                                                     <Link
                                                         to={`/admin/categories/${c.categoryId}/edit`}
                                                         className="w-full sm:w-auto"
@@ -312,7 +312,7 @@ export default function AdminCategories() {
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={3}
+                                            colSpan={4}
                                             className="p-6 text-center text-gray-500"
                                         >
                                             <EmptyState

@@ -5,10 +5,11 @@ import {
     STATUS_ORDER,
     STATUS_COLORS,
 } from "../../utils/orderStatus";
-import { useAdminOrdersStore } from "../../store/adminOrders.store";
+import { useAdminOrdersStore, } from "../../store/adminOrders.store";
 import { useDebounce } from "../../utils/useDebounce";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import { useNavigate } from "react-router-dom";
+import { formatDateTime } from "../../utils/date";
 
 const DATE_OPTIONS = [
     { label: "All", value: "all" },
@@ -43,7 +44,12 @@ export default function AdminOrders() {
             dateRange,
             orderId: debouncedOrderId || undefined,
         });
-    }, [status, dateRange, debouncedOrderId]);
+    }, [
+        status,
+        dateRange,
+        debouncedOrderId,
+        setFilters,
+    ]);
 
     const key = useMemo(
         () =>
@@ -54,16 +60,6 @@ export default function AdminOrders() {
             }),
         [filters]
     );
-
-    const formatDateTime = (ts: number) =>
-        new Date(ts).toLocaleString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        });
 
     function getCustomerName(address?: string) {
         if (!address) return "-";
@@ -101,10 +97,10 @@ export default function AdminOrders() {
     const isLoading = loading[key];
 
     useEffect(() => {
-        fetchInitial();
-    }, [key]);
+        fetchInitial(true);
+    }, [key, fetchInitial]);
 
-    if (!orders && isLoading) {
+    if (orders.length === 0 && isLoading) {
         return (<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
                 <ProductSkeleton key={i} />
@@ -211,12 +207,12 @@ export default function AdminOrders() {
 
                                     <p
                                         className="
-      font-semibold
-      text-sm
-      whitespace-nowrap
-      overflow-x-auto
-      scrollbar-hide
-    "
+                                            font-semibold
+                                            text-sm
+                                            whitespace-nowrap
+                                            overflow-x-auto
+                                            scrollbar-hide
+                                            "
                                     >
                                         {o.orderId}
                                     </p>

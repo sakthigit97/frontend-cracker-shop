@@ -12,6 +12,7 @@ import { downloadBulkInvoice } from "../utils/pdf/downloadBulkInvoice";
 
 import { ORDER_STATUS_CONFIG } from "../utils/orderStatus";
 import { useConfigStore } from "../store/config.store";
+import { formatDateTime } from "../utils/date";
 const TERMINAL_STATUS = "CANCELLED";
 const CANCELLABLE_STATUSES = [
     "ORDER_PLACED",
@@ -43,17 +44,6 @@ export default function BulkOrderDetails() {
         }
         fetchOrder(orderId);
     }, [orderId, fetchOrder, clearOrder]);
-
-    function formatDateTime(ts: string | number) {
-        return new Date(ts).toLocaleString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        });
-    }
 
     async function handleCancel() {
         if (!order) {

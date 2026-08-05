@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import { useAlert } from "../../store/alert.store";
-import { fetchGlobalConfig } from "../../services/config.api";
 import { updateAdminConfig, getSliderPresign } from "../../services/adminConfig.api";
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
 import { useConfigStore } from "../../store/config.store";
@@ -11,8 +10,7 @@ const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
 export default function AdminConfigPage() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-    const config = useConfigStore((s) => s.config);
-    const setConfig = useConfigStore((s) => s.setConfig);
+    const refreshConfig = useConfigStore((s) => s.refreshConfig);
     const [fetching, setFetching] = useState(true);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState<any>(null);
@@ -26,7 +24,14 @@ export default function AdminConfigPage() {
     useEffect(() => {
         const load = async () => {
             try {
-                const res = config ? config : await fetchGlobalConfig();
+                await refreshConfig();
+
+                const res = useConfigStore.getState().config;
+
+                if (!res) {
+                    throw new Error("Config not available");
+                }
+
                 const fixedSliderImages = (res.sliderImages || []).map((s: any) => ({
                     id: s.id || crypto.randomUUID(),
                     imageUrl: s.imageUrl || "",
@@ -35,8 +40,6 @@ export default function AdminConfigPage() {
                     previewUrl: "",
                     imageChanged: false,
                 }));
-
-                setConfig(res);
                 setForm({
                     ...res,
                     adminMobile: res.adminMobile || "",
@@ -81,10 +84,9 @@ export default function AdminConfigPage() {
         };
 
         load();
-    }, []);
+    }, [refreshConfig]);
 
     const createPreview = (file: File) => URL.createObjectURL(file);
-
     const validateImage = (
         file: File
     ) => {
@@ -126,21 +128,13 @@ export default function AdminConfigPage() {
         if (uploadIndex === null) return;
 
         const previewUrl = createPreview(file);
-
         setForm((prev: any) => {
-
             const sliderImages = [...prev.sliderImages];
-
             sliderImages[uploadIndex] = {
-
                 ...sliderImages[uploadIndex],
-
                 imageFile: file,
-
                 previewUrl,
-
                 imageChanged: true,
-
             };
 
             return {
@@ -757,16 +751,21 @@ export default function AdminConfigPage() {
                 },
             };
 
-            const updated = await updateAdminConfig(payload);
+            await updateAdminConfig(payload);
 
-            setConfig(updated);
+            await refreshConfig();
+            const latest = useConfigStore.getState().config;
+            if (!latest) {
+                throw new Error("Failed to refresh config");
+            }
 
             setForm((prev: any) => ({
                 ...prev,
+                ...latest,
                 sliderImages: uploadedSliderImages,
                 packageTags: uploadedPackageTags,
                 whatsAppSupport: {
-                    ...prev.whatsAppSupport,
+                    ...latest.whatsAppSupport,
                     contacts: uploadedWhatsAppContacts,
                 },
             }));
@@ -775,7 +774,6 @@ export default function AdminConfigPage() {
                 type: "success",
                 message: "Config updated successfully",
             });
-
             navigate("/admin/configs");
 
         } catch {
@@ -1308,7 +1306,7 @@ export default function AdminConfigPage() {
                                         className="border rounded-xl bg-gray-50 p-4 space-y-4 mb-5"
                                     >
 
-                                        {contact.image ? (
+                                        {contact.previewUrl || contact.image ? (
                                             <img
                                                 src={contact.previewUrl || contact.image}
                                                 alt={contact.name}
@@ -1432,7 +1430,7 @@ export default function AdminConfigPage() {
                         {form.sliderImages.map((img: any, index: number) => (
                             <div key={img.id} className="border rounded-xl p-4 space-y-3 bg-gray-50">
 
-                                {img.imageUrl ? (
+                                {img.previewUrl || img.imageUrl ? (
                                     <img
                                         src={img.previewUrl || img.imageUrl}
                                         className="h-24 w-full object-cover rounded-lg border"
@@ -1450,7 +1448,9 @@ export default function AdminConfigPage() {
                                         fileRef.current?.click();
                                     }}
                                 >
-                                    {img.imageUrl ? "Change Image" : "Upload Image"}
+                                    {img.previewUrl || img.imageUrl
+                                        ? "Change Image"
+                                        : "Upload Image"}
                                 </Button>
 
                                 <input
@@ -1506,7 +1506,7 @@ export default function AdminConfigPage() {
                                         bg-gray-50
                                     "
                                 >
-                                    {tag.imageUrl ? (
+                                    {tag.previewUrl || tag.imageUrl ? (
                                         <img
                                             src={tag.previewUrl || tag.imageUrl}
                                             className="

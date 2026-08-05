@@ -8,6 +8,7 @@ import { useAlert } from "../store/alert.store";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useConfigStore } from "../store/config.store";
 import { downloadInvoice } from "../utils/pdf/downloadInvoice";
+import { formatDateTime } from "../utils/date";
 
 const TERMINAL_STATUS = "CANCELLED";
 const CANCELLABLE_STATUSES = ["ORDER_PLACED", "ORDER_CONFIRMED"];
@@ -109,16 +110,6 @@ export default function OrderDetails() {
     }
   }
 
-  const formatDateTime = (ts: number) =>
-    new Date(ts).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
   async function handleCancel() {
     try {
       setLoading(true);
@@ -139,6 +130,11 @@ export default function OrderDetails() {
       setLoading(false);
     }
   }
+
+  const totalQuantity = order.items.reduce(
+    (total: number, item: any) => total + item.quantity,
+    0
+  );
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
@@ -298,6 +294,7 @@ export default function OrderDetails() {
             {[...(order.statusHistory || [])]
               .sort((a, b) => (b.changedAt ?? b.at) - (a.changedAt ?? a.at))
               .map((history: any, index: number) => {
+                console.log(history)
 
                 const status = history.toStatus ?? history.status;
                 const updatedBy = history.changedBy ?? history.by;
@@ -326,7 +323,7 @@ export default function OrderDetails() {
                       </div>
 
                       <p className="text-sm text-gray-500 mt-1">
-                        Updated By :{" "}
+                        Changed By :{" "}
                         {updatedBy.startsWith("ADMIN")
                           ? "Admin"
                           : updatedBy.replace("USER#", "")}
@@ -404,9 +401,15 @@ export default function OrderDetails() {
 
         <div className="space-y-2 text-sm">
 
-          {/* Products */}
-          <div className="flex justify-between">
-            <span>Products Total</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <p>Products Total</p>
+
+              <p className="text-xs text-gray-500">
+                {order.items.length} Products • {totalQuantity} Qty
+              </p>
+            </div>
+
             <span>₹{order.totalProductAmount}</span>
           </div>
 
@@ -489,7 +492,7 @@ export default function OrderDetails() {
               </p>
 
               <p className="text-xs text-gray-500">
-                {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                {disableGstForTN && isTamilNadu ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
               </p>
             </div>
 

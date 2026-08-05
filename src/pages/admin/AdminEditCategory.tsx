@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import { useAlert } from "../../store/alert.store";
+import defaultImage from "../../assets/default-image.png";
 
 import {
     getCategoryById,
@@ -42,7 +43,6 @@ export default function AdminEditCategory() {
         const loadCategory = async () => {
             try {
                 const res = await getCategoryById(categoryId);
-
                 const loaded = {
                     name: res.name || "",
                     isActive: res.isActive ?? true,
@@ -217,6 +217,10 @@ export default function AdminEditCategory() {
                         <div className="flex flex-col sm:flex-row gap-4 border rounded-xl p-4 bg-gray-50">
                             <img
                                 src={previewImage}
+                                onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = defaultImage;
+                                }}
                                 className="h-20 w-20 rounded-lg object-cover border"
                             />
 

@@ -20,6 +20,7 @@ export default function ComboPackages() {
     const EXCLUDED_PACKAGE_IDS = new Set([
         "best-selling",
         "new-arrivals",
+        "party",
     ]);
     const visiblePackages = packages.filter(
         (p) =>

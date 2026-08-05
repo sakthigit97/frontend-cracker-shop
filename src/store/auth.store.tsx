@@ -7,7 +7,6 @@ import { cartStore } from "./cart.store";
 import { useCartStorageSync } from "../hooks/useCartStorageSync";
 import { useOrdersStore } from "./orders.store";
 export type UserRole = "USER" | "ADMIN";
-import { useConfigStore } from "../store/config.store";
 
 interface AuthUser {
   userId: string;
@@ -30,8 +29,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const loadConfig = useConfigStore((s) => s.loadConfig);
-  const clearConfig = useConfigStore((s) => s.clearConfig);
   const [user, setUser] = useState<AuthUser | null>(() => {
     const stored = localStorage.getItem("auth");
     if (!stored) return null;
@@ -53,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useCartSync(!!user);
   useCartStorageSync();
-
   const logout = useCallback(() => {
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
@@ -67,14 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.removeItem("auth");
     sessionStorage.removeItem("cartAlertShown");
-
     setUser(null);
     cartStore.getState().resetToGuest();
     cartStore.getState().unlock();
     useOrdersStore.getState().clear();
-
-    clearConfig();
-  }, [clearConfig]);
+  }, []);
 
   const updateUser = useCallback((data: Partial<AuthUser>) => {
     setUser((prev) => {
@@ -131,11 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     };
   }, [user, logout]);
-
-  useEffect(() => {
-    loadConfig();
-  }, [loadConfig]);
-
 
   useEffect(() => {
     if (!user) return;
@@ -199,12 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     } catch (err) {
       console.error("Cart sync failed:", err);
-    }
-
-    try {
-      await loadConfig();
-    } catch (err) {
-      console.error("Failed to load config:", err);
     }
   };
 

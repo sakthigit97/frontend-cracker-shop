@@ -99,6 +99,9 @@ export default function AddOrderItemModal({
                 const items = res.data.items || [];
                 searchCache.current[search] = items;
                 setResults(items);
+            } catch (err) {
+                console.error(err);
+                setResults([]);
             } finally {
                 setLoading(false);
             }

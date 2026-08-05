@@ -5,6 +5,7 @@ import { ORDER_STATUS_CONFIG, STATUS_ORDER } from "../utils/orderStatus";
 import { useOrdersStore } from "../store/orders.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { useConfigStore } from "../store/config.store";
+import { formatDateTime } from "../utils/date";
 
 
 export default function MyOrders() {
@@ -20,17 +21,6 @@ export default function MyOrders() {
   const config = useConfigStore((s) => s.config);
   const companyName = config?.companyName ?? "Sivakaasi Pyro Park";
   const [sortBy, setSortBy] = useState("latest");
-
-  const formatDateTime = (ts: number) =>
-    new Date(ts).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
 
   useEffect(() => {
     fetchInitial();

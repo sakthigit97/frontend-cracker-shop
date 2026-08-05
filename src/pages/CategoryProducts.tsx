@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProductCard from "../components/product/ProductCard";
 import { useCategoryProducts } from "../store/categoryProduct.store";
@@ -24,21 +24,19 @@ export default function CategoryProducts() {
 
   useEffect(() => {
     fetchInitial();
-  }, [categoryId]);
-
+  }, [fetchInitial]);
 
   const isSearching = search.trim().length > 0;
   const query = search.trim().toLowerCase();
-  let displayProducts: any = isSearching
-    ? items.filter((p) =>
-      (
-        `${p.name}`
-      )
-        .toLowerCase()
-        .includes(query)
-    )
-    : items;
-  displayProducts = sortProductsBySequence(displayProducts);
+  const displayProducts = useMemo(() => {
+    return sortProductsBySequence(
+      isSearching
+        ? items.filter((p) =>
+          p.name.toLowerCase().includes(query)
+        )
+        : items
+    );
+  }, [items, isSearching, query]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -99,7 +97,7 @@ export default function CategoryProducts() {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-        {displayProducts.map((p: any) => {
+        {displayProducts.map((p) => {
           const quantityInCart = cartItems[p.id] ?? 0;
 
           return (

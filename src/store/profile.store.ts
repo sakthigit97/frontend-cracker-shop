@@ -45,7 +45,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             cachedTime &&
             Date.now() - Number(cachedTime) < CACHE_TTL;
         if (isCacheValid) {
-            get().refreshProfile();
             return;
         }
 

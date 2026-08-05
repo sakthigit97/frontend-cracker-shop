@@ -1,18 +1,18 @@
-import { cartStore } from "../store/cart.store";
-import { useCartProducts } from "../hooks/useCartProducts";
+
 import Button from "../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
-import ProductSkeleton from "../components/product/ProductSkeleton";
 import { Link } from "react-router-dom";
 import defaultImage from "../assets/default-image.png";
+import { useMemo, useState, useEffect } from "react";
+import ProductSkeleton from "../components/product/ProductSkeleton";
+import { cartStore } from "../store/cart.store";
+import { useCartProducts } from "../hooks/useCartProducts";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useAlert } from "../store/alert.store";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { useConfigStore } from "../store/config.store";
 import { useProfileStore } from "../store/profile.store";
-import { useEffect } from "react";
 
 export default function Cart() {
   const addItem = cartStore((s) => s.addItem);
@@ -30,17 +30,24 @@ export default function Cart() {
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
 
-  const pricingBreakdown: any = useMemo(
-    () => calculateOrderPricingBreakdown(products),
+  const totalQuantity = useMemo(
+    () =>
+      products.reduce(
+        (total, item) => total + item.quantity,
+        0
+      ),
     [products]
   );
 
+  const pricingBreakdown = useMemo(
+    () => calculateOrderPricingBreakdown(products),
+    [products]
+  );
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
 
   const deliveryState = profile?.state;
-
   const {
     packagingCharge,
     gstAmount,
@@ -75,13 +82,7 @@ export default function Cart() {
       </div>
     );
   }
-  {
-    locked && (
-      <div className="text-sm text-gray-500 text-center py-2">
-        Cart locked after order placement
-      </div>
-    )
-  }
+
   if (isEmpty) {
     return (
       <div className="py-24 text-center space-y-4">
@@ -101,7 +102,13 @@ export default function Cart() {
       </div>
     );
   }
-
+  {
+    locked && (
+      <div className="text-sm text-gray-500 text-center py-2">
+        Cart locked after order placement
+      </div>
+    )
+  }
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-4">
@@ -175,6 +182,13 @@ export default function Cart() {
             >
               <img
                 src={p.image || defaultImage}
+                alt={p.name}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = defaultImage;
+                }}
                 className="w-16 h-16 object-contain rounded-md"
               />
 
@@ -308,7 +322,9 @@ export default function Cart() {
               </h3>
 
               <div className="flex justify-between text-sm">
-                <span>Products Total</span>
+                <span>
+                  Products Total ({products.length} Products / {totalQuantity} Qty)
+                </span>
                 <span>₹{pricingBreakdown.productSubtotal}</span>
               </div>
 
@@ -358,7 +374,7 @@ export default function Cart() {
                   </p>
 
                   <p className="text-xs text-gray-500">
-                    {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                    {disableGstForTN && deliveryState == 'Tamil Nadu' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                   </p>
                 </div>
 
@@ -427,4 +443,6 @@ export default function Cart() {
       />
     </div>
   );
+
+
 }

@@ -237,7 +237,9 @@ export default function AdminBrands() {
                                 paginatedBrands.map((b: any) => (
                                     <tr key={b.brandId} className="border-t">
                                         <td className="p-3">{b.name}</td>
-                                        <td>{b.brandId}</td>
+                                        <td className="p-3 font-mono text-xs break-all">
+                                            {b.brandId}
+                                        </td>
                                         <td className="p-3">
                                             <div className="flex items-center gap-2">
                                                 <Toggle
@@ -254,7 +256,7 @@ export default function AdminBrands() {
                                             </div>
                                         </td>
                                         <td className="p-3">
-                                            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                                            <div className="flex flex-nowrap gap-2">
                                                 <Link to={`/admin/brands/${b.brandId}/edit`}>
                                                     <Button variant="outline" className="w-full sm:w-auto">
                                                         Edit
@@ -278,7 +280,7 @@ export default function AdminBrands() {
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan={3}
+                                        colSpan={4}
                                         className="p-6 text-center text-gray-500"
                                     >
                                         <EmptyState

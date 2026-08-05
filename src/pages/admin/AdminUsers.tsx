@@ -187,7 +187,9 @@ export default function AdminUsers() {
                                 paginatedUsers.map((u: any) => (
                                     <tr key={u.mobile} className="border-t">
                                         <td className="p-3">{u.name}</td>
-                                        <td className="p-3">{u.mobile}</td>
+                                        <td className="p-3 whitespace-nowrap">
+                                            {u.mobile}
+                                        </td>
                                         <td className="p-3">{u.address}</td>
                                         <td className="p-3">{u.role}</td>
 
@@ -216,7 +218,7 @@ export default function AdminUsers() {
                                     data.items.length === 0) && (
                                     <tr>
                                         <td
-                                            colSpan={3}
+                                            colSpan={5}
                                             className="p-6 text-center text-gray-500"
                                         >
                                             <EmptyState

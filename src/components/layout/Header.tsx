@@ -17,8 +17,6 @@ import {
   FaBars,
   FaTimes,
   FaPalette,
-  // FaTruckLoading,
-  // FaBoxes,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -29,6 +27,7 @@ import { useAuth } from "../../store/auth.store";
 import { cartStore } from "../../store/cart.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
 import { useConfigStore } from "../../store/config.store";
+import { useProfileStore } from "../../store/profile.store";
 
 function formatCartAmount(amount: number) {
   if (amount >= 1000) {
@@ -40,24 +39,22 @@ function formatCartAmount(amount: number) {
 
 export default function Header() {
   const navigate = useNavigate();
-  const { config } = useConfigStore();
+  const config = useConfigStore((s) => s.config);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, logout, user } = useAuth();
   const items = cartStore((s) => s.items);
   const packagingPercent = Number(config?.packagingPercent || 0);
   const gstPercent = Number(config?.gstPercent || 0);
+  const profile = useProfileStore((s) => s.profile);
 
   const {
     products,
-    fetchInitial,
-    hasFetched,
+    fetchAll,
   } = useHomeProducts();
 
   useEffect(() => {
-    if (!hasFetched) {
-      fetchInitial();
-    }
-  }, [fetchInitial, hasFetched]);
+    fetchAll();
+  }, [fetchAll]);
 
   const handleLogout = () => {
     logout();
@@ -102,17 +99,21 @@ export default function Header() {
 
     const pricingBreakdown = calculateOrderPricingBreakdown(cartProducts);
     return calculateOrderAmounts({
-      nonComboProductTotal:
-        pricingBreakdown.nonComboProductTotal,
-      comboPackageTotal:
-        pricingBreakdown.comboPackageTotal,
+      nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+      comboPackageTotal: pricingBreakdown.comboPackageTotal,
       couponDiscount: 0,
       packagingPercent,
       gstPercent,
-      state: undefined,
+      state: profile?.state || "Tamil Nadu",
       config,
     });
-  }, [items, products]);
+  }, [
+    items,
+    products,
+    packagingPercent,
+    gstPercent,
+    config,
+  ]);
 
   const productMenu: HeaderDropdownItem[] = [
     {
@@ -125,16 +126,6 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    // {
-    //   label: "Bulk Order",
-    //   to: "/bulk-order",
-    //   icon: <FaTruckLoading />,
-    // },
-    // {
-    //   label: "View Bulk Orders",
-    //   to: "/bulk-orders",
-    //   icon: <FaBoxes />,
-    // },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -194,16 +185,6 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    // {
-    //   label: "Bulk Order",
-    //   to: "/bulk-order",
-    //   icon: <FaTruckLoading />,
-    // },
-    // {
-    //   label: "View Bulk Orders",
-    //   to: "/bulk-orders",
-    //   icon: <FaBoxes />,
-    // },
   ];
 
   const mobileSupport: MobileAccordionItem[] = [
@@ -456,7 +437,7 @@ export default function Header() {
                 </p>
 
                 <p className="mt-1 text-xs text-gray-500">
-                  Includes applicable GST and Packaging Charges.
+                  Includes of All Charges.
                 </p>
               </div>
             )}

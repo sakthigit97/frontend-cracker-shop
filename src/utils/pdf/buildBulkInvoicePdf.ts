@@ -391,7 +391,7 @@ export async function buildBulkInvoicePdf(
 
     text(
         doc,
-        "This is a computer generated invoice. No signature is required.",
+        "This is not tax invoice – The tax invoice will be sent separately by email or included with your parcel.",
         LEFT,
         summaryStartY
     );

@@ -20,7 +20,7 @@ import { validateCoupon } from "../services/coupon.api";
 type ProfileResponse = {
   success: boolean;
   data: {
-    title: any;
+    title?: "Mr" | "Mrs" | "Ms";
     name: string;
     mobile: string;
     address: string;
@@ -70,18 +70,28 @@ export default function Checkout() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [mobile, setMobile] = useState("");
   const disableGstForTN = config?.disableGstForTN || false;
+  const [validatedLocation, setValidatedLocation] = useState<{
+    pincode: string;
+    state: string;
+  } | null>(null);
 
-  const pricingBreakdown: any = useMemo(
+  const pricingBreakdown = useMemo(
     () => calculateOrderPricingBreakdown(products),
     [products]
   );
-
+  const totalQuantity = useMemo(
+    () =>
+      products.reduce(
+        (total, item) => total + item.quantity,
+        0
+      ),
+    [products]
+  );
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
-  const currentState =
-    addressMode === "PROFILE"
-      ? profileState
-      : stateValue.trim();
+  const currentState = addressMode === "PROFILE"
+    ? profileState
+    : stateValue.trim();
 
   const {
     packagingCharge,
@@ -115,27 +125,86 @@ export default function Checkout() {
   const finalPayable = grandTotal - creditUsed;
 
   useEffect(() => {
-    const currentPincode = addressMode === "PROFILE" ? profilePincode : pincode;
+    const currentPincode =
+      addressMode === "PROFILE"
+        ? profilePincode
+        : pincode;
+
     if (!currentPincode || currentPincode.length !== 6) {
+      setValidatedLocation(null);
       setMinOrderValid(false);
       return;
     }
 
-    let active = true;
-    (async () => {
-      const res = await validateMinimumOrder(
-        currentPincode,
-        grandTotal
-      );
+    if (
+      validatedLocation?.pincode === currentPincode
+    ) {
+      return;
+    }
 
-      if (!active) return;
-      setMinOrderValid(res.valid);
+    let active = true;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://api.postalpincode.in/pincode/${currentPincode}`
+        );
+
+        const data = await res.json();
+        if (!active) return;
+
+        if (
+          !data ||
+          data[0]?.Status !== "Success"
+        ) {
+          setValidatedLocation(null);
+          setMinOrderValid(false);
+          return;
+        }
+
+        setValidatedLocation({
+          pincode: currentPincode,
+          state: data[0].PostOffice[0].State,
+        });
+
+      } catch {
+        if (!active) return;
+        setValidatedLocation(null);
+        setMinOrderValid(false);
+      }
     })();
 
     return () => {
       active = false;
     };
-  }, [pincode, profilePincode, addressMode, grandTotal]);
+  }, [
+    addressMode,
+    pincode,
+    profilePincode,
+    validatedLocation?.pincode,
+  ]);
+
+
+  useEffect(() => {
+    if (!validatedLocation) {
+      return;
+    }
+
+    let minAmount = config?.otherStateMinOrderValue ?? 5000;
+    const isTamilNadu = validatedLocation.state.trim().toLowerCase() === "tamil nadu";
+    if (isTamilNadu) {
+      minAmount = config?.tnMinOrderValue ?? 3000;
+    }
+
+    setMinOrderValid(
+      grandTotal >= minAmount
+    );
+  }, [
+    validatedLocation,
+    grandTotal,
+    config?.tnMinOrderValue,
+    config?.otherStateMinOrderValue,
+  ]);
 
   useEffect(() => {
     setAppliedCoupon(null);
@@ -150,12 +219,6 @@ export default function Checkout() {
         const res: ProfileResponse = await apiFetch("/user/profile");
         if (!mounted || !res?.data) return;
         setMobile(res.data.mobile);
-        // const formatted = [
-        //   res.data.name?.trim(),
-        //   res.data.mobile?.trim(),
-        //   res.data.address?.trim(),
-        //   `${res.data.city?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,
-        // ].filter(Boolean).join("\n");
 
         const customerName = [
           res.data.title?.trim(),
@@ -188,44 +251,6 @@ export default function Checkout() {
       mounted = false;
     };
   }, []);
-
-  async function validateMinimumOrder(
-    pincode: string,
-    amount: number
-  ): Promise<{ valid: boolean; message?: string }> {
-    try {
-      const res = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
-      const data = await res.json();
-
-      if (!data || data[0].Status !== "Success") {
-        return {
-          valid: false,
-          message: "Invalid pincode. Please enter a valid pincode.",
-        };
-      }
-
-      const state = data[0].PostOffice[0].State;
-      let minAmount = config?.otherStateMinOrderValue || 5000;
-      if (state === "Tamil Nadu") {
-        minAmount = config?.tnMinOrderValue || 3000;
-      }
-
-      if (amount < minAmount) {
-        return {
-          valid: false,
-          message: `Minimum order for ${state} is ₹${minAmount}`,
-        };
-      }
-      return { valid: true };
-    } catch (err) {
-      return {
-        valid: false,
-        message: "Unable to verify pincode. Please try again.",
-      };
-    }
-  }
 
   const placeOrder = async () => {
     if (placingOrder) return;
@@ -332,7 +357,7 @@ export default function Checkout() {
         .map(line => line.trim())
         .filter(Boolean)
         .join("\n");
-      
+
       const res = await apiFetch("/orders", {
         method: "POST",
         body: JSON.stringify({
@@ -350,7 +375,6 @@ export default function Checkout() {
 
       lockCart();
       clearCart();
-      cartStore.getState().clear();
       cartStore.getState().clearDirty();
 
       navigate("/order-success", {
@@ -390,7 +414,6 @@ export default function Checkout() {
       </div>
     );
   }
-
   async function applyCoupon() {
 
     const code = couponCode.trim().toUpperCase();
@@ -725,9 +748,15 @@ export default function Checkout() {
 
           <div className="border-t pt-4 space-y-2 text-sm">
 
-            {/* Products */}
-            <div className="flex justify-between">
-              <span>Products Total</span>
+            <div className="flex justify-between items-start">
+              <div>
+                <p>Products Total</p>
+
+                <p className="text-xs text-gray-500">
+                  {products.length} Products • {totalQuantity} Qty
+                </p>
+              </div>
+
               <span>₹{pricingBreakdown.productSubtotal}</span>
             </div>
 
@@ -810,7 +839,7 @@ export default function Checkout() {
                 </p>
 
                 <p className="text-xs text-gray-500">
-                  {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                  {disableGstForTN && currentState == 'Tamil Nadu' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                 </p>
               </div>
 
@@ -923,8 +952,8 @@ export default function Checkout() {
 
             >
               {placingOrder
-                ? "Placing Order…"
-                : "Place Order (Online Payment Required)"}
+                ? "Placing Order Enquiry…"
+                : "Place Order Enquiry"}
             </Button>
           )}
         </div>

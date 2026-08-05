@@ -50,7 +50,13 @@ export const useCartProductsStore = create<CartProductsState>(
                 );
 
                 set((state) => {
-                    const map = { ...state.products };
+                    const map: Record<string, CartProduct> = {};
+
+                    ids.forEach((id) => {
+                        if (state.products[id]) {
+                            map[id] = state.products[id];
+                        }
+                    });
 
                     data.forEach((p: any) => {
                         map[p.productId] = {
@@ -61,8 +67,7 @@ export const useCartProductsStore = create<CartProductsState>(
                             brand: p.brandId,
                             originalPrice: p.originalPrice,
                             discountText: p.discountText,
-                            isComboPackage:
-                                !!p.isComboPackage,
+                            isComboPackage: !!p.isComboPackage,
                         };
                     });
 
