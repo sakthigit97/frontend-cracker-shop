@@ -23,7 +23,6 @@ export default function AdminDiscountsPage() {
     const discountLoading = useAdminDiscountsStore((s) => s.loading);
     const [deleteDiscountId, setDeleteDiscountId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
-
     const [fetching, setFetching] = useState(true);
     const [loading, setLoading] = useState(false);
 
@@ -201,11 +200,10 @@ export default function AdminDiscountsPage() {
             });
 
             setSearch("");
-        } catch (e) {
-            console.log(e)
+        } catch (e: any) {
             showAlert({
                 type: "error",
-                message: "Failed to create discount : " + e,
+                message: e?.message || "Failed to create discount",
             });
         } finally {
             setLoading(false);

@@ -24,20 +24,31 @@ export const useAdminDiscountsStore = create<DiscountState>((set, get) => ({
     loading: false,
     fetchDiscounts: async () => {
         if (get().discounts.length > 0) return;
+
         set({ loading: true });
-        const res = await listDiscounts();
-        set({
-            discounts: res.items || [],
-            loading: false,
-        });
+
+        try {
+            const res = await listDiscounts();
+
+            set({
+                discounts: res.items || [],
+            });
+        } finally {
+            set({ loading: false });
+        }
     },
     refreshDiscounts: async () => {
         set({ loading: true });
-        const res = await listDiscounts();
-        set({
-            discounts: res.items || [],
-            loading: false,
-        });
+
+        try {
+            const res = await listDiscounts();
+
+            set({
+                discounts: res.items || [],
+            });
+        } finally {
+            set({ loading: false });
+        }
     },
     clearCache: () => {
         set({ discounts: [] });

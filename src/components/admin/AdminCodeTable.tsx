@@ -3,6 +3,7 @@ import { useAdminCodeStore } from "../../store/adminCode.store";
 import type {
     AdminCode,
 } from "../../types/adminCode";
+import { formatDateTime } from "../../utils/date";
 
 interface Props {
     codes: AdminCode[];
@@ -17,31 +18,6 @@ export default function AdminCodeTable({
         deleting,
     } = useAdminCodeStore();
 
-    function formatDate(
-        ts: number
-    ) {
-
-        return new Date(ts)
-            .toLocaleString(
-                "en-IN",
-                {
-
-                    day: "2-digit",
-
-                    month: "short",
-
-                    year: "numeric",
-
-                    hour: "2-digit",
-
-                    minute: "2-digit",
-
-                    hour12: true,
-
-                }
-            );
-
-    }
     async function handleDelete(
         code: string
     ) {
@@ -239,7 +215,7 @@ export default function AdminCodeTable({
 
                                 <td className="px-4 py-4">
 
-                                    {formatDate(
+                                    {formatDateTime(
                                         code.expiryDate
                                     )}
 
@@ -247,7 +223,7 @@ export default function AdminCodeTable({
 
                                 <td className="px-4 py-4">
 
-                                    {formatDate(
+                                    {formatDateTime(
                                         code.createdAt
                                     )}
 

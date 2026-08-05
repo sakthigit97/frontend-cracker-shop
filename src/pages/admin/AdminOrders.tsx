@@ -5,10 +5,11 @@ import {
     STATUS_ORDER,
     STATUS_COLORS,
 } from "../../utils/orderStatus";
-import { useAdminOrdersStore,  } from "../../store/adminOrders.store";
+import { useAdminOrdersStore, } from "../../store/adminOrders.store";
 import { useDebounce } from "../../utils/useDebounce";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import { useNavigate } from "react-router-dom";
+import { formatDateTime } from "../../utils/date";
 
 const DATE_OPTIONS = [
     { label: "All", value: "all" },
@@ -59,16 +60,6 @@ export default function AdminOrders() {
             }),
         [filters]
     );
-
-    const formatDateTime = (ts: number) =>
-        new Date(ts).toLocaleString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        });
 
     function getCustomerName(address?: string) {
         if (!address) return "-";
@@ -216,12 +207,12 @@ export default function AdminOrders() {
 
                                     <p
                                         className="
-      font-semibold
-      text-sm
-      whitespace-nowrap
-      overflow-x-auto
-      scrollbar-hide
-    "
+                                            font-semibold
+                                            text-sm
+                                            whitespace-nowrap
+                                            overflow-x-auto
+                                            scrollbar-hide
+                                            "
                                     >
                                         {o.orderId}
                                     </p>

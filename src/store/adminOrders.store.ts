@@ -27,6 +27,14 @@ interface AdminOrdersState {
     ) => void;
 }
 
+function buildCacheKey(filters: AdminOrderFilters) {
+    return JSON.stringify({
+        status: filters.status,
+        dateRange: filters.dateRange,
+        orderId: filters.orderId || null,
+    });
+}
+
 function buildApiParams(filters: AdminOrderFilters) {
     const now = Date.now();
     if (filters.dateRange === "all") {
@@ -66,12 +74,7 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
         },
         fetchInitial: async (force = false) => {
             const { filters, data, loading } = get();
-            const key = JSON.stringify({
-                status: filters.status,
-                dateRange: filters.dateRange,
-                orderId: filters.orderId || null,
-            });
-
+            const key = buildCacheKey(filters);
             if (!force && (data[key]?.initialized || loading[key])) {
                 return;
             }
@@ -94,7 +97,10 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
                         },
                     },
                 }));
-            } finally {
+            } catch (error) {
+                console.error(error);
+            }
+            finally {
                 set((state) => ({
                     loading: { ...state.loading, [key]: false },
                 }));
@@ -134,13 +140,7 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
             }),
         fetchMore: async () => {
             const { filters, data, loading } = get();
-
-            const key = JSON.stringify({
-                status: filters.status,
-                dateRange: filters.dateRange,
-                orderId: filters.orderId || null,
-            });
-
+            const key = buildCacheKey(filters);
             const cache = data[key];
             if (!cache?.nextCursor || loading[key]) return;
 

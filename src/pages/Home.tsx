@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowUp } from "react-icons/fa";
+import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
 
 import ProductCard from "../components/product/ProductCard";
 import HeroSlider from "../components/ui/HeroSlider";
@@ -357,6 +357,62 @@ export default function Home() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--color-primary)]"
         />
+      </div>
+
+      <div className="px-4">
+        <div
+          className="
+            mt-4
+            mb-2
+            flex
+            flex-col
+            gap-3
+            rounded-2xl
+            border
+            border-green-200
+            bg-green-50
+            p-4
+            shadow-sm
+
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+        "
+        >
+          <div>
+            <h3 className="flex items-center gap-2 text-xl font-semibold text-green-800">
+              <FaWhatsapp className="text-[#25D366] text-2xl flex-shrink-0" />
+              <span>Join Our WhatsApp Community</span>
+            </h3>
+
+            <p className="mt-1 text-sm text-green-700">
+              Get festival offers, new arrivals, stock updates and exclusive deals.
+            </p>
+          </div>
+
+          <a
+            href="https://chat.whatsapp.com/DLIqbz48mGNGKasf9XycgU"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+                inline-flex
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#25D366]
+                px-5
+                py-2.5
+                text-sm
+                font-semibold
+                text-white
+                transition
+                hover:scale-105
+                active:scale-95
+            "
+          >
+            Join Now →
+          </a>
+        </div>
       </div>
 
       <div className="px-4">

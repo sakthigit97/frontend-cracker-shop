@@ -1,26 +1,20 @@
-// ONLY UI UPDATED — LOGIC SAME
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import { useAlert } from "../../store/alert.store";
-
 import {
     getBrandById,
     updateBrand,
     getBrandLogoPresign,
 } from "../../services/adminBrands.api";
-
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
 import { useAdminBrandsStore } from "../../store/adminBrands.store";
 
 const MAX_LOGO_SIZE = 2 * 1024 * 1024;
-
 export default function AdminEditBrand() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
     const { brandId } = useParams<{ brandId: string }>();
-
     const fileRef = useRef<HTMLInputElement | null>(null);
 
     if (!brandId) {

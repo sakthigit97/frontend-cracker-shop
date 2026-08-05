@@ -8,6 +8,7 @@ import {
 } from "../utils/orderStatus";
 import { useBulkOrderHistoryStore } from "../store/bulkOrderHistory.store";
 import { formatCurrency } from "../utils/pricing";
+import { formatDateTime } from "../utils/date";
 
 export default function BulkOrders() {
     const navigate = useNavigate();
@@ -20,14 +21,6 @@ export default function BulkOrders() {
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
-
-    function formatDate(ts: number) {
-        return new Date(ts).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-        });
-    }
 
     const STATUS_PRIORITY = STATUS_ORDER.reduce((acc, status, index) => {
         acc[status] = index;
@@ -152,7 +145,7 @@ export default function BulkOrders() {
                                     </p>
 
                                     <p className="text-xs text-[var(--color-muted)] mt-1">
-                                        Placed on {formatDate(order.createdAt)}
+                                        Placed on {formatDateTime(order.createdAt)}
                                     </p>
 
                                     <p className="text-xs text-[var(--color-muted)] mt-1">

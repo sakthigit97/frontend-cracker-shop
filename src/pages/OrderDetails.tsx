@@ -8,6 +8,7 @@ import { useAlert } from "../store/alert.store";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useConfigStore } from "../store/config.store";
 import { downloadInvoice } from "../utils/pdf/downloadInvoice";
+import { formatDateTime } from "../utils/date";
 
 const TERMINAL_STATUS = "CANCELLED";
 const CANCELLABLE_STATUSES = ["ORDER_PLACED", "ORDER_CONFIRMED"];
@@ -108,16 +109,6 @@ export default function OrderDetails() {
       setDownloading(false);
     }
   }
-
-  const formatDateTime = (ts: number) =>
-    new Date(ts).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
 
   async function handleCancel() {
     try {
@@ -298,6 +289,7 @@ export default function OrderDetails() {
             {[...(order.statusHistory || [])]
               .sort((a, b) => (b.changedAt ?? b.at) - (a.changedAt ?? a.at))
               .map((history: any, index: number) => {
+                console.log(history)
 
                 const status = history.toStatus ?? history.status;
                 const updatedBy = history.changedBy ?? history.by;
@@ -326,7 +318,7 @@ export default function OrderDetails() {
                       </div>
 
                       <p className="text-sm text-gray-500 mt-1">
-                        Updated By :{" "}
+                        Changed By :{" "}
                         {updatedBy.startsWith("ADMIN")
                           ? "Admin"
                           : updatedBy.replace("USER#", "")}

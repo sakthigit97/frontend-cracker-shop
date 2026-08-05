@@ -114,6 +114,17 @@ export default function AdminEditDiscount() {
             return;
         }
 
+        if (
+            form.discountMode === "PERCENT" &&
+            form.discountValue > 100
+        ) {
+            showAlert({
+                type: "error",
+                message: "Percentage discount cannot exceed 100%",
+            });
+            return;
+        }
+
         try {
             setLoading(true);
 

@@ -308,30 +308,71 @@ export default function AdminProducts() {
             </div>
 
             <div className="bg-white border rounded-xl overflow-hidden">
-                <div className="overflow-x-auto sm:overflow-visible">
-                    <table className="w-full text-sm min-w-[520px] sm:min-w-0">
+                <div className="w-full overflow-x-auto">
+                    <table className="w-full table-auto text-sm">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="p-3 text-left">Name</th>
-                                <th className="p-3 text-left">ID</th>
-                                <th className="p-3 text-left">Price</th>
-                                <th className="p-3 text-left">Available Quantity</th>
-                                <th className="p-3 text-left">Brand</th>
-                                <th className="p-3 text-left">Category</th>
-                                <th className="p-3 text-left">Status</th>
-                                <th className="p-3 text-left">Action</th>
+                                <th className="p-3 text-left">
+                                    Name
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    ID
+                                </th>
+
+                                <th className="p-3 text-left whitespace-nowrap">
+                                    Price
+                                </th>
+
+                                <th className="p-3 text-left whitespace-nowrap">
+                                    Available Quantity
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Brand
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Category
+                                </th>
+
+                                <th className="p-3 text-left whitespace-nowrap">
+                                    Status
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Action
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedProducts.length ? (
                                 paginatedProducts.map((p: any) => (
                                     <tr key={p.productId} className="border-t">
-                                        <td className="p-3">{p.name}</td>
-                                        <td className="p-3">{p.productId}</td>
+                                        <td className="p-3">
+                                            <div
+                                                className="line-clamp-2 break-words"
+                                                title={p.name}
+                                            >
+                                                {p.name}
+                                            </div>
+                                        </td>
+                                        <td className="p-3">
+                                            <div
+                                                className="font-mono text-xs break-all"
+                                                title={p.productId}
+                                            >
+                                                {p.productId}
+                                            </div>
+                                        </td>
                                         <td className="p-3">₹{p.price}</td>
                                         <td className="p-3">{p.quantity || 0}</td>
-                                        <td>{brandMap[p.brandId] || "-"}</td>
-                                        <td>{categoryMap[p.categoryId] || "-"}</td>
+                                        <td className="p-3 whitespace-nowrap">
+                                            {brandMap[p.brandId] || "-"}
+                                        </td>
+                                        <td className="p-3 whitespace-nowrap">
+                                            {categoryMap[p.categoryId] || "-"}
+                                        </td>
                                         <td className="p-3">
                                             <div className="flex items-center gap-3">
                                                 <Toggle
@@ -353,7 +394,7 @@ export default function AdminProducts() {
                                         </td>
 
                                         <td className="p-3 ">
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-nowrap gap-2">
                                                 <Link to={`/admin/products/${p.productId}/edit`}>
                                                     <Button variant="outline">
                                                         Edit

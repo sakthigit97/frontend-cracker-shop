@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import WhatsAppSupportModal from "./WhatsAppSupportModal";
 import type { WhatsAppContact } from "./WhatsAppSupportModal";
@@ -7,39 +7,7 @@ import { useConfigStore } from "../../store/config.store";
 export default function WhatsAppSupport() {
     const config = useConfigStore((s) => s.config);
     const contacts: WhatsAppContact[] = config?.whatsAppSupport?.contacts ?? [];
-    const support = config?.whatsAppSupport;
-    const openDelay = support?.autoOpenDelay ?? 1000;
-    const autoCloseDelay = support?.autoCloseAfter ?? 8000;
     const [open, setOpen] = useState(false);
-
-    useEffect(() => {
-        if (!support?.enabled || contacts.length === 0) {
-            return;
-        }
-
-        if (sessionStorage.getItem("whatsapp-popup-shown")) {
-            return;
-        }
-
-        const openTimer = window.setTimeout(() => {
-            setOpen(true);
-            sessionStorage.setItem("whatsapp-popup-shown", "true");
-        }, openDelay);
-
-        const closeTimer = window.setTimeout(() => {
-            setOpen(false);
-        }, openDelay + autoCloseDelay);
-
-        return () => {
-            clearTimeout(openTimer);
-            clearTimeout(closeTimer);
-        };
-    }, [
-        support?.enabled,
-        contacts.length,
-        openDelay,
-        autoCloseDelay,
-    ]);
 
     return (
         <>
@@ -51,7 +19,7 @@ export default function WhatsAppSupport() {
 
             {contacts.length > 0 && (
                 <button
-                    onClick={() => setOpen((v) => !v)}
+                    onClick={() => setOpen(true)}
                     aria-label="WhatsApp Support"
                     className="
                         fixed
