@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import defaultImage from "../../assets/default-image.png";
 
@@ -8,7 +9,12 @@ interface Props {
   type: "category" | "brand";
 }
 
-export default function CategoryCard({ id, name, image, type }: Props) {
+function CategoryCard({
+  id,
+  name,
+  image,
+  type,
+}: Props) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -38,7 +44,21 @@ export default function CategoryCard({ id, name, image, type }: Props) {
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={image || defaultImage}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          alt={name}
+          loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = defaultImage;
+          }}
+          className="
+            w-full
+            h-full
+            object-cover
+            group-hover:scale-110
+            transition-transform
+            duration-500
+          "
         />
       </div>
 
@@ -46,6 +66,7 @@ export default function CategoryCard({ id, name, image, type }: Props) {
         <h3 className="font-semibold text-sm md:text-base text-[var(--color-primary)]">
           {name}
         </h3>
+
         <span className="text-xs text-orange-600 font-medium group-hover:underline">
           Explore →
         </span>
@@ -53,3 +74,5 @@ export default function CategoryCard({ id, name, image, type }: Props) {
     </div>
   );
 }
+
+export default memo(CategoryCard);

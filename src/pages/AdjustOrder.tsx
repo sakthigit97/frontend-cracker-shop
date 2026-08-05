@@ -95,7 +95,6 @@ export default function AdjustOrder() {
     }, [items, originalItems]);
 
     const [showAddItem, setShowAddItem] = useState(false);
-    const [dirty, setDirty] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -195,7 +194,6 @@ export default function AdjustOrder() {
     const diffAmount = grandTotal - oldTotal;
     const updateQty = (productId: string, delta: number) => {
         if (!canAdjust) return;
-        setDirty(true);
         setItems((prev) =>
             prev.map((item) =>
                 item.productId === productId
@@ -247,7 +245,6 @@ export default function AdjustOrder() {
 
     const removeItem = (productId: string) => {
         if (!canAdjust) return;
-        setDirty(true);
         setItems((prev) =>
             prev.filter((item) => item.productId !== productId)
         );
@@ -255,7 +252,6 @@ export default function AdjustOrder() {
 
     const handleAddItem = (newItems: AdjustOrderItem[]) => {
         if (!canAdjust) return;
-        setDirty(true);
 
         setItems((prev) => {
             const map = new Map<string, AdjustOrderItem>();
@@ -296,7 +292,7 @@ export default function AdjustOrder() {
             });
             return;
         }
-
+        if (saving) return;
         try {
             setSaving(true);
             const updatedOrder = await adjustOrderApi(mobile, orderId, {
@@ -335,7 +331,6 @@ export default function AdjustOrder() {
         } finally {
             setSaving(false);
             setShowSaveConfirm(false);
-            setDirty(false);
         }
     }
 
@@ -371,7 +366,7 @@ export default function AdjustOrder() {
                 Order ID: <span className="font-medium">{orderId}</span>
             </p>
 
-            {dirty && canAdjust && (
+            {hasChanges && canAdjust && (
                 <div className="mb-3 flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-orange-500" />
                     <p className="text-sm text-orange-600 font-medium">
@@ -550,38 +545,30 @@ export default function AdjustOrder() {
                                         </div>
                                     )}
 
-                                    <div className="border-t pt-3 flex justify-between font-medium">
-                                        <span>Amount Before Discount</span>
+                                    {couponCode && (
+                                        <>
+                                            <div className="border-t pt-3 flex justify-between font-medium">
+                                                <span>Amount Before Discount</span>
+                                                <span>₹{amountBeforeDiscount}</span>
+                                            </div>
 
-                                        <span>
-                                            ₹{amountBeforeDiscount}
-                                        </span>
-                                    </div>
+                                            <div className="flex justify-between text-green-600">
+                                                <span>
+                                                    Coupon Savings{" "}
+                                                    {couponType === "PERCENTAGE"
+                                                        ? `(${couponValue}%)`
+                                                        : `(Flat ₹${couponValue})`}
+                                                </span>
 
-                                    {couponCode ? (
-                                        <div className="flex justify-between text-green-600">
-                                            <span>
-                                                Coupon Savings{" "}
-                                                {couponType === "PERCENTAGE"
-                                                    ? `(${couponValue}%)`
-                                                    : `(Flat ₹${couponValue})`}
-                                            </span>
+                                                <span>-₹{couponDiscount}</span>
+                                            </div>
 
-                                            <span>
-                                                -₹{couponDiscount}
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <></>
+                                            <div className="flex justify-between font-medium">
+                                                <span>Amount After Discount</span>
+                                                <span>₹{amountAfterDiscount}</span>
+                                            </div>
+                                        </>
                                     )}
-
-                                    <div className="flex justify-between font-medium">
-                                        <span>Amount After Discount</span>
-
-                                        <span>
-                                            ₹{amountAfterDiscount}
-                                        </span>
-                                    </div>
 
                                     {gstAmount > 0 && (
                                         <div className="flex justify-between text-gray-600">
@@ -604,7 +591,7 @@ export default function AdjustOrder() {
                                                 </p>
 
                                                 <p className="text-xs text-gray-500">
-                                                    {disableGstForTN
+                                                    {disableGstForTN && derivedState == 'Tamil Nadu'
                                                         ? "Inclusive of Packaging Charges"
                                                         : "Inclusive of GST & Packaging Charges"}
                                                 </p>
@@ -762,29 +749,30 @@ export default function AdjustOrder() {
                                 </div>
                             )}
 
-                            <div className="border-t pt-2 flex justify-between font-medium">
-                                <span>Amount Before Discount</span>
-                                <span>₹{amountBeforeDiscount}</span>
-                            </div>
+                            {couponCode && (
+                                <>
+                                    <div className="border-t pt-2 flex justify-between font-medium">
+                                        <span>Amount Before Discount</span>
+                                        <span>₹{amountBeforeDiscount}</span>
+                                    </div>
 
-                            {couponCode ? (
-                                <div className="flex justify-between text-green-600">
-                                    <span>
-                                        Coupon Savings{" "}
-                                        {couponType === "PERCENTAGE"
-                                            ? `(${couponValue}%)`
-                                            : `(Flat ₹${couponValue})`}
-                                    </span>
-                                    <span>-₹{couponDiscount}</span>
-                                </div>
-                            ) : (
-                                <></>
+                                    <div className="flex justify-between text-green-600">
+                                        <span>
+                                            Coupon Savings{" "}
+                                            {couponType === "PERCENTAGE"
+                                                ? `(${couponValue}%)`
+                                                : `(Flat ₹${couponValue})`}
+                                        </span>
+
+                                        <span>-₹{couponDiscount}</span>
+                                    </div>
+
+                                    <div className="flex justify-between font-medium">
+                                        <span>Amount After Discount</span>
+                                        <span>₹{amountAfterDiscount}</span>
+                                    </div>
+                                </>
                             )}
-
-                            <div className="flex justify-between font-medium">
-                                <span>Amount After Discount</span>
-                                <span>₹{amountAfterDiscount}</span>
-                            </div>
 
                             {gstAmount > 0 && (
                                 <div className="flex justify-between text-gray-600">

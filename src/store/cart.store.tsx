@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type CartItems = Record<string, any>;
+export type CartItems = Record<string, number>;
 const CART_EXPIRY_MS = 3 * 24 * 60 * 60 * 1000;
 
 export interface CartState {

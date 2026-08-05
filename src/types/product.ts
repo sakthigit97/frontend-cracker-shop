@@ -10,6 +10,7 @@ export interface Product {
   brand?: string;
   discountText?: string;
   categoryId?: string;
+  sequenceNumber?: number;
   isComboPackage?: boolean;
   productFamily?: string;
   cartonQty?: number;

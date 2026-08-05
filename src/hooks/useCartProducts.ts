@@ -4,16 +4,21 @@ import { useCartProductsStore } from "../store/cartProducts.store";
 
 export function useCartProducts() {
     const items = cartStore((s) => s.items);
-    const { products, fetchProducts, loading } = useCartProductsStore();
     const productIds = useMemo(
         () => Object.keys(items),
         [items]
     );
 
+    const { products, fetchProducts, loading, clear } = useCartProductsStore();
     useEffect(() => {
-        if (productIds.length === 0) return;
+        if (productIds.length === 0) {
+            clear();
+            return;
+        }
+
         fetchProducts(productIds);
-    }, [productIds, fetchProducts]);
+    }, [productIds, fetchProducts, clear]);
+
 
     const merged = useMemo(() => {
         return productIds

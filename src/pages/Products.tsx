@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import CategoryCard from "../components/product/CategoryCard";
-import { useCatalog } from "../store/catalog.store";
-import ProductSkeleton from "../components/product/ProductSkeleton";
 import { useNavigate } from "react-router-dom";
-
+import CategoryCard from "../components/product/CategoryCard";
+import ProductSkeleton from "../components/product/ProductSkeleton";
+import { useCatalog } from "../store/catalog.store";
 type TabType = "category" | "brand";
 
 export default function Products() {
   const [activeTab, setActiveTab] = useState<TabType>("category");
   const navigate = useNavigate();
-
   const {
     categories,
     brands,
@@ -25,30 +23,38 @@ export default function Products() {
     } else {
       fetchBrands();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [
+    activeTab,
+    fetchCategories,
+    fetchBrands,
+  ]);
 
-  const items = activeTab === "category" ? categories : brands;
-  const loading = activeTab === "category" ? loadingCategory : loadingBrand;
+  const items =
+    activeTab === "category"
+      ? categories
+      : brands;
+
+  const loading =
+    activeTab === "category"
+      ? loadingCategory
+      : loadingBrand;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-
       <div className="flex items-center gap-3 mb-4">
         <button
           onClick={() => navigate(-1)}
           className="
-          flex items-center justify-center
-          w-9 h-9
-          rounded-full
-          bg-[var(--color-primary)]
-          text-white
-          shadow-sm
-
-          hover:scale-105
-          active:scale-95
-          transition-all
-        "
+            flex items-center justify-center
+            w-9 h-9
+            rounded-full
+            bg-[var(--color-primary)]
+            text-white
+            shadow-sm
+            hover:scale-105
+            active:scale-95
+            transition-all
+          "
         >
           ←
         </button>
@@ -63,8 +69,8 @@ export default function Products() {
         <button
           onClick={() => setActiveTab("category")}
           className={`pb-2 text-sm font-semibold ${activeTab === "category"
-            ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]"
-            : "text-[var(--color-muted)]"
+              ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]"
+              : "text-[var(--color-muted)]"
             }`}
         >
           Categories
@@ -73,8 +79,8 @@ export default function Products() {
         <button
           onClick={() => setActiveTab("brand")}
           className={`pb-2 text-sm font-semibold ${activeTab === "brand"
-            ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]"
-            : "text-[var(--color-muted)]"
+              ? "border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]"
+              : "text-[var(--color-muted)]"
             }`}
         >
           Brands
@@ -89,14 +95,12 @@ export default function Products() {
         </div>
       )}
 
-      {/* Empty */}
       {!loading && items.length === 0 && (
         <div className="text-center py-14 text-sm text-[var(--color-muted)]">
           No {activeTab}s available
         </div>
       )}
 
-      {/* Grid */}
       {!loading && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {items.map((item) => (

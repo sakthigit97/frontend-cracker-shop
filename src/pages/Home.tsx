@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaArrowUp } from "react-icons/fa";
+
 import ProductCard from "../components/product/ProductCard";
 import HeroSlider from "../components/ui/HeroSlider";
+import EmptyState from "../components/ui/EmptyState";
 import { useHomeProducts } from "../store/homeProduct.store";
 import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { useAuth } from "../store/auth.store";
-import { useMemo } from "react";
 import { usePackageStore } from "../store/package.store";
 import { sortProductsByCategoryAndSequence } from "../utils/sequncerUtil";
-import { FaArrowUp } from "react-icons/fa";
 import { useCategoryProducts } from "../store/categoryProduct.store";
 import { useBrandProducts } from "../store/brandProduct.store";
 import { useCatalog } from "../store/catalog.store";
-import EmptyState from "../components/ui/EmptyState";
 import WhatsAppSupport from "../components/whatsapp/WhatsAppSupport";
 
 

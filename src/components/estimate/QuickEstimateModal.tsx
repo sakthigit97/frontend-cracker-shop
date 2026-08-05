@@ -22,7 +22,7 @@ export default function QuickEstimateModal({
     open,
     onClose,
 }: Props) {
-    const { products } = useQuickEstimateProducts();
+    const { products, loading } = useQuickEstimateProducts();
 
     const addItem = quickEstimateStore((s) => s.addItem);
     const removeItem = quickEstimateStore((s) => s.removeItem);
@@ -41,7 +41,6 @@ export default function QuickEstimateModal({
         () => calculateOrderPricingBreakdown(products),
         [products]
     );
-
     const {
         productSubtotal,
         nonComboProductTotal,
@@ -494,9 +493,7 @@ export default function QuickEstimateModal({
                     },
                 },
             ]],
-
             body: summaryRows,
-
             styles: {
                 font: "helvetica",
                 fontSize: 8,
@@ -1068,7 +1065,7 @@ export default function QuickEstimateModal({
                             </p>
 
                             <p className="text-xs text-gray-500">
-                                {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                                {disableGstForTN && deliveryRegion != 'OTHER' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                             </p>
                         </div>
 
@@ -1081,7 +1078,7 @@ export default function QuickEstimateModal({
 
                         <Button
                             onClick={addAllToCart}
-                            disabled={isEstimateEmpty || downloading}
+                            disabled={loading || isEstimateEmpty || downloading}
                             className="
                                 w-full
                                 h-12
@@ -1096,7 +1093,7 @@ export default function QuickEstimateModal({
 
                             <Button
                                 variant="outline"
-                                disabled={isEstimateEmpty || downloading}
+                                disabled={loading || isEstimateEmpty || downloading}
                                 onClick={() => setShowDownloadDialog(true)}
                                 className="h-11 whitespace-nowrap"
                             >

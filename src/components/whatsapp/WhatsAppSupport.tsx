@@ -12,38 +12,34 @@ export default function WhatsAppSupport() {
     const autoCloseDelay = support?.autoCloseAfter ?? 8000;
     const [open, setOpen] = useState(false);
 
-useEffect(() => {
-    console.log("Support config:", support);
+    useEffect(() => {
+        if (!support?.enabled || contacts.length === 0) {
+            return;
+        }
 
-    if (!support?.enabled) {
-        console.log("Support disabled or not loaded yet");
-        return;
-    }
+        if (sessionStorage.getItem("whatsapp-popup-shown")) {
+            return;
+        }
 
-    if (sessionStorage.getItem("whatsapp-popup-shown")) {
-        console.log("Already shown");
-        return;
-    }
+        const openTimer = window.setTimeout(() => {
+            setOpen(true);
+            sessionStorage.setItem("whatsapp-popup-shown", "true");
+        }, openDelay);
 
-    sessionStorage.setItem("whatsapp-popup-shown", "true");
+        const closeTimer = window.setTimeout(() => {
+            setOpen(false);
+        }, openDelay + autoCloseDelay);
 
-    console.log("Scheduling popup...");
-
-    const openTimer = window.setTimeout(() => {
-        console.log("Opening popup");
-        setOpen(true);
-    }, openDelay);
-
-    const closeTimer = window.setTimeout(() => {
-        console.log("Closing popup");
-        setOpen(false);
-    }, openDelay + autoCloseDelay);
-
-    return () => {
-        clearTimeout(openTimer);
-        clearTimeout(closeTimer);
-    };
-}, [support, openDelay, autoCloseDelay]);
+        return () => {
+            clearTimeout(openTimer);
+            clearTimeout(closeTimer);
+        };
+    }, [
+        support?.enabled,
+        contacts.length,
+        openDelay,
+        autoCloseDelay,
+    ]);
 
     return (
         <>

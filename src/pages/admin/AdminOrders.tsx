@@ -5,7 +5,7 @@ import {
     STATUS_ORDER,
     STATUS_COLORS,
 } from "../../utils/orderStatus";
-import { useAdminOrdersStore } from "../../store/adminOrders.store";
+import { useAdminOrdersStore,  } from "../../store/adminOrders.store";
 import { useDebounce } from "../../utils/useDebounce";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import { useNavigate } from "react-router-dom";
@@ -43,7 +43,12 @@ export default function AdminOrders() {
             dateRange,
             orderId: debouncedOrderId || undefined,
         });
-    }, [status, dateRange, debouncedOrderId]);
+    }, [
+        status,
+        dateRange,
+        debouncedOrderId,
+        setFilters,
+    ]);
 
     const key = useMemo(
         () =>
@@ -102,9 +107,9 @@ export default function AdminOrders() {
 
     useEffect(() => {
         fetchInitial();
-    }, [key]);
+    }, [key, fetchInitial]);
 
-    if (!orders && isLoading) {
+    if (orders.length === 0 && isLoading) {
         return (<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
                 <ProductSkeleton key={i} />

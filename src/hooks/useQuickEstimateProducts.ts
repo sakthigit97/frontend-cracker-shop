@@ -5,7 +5,7 @@ import { useHomeProducts } from "../store/homeProduct.store";
 export function useQuickEstimateProducts() {
     const items = quickEstimateStore((s) => s.items);
 
-    const { products } = useHomeProducts();
+    const { products, loading } = useHomeProducts();
 
     const merged = useMemo(() => {
         return products
@@ -18,6 +18,6 @@ export function useQuickEstimateProducts() {
 
     return {
         products: merged,
-        loading: false,
+        loading,
     };
 }

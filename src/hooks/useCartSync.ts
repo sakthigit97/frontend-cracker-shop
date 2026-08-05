@@ -50,8 +50,11 @@ export function useCartSync(isLoggedIn: boolean) {
                 }
             };
 
-            if ("requestIdleCallback" in window) {
-                (window as any).requestIdleCallback(runSync, { timeout: 8000 });
+            const requestIdle = window.requestIdleCallback?.bind(window);
+            if (requestIdle) {
+                requestIdle(runSync, {
+                    timeout: 8000,
+                });
             } else {
                 runSync();
             }

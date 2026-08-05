@@ -15,7 +15,9 @@ import EmptyState from "../../components/ui/EmptyState";
 import defaultImage from "../../assets/default-image.png";
 import { downloadInvoice } from "../../utils/pdf/downloadInvoice";
 import { useConfigStore } from "../../store/config.store";
-
+import { useAdminOrdersStore } from "../../store/adminOrders.store";
+import { restoreOrderApi } from "../../services/order.api";
+import { useOrdersStore } from "../../store/orders.store";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -24,6 +26,7 @@ export default function AdminOrderDetails() {
     const location = useLocation();
     const [downloading, setDownloading] = useState(false);
     const { cache, fetchOrder, loading, updateOrder } = useAdminOrderDetailsStore();
+    const updateOrderListCache = useAdminOrdersStore((s) => s.updateOrderInCache);
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingPayload, setPendingPayload] = useState<{
         status?: string;
@@ -35,6 +38,9 @@ export default function AdminOrderDetails() {
     const [selectedStatus, setSelectedStatus] = useState("");
     const [comment, setComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [restoring, setRestoring] = useState(false);
+    const clearOrdersCache = useOrdersStore((s) => s.clear);
+    const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
 
     const order = cache[orderId];
     useEffect(() => {
@@ -43,7 +49,13 @@ export default function AdminOrderDetails() {
         if (shouldForce) {
             navigate(location.pathname, { replace: true });
         }
-    }, [orderId]);
+    }, [
+        orderId,
+        fetchOrder,
+        navigate,
+        location.pathname,
+        location.state,
+    ]);
 
     useEffect(() => {
         if (order) {
@@ -52,18 +64,53 @@ export default function AdminOrderDetails() {
         }
     }, [order]);
 
-
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
     const canDownloadInvoice = STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
 
+    const isCancelled = order?.status === "CANCELLED";
     const currentIndex = STATUS_ORDER.indexOf(order?.status);
     const availableStatuses = STATUS_ORDER.filter((status, index) => {
         if (status === "CANCELLED") return true;
         return index >= currentIndex;
     });
+
+    async function handleRestore() {
+        try {
+            setRestoring(true);
+
+            await restoreOrderApi(order.orderId);
+
+            clearOrdersCache();
+            clearAdminOrdersCache();
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            showAlert({
+                type: "success",
+                message: "Order Reopened Successfully",
+                duration: 1500,
+            });
+
+            navigate("/admin/orders", {
+                replace: true,
+            });
+        } catch (err: any) {
+            showAlert({
+                type: "error",
+                message:
+                    err.message ||
+                    "Unable to reopen order",
+            });
+        } finally {
+            setRestoring(false);
+        }
+    }
+
 
     async function handleDownloadInvoice() {
         if (downloading) return;
@@ -115,12 +162,10 @@ export default function AdminOrderDetails() {
                         </svg>
                     </div>
 
-                    <h2 className="text-sm font-semibold text-gray-800">
-                        <EmptyState
-                            title="Order not found"
-                            description="Try explore other order."
-                        />
-                    </h2>
+                    <EmptyState
+                        title="Order not found"
+                        description="Try explore other order."
+                    />
                     <p className="mt-1 text-xs text-gray-500">
                         The order you are trying to view does not exist or may have been removed.
                     </p>
@@ -128,7 +173,9 @@ export default function AdminOrderDetails() {
             </div>
         );
     }
-    const canSubmit = selectedStatus !== "" || comment !== order.adminComment;
+    const canSubmit =
+        selectedStatus !== order.status ||
+        comment !== (order.adminComment || "");
     return (
         <div className="space-y-6">
             <div className="bg-white border rounded-xl p-4 space-y-3">
@@ -165,7 +212,12 @@ export default function AdminOrderDetails() {
                         <button
                             onClick={() => {
                                 navigator.clipboard.writeText(order.orderId);
+                                showAlert({
+                                    type: "success",
+                                    message: "Order ID copied"
+                                });
                             }}
+
                             className="p-1.5 rounded-md border hover:bg-gray-100 active:bg-gray-200"
                             aria-label="Copy Order ID"
                             title="Copy Order ID"
@@ -203,6 +255,16 @@ export default function AdminOrderDetails() {
                                 }
                             >
                                 Adjust Order
+                            </Button>
+                        )}
+
+                        {isCancelled && (
+                            <Button
+                                disabled={restoring}
+                                onClick={handleRestore}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                {restoring ? "Reopening..." : "Reopen Order"}
                             </Button>
                         )}
 
@@ -255,9 +317,9 @@ export default function AdminOrderDetails() {
                     <div key={item.productId || idx} className="p-4 flex gap-4">
                         <img
                             src={item.image || defaultImage}
-                            onError={(e) =>
-                                (e.currentTarget.src = "")
-                            }
+                            onError={(e) => {
+                                e.currentTarget.src = defaultImage;
+                            }}
                             className="w-14 h-14 rounded object-cover"
                             loading="lazy"
                         />
@@ -334,11 +396,10 @@ export default function AdminOrderDetails() {
                                 value={selectedStatus}
                                 onChange={(e) => {
                                     setSelectedStatus(e.target.value);
-                                    setComment("");
                                 }}
                                 className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
                             >
-                                <option value="">Status</option>
+                                <option value="" disabled>Status</option>
                                 {availableStatuses.map((s) => (
                                     <option key={s} value={s}>
                                         {STATUS_LABELS[s]}
@@ -365,7 +426,9 @@ export default function AdminOrderDetails() {
                         onClick={() => {
                             if (!canSubmit) return;
                             setPendingPayload({
-                                status: selectedStatus || undefined,
+                                status: selectedStatus !== order.status
+                                    ? selectedStatus
+                                    : undefined,
                                 adminComment: comment !== order.adminComment ? comment : undefined,
                                 mobile: order.userId || '',
                                 amount: order.totalAmount || 0
@@ -395,15 +458,27 @@ export default function AdminOrderDetails() {
                     setSubmitting(true);
 
                     try {
-                        await updateOrder(order.orderId, pendingPayload);
+                        await updateOrder(
+                            order.orderId,
+                            pendingPayload
+                        );
                         showAlert({
                             type: "success",
                             message: "Order updated successfully",
                             duration: 1500,
                         });
+
                         setSelectedStatus(
                             pendingPayload.status ?? selectedStatus
                         );
+
+                        updateOrderListCache(order.orderId, {
+                            status: pendingPayload.status ?? order.status,
+                            adminComment:
+                                pendingPayload.adminComment ??
+                                order.adminComment,
+                        });
+                        await fetchOrder(orderId, { force: true });
                     } catch (err: any) {
                         showAlert({
                             type: "error",

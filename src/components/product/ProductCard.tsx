@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import Button from "../ui/Button";
-import type { Product } from "../../types/product";
 import { memo } from "react";
 import defaultImage from "../../assets/default-image.png";
+import type { Product } from "../../types/product";
+import Button from "../ui/Button";
 
 interface Props {
   product: Product;
@@ -24,12 +24,15 @@ function ProductCard({
   buttonLabel = "Add to Cart",
 }: Props) {
   const navigate = useNavigate();
+
   const available_qty = product?.qty || 0;
+
   const handleCardClick = () => {
     navigate(`/product/${product.id}`);
   };
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+
   return (
     <div
       onClick={buttonLabel === "Add to Cart" ? handleCardClick : undefined}
@@ -55,15 +58,20 @@ function ProductCard({
         hover:ring-opacity-30
       "
     >
-
       <div className="relative bg-white aspect-[4/3] flex items-center justify-center">
         <img
           src={product.image?.trim() || defaultImage}
-          onError={(e) => {
-            e.currentTarget.src = defaultImage;
-          }}
+          alt={product.name}
           loading="lazy"
           decoding="async"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = defaultImage;
+          }}
+          onLoad={(e) => {
+            e.currentTarget.classList.remove("opacity-0");
+            e.currentTarget.classList.add("opacity-100");
+          }}
           className="
             max-h-full
             max-w-full
@@ -73,33 +81,33 @@ function ProductCard({
             duration-300
             opacity-0
           "
-          onLoad={(e) => {
-            e.currentTarget.classList.remove("opacity-0");
-            e.currentTarget.classList.add("opacity-100");
-          }}
         />
 
-        {product?.discountText && (
+        {product.discountText && (
           <span className="absolute top-2 left-2 bg-[var(--color-secondary)] text-white text-xs font-semibold px-2 py-1 rounded">
-            {product?.discountText}
+            {product.discountText}
           </span>
         )}
       </div>
 
       <div className="p-3 flex flex-col flex-1 gap-0.5">
-        <h3 className="
-          text-sm
-          font-semibold
-          text-[var(--color-primary)]
-          line-clamp-2
-          min-h-[2.25rem]
-          leading-snug
-        ">
+        <h3
+          className="
+            text-sm
+            font-semibold
+            text-[var(--color-primary)]
+            line-clamp-2
+            min-h-[2.25rem]
+            leading-snug
+          "
+        >
           {product.name}
         </h3>
 
         {product.brand && (
-          <p className="text-xs text-[var(--color-muted)]">{product.brand}</p>
+          <p className="text-xs text-[var(--color-muted)]">
+            {product.brand}
+          </p>
         )}
 
         <div className="flex items-center gap-2">
@@ -113,67 +121,66 @@ function ProductCard({
             </span>
           )}
         </div>
+
         {!hideCartControls && (
-
-          <>
-            <div className="mt-auto pt-3">
-              {quantityInCart === 0 ? (
-                <Button
-                  onClick={(e) => {
-                    stop(e);
-                    onAddToCart?.(product);
-                  }}
-                  disabled={available_qty === 0}
-                  className={`mt-2 w-full text-sm ${available_qty === 0
-                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                    : ""
-                    }`}
+          <div className="mt-auto pt-3">
+            {quantityInCart === 0 ? (
+              <Button
+                onClick={(e) => {
+                  stop(e);
+                  onAddToCart?.(product);
+                }}
+                disabled={available_qty === 0}
+                className={`mt-2 w-full text-sm ${available_qty === 0
+                  ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                  : ""
+                  }`}
+              >
+                {available_qty === 0 ? "Out of Stock" : buttonLabel}
+              </Button>
+            ) : (
+              <div
+                onClick={stop}
+                className="
+                  mt-2
+                  flex
+                  items-center
+                  justify-between
+                  rounded-lg
+                  px-3
+                  py-1.5
+                  bg-[var(--color-primary)]
+                  text-white
+                  border
+                  border-[var(--color-primary)]
+                  hover:opacity-90
+                  transition-all
+                "
+              >
+                <button
+                  onClick={() => onDecrease?.(product)}
+                  className="text-lg font-bold px-2 hover:scale-110 transition-transform"
                 >
-                  {available_qty === 0 ? "Out of Stock" : buttonLabel}
-                </Button>
-              ) : (
-                <div
-                  onClick={stop}
-                  className="
-                    mt-2
-                    flex
-                    items-center
-                    justify-between
-                    rounded-lg
-                    px-3
-                    py-1.5
-                    bg-[var(--color-primary)]
-                    text-white
-                    border
-                    border-[var(--color-primary)]
-                    hover:opacity-90
-                    transition-all
-                  "
+                  −
+                </button>
+
+                <span className="text-sm font-semibold">
+                  {quantityInCart}
+                </span>
+
+                <button
+                  onClick={() => onIncrease?.(product)}
+                  className="text-lg font-bold px-2 hover:scale-110 transition-transform"
                 >
-
-                  <button
-                    onClick={() => onDecrease?.(product)}
-                    className="text-lg font-bold px-2 hover:scale-110 transition-transform"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm font-semibold">
-                    {quantityInCart}
-                  </span>
-
-                  <button
-                    onClick={() => onIncrease?.(product)}
-                    className="text-lg font-bold px-2 hover:scale-110 transition-transform"
-                  >
-                    +
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
+                  +
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 }
+
 export default memo(ProductCard);

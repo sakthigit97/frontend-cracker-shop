@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+
 import ProductCard from "../components/product/ProductCard";
-import { useBrandProducts } from "../store/brandProduct.store";
-import { cartStore } from "../store/cart.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
+import { useBrandProducts } from "../store/brandProduct.store";
+import { cartStore } from "../store/cart.store";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 export default function BrandProducts() {
@@ -25,19 +26,23 @@ export default function BrandProducts() {
 
     useEffect(() => {
         fetchInitial();
-    }, [brandId]);
-    const isSearching = search.trim().length > 0;
+    }, [fetchInitial]);
 
-    let displayProducts: any = isSearching
-        ? items.filter((p) =>
-            (
-                `${p.name}`
-            )
-                .toLowerCase()
-                .includes(search.trim().toLowerCase())
-        )
-        : items;
-    displayProducts = sortProductsBySequence(displayProducts);
+    const trimmedSearch = search.trim();
+
+    const isSearching = trimmedSearch.length > 0;
+
+    const query = trimmedSearch.toLowerCase();
+
+    const displayProducts = useMemo(() => {
+        return sortProductsBySequence(
+            isSearching
+                ? items.filter((p) =>
+                    p.name.toLowerCase().includes(query)
+                )
+                : items
+        );
+    }, [items, isSearching, query]);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -45,11 +50,16 @@ export default function BrandProducts() {
                 <button
                     onClick={() => navigate(-1)}
                     className="
-                        flex items-center justify-center
-                        w-9 h-9 rounded-full
-                        bg-[var(--color-primary)] text-white
-                        shadow-sm hover:scale-105 active:scale-95 transition-all
-                    "
+            flex items-center justify-center
+            w-9 h-9
+            rounded-full
+            bg-[var(--color-primary)]
+            text-white
+            shadow-sm
+            hover:scale-105
+            active:scale-95
+            transition-all
+          "
                 >
                     ←
                 </button>
@@ -64,7 +74,19 @@ export default function BrandProducts() {
                 placeholder="Search crackers..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full mb-4 px-5 py-3 rounded-full border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[var(--color-primary)]"
+                className="
+          w-full
+          mb-4
+          px-5
+          py-3
+          rounded-full
+          border
+          border-gray-300
+          bg-white
+          shadow-sm
+          focus:ring-2
+          focus:ring-[var(--color-primary)]
+        "
             />
 
             {loading && items.length === 0 && !isSearching && (
@@ -83,7 +105,7 @@ export default function BrandProducts() {
             )}
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                {displayProducts.map((p: any) => {
+                {displayProducts.map((p) => {
                     const quantityInCart = cartItems[p.id] ?? 0;
 
                     return (

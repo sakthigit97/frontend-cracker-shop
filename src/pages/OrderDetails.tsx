@@ -489,7 +489,7 @@ export default function OrderDetails() {
               </p>
 
               <p className="text-xs text-gray-500">
-                {disableGstForTN ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                {disableGstForTN && isTamilNadu ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
               </p>
             </div>
 

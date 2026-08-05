@@ -173,6 +173,7 @@ const ProductImage = memo(function ProductImage({
                 setShowViewer(true);
               }}
               onError={(e) => {
+                e.currentTarget.onerror = null;
                 e.currentTarget.src = defaultImage;
               }}
               src={item.src || defaultImage}
@@ -281,7 +282,7 @@ export default function ProductDetails() {
 
   useEffect(() => {
     fetchProduct(productId);
-  }, [productId]);
+  }, [productId, fetchProduct]);
 
   if (loading && !product) {
     return (

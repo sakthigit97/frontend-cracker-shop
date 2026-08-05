@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Button from "../ui/Button";
+// import { useAuth } from "../../context/AuthContext";
+import { useProfileStore } from "../../store/profile.store";
 
 interface Props {
     open: boolean;
@@ -18,6 +20,9 @@ export default function EstimateDownloadDialog({
     onClose,
     onDownload,
 }: Props) {
+
+    const profile = useProfileStore((s: any) => s.profile);
+
     const [customerName, setCustomerName] = useState("");
     const [mobile, setMobile] = useState("");
     const [email, setEmail] = useState("");
@@ -46,8 +51,19 @@ export default function EstimateDownloadDialog({
             }
 
             setCaptchaAnswer("");
+            if (profile && profile.name && profile.mobile) {
+                setCustomerName(profile.name || "");
+                setMobile(profile.mobile || "");
+                setEmail(profile.email || "");
+            } else {
+                setCustomerName("");
+                setMobile("");
+                setEmail("");
+            }
         }
     }, [open]);
+
+
 
     if (!open) return null;
 

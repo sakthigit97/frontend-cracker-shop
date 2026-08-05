@@ -18,9 +18,13 @@ interface AdminOrdersState {
     data: Record<string, OrdersCache>;
     loading: Record<string, boolean>;
     setFilters: (f: AdminOrderFilters) => void;
-    fetchInitial: () => Promise<void>;
+    fetchInitial: (force?: boolean) => Promise<void>;
     fetchMore: () => Promise<void>;
     clear: () => void;
+    updateOrderInCache: (
+        orderId: string,
+        updates: Partial<any>
+    ) => void;
 }
 
 function buildApiParams(filters: AdminOrderFilters) {
@@ -60,7 +64,7 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
         setFilters: (filters) => {
             set({ filters });
         },
-        fetchInitial: async () => {
+        fetchInitial: async (force = false) => {
             const { filters, data, loading } = get();
             const key = JSON.stringify({
                 status: filters.status,
@@ -68,7 +72,9 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
                 orderId: filters.orderId || null,
             });
 
-            if (data[key]?.initialized || loading[key]) return;
+            if (!force && (data[key]?.initialized || loading[key])) {
+                return;
+            }
             set({
                 loading: { ...loading, [key]: true },
             });
@@ -94,7 +100,38 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
                 }));
             }
         },
+        updateOrderInCache: (orderId, updates) =>
+            set((state) => {
+                const data = { ...state.data };
 
+                Object.keys(data).forEach((key) => {
+                    const filters: AdminOrderFilters = JSON.parse(key);
+                    data[key] = {
+                        ...data[key],
+                        items: data[key].items
+                            .map((order) =>
+                                order.orderId === orderId
+                                    ? {
+                                        ...order,
+                                        ...updates,
+                                    }
+                                    : order
+                            )
+                            .filter((order) => {
+                                if (
+                                    filters.status &&
+                                    order.status !== filters.status
+                                ) {
+                                    return false;
+                                }
+
+                                return true;
+                            }),
+                    };
+                });
+
+                return { data };
+            }),
         fetchMore: async () => {
             const { filters, data, loading } = get();
 
@@ -117,16 +154,24 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
                     cursor: cache.nextCursor,
                 });
 
-                set((state) => ({
-                    data: {
-                        ...state.data,
-                        [key]: {
-                            ...cache,
-                            items: [...cache.items, ...res.items],
-                            nextCursor: res.nextCursor ?? null,
+                set((state) => {
+                    const latest = state.data[key];
+
+                    if (!latest) {
+                        return state;
+                    }
+
+                    return {
+                        data: {
+                            ...state.data,
+                            [key]: {
+                                ...latest,
+                                items: [...latest.items, ...res.items],
+                                nextCursor: res.nextCursor ?? null,
+                            },
                         },
-                    },
-                }));
+                    };
+                });
             } finally {
                 set((state) => ({
                     loading: { ...state.loading, [key]: false },
