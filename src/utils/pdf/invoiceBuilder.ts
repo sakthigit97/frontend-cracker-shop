@@ -40,7 +40,6 @@ export async function buildInvoicePdf(
     doc.setTextColor(0);
     const packagingPercent = config?.packagingPercent ?? 0;
     const gstPercent = config?.gstPercent ?? 0;
-
     text(
         doc,
         config?.companyName ||
@@ -251,10 +250,11 @@ export async function buildInvoicePdf(
                 : item.name,
 
             String(item.quantity),
-
-            item.originalPrice
-                ? money(item.originalPrice)
-                : "-",
+            item.isComboPackage
+                ? money(item.price)
+                : item.originalPrice
+                    ? money(item.originalPrice)
+                    : "-",
 
             item.discountText ?? "-",
 
@@ -387,12 +387,11 @@ export async function buildInvoicePdf(
                 data.section === "body" &&
                 data.column.index === 2
             ) {
+                const item = order.items[data.row.index];
 
-                data.cell.styles.textColor = [
-                    120,
-                    120,
-                    120
-                ];
+                data.cell.styles.textColor = item?.isComboPackage
+                    ? COLORS.dark
+                    : [120, 120, 120];
 
                 data.cell.styles.fillColor = [
                     248,
@@ -400,6 +399,9 @@ export async function buildInvoicePdf(
                     248
                 ];
 
+                if (item?.isComboPackage) {
+                    data.cell.styles.fontStyle = "bold";
+                }
             }
 
             if (
@@ -528,7 +530,7 @@ export async function buildInvoicePdf(
             "Amount After Discount",
             order.amountAfterDiscount
         );
-    } 
+    }
 
     if (order.gstAmount > 0) {
         drawSummaryRow(
@@ -538,7 +540,7 @@ export async function buildInvoicePdf(
     }
 
     drawSummaryRow(
-        "Grand Total (Incl. GST & Packaging)",
+        "Grand Total (Inclusive of All Charges)",
         order.grandTotal || 0
     );
 

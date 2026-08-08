@@ -330,39 +330,39 @@ export default function QuickEstimate() {
 
                                     <div
                                         className={`
-      absolute
-      bottom-full
-      left-1/2
-      -translate-x-1/2
-      mb-2
-      w-64
-      rounded-xl
-      border
-      border-gray-200
-      bg-white
-      p-3
-      shadow-xl
-      text-gray-700
-      text-sm
-      z-50
-      transition-all
-      duration-200
+                                        absolute
+                                        bottom-full
+                                        left-1/2
+                                        -translate-x-1/2
+                                        mb-2
+                                        w-64
+                                        rounded-xl
+                                        border
+                                        border-gray-200
+                                        bg-white
+                                        p-3
+                                        shadow-xl
+                                        text-gray-700
+                                        text-sm
+                                        z-50
+                                        transition-all
+                                        duration-200
 
-      ${showEstimateInfo
+                                        ${showEstimateInfo
                                                 ? "opacity-100 visible"
                                                 : "opacity-0 invisible"
                                             }
 
-      md:group-hover:opacity-100
-      md:group-hover:visible
-    `}
+                                        md:group-hover:opacity-100
+                                        md:group-hover:visible
+                                        `}
                                     >
                                         <p className="font-semibold text-gray-900">
                                             Estimated Total
                                         </p>
 
                                         <p className="mt-1 text-xs text-gray-500">
-                                            Includes applicable GST and Packaging Charges.
+                                            Inclusive of all applicable charges.
                                         </p>
                                     </div>
                                 </div>

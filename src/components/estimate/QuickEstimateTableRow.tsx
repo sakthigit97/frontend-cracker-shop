@@ -97,15 +97,17 @@ function QuickEstimateTableRow({
             </td>
 
             <td className="text-center py-2 px-3">
-
-                {product.originalPrice ? (
+                {product.isComboPackage ? (
+                    <span className="text-gray-500">
+                        ₹{product.price}
+                    </span>
+                ) : product.originalPrice ? (
                     <span className="line-through text-gray-400">
                         ₹{product.originalPrice}
                     </span>
                 ) : (
                     "-"
                 )}
-
             </td>
 
             <td className="text-center py-2 px-3">

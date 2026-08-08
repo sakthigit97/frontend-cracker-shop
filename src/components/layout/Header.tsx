@@ -43,6 +43,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, logout, user } = useAuth();
   const items = cartStore((s) => s.items);
+  const deliveryState = cartStore((s) => s.deliveryState);
   const packagingPercent = Number(config?.packagingPercent || 0);
   const gstPercent = Number(config?.gstPercent || 0);
   const profile = useProfileStore((s) => s.profile);
@@ -104,7 +105,7 @@ export default function Header() {
       couponDiscount: 0,
       packagingPercent,
       gstPercent,
-      state: profile?.state || "Tamil Nadu",
+      state: deliveryState || profile?.state || "Tamil Nadu",
       config,
     });
   }, [
@@ -113,6 +114,8 @@ export default function Header() {
     packagingPercent,
     gstPercent,
     config,
+    deliveryState,
+    profile?.state,
   ]);
 
   const productMenu: HeaderDropdownItem[] = [
@@ -437,13 +440,11 @@ export default function Header() {
                 </p>
 
                 <p className="mt-1 text-xs text-gray-500">
-                  Includes of All Charges.
+                  Inclusive of all applicable charges.
                 </p>
               </div>
             )}
-
           </Link>
-
 
           {isAuthenticated && (
             <div className="hidden lg:block">
@@ -694,9 +695,8 @@ export default function Header() {
               </div>
 
               <div className="text-right">
-
                 <div className="text-xs text-white/60">
-                  Total (Incl. GST & Packaging)
+                  Total (Inclusive of GST & Packaging Charges)
                 </div>
 
                 <div className="text-xs font-semibold md:hidden">

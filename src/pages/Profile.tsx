@@ -210,13 +210,22 @@ export default function Profile() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
           <div className="bg-white border rounded-xl p-4">
-            <p className="text-sm text-gray-500">Wallet Credit Available</p>
+            <p className="text-sm text-gray-500">
+              Wallet Bonus
+            </p>
+
             <p className="text-2xl font-bold text-green-700">
               ₹{form.walletCredit || 0}
             </p>
+
             <p className="text-xs text-gray-400 mt-1">
-              Auto-used during checkout
+              🎁 Joining Bonus / Referral Reward
+            </p>
+
+            <p className="text-xs text-gray-400 mt-1">
+              Auto-used during next order
             </p>
           </div>
 

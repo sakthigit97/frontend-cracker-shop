@@ -618,8 +618,7 @@ export default function AiWizard({
                         "
                     >
 
-                        {loading
-                            ? "Generating Package..."
+                        {loading ? "Generating Package..."
                             : "Generate Package"}
 
                     </button>
