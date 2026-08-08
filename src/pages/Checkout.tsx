@@ -5,6 +5,7 @@ import { useCartProducts } from "../hooks/useCartProducts";
 import { apiFetch } from "../services/api";
 import { cartStore } from "../store/cart.store";
 import { useConfigStore } from "../store/config.store";
+import { useProfileStore } from "../store/profile.store";
 import { useAlert } from "../store/alert.store";
 import { INDIA_STATES } from "../utils/states";
 import { calculateOrderAmounts } from "../utils/pricing";
@@ -53,6 +54,8 @@ export default function Checkout() {
   const [profileAddress, setProfileAddress] = useState("");
   const [profilePincode, setProfilePicode] = useState("");
   const [profileState, setProfileState] = useState("");
+  const [title, setTitle] = useState<"Mr" | "Mrs" | "Ms">("Mr");
+  const [name, setName] = useState("");
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
@@ -87,11 +90,24 @@ export default function Checkout() {
       ),
     [products]
   );
+
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
   const currentState = addressMode === "PROFILE"
     ? profileState
     : stateValue.trim();
+
+  useEffect(() => {
+    cartStore
+      .getState()
+      .setDeliveryState(currentState || undefined);
+  }, [currentState]);
+
+  useEffect(() => {
+    return () => {
+      cartStore.getState().setDeliveryState(undefined);
+    };
+  }, []);
 
   const {
     packagingCharge,
@@ -125,11 +141,7 @@ export default function Checkout() {
   const finalPayable = grandTotal - creditUsed;
 
   useEffect(() => {
-    const currentPincode =
-      addressMode === "PROFILE"
-        ? profilePincode
-        : pincode;
-
+    const currentPincode = addressMode === "PROFILE" ? profilePincode : pincode;
     if (!currentPincode || currentPincode.length !== 6) {
       setValidatedLocation(null);
       setMinOrderValid(false);
@@ -143,7 +155,6 @@ export default function Checkout() {
     }
 
     let active = true;
-
     (async () => {
       try {
         const res = await fetch(
@@ -159,6 +170,13 @@ export default function Checkout() {
         ) {
           setValidatedLocation(null);
           setMinOrderValid(false);
+          if (addressMode === "NEW") {
+            setPincode("");
+          }
+          showAlert({
+            type: "error",
+            message: "Invalid pincode. Please select a valid delivery pincode.",
+          });
           return;
         }
 
@@ -254,10 +272,19 @@ export default function Checkout() {
 
   const placeOrder = async () => {
     if (placingOrder) return;
-    if (!acceptedTerms || !acceptedTransport) {
+    if (!acceptedTerms) {
       showAlert({
         type: "error",
-        message: "Please accept terms and transportation conditions to proceed",
+        message: "Please accept the Terms & Conditions to continue.",
+      });
+      return;
+    }
+
+    if (!acceptedTransport) {
+      showAlert({
+        type: "error",
+        message:
+          "Please acknowledge that transportation and parcel charges are to be borne by the customer.",
       });
       return;
     }
@@ -276,19 +303,59 @@ export default function Checkout() {
       finalAddress = profileAddress;
       deliveryState = profileState;
     } else {
-      if (!line1 || !city || !stateValue || pincode.length !== 6) {
+      if (!name.trim()) {
         showAlert({
           type: "error",
-          message: "Please complete all required address fields",
+          message: "Please enter the name.",
         });
         return;
       }
+
+      if (!line1.trim()) {
+        showAlert({
+          type: "error",
+          message: "Please enter Address Line 1.",
+        });
+        return;
+      }
+
+      if (!city.trim()) {
+        showAlert({
+          type: "error",
+          message: "Please enter the delivery city.",
+        });
+        return;
+      }
+
+      if (!stateValue) {
+        showAlert({
+          type: "error",
+          message: "Please select the delivery state.",
+        });
+        return;
+      }
+
+      if (pincode.length !== 6) {
+        showAlert({
+          type: "error",
+          message: "Please enter a valid 6-digit pincode.",
+        });
+        return;
+      }
+
+      const customerName = [
+        title.trim(),
+        name.trim(),
+      ]
+        .filter(Boolean)
+        .join(" ");
+
       const addressParts = [
+        customerName,
         line1.trim(),
         line2.trim(),
         `${city.trim()}, ${stateValue.trim()} - ${pincode.trim()}`,
       ];
-
       finalAddress = addressParts
         .filter(Boolean)
         .join("\n");
@@ -372,6 +439,7 @@ export default function Checkout() {
         })
       });
       const orderId = res.OrderId;
+      await useProfileStore.getState().refreshProfile();
 
       lockCart();
       clearCart();
@@ -548,7 +616,29 @@ export default function Checkout() {
               </label>
 
               {addressMode === "NEW" && (
+
                 <div className="space-y-3 mt-3">
+                  <div className="grid grid-cols-[110px_1fr] gap-3">
+                    <select
+                      value={title}
+                      onChange={(e) =>
+                        setTitle(e.target.value as "Mr" | "Mrs" | "Ms")
+                      }
+                      className="w-full rounded-lg border p-3 text-sm bg-white"
+                    >
+                      <option value="Mr">Mr</option>
+                      <option value="Mrs">Mrs</option>
+                      <option value="Ms">Ms</option>
+                    </select>
+
+                    <input
+                      type="text"
+                      placeholder="Name *"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-lg border p-3 text-sm"
+                    />
+                  </div>
 
                   <input
                     type="text"
@@ -839,7 +929,7 @@ export default function Checkout() {
                 </p>
 
                 <p className="text-xs text-gray-500">
-                  {disableGstForTN && currentState == 'Tamil Nadu' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                  {disableGstForTN && currentState === 'Tamil Nadu' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                 </p>
               </div>
 

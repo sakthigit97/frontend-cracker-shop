@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { useConfigStore } from "../../store/config.store";
 
+const EMPTY_SLIDER_IMAGES: any[] = [];
+
 export default function HeroSlider() {
   const [index, setIndex] = useState(0);
-  const sliderImages = useConfigStore(
-    (state) => state.config?.sliderImages ?? []
+
+  const sliderImagesFromStore = useConfigStore(
+    (state) => state.config?.sliderImages
   );
+
+  const sliderImages =
+    sliderImagesFromStore ?? EMPTY_SLIDER_IMAGES;
 
   useEffect(() => {
     if (sliderImages.length === 0) {
@@ -25,7 +31,9 @@ export default function HeroSlider() {
     if (sliderImages.length <= 1) return;
 
     const timer = window.setInterval(() => {
-      setIndex((prev) => (prev + 1) % sliderImages.length);
+      setIndex(
+        (prev) => (prev + 1) % sliderImages.length
+      );
     }, 4000);
 
     return () => window.clearInterval(timer);
@@ -34,13 +42,20 @@ export default function HeroSlider() {
   const prevSlide = () => {
     if (!sliderImages.length) return;
 
-    setIndex((prev) => (prev - 1 + sliderImages.length) % sliderImages.length);
+    setIndex(
+      (prev) =>
+        (prev - 1 + sliderImages.length) %
+        sliderImages.length
+    );
   };
 
   const nextSlide = () => {
     if (!sliderImages.length) return;
 
-    setIndex((prev) => (prev + 1) % sliderImages.length);
+    setIndex(
+      (prev) =>
+        (prev + 1) % sliderImages.length
+    );
   };
 
   if (!sliderImages.length) {
@@ -48,24 +63,13 @@ export default function HeroSlider() {
   }
 
   return (
-    <div
-      className="
-        relative
-        w-full
-        overflow-hidden
-        rounded-xl
-        mb-6
-        h-[180px]
-        sm:h-[220px]
-        md:h-[260px]
-        lg:h-[320px]
-        xl:h-[360px]
-      "
-    >
+    <div className="relative w-full h-[220px] sm:h-[280px] md:h-[380px] lg:h-[450px] overflow-hidden">
       {sliderImages.map((slide, i) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${i === index ? "opacity-100 z-10" : "opacity-0 z-0"
+          className={`absolute inset-0 transition-opacity duration-700 ${i === index
+            ? "opacity-100 z-10"
+            : "opacity-0 z-0"
             }`}
         >
           <img

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 export default function AiPackageResult() {
 
     const navigate = useNavigate();
-    const { response } = useAiRecommendation();
+    const { response, clear } = useAiRecommendation();
     const [packageItems, setPackageItems] = useState<any[]>([]);
     const [packageAdded, setPackageAdded] = useState(false);
     const [additionalItems, setAdditionalItems] =
@@ -58,8 +58,7 @@ export default function AiPackageResult() {
 
             }
         );
-
-        setPackageAdded(true);
+        clear();
     };
 
     const backendTotal = response.recommendedPackage.total;
@@ -223,6 +222,14 @@ export default function AiPackageResult() {
         });
     };
 
+    const clearPackage = () => {
+        setPackageItems([]);
+        setAdditionalItems([]);
+        setPackageAdded(false);
+
+        clear();
+    };
+
     return (
         <div className="space-y-6">
 
@@ -303,46 +310,67 @@ export default function AiPackageResult() {
             <div>
                 <div>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                         <h3 className="text-lg font-semibold">
                             Package Preview
                         </h3>
 
-                        {!packageAdded ? (
+                        <div className="flex items-center gap-3">
                             <button
-                                onClick={addPackageToCart}
+                                onClick={clearPackage}
+                                disabled={packageItems.length === 0}
                                 className="
-                                    px-5
-                                    py-2
-                                    rounded-full
-                                    bg-[var(--color-primary)]
-                                    text-white
-                                    font-semibold
-                                    hover:opacity-90
-                                    transition
-                                "
+                px-5
+                py-2
+                rounded-full
+                border
+                border-red-300
+                text-red-600
+                font-medium
+                hover:bg-red-50
+                transition
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+            "
                             >
-                                Add Package To cart ({totalItems}) →
+                                Clear Package
                             </button>
-                        ) : (
-                            <button
-                                onClick={() => navigate("/cart")}
-                                className="
-                                    px-5
-                                    py-2
-                                    rounded-full
-                                    bg-green-600
-                                    text-white
-                                    font-semibold
-                                    hover:opacity-90
-                                    transition
-                                "
-                            >
-                                View Cart →
-                            </button>
-                        )}
-                    </div>
 
+                            {!packageAdded ? (
+                                <button
+                                    onClick={addPackageToCart}
+                                    className="
+                    px-5
+                    py-2
+                    rounded-full
+                    bg-[var(--color-primary)]
+                    text-white
+                    font-semibold
+                    hover:opacity-90
+                    transition
+                "
+                                >
+                                    Add Package To Cart ({totalItems}) →
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => navigate("/cart")}
+                                    className="
+                    px-5
+                    py-2
+                    rounded-full
+                    bg-green-600
+                    text-white
+                    font-semibold
+                    hover:opacity-90
+                    transition
+                "
+                                >
+                                    View Cart →
+                                </button>
+                            )}
+                        </div>
+                    </div>
                     {packageItems.length === 0 ? (
 
                         <div

@@ -28,6 +28,8 @@ export interface CartState {
   lock: () => void;
   unlock: () => void;
   resetToGuest: () => void;
+  deliveryState?: string;
+  setDeliveryState: (state?: string) => void;
 }
 
 type PersistedCartState = {
@@ -43,6 +45,15 @@ export const cartStore = create<CartState>()(
       dirty: false,
       dirtyItems: {},
       locked: false,
+      deliveryState: undefined,
+      setDeliveryState: (deliveryState) =>
+        set((state) => {
+          if (state.deliveryState === deliveryState) {
+            return state;
+          }
+
+          return { deliveryState };
+        }),
       addItem: (productId, qty = 1) =>
         set((state) => {
           if (!productId) return state;
@@ -96,6 +107,7 @@ export const cartStore = create<CartState>()(
             hydrated: true,
             dirty: true,
             locked: false,
+            deliveryState: undefined,
           };
         }),
 
@@ -126,6 +138,7 @@ export const cartStore = create<CartState>()(
           dirty: false,
           dirtyItems: {},
           locked: false,
+          deliveryState: undefined,
         }),
 
       markDirty: () => set({ dirty: true }),

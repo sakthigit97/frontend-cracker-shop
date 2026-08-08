@@ -264,14 +264,14 @@ export default function QuickEstimateModal({
 
                 String(product.quantity),
 
-                product.originalPrice
-                    ? formatMoney(product.originalPrice)
-                    : "-",
+                product.isComboPackage
+                    ? formatMoney(product.price)
+                    : product.originalPrice
+                        ? formatMoney(product.originalPrice)
+                        : "-",
 
                 product.discountText ?? "-",
-
                 formatMoney(product.price),
-
                 formatMoney(product.price * product.quantity),
             ]),
             theme: "grid",
@@ -353,18 +353,21 @@ export default function QuickEstimateModal({
                     data.section === "body" &&
                     data.column.index === 2
                 ) {
+                    const product = products[data.row.index];
 
-                    data.cell.styles.textColor = [
-                        120,
-                        120,
-                        120,
-                    ];
+                    data.cell.styles.textColor = product?.isComboPackage
+                        ? COLORS.dark
+                        : [120, 120, 120];
 
                     data.cell.styles.fillColor = [
                         248,
                         248,
                         248,
                     ];
+
+                    if (product?.isComboPackage) {
+                        data.cell.styles.fontStyle = "bold";
+                    }
                 }
 
                 if (
@@ -375,6 +378,8 @@ export default function QuickEstimateModal({
                     data.cell.styles.fontStyle = "bold";
                     data.cell.styles.halign = "center";
                 }
+
+
 
                 if (
                     data.section === "body" &&
@@ -556,32 +561,23 @@ export default function QuickEstimateModal({
             },
         });
 
-        let footerY =
-            (doc as any).lastAutoTable.finalY + 6;
-
+        let footerY = (doc as any).lastAutoTable.finalY + 6;
         line(footerY);
-
         footerY += 5;
-
         doc.setFont("helvetica", "normal");
-
         doc.setFontSize(7.5);
-
         doc.setTextColor(...COLORS.gray);
-
         if (comboPackageTotal > 0) {
             text(
-                "GST & Packaging charges are calculated only for eligible products.",
+                "Packing charges are calculated only for non-combo products.",
                 LEFT,
                 footerY
             );
-
             footerY += 4;
 
         } else {
 
             const notes: string[] = [];
-
             if (
                 packagingPercent > 0 &&
                 packagingCharge > 0
@@ -846,7 +842,6 @@ export default function QuickEstimateModal({
                             <ul className="list-disc pl-5 mt-1">
                                 <li>Tamil Nadu – ₹3,000</li>
                                 <li>Other States – ₹5,000</li>
-                                <li>Northern States – ₹10,000</li>
                             </ul>
                         </li>
                     </ul>
@@ -926,37 +921,25 @@ export default function QuickEstimateModal({
                                             product.name
                                         }
                                     </p>
-
-                                    <div
-                                        className="
-                                            flex
-                                            gap-2
-                                            items-center
-                                        "
-                                    >
-                                        <span>
-                                            ₹
-                                            {
-                                                product.price
-                                            }
-                                        </span>
-
-                                        {product.originalPrice && (
-                                            <span
-                                                className="
-                                                    text-sm
-                                                    line-through
-                                                    text-gray-400
-                                                "
-                                            >
-                                                ₹
-                                                {
-                                                    product.originalPrice
-                                                }
+                                    <div className="flex gap-2 items-center">
+                                        {product.isComboPackage ? (
+                                            <span className="text-sm text-gray-500">
+                                                ₹{product.price}
                                             </span>
+                                        ) : (
+                                            <>
+                                                <span>
+                                                    ₹{product.price}
+                                                </span>
+
+                                                {product.originalPrice && (
+                                                    <span className="text-sm line-through text-gray-400">
+                                                        ₹{product.originalPrice}
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                     </div>
-
                                     <div
                                         className="
                                             mt-2
