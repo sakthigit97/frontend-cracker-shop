@@ -17,7 +17,6 @@ import { useBrandProducts } from "../store/brandProduct.store";
 import { useCatalog } from "../store/catalog.store";
 import WhatsAppSupport from "../components/whatsapp/WhatsAppSupport";
 
-
 export default function Home() {
   const {
     products,
@@ -65,9 +64,7 @@ export default function Home() {
     | "categories"
     | "brands";
 
-  const [activeTab, setActiveTab] =
-    useState<HomeTab>("products");
-
+  const [activeTab, setActiveTab] = useState<HomeTab>("products");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState("");
   const categoryProducts = useCategoryProducts(selectedCategoryId);
