@@ -25,7 +25,6 @@ export default function AdminConfigPage() {
         const load = async () => {
             try {
                 await refreshConfig();
-
                 const res = useConfigStore.getState().config;
 
                 if (!res) {
@@ -462,24 +461,19 @@ export default function AdminConfigPage() {
                         uploadUrl: presign.uploadUrl,
                     },
                 ],
-                [item.imageFile]
+                [item.imageFile],
+                true
             );
 
             updated[i] = {
                 ...item,
-
                 [imageKey]: presign.fileUrl,
-
                 imageFile: null,
-
                 previewUrl: "",
-
                 imageChanged: false,
-
                 oldImageUrl: item[imageKey] || "",
             };
         }
-
         return updated;
     };
 
