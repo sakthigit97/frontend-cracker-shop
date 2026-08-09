@@ -1,40 +1,60 @@
 import { create } from "zustand";
-import { getAdminUsers } from "../services/adminUsers.api";
+import {
+    getAdminUsers,
+    type GetAdminUsersParams,
+    type GetAdminUsersResponse,
+} from "../services/adminUsers.api";
 
 interface UserState {
-    cache: Record<string, any>;
+    cache: Record<string, GetAdminUsersResponse>;
     loading: boolean;
-    fetchPage: (filters: any, page: number) => Promise<any>;
+
+    fetchPage: (
+        params: GetAdminUsersParams
+    ) => Promise<GetAdminUsersResponse>;
+
     clearCache: () => void;
 }
 
-export const useAdminUsersStore = create<UserState>((set, get) => ({
-    cache: {},
-    loading: false,
+export const useAdminUsersStore = create<UserState>(
+    (set, get) => ({
+        cache: {},
+        loading: false,
 
-    async fetchPage(filters, page) {
-        const key = JSON.stringify({ filters, page });
-        const cached = get().cache[key];
-        if (cached) return cached;
-        set({ loading: true });
+        async fetchPage(params) {
+            const key = JSON.stringify({
+                search: params.search?.trim() || "",
+                cursor: params.cursor || null,
+                limit: params.limit || 20,
+            });
 
-        try {
-            const res = await getAdminUsers(filters);
+            const cached = get().cache[key];
 
-            set((state) => ({
-                cache: {
-                    ...state.cache,
-                    [key]: res,
-                },
-            }));
+            if (cached) {
+                return cached;
+            }
 
-            return res;
-        } finally {
-            set({ loading: false });
-        }
-    },
+            set({ loading: true });
 
-    clearCache() {
-        set({ cache: {} });
-    },
-}));
+            try {
+                const response =
+                    await getAdminUsers(params);
+
+                set((state) => ({
+                    cache: {
+                        ...state.cache,
+                        [key]: response,
+                    },
+                }));
+
+                return response;
+            } finally {
+                set({ loading: false });
+            }
+        },
+
+        clearCache() {
+            set({ cache: {} });
+        },
+    })
+);
