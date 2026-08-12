@@ -1,9 +1,31 @@
 import { apiFetch } from "./api";
-export async function getAdminUsers(params: {
+
+export interface GetAdminUsersParams {
     search?: string;
     cursor?: string;
     limit?: number;
-}) {
+}
+
+export interface AdminUser {
+    mobile: string;
+    name?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    role?: string;
+    referralCode?: string;
+}
+
+export interface GetAdminUsersResponse {
+    items: AdminUser[];
+    nextCursor?: string;
+}
+
+export async function getAdminUsers(
+    params: GetAdminUsersParams = {}
+): Promise<GetAdminUsersResponse> {
     const query = new URLSearchParams();
 
     if (params.search?.trim()) {
@@ -18,12 +40,19 @@ export async function getAdminUsers(params: {
         query.append("limit", String(params.limit));
     }
 
-    return apiFetch(`/admin/users?${query.toString()}`, {
-        method: "GET",
-    });
+    const queryString = query.toString();
+
+    return apiFetch(
+        `/admin/users${queryString ? `?${queryString}` : ""}`,
+        {
+            method: "GET",
+        }
+    );
 }
 
-export async function deleteUser(mobile: string) {
+export async function deleteUser(
+    mobile: string
+) {
     return apiFetch(`/admin/users/${mobile}`, {
         method: "DELETE",
     });

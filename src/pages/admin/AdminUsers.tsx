@@ -1,81 +1,138 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+
 import Button from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import EmptyState from "../../components/ui/EmptyState";
+
 import { useAdminUsersStore } from "../../store/adminUsers.store";
 import { useAlert } from "../../store/alert.store";
 import { deleteUser } from "../../services/adminUsers.api";
-import EmptyState from "../../components/ui/EmptyState";
+
 import { useNavigate } from "react-router-dom";
 
+const PAGE_SIZE = 20;
+
 export default function AdminUsers() {
-    const { fetchPage, loading, clearCache } = useAdminUsersStore();
-    const { showAlert } = useAlert();
-    const [page, setPage] = useState(1);
-    const [data, setData] = useState<any>(null);
-    const [search, setSearch] = useState("");
-    const [deletingMobile, setDeletingMobile] = useState<string | null>(null);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [selectedMobile, setSelectedMobile] = useState<string | null>(null);
     const navigate = useNavigate();
-    const PAGE_SIZE = 20;
-    const query = search.trim().toLowerCase();
 
-    useEffect(() => {
-        setPage(1);
-    }, [query]);
+    const {
+        fetchPage,
+        loading,
+        clearCache,
+    } = useAdminUsersStore();
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+    const { showAlert } = useAlert();
 
-    const loadUsers = async () => {
+    const [page, setPage] = useState(1);
+
+    const [data, setData] = useState<any>(null);
+
+    const [search, setSearch] = useState("");
+
+    const [cursorByPage, setCursorByPage] =
+        useState<Record<number, string | undefined>>({});
+
+    const [deletingMobile, setDeletingMobile] =
+        useState<string | null>(null);
+
+    const [showDeleteConfirm, setShowDeleteConfirm] =
+        useState(false);
+
+    const [selectedMobile, setSelectedMobile] =
+        useState<string | null>(null);
+
+    const query = search.trim();
+
+    /*
+     * ---------------------------------------------------------
+     * Load users
+     * ---------------------------------------------------------
+     */
+    const loadUsers = async (
+        targetPage: number,
+        searchValue: string,
+        cursor?: string
+    ) => {
         try {
-            const res = await fetchPage({}, 1);
-            setData(res);
-        } catch (err: any) {
+            const response = await fetchPage({
+                search: searchValue || undefined,
+                cursor,
+                limit: PAGE_SIZE,
+            });
+
+            setData(response);
+
+            /*
+             * The cursor returned for the current page
+             * is the cursor required to load the next page.
+             */
+            if (response?.nextCursor) {
+                setCursorByPage((previous) => ({
+                    ...previous,
+                    [targetPage + 1]:
+                        response.nextCursor,
+                }));
+            }
+        } catch (error: any) {
             showAlert({
                 type: "error",
-                message: err?.message || "Failed to load users",
+                message:
+                    error?.message ||
+                    "Failed to load users",
             });
         }
     };
 
-    const filteredUsers = useMemo(() => {
-        return (data?.items ?? []).filter((u: any) =>
-            (
-                `${u.name ?? ""} ${u.mobile ?? ""}`
-            )
-                .toLowerCase()
-                .includes(query)
-        );
-    }, [data?.items, query]);
-
-    const paginatedUsers = useMemo(() => {
-        const start = (page - 1) * PAGE_SIZE;
-
-        return filteredUsers.slice(
-            start,
-            start + PAGE_SIZE
-        );
-    }, [filteredUsers, page]);
-
-    const totalPages = Math.ceil(
-        filteredUsers.length / PAGE_SIZE
-    );
-
+    /*
+     * ---------------------------------------------------------
+     * Initial load + page/search changes
+     * ---------------------------------------------------------
+     */
     useEffect(() => {
-        if (page > totalPages && totalPages > 0) {
-            setPage(totalPages);
-        }
-    }, [page, totalPages]);
+        const cursor =
+            page === 1
+                ? undefined
+                : cursorByPage[page];
 
-    const handleDeleteClick = (mobile: string) => {
+        loadUsers(
+            page,
+            query,
+            cursor
+        );
+    }, [page, query]);
+
+    /*
+     * ---------------------------------------------------------
+     * Search change
+     *
+     * Whenever search changes:
+     * - Go back to page 1
+     * - Clear old cursors
+     * - Old page cursors cannot be reused for a new search
+     * ---------------------------------------------------------
+     */
+    useEffect(() => {
+        setPage(1);
+        setCursorByPage({});
+        setData(null);
+    }, [query]);
+
+    /*
+     * ---------------------------------------------------------
+     * Delete
+     * ---------------------------------------------------------
+     */
+    const handleDeleteClick = (
+        mobile: string
+    ) => {
         setSelectedMobile(mobile);
         setShowDeleteConfirm(true);
     };
 
     const confirmDelete = async () => {
-        if (!selectedMobile) return;
+        if (!selectedMobile) {
+            return;
+        }
 
         try {
             setDeletingMobile(selectedMobile);
@@ -84,20 +141,50 @@ export default function AdminUsers() {
 
             showAlert({
                 type: "success",
-                message: "User deleted successfully",
+                message:
+                    "User deleted successfully",
             });
-            setData((prev: any) => ({
-                ...prev,
-                items: prev.items.filter(
-                    (u: any) => u.mobile !== selectedMobile
-                ),
-            }));
 
+            /*
+             * Clear cached pages because deleting a user
+             * can change pagination results.
+             */
             clearCache();
-        } catch (err: any) {
+
+            /*
+             * Reload current page.
+             *
+             * If the current page becomes empty after deletion,
+             * go to previous page.
+             */
+            const currentItems =
+                data?.items ?? [];
+
+            if (
+                currentItems.length === 1 &&
+                page > 1
+            ) {
+                setPage((previous) =>
+                    previous - 1
+                );
+            } else {
+                const cursor =
+                    page === 1
+                        ? undefined
+                        : cursorByPage[page];
+
+                await loadUsers(
+                    page,
+                    query,
+                    cursor
+                );
+            }
+        } catch (error: any) {
             showAlert({
                 type: "error",
-                message: err?.message || "Failed to delete user",
+                message:
+                    error?.message ||
+                    "Failed to delete user",
             });
         } finally {
             setDeletingMobile(null);
@@ -106,148 +193,312 @@ export default function AdminUsers() {
         }
     };
 
+    /*
+     * ---------------------------------------------------------
+     * Current page users
+     * ---------------------------------------------------------
+     */
+    const users = data?.items ?? [];
+
+    /*
+     * DynamoDB cursor pagination:
+     *
+     * If nextCursor exists -> another page exists.
+     */
+    const hasNextPage =
+        Boolean(data?.nextCursor);
+
     return (
         <div className="space-y-4">
+
+            {/* Header */}
             <div className="flex items-center gap-3 mb-4">
+
                 <button
                     onClick={() => navigate(-1)}
                     className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
-
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
-                                "
+                        flex items-center justify-center
+                        w-9 h-9
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        text-white
+                        shadow-sm
+                        hover:scale-105
+                        active:scale-95
+                        transition-all
+                    "
                 >
                     ←
                 </button>
-                <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
+
+                <h1 className="
+                    text-xl md:text-2xl
+                    font-semibold
+                    text-[var(--color-primary)]
+                ">
                     Users
                 </h1>
             </div>
 
-            <div className="">
+            {/* Search */}
+            <div>
                 <input
                     placeholder="Search by name or mobile..."
                     className="
-                    w-full mb-4
-                    px-5 py-3
-                    rounded-full
-                    border border-gray-300
-                    bg-white
-                    shadow-sm
-                    focus:ring-2 focus:ring-[var(--color-primary)]
+                        w-full mb-4
+                        px-5 py-3
+                        rounded-full
+                        border border-gray-300
+                        bg-white
+                        shadow-sm
+                        focus:ring-2
+                        focus:ring-[var(--color-primary)]
                     "
-
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(event) =>
+                        setSearch(
+                            event.target.value
+                        )
+                    }
                 />
             </div>
 
-            <div className="bg-white border rounded-xl overflow-hidden">
+            {/* Table */}
+            <div className="
+                bg-white
+                border
+                rounded-xl
+                overflow-hidden
+            ">
+
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[700px]">
+
+                    <table className="
+                        w-full
+                        text-sm
+                        min-w-[700px]
+                    ">
+
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="p-3 text-left">User Name</th>
-                                <th className="p-3 text-left">Mobile No</th>
-                                <th className="p-3 text-left">Address</th>
-                                <th className="p-3 text-left">Role</th>
-                                <th className="p-3 text-left">Action</th>
+                                <th className="p-3 text-left">
+                                    User Name
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Mobile No
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Address
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Role
+                                </th>
+
+                                <th className="p-3 text-left">
+                                    Action
+                                </th>
                             </tr>
                         </thead>
 
                         <tbody>
+
+                            {/* Loading */}
                             {loading &&
-                                Array.from({ length: 5 }).map((_, i) => (
+                                Array.from({
+                                    length: 5,
+                                }).map((_, index) => (
                                     <tr
-                                        key={i}
-                                        className="border-t animate-pulse"
+                                        key={index}
+                                        className="
+                                            border-t
+                                            animate-pulse
+                                        "
                                     >
                                         <td className="p-3">
-                                            <div className="h-4 w-40 bg-gray-200 rounded" />
+                                            <div className="
+                                                h-4
+                                                w-40
+                                                bg-gray-200
+                                                rounded
+                                            " />
                                         </td>
 
                                         <td className="p-3">
-                                            <div className="h-4 w-24 bg-gray-200 rounded" />
+                                            <div className="
+                                                h-4
+                                                w-24
+                                                bg-gray-200
+                                                rounded
+                                            " />
                                         </td>
 
                                         <td className="p-3">
-                                            <div className="h-8 w-24 bg-gray-200 rounded-lg" />
+                                            <div className="
+                                                h-8
+                                                w-40
+                                                bg-gray-200
+                                                rounded-lg
+                                            " />
+                                        </td>
+
+                                        <td className="p-3">
+                                            <div className="
+                                                h-4
+                                                w-16
+                                                bg-gray-200
+                                                rounded
+                                            " />
+                                        </td>
+
+                                        <td className="p-3">
+                                            <div className="
+                                                h-8
+                                                w-20
+                                                bg-gray-200
+                                                rounded
+                                            " />
                                         </td>
                                     </tr>
                                 ))}
 
-                            {!loading && paginatedUsers.length ? (
-                                paginatedUsers.map((u: any) => (
-                                    <tr key={u.mobile} className="border-t">
-                                        <td className="p-3">{u.name}</td>
-                                        <td className="p-3 whitespace-nowrap">
-                                            {u.mobile}
-                                        </td>
-                                        <td className="p-3">{u.address}</td>
-                                        <td className="p-3">{u.role}</td>
-
-                                        <td className="p-3">
-                                            <Button
-                                                variant="outline"
-                                                className="border-red-500 text-red-600"
-                                                disabled={
-                                                    deletingMobile === u.mobile
-                                                }
-                                                onClick={() =>
-                                                    handleDeleteClick(u.mobile)
-                                                }
-                                            >
-                                                {deletingMobile === u.mobile
-                                                    ? "Deleting…"
-                                                    : "Delete"}
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : null}
-
+                            {/* Users */}
                             {!loading &&
-                                (!data?.items ||
-                                    data.items.length === 0) && (
+                                users.length > 0 &&
+                                users.map(
+                                    (user: any) => (
+                                        <tr
+                                            key={
+                                                user.mobile
+                                            }
+                                            className="
+                                                border-t
+                                            "
+                                        >
+                                            <td className="p-3">
+                                                {user.name ||
+                                                    "-"}
+                                            </td>
+
+                                            <td className="
+                                                p-3
+                                                whitespace-nowrap
+                                            ">
+                                                {user.mobile}
+                                            </td>
+
+                                            <td className="p-3">
+                                                {user.address ||
+                                                    "-"}
+                                            </td>
+
+                                            <td className="p-3">
+                                                {user.role ||
+                                                    "-"}
+                                            </td>
+
+                                            <td className="p-3">
+                                                <Button
+                                                    variant="outline"
+                                                    className="
+                                                        border-red-500
+                                                        text-red-600
+                                                    "
+                                                    disabled={
+                                                        deletingMobile ===
+                                                        user.mobile
+                                                    }
+                                                    onClick={() =>
+                                                        handleDeleteClick(
+                                                            user.mobile
+                                                        )
+                                                    }
+                                                >
+                                                    {deletingMobile ===
+                                                        user.mobile
+                                                        ? "Deleting…"
+                                                        : "Delete"}
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    )
+                                )}
+
+                            {/* Empty */}
+                            {!loading &&
+                                users.length === 0 && (
                                     <tr>
                                         <td
                                             colSpan={5}
-                                            className="p-6 text-center text-gray-500"
+                                            className="
+                                                p-6
+                                                text-center
+                                                text-gray-500
+                                            "
                                         >
                                             <EmptyState
-                                                title="No users found"
+                                                title={
+                                                    query
+                                                        ? "No users found"
+                                                        : "No users available"
+                                                }
                                             />
                                         </td>
                                     </tr>
                                 )}
+
                         </tbody>
                     </table>
                 </div>
-                <div className="flex justify-center items-center gap-3 p-4 border-t">
+
+                {/* Pagination */}
+                <div className="
+                    flex
+                    justify-center
+                    items-center
+                    gap-3
+                    p-4
+                    border-t
+                ">
 
                     <Button
                         variant="outline"
-                        disabled={page === 1}
-                        onClick={() => setPage((p) => p - 1)}
+                        disabled={
+                            page === 1 ||
+                            loading
+                        }
+                        onClick={() =>
+                            setPage(
+                                (previous) =>
+                                    previous - 1
+                            )
+                        }
                     >
                         ← Previous
                     </Button>
 
-                    <span className="text-sm">
-                        Page {page} of {totalPages || 1}
+                    <span className="
+                        text-sm
+                        min-w-[70px]
+                        text-center
+                    ">
+                        Page {page}
                     </span>
 
                     <Button
                         variant="outline"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => p + 1)}
+                        disabled={
+                            !hasNextPage ||
+                            loading
+                        }
+                        onClick={() =>
+                            setPage(
+                                (previous) =>
+                                    previous + 1
+                            )
+                        }
                     >
                         Next →
                     </Button>
@@ -255,23 +506,40 @@ export default function AdminUsers() {
                 </div>
             </div>
 
+            {/* Delete confirmation */}
             <ConfirmDialog
-                open={showDeleteConfirm}
+                open={
+                    showDeleteConfirm
+                }
                 title="Delete User?"
                 message={
                     <>
-                        Are you sure you want to delete this user?
+                        Are you sure you want
+                        to delete this user?
                         <br />
-                        <span className="text-red-500 font-medium">
-                            This action cannot be undone.
+
+                        <span className="
+                            text-red-500
+                            font-medium
+                        ">
+                            This action cannot be
+                            undone.
                         </span>
                     </>
                 }
                 confirmText="Yes, Delete"
                 cancelText="Cancel"
-                loading={!!deletingMobile}
-                onCancel={() => setShowDeleteConfirm(false)}
-                onConfirm={confirmDelete}
+                loading={
+                    !!deletingMobile
+                }
+                onCancel={() =>
+                    setShowDeleteConfirm(
+                        false
+                    )
+                }
+                onConfirm={
+                    confirmDelete
+                }
             />
         </div>
     );

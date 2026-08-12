@@ -362,6 +362,10 @@ export default function BulkOrderDetails() {
                                 <img
                                     src={item.image || defaultImage}
                                     alt={item.name}
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = defaultImage;
+                                    }}
                                     className="w-20 h-20 rounded-lg border object-cover"
                                 />
 

@@ -1,13 +1,20 @@
 import { memo, useMemo } from "react";
-import { Minus, Plus, Package } from "lucide-react";
+import {
+    Minus,
+    Plus,
+    Package,
+} from "lucide-react";
+
 import defaultImage from "../../assets/default-image.png";
+
 import type { Product } from "../../types/product";
-import type { BulkSchemeId } from "../../types/bulkOrder";
-import { getSchemePrice } from "../../utils/bulkPricing";
+import type { BulkScheme } from "../../types/bulkOrder";
+
+import { calculateBulkUnitPrice } from "../../utils/bulkPricing";
 
 interface BulkProductRowProps {
     product: Product;
-    schemeId: BulkSchemeId;
+    scheme: BulkScheme;
     quantity: number;
     onQuantityChange: (
         productId: string,
@@ -17,24 +24,54 @@ interface BulkProductRowProps {
 
 function BulkProductRow({
     product,
-    schemeId,
+    scheme,
     quantity,
     onQuantityChange,
 }: BulkProductRowProps) {
-
+    /**
+     * Calculate the product's bulk unit price
+     * based on:
+     *
+     * bulkOrderBasePrice
+     * + / - scheme adjustment
+     */
     const unitPrice = useMemo(
-        () => getSchemePrice(product, schemeId),
-        [product, schemeId]
+        () =>
+            calculateBulkUnitPrice(
+                product,
+                scheme
+            ),
+        [product, scheme]
     );
 
-    const cartonQty = Number(product.cartonQty || 0);
+    const cartonQty = Number(
+        product.cartonQty || 0
+    );
+
+    /**
+     * Final product total:
+     *
+     * quantity
+     * × cartonQty
+     * × calculated unitPrice
+     */
     const total = useMemo(
-        () => quantity * cartonQty * unitPrice,
-        [quantity, cartonQty, unitPrice]
+        () =>
+            quantity *
+            cartonQty *
+            unitPrice,
+        [
+            quantity,
+            cartonQty,
+            unitPrice,
+        ]
     );
 
     const increase = () =>
-        onQuantityChange(product.id, quantity + 1);
+        onQuantityChange(
+            product.id,
+            quantity + 1
+        );
 
     const decrease = () =>
         onQuantityChange(
@@ -44,50 +81,65 @@ function BulkProductRow({
 
     return (
         <>
+            {/* =========================================
+                DESKTOP
+            ========================================= */}
 
-            <div className="hidden lg:grid grid-cols-[120px_1fr_240px_230px] items-center gap-6 border-b border-gray-100 px-4 py-3 hover:bg-gray-50 transition">
+            <div className="hidden lg:grid grid-cols-[120px_1fr_240px_230px] items-center gap-6 border-b border-gray-100 px-4 py-3 transition hover:bg-gray-50">
 
+                {/* Product Image */}
                 <img
-                    src={product.images?.[0] || defaultImage}
+                    src={
+                        product.images?.[0]?.trim() ||
+                        defaultImage
+                    }
                     alt={product.name}
                     className="h-16 w-16 rounded-lg border bg-white object-contain p-1"
                     loading="lazy"
+                    onError={(e) => {
+                        e.currentTarget.onerror =
+                            null;
+                        e.currentTarget.src =
+                            defaultImage;
+                    }}
                 />
 
                 {/* Product */}
-
                 <div className="min-w-0">
-
                     <h3 className="truncate text-base font-semibold text-blue-600">
                         {product.name}
                     </h3>
 
                     <div className="mt-2 flex flex-wrap gap-3">
 
-                        <span className="rounded-full bg-gray-100 px-3 py-1  font-semibold">
-                            ₹{unitPrice.toLocaleString("en-IN")} / Piece
+                        {/* Bulk Price */}
+                        <span className="rounded-full bg-gray-100 px-3 py-1 font-semibold">
+                            ₹
+                            {unitPrice.toLocaleString(
+                                "en-IN"
+                            )}{" "}
+                            / Piece
                         </span>
 
-                        <span className="rounded-full bg-amber-50 px-3 py-1  text-gray-700 flex items-center gap-2">
-
+                        {/* Carton Quantity */}
+                        <span className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-gray-700">
                             <Package
                                 size={15}
                                 className="text-amber-600"
                             />
 
-                            Carton Qty :
+                            Carton Qty:
                             <strong>
-                                {cartonQty.toLocaleString("en-IN")}
+                                {cartonQty.toLocaleString(
+                                    "en-IN"
+                                )}
                             </strong>
-
                         </span>
 
                     </div>
-
                 </div>
 
                 {/* Quantity */}
-
                 <div className="flex flex-col items-center">
 
                     <div className="mb-2 text-[10px] tracking-wider text-gray-500">
@@ -99,7 +151,9 @@ function BulkProductRow({
                         <button
                             type="button"
                             onClick={decrease}
-                            disabled={quantity === 0}
+                            disabled={
+                                quantity === 0
+                            }
                             className="flex h-9 w-9 items-center justify-center border-r bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
                         >
                             <Minus size={18} />
@@ -118,21 +172,22 @@ function BulkProductRow({
                         </button>
 
                     </div>
-
                 </div>
 
                 {/* Total */}
-
                 <div className="text-right">
 
                     {quantity > 0 ? (
                         <>
-
                             <div className="text-xs text-gray-500">
-
-                                {quantity} × {cartonQty.toLocaleString("en-IN")} Pieces × ₹
-                                {unitPrice.toLocaleString("en-IN")}
-
+                                {quantity} ×{" "}
+                                {cartonQty.toLocaleString(
+                                    "en-IN"
+                                )}{" "}
+                                Pieces × ₹
+                                {unitPrice.toLocaleString(
+                                    "en-IN"
+                                )}
                             </div>
 
                             <div className="mt-2 text-[10px] tracking-wide text-gray-500">
@@ -140,25 +195,24 @@ function BulkProductRow({
                             </div>
 
                             <div className="mt-1 text-3xl font-bold text-primary">
-                                ₹{total.toLocaleString("en-IN")}
+                                ₹
+                                {total.toLocaleString(
+                                    "en-IN"
+                                )}
                             </div>
-
                         </>
                     ) : (
-
                         <div className="text-gray-400">
                             Select quantity
                         </div>
-
                     )}
 
                 </div>
-
             </div>
 
-            {/* ===========================
-        MOBILE
-=========================== */}
+            {/* =========================================
+                MOBILE
+            ========================================= */}
 
             <div className="block lg:hidden">
 
@@ -168,10 +222,19 @@ function BulkProductRow({
                     <div className="flex items-center gap-3 p-3">
 
                         <img
-                            src={product.images?.[0] || defaultImage}
+                            src={
+                                product.images?.[0]?.trim() ||
+                                defaultImage
+                            }
                             alt={product.name}
-                            className="h-14 w-14 rounded-lg border bg-white object-contain p-1 flex-shrink-0"
+                            className="h-14 w-14 flex-shrink-0 rounded-lg border bg-white object-contain p-1"
                             loading="lazy"
+                            onError={(e) => {
+                                e.currentTarget.onerror =
+                                    null;
+                                e.currentTarget.src =
+                                    defaultImage;
+                            }}
                         />
 
                         <div className="min-w-0 flex-1">
@@ -182,86 +245,119 @@ function BulkProductRow({
 
                             <div className="mt-2 flex flex-wrap gap-2">
 
+                                {/* Bulk Price */}
                                 <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">
-                                    ₹{unitPrice.toLocaleString("en-IN")} / Piece
+                                    ₹
+                                    {unitPrice.toLocaleString(
+                                        "en-IN"
+                                    )}{" "}
+                                    / Piece
                                 </span>
 
+                                {/* Carton Quantity */}
                                 <span className="rounded-full bg-amber-50 px-3 py-1 text-xs text-gray-700">
-                                    📦 {cartonQty.toLocaleString("en-IN")} Pieces / Carton
+                                    📦{" "}
+                                    {cartonQty.toLocaleString(
+                                        "en-IN"
+                                    )}{" "}
+                                    Pieces / Carton
                                 </span>
 
                             </div>
-
                         </div>
-
                     </div>
+
                     {/* Bottom Section */}
                     <div className="border-t bg-gray-50 px-4 py-3">
 
+                        {/* Quantity */}
                         <div>
-
                             <div className="flex justify-left">
 
                                 <div className="flex overflow-hidden rounded-lg border bg-white shadow-sm">
 
                                     <button
                                         type="button"
-                                        onClick={decrease}
-                                        disabled={quantity === 0}
+                                        onClick={
+                                            decrease
+                                        }
+                                        disabled={
+                                            quantity ===
+                                            0
+                                        }
                                         className="flex h-9 w-9 items-center justify-center border-r bg-gray-100 disabled:opacity-40"
                                     >
-                                        <Minus size={16} />
+                                        <Minus
+                                            size={
+                                                16
+                                            }
+                                        />
                                     </button>
 
                                     <div className="flex h-9 w-10 items-center justify-center font-semibold">
-                                        {quantity}
+                                        {
+                                            quantity
+                                        }
                                     </div>
 
                                     <button
                                         type="button"
-                                        onClick={increase}
+                                        onClick={
+                                            increase
+                                        }
                                         className="flex h-9 w-9 items-center justify-center border-l bg-primary text-white"
                                     >
-                                        <Plus size={16} />
+                                        <Plus
+                                            size={
+                                                16
+                                            }
+                                        />
                                     </button>
 
                                 </div>
-
                             </div>
                         </div>
 
-                        {/* Total Row */}
+                        {/* Total */}
                         {quantity > 0 && (
-
                             <div className="mt-4 rounded-lg bg-blue-50 p-3">
+
                                 <div className="space-y-3">
+
                                     <div>
                                         <div className="mt-1 text-sm leading-5 text-gray-700">
-                                            {quantity} × {cartonQty.toLocaleString("en-IN")} Pieces × ₹
-                                            {unitPrice.toLocaleString("en-IN")}
+                                            {
+                                                quantity
+                                            }{" "}
+                                            ×{" "}
+                                            {cartonQty.toLocaleString(
+                                                "en-IN"
+                                            )}{" "}
+                                            Pieces × ₹
+                                            {unitPrice.toLocaleString(
+                                                "en-IN"
+                                            )}
                                         </div>
-
                                     </div>
 
                                     <div className="border-t border-blue-100 pt-3">
+
                                         <div className="mt-1 text-2xl font-bold text-primary">
-                                            ₹{total.toLocaleString("en-IN")}
+                                            ₹
+                                            {total.toLocaleString(
+                                                "en-IN"
+                                            )}
                                         </div>
 
                                     </div>
 
                                 </div>
                             </div>
-
                         )}
 
                     </div>
                 </div>
-
             </div>
-
-
-
         </>
     );
 }

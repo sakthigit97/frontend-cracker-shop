@@ -7,7 +7,7 @@ interface AdminDashboardState {
     loading: boolean;
     error: string | null;
     lastFetched: number | null;
-    fetch: () => Promise<void>;
+    fetch: (force?: boolean) => Promise<void>;
     clearCache: () => void;
 }
 
@@ -18,21 +18,33 @@ export const useAdminDashboardStore = create<AdminDashboardState>(
         loading: false,
         error: null,
         lastFetched: null,
-        fetch: async () => {
+        fetch: async (force = false) => {
             const { data, lastFetched, loading } = get();
+
             if (loading) return;
 
-            if (data && lastFetched && Date.now() - lastFetched < CACHE_TTL) {
+            if (
+                !force &&
+                data &&
+                lastFetched &&
+                Date.now() - lastFetched < CACHE_TTL
+            ) {
                 return;
             }
 
-            set({ loading: true, error: null });
+            set({
+                loading: true,
+                error: null,
+            });
 
             try {
                 const res = await getAdminDashboard();
+
                 const safeBreakdown: Record<string, number> = {};
+
                 STATUS_ORDER.forEach((s) => {
-                    safeBreakdown[s] = res.statusBreakdown?.[s] ?? 0;
+                    safeBreakdown[s] =
+                        res.statusBreakdown?.[s] ?? 0;
                 });
 
                 set({
@@ -43,12 +55,17 @@ export const useAdminDashboardStore = create<AdminDashboardState>(
                     lastFetched: Date.now(),
                 });
             } catch (err: any) {
-                set({ error: err.message || "Failed to load dashboard" });
+                set({
+                    error:
+                        err.message ||
+                        "Failed to load dashboard",
+                });
             } finally {
-                set({ loading: false });
+                set({
+                    loading: false,
+                });
             }
         },
-
         clearCache: () =>
             set({
                 data: null,

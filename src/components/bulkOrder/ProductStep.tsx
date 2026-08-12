@@ -4,10 +4,9 @@ import BulkSearch from "./BulkSearch";
 import BulkProductTable from "./BulkProductTable";
 import { bulkOrderStore } from "../../store/bulkOrder.store";
 import { useHomeProducts } from "../../store/homeProduct.store";
-import { getSchemePrice } from "../../utils/bulkPricing";
+import { createBulkOrderItem } from "../../utils/bulkPricing";
 
 export default function ProductStep() {
-
     const {
         scheme,
         items,
@@ -20,45 +19,40 @@ export default function ProductStep() {
     } = bulkOrderStore();
 
     const { products = [] } = useHomeProducts();
-
     const handleQuantityChange = useCallback(
         (productId: string, quantity: number) => {
-
             const existing = items.find(
                 (x) => x.productId === productId
             );
 
             if (existing) {
-
                 updateQuantity(productId, quantity);
                 return;
-
             }
 
             const product = products.find(
                 (p) => p.id === productId
             );
 
-            if (!product || quantity <= 0) {
+            if (!product || quantity <= 0 || !scheme) {
                 return;
             }
 
-            const unitPrice = getSchemePrice(
+            const item = createBulkOrderItem(
                 product,
-                scheme!.id
+                scheme,
+                1
             );
 
-            addItem({
-                productId: product.id,
-                name: product.name,
-                cartonQty: Number(product.cartonQty ?? 0),
-                quantity: 1,
-                unitPrice,
-                total: Number(product.cartonQty || 0) * unitPrice,
-            });
-
+            addItem(item);
         },
-        [items, products, scheme, addItem, updateQuantity]
+        [
+            items,
+            products,
+            scheme,
+            addItem,
+            updateQuantity,
+        ]
     );
 
     const canContinue = items.length > 0;
@@ -89,7 +83,8 @@ export default function ProductStep() {
                     <button
                         type="button"
                         onClick={previousStep}
-                        className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium transition hover:bg-gray-100"                    >
+                        className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium transition hover:bg-gray-100"
+                    >
                         Back
                     </button>
 
@@ -97,7 +92,8 @@ export default function ProductStep() {
                         type="button"
                         onClick={nextStep}
                         disabled={!canContinue}
-                        className={["rounded-lg px-4 py-1.5 text-sm font-medium text-white transition",
+                        className={[
+                            "rounded-lg px-4 py-1.5 text-sm font-medium text-white transition",
                             canContinue
                                 ? "bg-primary hover:opacity-90"
                                 : "cursor-not-allowed bg-gray-300",
@@ -106,11 +102,10 @@ export default function ProductStep() {
                         Continue
                     </button>
                 </div>
-
                 <BulkProductTable
                     products={products}
                     search={search}
-                    schemeId={scheme.id}
+                    scheme={scheme}
                     items={items}
                     onQuantityChange={handleQuantityChange}
                 />

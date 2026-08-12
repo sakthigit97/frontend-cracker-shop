@@ -33,7 +33,7 @@ export type GlobalConfig = {
     gmapLink: string;
     displayMobile: string;
     website: string;
-    bulkSchemes?: any;
+    bulkOrderSchemes?: any;
     companyName: string;
     whatsAppSupport: any;
 };

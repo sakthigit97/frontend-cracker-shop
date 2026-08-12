@@ -1,19 +1,20 @@
 import { BULK_ORDER_STEPS } from "../constants/bulkOrderSteps";
-export type BulkOrderStep = (typeof BULK_ORDER_STEPS)[keyof typeof BULK_ORDER_STEPS];
 
-export type BulkSchemeId =
-    | "SCHEME1"
-    | "SCHEME2"
-    | "SCHEME3"
-    | "SCHEME4";
+export type BulkOrderStep =
+    (typeof BULK_ORDER_STEPS)[keyof typeof BULK_ORDER_STEPS];
+
+export type BulkSchemeId = string;
 
 export interface BulkScheme {
-    id: BulkSchemeId;
-    name: string;
-    description: string;
+    schemeId: BulkSchemeId;
+    schemeName: string;
     minAmount: number;
     maxAmount: number;
-    requireAdminCode: boolean;
+    isAdminApprovalRequired: boolean;
+    bulkPriceAdjustmentPercent?: number;
+    bulkPriceAdjustmentType?: "PLUS" | "MINUS";
+    isActive: boolean;
+    sortOrder: number;
 }
 
 export interface BulkOrderDetailsResponse {
@@ -21,7 +22,7 @@ export interface BulkOrderDetailsResponse {
     createdAt: string;
     status: string;
     schemeName: string;
-    schemeId: string;
+    schemeId: BulkSchemeId;
     address: BulkOrderAddress;
     items: BulkOrderProduct[];
     pricing: BulkOrderPricing;
@@ -34,10 +35,11 @@ export interface BulkOrderProduct {
     image?: string;
     brand?: string;
     categoryId?: string;
+    bulkOrderBasePrice: number;
     cartonQty: number;
+    unitPrice: number;
     schemePrice?: number;
     quantity: number;
-    unitPrice: number;
     total: number;
 }
 

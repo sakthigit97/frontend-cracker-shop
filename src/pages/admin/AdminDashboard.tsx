@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const { data, loading, error, fetch } = useAdminDashboardStore();
 
   useEffect(() => {
-    fetch();
+    fetch(true);
   }, []);
 
   if (loading && !data) {

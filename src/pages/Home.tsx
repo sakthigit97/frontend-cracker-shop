@@ -385,6 +385,10 @@ export default function Home() {
             <p className="mt-1 text-sm text-green-700">
               Get festival offers, new arrivals, stock updates and exclusive deals.
             </p>
+
+            <p className="mt-1 text-sm text-green-700">
+              🔒 Your personal details are kept private — other community members won't see your information.
+            </p>
           </div>
 
           <a
