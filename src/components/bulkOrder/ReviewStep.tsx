@@ -194,12 +194,6 @@ export default function ReviewStep() {
                 <div className="space-y-5 xl:sticky xl:top-24 xl:h-fit">
                     <BulkPricingCard
                         pricing={pricing}
-                        packagingPercent={
-                            pricing.packagingPercent
-                        }
-                        gstPercent={
-                            pricing.gstPercent
-                        }
                     />
 
                     <div className="rounded-xl border border-green-200 bg-green-50 p-4">
