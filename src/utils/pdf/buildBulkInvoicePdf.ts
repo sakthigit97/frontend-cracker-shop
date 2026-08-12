@@ -117,14 +117,11 @@ export async function buildBulkInvoicePdf(
 
     y += 5;
 
-    line(
-        doc,
-        y
-    );
-    y += 3;
     line(doc, y);
+
     y += 6;
     bold();
+
     doc.setFontSize(8);
     doc.setTextColor(0);
 
@@ -341,11 +338,16 @@ export async function buildBulkInvoicePdf(
         `Packaging (${order.pricing.packagingPercent}%)`,
         order.pricing.packagingCharge
     );
-
-    drawSummaryRow(
-        `GST (${order.pricing.gstPercent}%)`,
-        order.pricing.gstAmount
+    const gstPercent = Number(
+        order.pricing?.gstPercent ?? 0
     );
+
+    if (gstPercent > 0) {
+        drawSummaryRow(
+            `GST (${gstPercent}%)`,
+            Number(order.pricing?.gstAmount ?? 0)
+        );
+    }
 
     drawSummaryRow(
         "Grand Total",

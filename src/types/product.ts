@@ -14,6 +14,9 @@ export interface Product {
   isComboPackage?: boolean;
   productFamily?: string;
   cartonQty?: number;
+  bulkOrderBasePrice?: number;
+  isBulkOrderOnly?: boolean;
+  isRetailOnly?: boolean;
 }
 
 export type ProductDetails = {

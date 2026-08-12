@@ -129,6 +129,16 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
+    {
+      label: "Bulk Order",
+      to: "/bulk-order",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "View Bulk Order",
+      to: "/bulk-orders",
+      icon: <FaBoxOpen />,
+    },
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -186,6 +196,16 @@ export default function Header() {
     {
       label: "Combo Packages",
       to: "/combo-packages",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "Bulk Order",
+      to: "/bulk-order",
+      icon: <FaBoxOpen />,
+    },
+    {
+      label: "View Bulk Order",
+      to: "/bulk-orders",
       icon: <FaBoxOpen />,
     },
   ];

@@ -26,12 +26,11 @@ export default function AdminBulkOrderDetails() {
     const location = useLocation();
     const { showAlert } = useAlert();
     const config = useConfigStore(s => s.config);
-
     const {
         cache,
         loading,
-        loaded,
         fetchOrder,
+        loaded,
         updateOrder,
     } = useAdminBulkOrderDetailsStore();
 
@@ -94,40 +93,26 @@ export default function AdminBulkOrderDetails() {
 
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canDownloadInvoice =
-        order &&
-        [
-            "ORDER_PLACED",
-            "ORDER_CONFIRMED",
-            "PAYMENT_CONFIRMED",
-            "ORDER_PACKED",
-            "DISPATCHED",
-        ].includes(order.status);
+        STATUS_ORDER.indexOf(order?.status) >=
+        STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
+        order.status !== "CANCELLED";
+
     const currentIndex = order
         ? STATUS_ORDER.indexOf(order.status)
         : -1;
-    const availableStatuses =
-        STATUS_ORDER.filter(
-            (
-                status,
-                index
-            ) => {
+    const nextStatus =
+        currentIndex >= 0 &&
+            currentIndex < STATUS_ORDER.length - 1
+            ? STATUS_ORDER[currentIndex + 1]
+            : null;
 
-                if (
-                    status === "CANCELLED"
-                ) {
-
-                    return true;
-
-                }
-
-                return (
-                    index >=
-                    currentIndex
-                );
-
-            }
-        );
-
+    const availableStatuses = [
+        order?.status,
+        ...(nextStatus ? [nextStatus] : []),
+        ...(order?.status !== "CANCELLED"
+            ? ["CANCELLED"]
+            : []),
+    ];
 
     async function handleDownloadInvoice() {
 
@@ -231,6 +216,8 @@ export default function AdminBulkOrderDetails() {
 
     if (!order) return;
 
+
+    console.log(order.statusHistory)
     return (
 
         <div className="space-y-6">
@@ -614,22 +601,23 @@ export default function AdminBulkOrderDetails() {
 
                         </div>
 
-                        <div className="flex justify-between">
+                        {order.pricing.gstAmount > 0 && (
 
-                            <span>
+                            <div className="flex justify-between">
+                                <span>
 
-                                GST ({order.pricing.gstPercent}%)
+                                    GST ({order.pricing.gstPercent}%)
 
-                            </span>
+                                </span>
 
-                            <span>
+                                <span>
 
-                                ₹{Number(order.pricing.gstAmount).toLocaleString("en-IN")}
+                                    ₹{Number(order.pricing.gstAmount).toLocaleString("en-IN")}
 
-                            </span>
+                                </span>
 
-                        </div>
-
+                            </div>
+                        )}
                         <div className="border-t pt-3 flex justify-between font-bold text-[var(--color-primary)]">
 
                             <span>
@@ -672,7 +660,105 @@ export default function AdminBulkOrderDetails() {
 
             )}
 
-            {/* ADMIN ACTIONS */}
+            {order.statusHistory?.length > 0 && (
+                <div className="bg-white border rounded-xl p-5">
+                    <h3 className="font-semibold text-[var(--color-primary)] mb-4">
+                        Order History
+                    </h3>
+
+                    <div className="space-y-4">
+                        {[...(order.statusHistory || [])]
+                            .sort(
+                                (a, b) =>
+                                    (b.changedAt ?? b.at) -
+                                    (a.changedAt ?? a.at)
+                            )
+                            .map((history: any, index: number) => {
+                                const status =
+                                    history.toStatus ??
+                                    history.status;
+
+                                const updatedBy =
+                                    history.changedBy ??
+                                    history.by;
+
+                                const updatedAt =
+                                    history.changedAt ??
+                                    history.at;
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex gap-4 items-start border-l-2 border-gray-200 pl-4 relative"
+                                    >
+                                        <div
+                                            className="
+                                    absolute
+                                    -left-[7px]
+                                    top-1
+                                    w-3
+                                    h-3
+                                    rounded-full
+                                    bg-[var(--color-primary)]
+                                "
+                                        />
+
+                                        <div className="flex-1">
+                                            <div
+                                                className="
+                                        flex
+                                        flex-col
+                                        sm:flex-row
+                                        sm:items-center
+                                        sm:justify-between
+                                        gap-1
+                                    "
+                                            >
+                                                <p className="font-medium">
+                                                    {STATUS_LABELS[status] ??
+                                                        status?.replaceAll(
+                                                            "_",
+                                                            " "
+                                                        )}
+                                                </p>
+
+                                                <span className="text-xs text-gray-500">
+                                                    {updatedAt
+                                                        ? new Date(
+                                                            updatedAt
+                                                        ).toLocaleString(
+                                                            "en-IN"
+                                                        )
+                                                        : "-"}
+                                                </span>
+                                            </div>
+
+                                            {updatedBy && (
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    Changed By :{" "}
+                                                    {updatedBy.startsWith(
+                                                        "ADMIN"
+                                                    )
+                                                        ? "Admin"
+                                                        : updatedBy.replace(
+                                                            "USER#",
+                                                            ""
+                                                        )}
+                                                </p>
+                                            )}
+
+                                            {history.comment && (
+                                                <div className="mt-2 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                                                    {history.comment}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                </div>
+            )}
 
             {!isTerminal && (
 
@@ -694,37 +780,19 @@ export default function AdminBulkOrderDetails() {
 
                         <select
                             value={selectedStatus}
-                            onChange={(e) => {
-
-                                setSelectedStatus(
-                                    e.target.value
-                                );
-
-                            }}
-                            className="
-                                w-full
-                                border
-                                rounded-lg
-                                px-3
-                                py-2
-                                text-sm
-                                bg-white
-                            "
+                            onChange={(e) =>
+                                setSelectedStatus(e.target.value)
+                            }
+                            className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
                         >
-
                             {availableStatuses.map((status) => (
-
                                 <option
                                     key={status}
                                     value={status}
                                 >
-
-                                    {STATUS_LABELS[status]}
-
+                                    {STATUS_LABELS[status] ?? status}
                                 </option>
-
                             ))}
-
                         </select>
 
                     </div>
@@ -732,9 +800,7 @@ export default function AdminBulkOrderDetails() {
                     <div>
 
                         <label className="text-xs text-gray-500 block mb-1">
-
                             Admin Comment
-
                         </label>
 
                         <textarea
@@ -844,29 +910,24 @@ export default function AdminBulkOrderDetails() {
 
                     try {
                         if (!order) return;
-
                         await updateOrder(
                             order.orderId,
                             pendingPayload
                         );
 
-                        showAlert({
-
-                            type: "success",
-
-                            message:
-                                "Bulk Order updated successfully.",
-
-                            duration: 1500,
-
-                        });
-
-                        fetchOrder(
+                        await fetchOrder(
                             order.orderId,
                             {
                                 force: true,
                             }
                         );
+
+                        showAlert({
+                            type: "success",
+                            message:
+                                "Bulk Order updated successfully.",
+                            duration: 1500,
+                        });
 
                     } catch (err: any) {
 

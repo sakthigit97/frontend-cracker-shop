@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import type {
     BulkOrderAddress,
     BulkOrderProduct,
     BulkScheme,
     BulkOrderStep,
 } from "../types/bulkOrder";
+
 import { BULK_ORDER_STEPS } from "../constants/bulkOrderSteps";
 
 interface BulkOrderStore {
@@ -15,249 +17,288 @@ interface BulkOrderStore {
     adminCodeVerified: boolean;
     search: string;
     items: BulkOrderProduct[];
-    setQuantity: (
-        productId: string,
-        quantity: number
-    ) => void;
     address: BulkOrderAddress | null;
     loading: boolean;
     setStep: (step: BulkOrderStep) => void;
     nextStep: () => void;
     previousStep: () => void;
-    setScheme: (scheme: BulkScheme | null) => void;
-    setAdminCode: (code: string) => void;
-    setAdminCodeVerified: (verified: boolean) => void;
-    setSearch: (search: string) => void;
-    setLoading: (loading: boolean) => void;
-    setAddress: (address: BulkOrderAddress) => void;
-    addItem: (item: BulkOrderProduct) => void;
+    setScheme: (
+        scheme: BulkScheme | null
+    ) => void;
+    setAdminCode: (
+        code: string
+    ) => void;
+    setAdminCodeVerified: (
+        verified: boolean
+    ) => void;
+    setSearch: (
+        search: string
+    ) => void;
+
+    setLoading: (
+        loading: boolean
+    ) => void;
+
+    setAddress: (
+        address: BulkOrderAddress
+    ) => void;
+
+    setQuantity: (
+        productId: string,
+        quantity: number
+    ) => void;
+
+    addItem: (
+        item: BulkOrderProduct
+    ) => void;
+
     updateQuantity: (
         productId: string,
         quantity: number
     ) => void;
-    removeItem: (productId: string) => void;
+
+    removeItem: (
+        productId: string
+    ) => void;
+
     clearItems: () => void;
+
     clearAll: () => void;
 }
 
-export const bulkOrderStore = create<BulkOrderStore>()(
-    persist(
-        (set, get) => ({
-            step: BULK_ORDER_STEPS.SCHEME,
-            scheme: null,
-            adminCode: "",
-            adminCodeVerified: false,
-            search: "",
-            items: [],
-            address: null,
-            loading: false,
-            setStep: (step) =>
-                set({
-                    step,
-                }),
-            nextStep: () =>
-                set((state) => ({
-                    step: Math.min(
-                        state.step + 1,
-                        BULK_ORDER_STEPS.REVIEW
-                    ) as BulkOrderStep,
-                })),
-            previousStep: () =>
-                set((state) => ({
-                    step: Math.max(
-                        state.step - 1,
-                        BULK_ORDER_STEPS.SCHEME
-                    ) as BulkOrderStep,
-                })),
+export const bulkOrderStore =
+    create<BulkOrderStore>()(
+        persist(
+            (set, get) => ({
+                step:
+                    BULK_ORDER_STEPS.SCHEME,
 
-            setScheme: (scheme) =>
-                set({
-                    scheme,
-                    items: [],
-                    search: "",
-                }),
+                scheme: null,
 
-            setAdminCode: (adminCode) =>
-                set({
-                    adminCode,
-                }),
+                adminCode: "",
 
-            setAdminCodeVerified: (
-                adminCodeVerified
-            ) =>
-                set({
-                    adminCodeVerified,
-                }),
+                adminCodeVerified:
+                    false,
 
-            setSearch: (search) =>
-                set({
-                    search,
-                }),
+                search: "",
 
-            setLoading: (loading) =>
-                set({
-                    loading,
-                }),
+                items: [],
 
-            setAddress: (address) =>
-                set({
-                    address,
-                }),
+                address: null,
 
-            setQuantity: (productId, quantity) =>
-                set((state) => {
+                loading: false,
 
-                    const items = [...state.items];
+                /* --------------------------------
+                 * Step Navigation
+                 * -------------------------------- */
 
-                    const index = items.findIndex(
-                        (x) => x.productId === productId
-                    );
-
-                    if (quantity <= 0) {
-                        return {
-                            items: items.filter(
-                                (x) => x.productId !== productId
-                            ),
-                        };
-                    }
-
-                    if (index >= 0) {
-
-                        items[index] = {
-                            ...items[index],
-                            quantity,
-                            total: quantity *
-                                items[index].cartonQty *
-                                items[index].unitPrice,
-                        };
-
-                    } else {
-                        return { items };
-                    }
-                    return { items };
-                }),
-
-
-            addItem: (item) => {
-
-                const items = get().items;
-                const exists = items.find(
-                    (x) =>
-                        x.productId === item.productId
-                );
-
-                if (exists) {
-
+                setStep: (step) =>
                     set({
-                        items: items.map((x) =>
-                            x.productId === item.productId
-                                ? item
-                                : x
-                        ),
-                    });
+                        step,
+                    }),
 
-                    return;
+                nextStep: () =>
+                    set((state) => ({
+                        step: Math.min(
+                            state.step + 1,
+                            BULK_ORDER_STEPS.REVIEW
+                        ) as BulkOrderStep,
+                    })),
 
-                }
+                previousStep: () =>
+                    set((state) => ({
+                        step: Math.max(
+                            state.step - 1,
+                            BULK_ORDER_STEPS.SCHEME
+                        ) as BulkOrderStep,
+                    })),
 
-                set({
-                    items: [
-                        ...items,
-                        item,
-                    ],
-                });
+                /* --------------------------------
+                 * Scheme
+                 * -------------------------------- */
 
-            },
+                setScheme: (scheme) =>
+                    set({
+                        scheme,
+                        items: [],
+                        search: "",
+                        adminCode: "",
 
-            updateQuantity: (
-                productId,
-                quantity
-            ) => {
+                        adminCodeVerified:
+                            false,
+                    }),
 
-                if (quantity <= 0) {
+                setAdminCode: (adminCode) =>
+                    set({
+                        adminCode,
+                        adminCodeVerified: false,
+                    }),
 
-                    get().removeItem(productId);
+                setAdminCodeVerified: (
+                    adminCodeVerified
+                ) =>
+                    set({
+                        adminCodeVerified,
+                    }),
 
-                    return;
 
-                }
+                setSearch: (search) =>
+                    set({
+                        search,
+                    }),
 
-                set({
+                setLoading: (loading) =>
+                    set({
+                        loading,
+                    }),
+                setAddress: (address) =>
+                    set({
+                        address,
+                    }),
 
-                    items: get().items.map(
-                        (item) => {
-
-                            if (
-                                item.productId !==
-                                productId
-                            ) {
-
-                                return item;
-
-                            }
-
+                setQuantity: (
+                    productId,
+                    quantity
+                ) =>
+                    set((state) => {
+                        if (quantity <= 0) {
                             return {
-                                ...item,
-                                quantity,
-                                total:
-                                    quantity *
-                                    item.cartonQty *
-                                    item.unitPrice,
+                                items:
+                                    state.items.filter(
+                                        (item) =>
+                                            item.productId !==
+                                            productId
+                                    ),
                             };
                         }
-                    ),
 
-                });
+                        return {
+                            items:
+                                state.items.map(
+                                    (item) => {
+                                        if (
+                                            item.productId !==
+                                            productId
+                                        ) {
+                                            return item;
+                                        }
 
-            },
+                                        return {
+                                            ...item,
+                                            quantity,
+                                            total:
+                                                quantity *
+                                                item.cartonQty *
+                                                item.unitPrice,
+                                        };
+                                    }
+                                ),
+                        };
+                    }),
 
-            removeItem: (
-                productId
-            ) =>
+                addItem: (item) =>
+                    set((state) => {
+                        const existing =
+                            state.items.find(
+                                (currentItem) =>
+                                    currentItem.productId ===
+                                    item.productId
+                            );
 
-                set({
+                        if (existing) {
+                            return {
+                                items:
+                                    state.items.map(
+                                        (currentItem) =>
+                                            currentItem.productId ===
+                                                item.productId
+                                                ? item
+                                                : currentItem
+                                    ),
+                            };
+                        }
 
-                    items: get().items.filter(
-                        (item) =>
-                            item.productId !==
+                        return {
+                            items: [
+                                ...state.items,
+                                item,
+                            ],
+                        };
+                    }),
+
+                updateQuantity: (
+                    productId,
+                    quantity
+                ) => {
+                    if (quantity <= 0) {
+                        get().removeItem(
                             productId
-                    ),
+                        );
 
-                }),
+                        return;
+                    }
 
-            clearItems: () =>
+                    set((state) => ({
+                        items:
+                            state.items.map(
+                                (item) => {
+                                    if (
+                                        item.productId !==
+                                        productId
+                                    ) {
+                                        return item;
+                                    }
 
-                set({
+                                    return {
+                                        ...item,
+                                        quantity,
+                                        total:
+                                            quantity *
+                                            item.cartonQty *
+                                            item.unitPrice,
+                                    };
+                                }
+                            ),
+                    }));
+                },
 
-                    items: [],
+                removeItem: (productId) =>
+                    set((state) => ({
+                        items:
+                            state.items.filter(
+                                (item) =>
+                                    item.productId !==
+                                    productId
+                            ),
+                    })),
 
-                }),
+                clearItems: () =>
+                    set({
+                        items: [],
+                    }),
+                clearAll: () =>
+                    set({
+                        step:
+                            BULK_ORDER_STEPS.SCHEME,
 
-            clearAll: () =>
+                        scheme: null,
 
-                set({
+                        adminCode: "",
 
-                    step: BULK_ORDER_STEPS.SCHEME,
+                        adminCodeVerified:
+                            false,
 
-                    scheme: null,
+                        search: "",
 
-                    adminCode: "",
+                        items: [],
 
-                    adminCodeVerified: false,
+                        address: null,
 
-                    search: "",
-
-                    items: [],
-
-                    address: null,
-
-                    loading: false,
-
-                }),
-
-        }),
-        {
-            name: "bulk-order-store",
-        }
-    )
-);
+                        loading: false,
+                    }),
+            }),
+            {
+                name: "bulk-order-store",
+            }
+        )
+    );

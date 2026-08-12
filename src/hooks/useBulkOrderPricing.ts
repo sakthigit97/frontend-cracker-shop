@@ -1,26 +1,48 @@
 import { useMemo } from "react";
 import { bulkOrderStore } from "../store/bulkOrder.store";
+import { useConfigStore } from "../store/config.store";
 import { calculateBulkPricing } from "../utils/bulkPricing";
 
-export function useBulkOrderPricing() {
+interface UseBulkOrderPricingProps {
+    state?: string;
+}
+
+export function useBulkOrderPricing({
+    state = "",
+}: UseBulkOrderPricingProps = {}) {
     const {
         scheme,
         items,
     } = bulkOrderStore();
+
+
+    const config = useConfigStore(
+        (store) => store.config
+    );
+
     const pricing = useMemo(
         () =>
             calculateBulkPricing({
                 items,
                 scheme,
+                state,
+                config,
             }),
-        [items, scheme]
+        [
+            items,
+            scheme,
+            state,
+            config,
+        ]
     );
 
     const selectedProducts = items.length;
+
     const totalBoxes = useMemo(
         () =>
             items.reduce(
-                (total, item) => total + item.quantity,
+                (total, item) =>
+                    total + item.quantity,
                 0
             ),
         [items]
@@ -31,7 +53,8 @@ export function useBulkOrderPricing() {
             items.reduce(
                 (total, item) =>
                     total +
-                    item.quantity * item.cartonQty,
+                    item.quantity *
+                    item.cartonQty,
                 0
             ),
         [items]

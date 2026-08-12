@@ -49,6 +49,22 @@ export default function AdminConfigPage() {
                     displayMobile: res.displayMobile || "",
                     website: res.website || "",
                     disableGstForTN: res.disableGstForTN || false,
+                    bulkOrderSchemes: (res.bulkOrderSchemes || []).map(
+                        (scheme: any) => ({
+                            schemeId: scheme.schemeId || "",
+                            schemeName: scheme.schemeName || "",
+                            minAmount: scheme.minAmount ?? 0,
+                            maxAmount: scheme.maxAmount ?? 0,
+                            isAdminApprovalRequired:
+                                scheme.isAdminApprovalRequired ?? false,
+                            bulkPriceAdjustmentPercent:
+                                scheme.bulkPriceAdjustmentPercent,
+                            bulkPriceAdjustmentType:
+                                scheme.bulkPriceAdjustmentType,
+                            isActive: scheme.isActive ?? true,
+                            sortOrder: scheme.sortOrder ?? 0,
+                        })
+                    ),
                     sliderImages: fixedSliderImages,
                     packageTags: (res.packageTags || []).map((p: any) => ({
                         ...p,
@@ -477,6 +493,153 @@ export default function AdminConfigPage() {
         return updated;
     };
 
+    const addBulkScheme = () => {
+        setForm((prev: any) => {
+            const schemes = prev.bulkOrderSchemes || [];
+
+            const nextNumber = schemes.length + 1;
+
+            return {
+                ...prev,
+                bulkOrderSchemes: [
+                    ...schemes,
+                    {
+                        schemeId: `SCHEME${nextNumber}`,
+                        schemeName: "",
+                        minAmount: 0,
+                        maxAmount: 0,
+                        isAdminApprovalRequired: false,
+                        bulkPriceAdjustmentPercent: undefined,
+                        bulkPriceAdjustmentType: undefined,
+                        isActive: true,
+                        sortOrder: nextNumber,
+                    },
+                ],
+            };
+        });
+    };
+
+    const updateBulkScheme = (
+        index: number,
+        changes: Record<string, any>
+    ) => {
+        setForm((prev: any) => {
+            const updated = [...(prev.bulkOrderSchemes || [])];
+
+            updated[index] = {
+                ...updated[index],
+                ...changes,
+            };
+
+            return {
+                ...prev,
+                bulkOrderSchemes: updated,
+            };
+        });
+    };
+
+    const validateBulkOrderSchemes = (): boolean => {
+        const schemes = form.bulkOrderSchemes || [];
+
+        const schemeIds = new Set<string>();
+
+        for (let i = 0; i < schemes.length; i++) {
+            const scheme = schemes[i];
+
+            const schemeNumber = i + 1;
+
+            // Scheme ID
+            if (!scheme.schemeId?.trim()) {
+                alert(`Scheme ${schemeNumber}: Scheme ID is required.`);
+                return false;
+            }
+
+            const schemeId =
+                scheme.schemeId.trim().toUpperCase();
+
+            if (schemeIds.has(schemeId)) {
+                alert(
+                    `Duplicate Scheme ID "${schemeId}". Scheme IDs must be unique.`
+                );
+                return false;
+            }
+
+            schemeIds.add(schemeId);
+
+            // Scheme Name
+            if (!scheme.schemeName?.trim()) {
+                alert(
+                    `Scheme ${schemeNumber}: Scheme Name is required.`
+                );
+                return false;
+            }
+
+            // Minimum Amount
+            if (
+                scheme.minAmount === "" ||
+                scheme.minAmount === undefined ||
+                scheme.minAmount === null ||
+                Number(scheme.minAmount) < 0
+            ) {
+                alert(
+                    `${scheme.schemeName}: Minimum Order Amount is required.`
+                );
+                return false;
+            }
+
+            // Maximum Amount
+            if (
+                scheme.maxAmount === "" ||
+                scheme.maxAmount === undefined ||
+                scheme.maxAmount === null ||
+                Number(scheme.maxAmount) <= 0
+            ) {
+                alert(
+                    `${scheme.schemeName}: Maximum Order Amount is required.`
+                );
+                return false;
+            }
+
+            // Max must be greater than Min
+            if (
+                Number(scheme.maxAmount) <=
+                Number(scheme.minAmount)
+            ) {
+                alert(
+                    `${scheme.schemeName}: Maximum Order Amount must be greater than Minimum Order Amount.`
+                );
+                return false;
+            }
+
+            // Adjustment validation
+            if (scheme.bulkPriceAdjustmentType) {
+                const percent =
+                    scheme.bulkPriceAdjustmentPercent;
+
+                if (
+                    percent === undefined ||
+                    percent === null ||
+                    percent === "" ||
+                    Number(percent) <= 0
+                ) {
+                    alert(
+                        `${scheme.schemeName}: Adjustment Percentage is required when an adjustment type is selected.`
+                    );
+                    return false;
+                }
+
+                if (Number(percent) > 100) {
+                    alert(
+                        `${scheme.schemeName}: Adjustment Percentage cannot be greater than 100%.`
+                    );
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
+
     const handleSave = async () => {
         try {
             const isValidMobile = /^[6-9]\d{9}$/.test(form.adminMobile);
@@ -574,7 +737,6 @@ export default function AdminConfigPage() {
             }
 
             const aiCategories = form.aiTags || [];
-
             const invalidCategory = aiCategories.some(
                 (c: any) => !c.name?.trim()
             );
@@ -639,9 +801,7 @@ export default function AdminConfigPage() {
                 }
             }
 
-            const contacts =
-                form.whatsAppSupport?.contacts || [];
-
+            const contacts = form.whatsAppSupport?.contacts || [];
             for (const contact of contacts) {
 
                 if (!contact.name?.trim()) {
@@ -668,6 +828,10 @@ export default function AdminConfigPage() {
                     });
                     return;
                 }
+            }
+
+            if (!validateBulkOrderSchemes()) {
+                return;
             }
 
             setLoading(true);
@@ -746,7 +910,6 @@ export default function AdminConfigPage() {
             };
 
             await updateAdminConfig(payload);
-
             await refreshConfig();
             const latest = useConfigStore.getState().config;
             if (!latest) {
@@ -1000,6 +1163,244 @@ export default function AdminConfigPage() {
                                 />
                             </div>
                         ))}
+                    </div>
+
+                    <div className="space-y-5 border border-gray-200 rounded-xl p-4">
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-semibold">
+                                    Bulk Order Schemes
+                                </p>
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Configure bulk-order pricing and approval rules.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={addBulkScheme}
+                                className="
+                                rounded-lg
+                                bg-[var(--color-primary)]
+                                px-4
+                                py-2
+                                text-sm
+                                font-medium
+                                text-white
+                                hover:opacity-90
+                                transition
+                                whitespace-nowrap
+                            "
+                            >
+                                + Add Scheme
+                            </button>
+                        </div>
+
+                        {(form.bulkOrderSchemes || []).map(
+                            (scheme: any, index: number) => (
+                                <div
+                                    key={scheme.schemeId || index}
+                                    className="border rounded-xl p-4 space-y-4 bg-gray-50"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-medium">
+                                            {scheme.schemeName ||
+                                                scheme.schemeId ||
+                                                `Scheme ${index + 1}`}
+                                        </h3>
+                                    </div>
+
+                                    {/* Scheme ID */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Scheme ID
+                                        </label>
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full bg-gray-100"
+                                            value={scheme.schemeId || ""}
+                                            disabled
+                                        />
+                                    </div>
+
+                                    {/* Scheme Name */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Scheme Name
+                                        </label>
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            value={scheme.schemeName || ""}
+                                            onChange={(e) =>
+                                                updateBulkScheme(index, {
+                                                    schemeName: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+
+                                    {/* Min / Max */}
+                                    <div className="grid md:grid-cols-2 gap-4">
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Minimum Order Amount *
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                                value={scheme.minAmount ?? ""}
+                                                onChange={(e) =>
+                                                    updateBulkScheme(index, {
+                                                        minAmount:
+                                                            e.target.value === ""
+                                                                ? ""
+                                                                : Number(e.target.value),
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Maximum Order Amount *
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                                value={scheme.maxAmount ?? ""}
+                                                onChange={(e) =>
+                                                    updateBulkScheme(index, {
+                                                        maxAmount:
+                                                            e.target.value === ""
+                                                                ? ""
+                                                                : Number(e.target.value),
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                    </div>
+
+                                    {/* Price Adjustment */}
+                                    <div className="border-t pt-4">
+                                        <p className="text-sm font-medium mb-3">
+                                            Bulk Price Adjustment
+                                        </p>
+
+                                        <div className="grid md:grid-cols-2 gap-4">
+
+                                            {/* Type */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Adjustment Type
+                                                </label>
+
+                                                <select
+                                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                                    value={
+                                                        scheme.bulkPriceAdjustmentType || ""
+                                                    }
+                                                    onChange={(e) => {
+                                                        const type = e.target.value || undefined;
+                                                        updateBulkScheme(index, {
+                                                            bulkPriceAdjustmentType: type,
+                                                            bulkPriceAdjustmentPercent: type ? scheme.bulkPriceAdjustmentPercent : undefined,
+                                                        });
+                                                    }}
+                                                >
+                                                    <option value="">
+                                                        No Adjustment
+                                                    </option>
+
+                                                    <option value="PLUS">
+                                                        Increase (+)
+                                                    </option>
+
+                                                    <option value="MINUS">
+                                                        Decrease (-)
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            {/* Percentage */}
+                                            {scheme.bulkPriceAdjustmentType && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Adjustment Percentage (%) *
+                                                    </label>
+
+                                                    <input
+                                                        type="number"
+                                                        min={0.01}
+                                                        max={100}
+                                                        step="0.01"
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="Enter percentage"
+                                                        value={
+                                                            scheme.bulkPriceAdjustmentPercent ?? ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateBulkScheme(index, {
+                                                                bulkPriceAdjustmentPercent:
+                                                                    e.target.value === ""
+                                                                        ? undefined
+                                                                        : Number(e.target.value),
+                                                            })
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
+
+                                        </div>
+
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            If no adjustment is configured, the product's
+                                            bulk base price will be used directly.
+                                        </p>
+                                    </div>
+
+                                    {/* Admin Approval */}
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                !!scheme.isAdminApprovalRequired
+                                            }
+                                            onChange={(e) =>
+                                                updateBulkScheme(index, {
+                                                    isAdminApprovalRequired:
+                                                        e.target.checked,
+                                                })
+                                            }
+                                        />
+
+                                        Admin Approval Required
+                                    </label>
+
+                                    {/* Active */}
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={scheme.isActive !== false}
+                                            onChange={(e) =>
+                                                updateBulkScheme(index, {
+                                                    isActive: e.target.checked,
+                                                })
+                                            }
+                                        />
+
+                                        Active
+                                    </label>
+                                </div>
+                            )
+                        )}
                     </div>
 
                     {/* Admin Contact */}

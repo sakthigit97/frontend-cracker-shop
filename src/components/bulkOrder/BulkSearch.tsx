@@ -14,7 +14,8 @@ function BulkSearch({
     placeholder = "Search products...",
     debounce = 300,
 }: BulkSearchProps) {
-    const [keyword, setKeyword] = useState(value);
+    const [keyword, setKeyword] =
+        useState(value);
 
     useEffect(() => {
         setKeyword(value);
@@ -27,8 +28,14 @@ function BulkSearch({
             }
         }, debounce);
 
-        return () => clearTimeout(timer);
-    }, [keyword, debounce]);
+        return () =>
+            clearTimeout(timer);
+    }, [
+        keyword,
+        value,
+        debounce,
+        onChange,
+    ]);
 
     const clear = () => {
         setKeyword("");
@@ -37,7 +44,6 @@ function BulkSearch({
 
     return (
         <div className="relative w-full">
-
             <Search
                 size={18}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -45,7 +51,11 @@ function BulkSearch({
 
             <input
                 value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
+                onChange={(event) =>
+                    setKeyword(
+                        event.target.value
+                    )
+                }
                 placeholder={placeholder}
                 className="h-12 w-full rounded-xl border border-gray-300 bg-white pl-11 pr-11 outline-none transition focus:border-primary"
             />
@@ -54,6 +64,7 @@ function BulkSearch({
                 <button
                     type="button"
                     onClick={clear}
+                    aria-label="Clear search"
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-gray-100"
                 >
                     <X
@@ -62,7 +73,6 @@ function BulkSearch({
                     />
                 </button>
             )}
-
         </div>
     );
 }

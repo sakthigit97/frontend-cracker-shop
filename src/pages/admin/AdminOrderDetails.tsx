@@ -43,6 +43,20 @@ export default function AdminOrderDetails() {
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
 
     const order = cache[orderId];
+    const packagingPercent = config?.packagingPercent ?? 0;
+    const gstPercent = config?.gstPercent ?? 0;
+    const disableGstForTN = config?.disableGstForTN || false;
+
+    const isTamilNadu = order?.address
+        ?.toLowerCase()
+        .includes("tamil nadu");
+
+    const totalQuantity =
+        order?.items?.reduce(
+            (total: number, item: any) => total + item.quantity,
+            0
+        ) ?? 0;
+
     useEffect(() => {
         const shouldForce = (location.state as any)?.forceRefresh === true;
         fetchOrder(orderId, { force: shouldForce });
@@ -299,7 +313,7 @@ export default function AdminOrderDetails() {
                     </div>
                 </div>
 
-                <div className="h-px bg-gray-100" />
+                {/* <div className="h-px bg-gray-100" />
 
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <div>
@@ -314,6 +328,215 @@ export default function AdminOrderDetails() {
                             <span className="text-gray-500">Expected Delivery</span>{" "}
                             <span className="font-medium text-gray-800">
                                 {new Date(order.expectedDelivery).toLocaleDateString("en-IN")}
+                            </span>
+                        </div>
+                    )}
+                </div> */}
+
+            </div>
+
+            {/* ORDER SUMMARY */}
+            <div className="bg-white border rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-[var(--color-primary)]">
+                        Order Summary
+                    </h3>
+
+                    {order.expectedDelivery && (
+                        <div className="text-xs text-gray-500">
+                            Expected Delivery:{" "}
+                            <span className="font-medium text-gray-800">
+                                {new Date(
+                                    order.expectedDelivery
+                                ).toLocaleDateString("en-IN")}
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-2 text-sm">
+
+                    {/* Products Total */}
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p>Products Total</p>
+
+                            <p className="text-xs text-gray-500">
+                                {order.items.length} Products • {totalQuantity} Qty
+                            </p>
+                        </div>
+
+                        <span>
+                            ₹{order.totalProductAmount}
+                        </span>
+                    </div>
+
+                    {/* Combo Packages */}
+                    {(order.comboPackageTotal ?? 0) > 0 && (
+                        <div className="flex justify-between items-center text-gray-600">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span>Combo Packages</span>
+
+                                <span
+                                    className="
+                            rounded-full
+                            bg-green-100
+                            text-green-700
+                            text-[10px]
+                            font-medium
+                            px-2
+                            py-0.5
+                        "
+                                >
+                                    Inclusive Of Packaging Charges
+                                </span>
+                            </div>
+
+                            <span>
+                                ₹{order.comboPackageTotal}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Non Combo Products */}
+                    {(order.nonComboProductTotal ?? 0) > 0 && (
+                        <div className="flex justify-between text-gray-600">
+                            <span>Non Combo Products</span>
+
+                            <span>
+                                ₹{order.nonComboProductTotal}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Packaging */}
+                    {(order.packagingCharge ?? 0) > 0 && (
+                        <div className="flex justify-between text-gray-600">
+                            <span>
+                                Packaging Charge ({packagingPercent}%)
+                            </span>
+
+                            <span>
+                                ₹{order.packagingCharge}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Coupon */}
+                    {(order.couponDiscount ?? 0) > 0 && (
+                        <>
+                            <div className="flex justify-between font-medium pt-2 border-t">
+                                <span>Amount Before Discount</span>
+
+                                <span>
+                                    ₹{order.amountBeforeDiscount}
+                                </span>
+                            </div>
+
+                            <div className="flex justify-between text-green-600 font-medium">
+                                <span>
+                                    Coupon Savings{" "}
+                                    {order.couponType === "PERCENTAGE"
+                                        ? `(${order.couponValue}%)`
+                                        : `(Flat ₹${order.couponValue})`}
+                                </span>
+
+                                <span>
+                                    -₹{order.couponDiscount}
+                                </span>
+                            </div>
+
+                            <div className="flex justify-between font-medium">
+                                <span>Amount After Discount</span>
+
+                                <span>
+                                    ₹{order.amountAfterDiscount}
+                                </span>
+                            </div>
+                        </>
+                    )}
+
+                    {/* GST */}
+                    {(order.gstAmount ?? 0) > 0 && (
+                        <div className="flex justify-between text-gray-600">
+                            <span>
+                                GST ({gstPercent}%)
+                            </span>
+
+                            <span>
+                                ₹{order.gstAmount}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Grand Total */}
+                    <div className="border-t my-4" />
+
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <p className="font-semibold text-[var(--color-primary)]">
+                                Grand Total
+                            </p>
+
+                            <p className="text-xs text-gray-500">
+                                {disableGstForTN && isTamilNadu
+                                    ? "Inclusive of Packaging Charges"
+                                    : "Inclusive of GST & Packaging Charges"}
+                            </p>
+                        </div>
+
+                        <span className="text-xl font-bold text-[var(--color-primary)]">
+                            ₹{order.grandTotal}
+                        </span>
+                    </div>
+
+                    {/* Wallet */}
+                    {(order.walletUsed ?? 0) > 0 && (
+                        <>
+                            <div className="border-t my-4" />
+
+                            <div className="flex justify-between text-green-700 font-medium">
+                                <span>Wallet Applied</span>
+
+                                <span>
+                                    -₹{order.walletUsed}
+                                </span>
+                            </div>
+
+                            {/* Amount Payable */}
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold text-[var(--color-primary)]">
+                                        Amount Payable
+                                    </p>
+
+                                    <p className="text-xs text-gray-500">
+                                        Amount to be paid
+                                    </p>
+                                </div>
+
+                                <span className="text-xl font-bold text-[var(--color-primary)]">
+                                    ₹{order.finalPayable}
+                                </span>
+                            </div>
+                        </>
+                    )}
+
+                    {/* No Wallet */}
+                    {(order.walletUsed ?? 0) <= 0 && (
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p className="font-semibold text-[var(--color-primary)]">
+                                    Amount Payable
+                                </p>
+
+                                <p className="text-xs text-gray-500">
+                                    Amount to be paid
+                                </p>
+                            </div>
+
+                            <span className="text-xl font-bold text-[var(--color-primary)]">
+                                ₹{order.finalPayable}
                             </span>
                         </div>
                     )}

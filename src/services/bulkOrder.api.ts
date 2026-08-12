@@ -1,8 +1,8 @@
 import { apiFetch } from "./api";
 
 import type {
-    BulkOrderResponse,
     BulkOrderDetailsResponse,
+    BulkOrderResponse,
     BulkSchemeId,
     CreateBulkOrderRequest,
 } from "../types/bulkOrder";
@@ -15,19 +15,21 @@ export interface ValidateAdminCodeRequest {
 export interface ValidateAdminCodeResponse {
     valid: boolean;
     message?: string;
+    schemeId?: string;
+    success?: boolean;
 }
 
 export async function validateBulkAdminCode(
     payload: ValidateAdminCodeRequest
 ): Promise<ValidateAdminCodeResponse> {
-    return apiFetch(
+    const response = await apiFetch(
         "/bulk-order/validate-code",
         {
             method: "POST",
             body: JSON.stringify(payload),
         }
     );
-
+    return response.data;
 }
 
 export async function createBulkOrder(
@@ -45,41 +47,49 @@ export async function createBulkOrder(
 export async function getBulkOrder(
     bulkOrderId: string
 ): Promise<BulkOrderDetailsResponse> {
+    const response =
+        await apiFetch(
+            `/bulk-order/${bulkOrderId}`,
+            {
+                method: "GET",
+            }
+        );
 
-    const response = await apiFetch(
-        `/bulk-order/${bulkOrderId}`,
-        {
-            method: "GET",
-        }
-    );
     return response.data;
 }
 
-export interface BulkOrderListResponse {
+export interface BulkOrderListItem {
+    orderId: string;
+    status: string;
+    schemeId: string;
+    createdAt: number;
+    pricing: {
+        grandTotal: number;
+    };
     items: {
-        orderId: string;
-        status: string;
-        schemeId: string;
-        createdAt: number;
-        pricing: {
-            grandTotal: number;
-        };
-        items: {
-            productId: string;
-            quantity: number;
-        }[];
-        customer?: {
-            name?: string;
-            mobile?: string;
-        };
+        productId: string;
+        quantity: number;
     }[];
+    customer?: {
+        name?: string;
+        mobile?: string;
+    };
+}
+
+export interface BulkOrderListResponse {
+    items: BulkOrderListItem[];
     nextCursor?: any;
 }
 
-export async function getBulkOrders() {
-    const response = await apiFetch("/bulk-order", {
-        method: "GET",
-    });
+export async function getBulkOrders(): Promise<BulkOrderListResponse> {
+    const response =
+        await apiFetch(
+            "/bulk-order",
+            {
+                method: "GET",
+            }
+        );
+
     return response.data;
 }
 

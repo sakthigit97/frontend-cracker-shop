@@ -4,6 +4,7 @@ import type {
     BulkScheme,
 } from "../types/bulkOrder";
 
+import type { Product } from "../types/product";
 import { isTamilNadu } from "./pricing";
 
 export interface BulkPricingInput {
@@ -20,52 +21,88 @@ export interface BulkValidationResult {
     message?: string;
 }
 
+
 export function calculateBulkProductTotal(
     items?: BulkOrderProduct[]
 ): number {
     return (items ?? []).reduce(
-        (sum, item) => sum + Number(item.total || 0),
+        (sum, item) =>
+            sum + Number(item.total || 0),
         0
     );
 }
 
 export function calculateBulkPricing({
     items,
-    packagingPercent = 3,
-    gstPercent = 18,
+    packagingPercent,
+    gstPercent,
     state,
     config,
 }: BulkPricingInput): BulkOrderPricing {
+    const productTotal =
+        calculateBulkProductTotal(items);
+    const configuredPackagingPercent =
+        Number(
+            packagingPercent ??
+            config?.packagingPercent ??
+            0
+        );
 
-    const productTotal = calculateBulkProductTotal(items);
+    const configuredGstPercent =
+        Number(
+            gstPercent ??
+            config?.gstPercent ??
+            0
+        );
 
-    const packagingCharge = Math.round(
-        (productTotal * packagingPercent) / 100
-    );
+    const packagingCharge =
+        Math.round(
+            (productTotal *
+                configuredPackagingPercent) /
+            100
+        );
 
-    const taxableAmount = productTotal + packagingCharge;
+    const taxableAmount =
+        productTotal +
+        packagingCharge;
 
-    const disableGstForTN = config?.disableGstForTN ?? false;
+    const disableGstForTN =
+        config?.disableGstForTN === true;
 
     const isTN = isTamilNadu(state);
 
-    let gstAmount = 0;
+    const effectiveGstPercent =
+        isTN && disableGstForTN
+            ? 0
+            : configuredGstPercent / 2;
 
-    if (!(isTN && disableGstForTN)) {
-        const effectiveGstPercent = gstPercent / 2;
-        gstAmount = Math.round(
-            (taxableAmount * effectiveGstPercent) /
-            100
-        );
-    }
+    const gstAmount =
+        effectiveGstPercent > 0
+            ? Math.round(
+                (taxableAmount *
+                    effectiveGstPercent) /
+                100
+            )
+            : 0;
 
-    const grandTotal = productTotal + packagingCharge + gstAmount;
+    const grandTotal =
+        productTotal +
+        packagingCharge +
+        gstAmount;
+
     return {
         productTotal,
-        packagingPercent,
+
+        packagingPercent:
+            configuredPackagingPercent,
+
         packagingCharge,
-        gstPercent,
+
+        gstPercent:
+            effectiveGstPercent,
+
         gstAmount,
+
         grandTotal,
     };
 }
@@ -74,32 +111,38 @@ export function validateSchemeAmount(
     scheme: BulkScheme | null,
     total: number
 ): BulkValidationResult {
-
     if (!scheme) {
         return {
             valid: false,
-            message: "Please select a bulk scheme.",
-        };
-    }
-
-    if (total < scheme.minAmount) {
-        return {
-            valid: false,
-            message: `Minimum order amount is ₹${scheme.minAmount.toLocaleString(
-                "en-IN"
-            )}.`,
+            message:
+                "Please select a bulk scheme.",
         };
     }
 
     if (
-        scheme.maxAmount &&
-        total > scheme.maxAmount
+        total <
+        Number(scheme.minAmount ?? 0)
     ) {
         return {
             valid: false,
-            message: `Maximum order amount is ₹${scheme.maxAmount.toLocaleString(
-                "en-IN"
-            )}.`,
+            message:
+                `Minimum order amount is ₹${Number(
+                    scheme.minAmount ?? 0
+                ).toLocaleString("en-IN")}.`,
+        };
+    }
+
+    if (
+        Number(scheme.maxAmount ?? 0) > 0 &&
+        total >
+        Number(scheme.maxAmount)
+    ) {
+        return {
+            valid: false,
+            message:
+                `Maximum order amount is ₹${Number(
+                    scheme.maxAmount
+                ).toLocaleString("en-IN")}.`,
         };
     }
 
@@ -108,58 +151,132 @@ export function validateSchemeAmount(
     };
 }
 
-export function getSchemePrice(
-    product: any,
-    schemeId: string
+export function calculateBulkUnitPrice(
+    product: Product,
+    scheme: BulkScheme
 ): number {
+    const basePrice = Number(
+        product.bulkOrderBasePrice ?? 0
+    );
 
-    switch (schemeId) {
-        case "SCHEME1":
-            return Number(product.scheme1Price || 0);
-
-        case "SCHEME2":
-            return Number(product.scheme2Price || 0);
-
-        case "SCHEME3":
-            return Number(product.scheme3Price || 0);
-
-        case "SCHEME4":
-            return Number(product.scheme4Price || 0);
-
-        default:
-            return 0;
+    if (basePrice <= 0) {
+        return 0;
     }
+
+    const adjustmentPercent =
+        Number(
+            scheme.bulkPriceAdjustmentPercent ??
+            0
+        );
+
+    if (
+        !adjustmentPercent ||
+        adjustmentPercent <= 0
+    ) {
+        return basePrice;
+    }
+
+    const adjustmentAmount =
+        (basePrice *
+            adjustmentPercent) /
+        100;
+
+    if (
+        scheme.bulkPriceAdjustmentType ===
+        "MINUS"
+    ) {
+        return Math.max(
+            0,
+            Math.round(
+                basePrice -
+                adjustmentAmount
+            )
+        );
+    }
+
+    if (
+        scheme.bulkPriceAdjustmentType ===
+        "PLUS"
+    ) {
+        return Math.round(
+            basePrice +
+            adjustmentAmount
+        );
+    }
+
+    return basePrice;
 }
 
+/**
+ * Create a bulk-order item from
+ * the selected product and scheme.
+ */
 export function createBulkOrderItem(
-    product: any,
-    schemeId: string,
+    product: Product,
+    scheme: BulkScheme,
     quantity: number
 ): BulkOrderProduct {
+    const cartonQty = Number(
+        product.cartonQty ?? 0
+    );
 
-    const cartonQty = Number(product.cartonQty || 0);
     if (cartonQty <= 0) {
         throw new Error(
             `${product.name} has an invalid carton quantity.`
         );
     }
 
-    const unitPrice = getSchemePrice(
-        product,
-        schemeId
-    );
+    const bulkOrderBasePrice =
+        Number(
+            product.bulkOrderBasePrice ??
+            0
+        );
+
+    if (bulkOrderBasePrice <= 0) {
+        throw new Error(
+            `${product.name} does not have a valid bulk order base price.`
+        );
+    }
+
+    const unitPrice =
+        calculateBulkUnitPrice(
+            product,
+            scheme
+        );
+
+    if (unitPrice <= 0) {
+        throw new Error(
+            `${product.name} has an invalid bulk order price.`
+        );
+    }
 
     return {
         productId: product.id,
+
         name: product.name,
+
         image: product.image,
-        brand: product.brandName,
-        categoryId: product.categoryId,
-        cartonQty: Number(product.cartonQty || 0),
+
+        brand: product.brand,
+
+        categoryId:
+            product.categoryId,
+
+        bulkOrderBasePrice,
+
+        cartonQty,
+
         quantity,
+
         unitPrice,
-        schemePrice: unitPrice,
-        total: quantity * cartonQty * unitPrice,
+
+        schemePrice:
+            unitPrice,
+
+        total:
+            quantity *
+            cartonQty *
+            unitPrice,
     };
 }
 
@@ -167,11 +284,14 @@ export function updateBulkOrderItem(
     item: BulkOrderProduct,
     quantity: number
 ): BulkOrderProduct {
-
     return {
         ...item,
+
         quantity,
-        total: quantity * item.cartonQty *
+
+        total:
+            quantity *
+            item.cartonQty *
             item.unitPrice,
     };
 }

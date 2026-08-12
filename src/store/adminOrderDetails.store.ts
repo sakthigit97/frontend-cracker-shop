@@ -3,6 +3,7 @@ import {
     getAdminOrderById,
     updateAdminOrder,
 } from "../services/admin.api";
+import { useAdminDashboardStore } from "./admin.store";
 
 type UpdatePayload = {
     status?: string;
@@ -75,7 +76,6 @@ export const useAdminOrderDetailsStore =
                 });
             }
         },
-
         updateOrder: async (
             orderId,
             payload
@@ -101,6 +101,12 @@ export const useAdminOrderDetailsStore =
                         },
                     },
                 }));
+
+                if (payload.status) {
+                    await useAdminDashboardStore
+                        .getState()
+                        .fetch(true);
+                }
 
                 return updated;
             } catch (e: any) {

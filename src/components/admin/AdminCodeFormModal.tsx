@@ -52,8 +52,7 @@ export default function AdminCodeFormModal({
     useEffect(() => {
         if (!open) return;
 
-        const defaultScheme = config?.bulkSchemes?.[0];
-
+        const defaultScheme = config?.bulkOrderSchemes?.[0];
         setForm({
             ...initialForm,
             code: generateAdminCode(),
@@ -318,7 +317,7 @@ export default function AdminCodeFormModal({
                                     }
                                 >
 
-                                    {config?.bulkSchemes?.map((scheme: any) => (
+                                    {config?.bulkOrderSchemes?.map((scheme: any) => (
                                         <option
                                             key={scheme.schemeId}
                                             value={scheme.schemeId}

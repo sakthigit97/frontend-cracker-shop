@@ -1,9 +1,15 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 import BulkSchemeCard from "./BulkSchemeCard";
 import AdminCodeSection from "./AdminCodeSection";
-import { BULK_SCHEMES } from "../../constants/bulkScheme";
 import { bulkOrderStore } from "../../store/bulkOrder.store";
+import { useConfigStore } from "../../store/config.store";
 import { validateBulkAdminCode } from "../../services/bulkOrder.api";
+import type { BulkScheme } from "../../types/bulkOrder";
 
 export default function SchemeStep() {
     const {
@@ -16,94 +22,278 @@ export default function SchemeStep() {
         nextStep,
     } = bulkOrderStore();
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const { config } = useConfigStore();
 
-    const selectedScheme = scheme;
-    const requiresAdminCode = selectedScheme?.requireAdminCode ?? false;
+    const [loading, setLoading] =
+        useState(false);
 
-    const handleSchemeSelect = useCallback(
-        (scheme: (typeof BULK_SCHEMES)[number]) => {
-            setScheme(scheme);
+    const [error, setError] =
+        useState("");
+
+    const bulkSchemes = useMemo(
+        () =>
+            [...(config?.bulkOrderSchemes ?? [])]
+                .filter(
+                    (item: BulkScheme) =>
+                        item.isActive !== false
+                )
+                .sort(
+                    (
+                        a: BulkScheme,
+                        b: BulkScheme
+                    ) =>
+                        (a.sortOrder ?? 0) -
+                        (b.sortOrder ?? 0)
+                ),
+        [config?.bulkOrderSchemes]
+    );
+
+    const selectedScheme =
+        scheme?.schemeId
+            ? bulkSchemes.find(
+                (item) =>
+                    item.schemeId ===
+                    scheme.schemeId
+            ) ?? null
+            : null;
+
+    const requiresAdminCode =
+        selectedScheme
+            ?.isAdminApprovalRequired ??
+        false;
+
+    /*
+     * Keep persisted scheme synchronized
+     * with the latest Admin Config.
+     */
+    useEffect(() => {
+        if (!scheme?.schemeId) {
+            return;
+        }
+
+        const latestScheme =
+            (
+                config?.bulkOrderSchemes ??
+                []
+            ).find(
+                (item: BulkScheme) =>
+                    item.schemeId ===
+                    scheme.schemeId
+            );
+
+        if (!latestScheme) {
+            setScheme(null);
             setAdminCode("");
             setAdminCodeVerified(false);
             setError("");
-        },
-        [
-            setScheme,
-            setAdminCode,
-            setAdminCodeVerified,
-        ]
-    );
-
-    const handleValidate = useCallback(async () => {
-        if (!selectedScheme) return;
-
-        setLoading(true);
-        setError("");
-
-        try {
-            const response =
-                await validateBulkAdminCode({
-                    schemeId: selectedScheme.id,
-                    code: adminCode.trim(),
-                });
-
-            if (!response.valid) {
-                setAdminCodeVerified(false);
-                setError(
-                    response.message ??
-                    "Invalid admin code."
-                );
-                return;
-            }
-
-            setAdminCodeVerified(true);
-        } catch (error) {
-            console.error(error);
-
-            setAdminCodeVerified(false);
-
-            setError(
-                "Unable to validate the admin code. Please try again."
-            );
-        } finally {
-            setLoading(false);
+            return;
         }
+
+        const hasChanged =
+            scheme.schemeName !==
+                latestScheme.schemeName ||
+            scheme.minAmount !==
+                latestScheme.minAmount ||
+            scheme.maxAmount !==
+                latestScheme.maxAmount ||
+            scheme.isAdminApprovalRequired !==
+                latestScheme.isAdminApprovalRequired ||
+            scheme.bulkPriceAdjustmentPercent !==
+                latestScheme.bulkPriceAdjustmentPercent ||
+            scheme.bulkPriceAdjustmentType !==
+                latestScheme.bulkPriceAdjustmentType ||
+            scheme.isActive !==
+                latestScheme.isActive ||
+            scheme.sortOrder !==
+                latestScheme.sortOrder;
+
+        if (!hasChanged) {
+            return;
+        }
+
+        setScheme(latestScheme);
+        setAdminCode("");
+        setAdminCodeVerified(false);
+        setError("");
     }, [
-        adminCode,
-        selectedScheme,
+        scheme,
+        config?.bulkOrderSchemes,
+        setScheme,
+        setAdminCode,
         setAdminCodeVerified,
     ]);
 
-    const canContinue = useMemo(() => {
-        if (!selectedScheme) return false;
+    /*
+     * Changing the admin code invalidates
+     * the previous verification.
+     */
+    const handleAdminCodeChange =
+        useCallback(
+            (value: string) => {
+                setAdminCode(value);
 
-        if (
-            requiresAdminCode &&
-            !adminCodeVerified
-        ) {
-            return false;
-        }
+                if (adminCodeVerified) {
+                    setAdminCodeVerified(
+                        false
+                    );
+                }
 
-        return true;
-    }, [
-        selectedScheme,
-        requiresAdminCode,
-        adminCodeVerified,
-    ]);
+                if (error) {
+                    setError("");
+                }
+            },
+            [
+                adminCodeVerified,
+                error,
+                setAdminCode,
+                setAdminCodeVerified,
+            ]
+        );
 
-    const handleContinue = () => {
-        if (!canContinue) return;
+    /*
+     * Scheme selection.
+     */
+    const handleSchemeSelect =
+        useCallback(
+            (selected: BulkScheme) => {
+                setScheme(selected);
+                setAdminCode("");
+                setAdminCodeVerified(
+                    false
+                );
+                setError("");
+                setLoading(false);
+            },
+            [
+                setScheme,
+                setAdminCode,
+                setAdminCodeVerified,
+            ]
+        );
 
-        nextStep();
-    };
+    /*
+     * Validate admin authorization code.
+     */
+    const handleValidate =
+        useCallback(
+            async () => {
+                if (!selectedScheme) {
+                    return;
+                }
+
+                const code =
+                    adminCode.trim();
+
+                if (!code) {
+                    setAdminCodeVerified(
+                        false
+                    );
+
+                    setError(
+                        "Please enter the admin code."
+                    );
+
+                    return;
+                }
+
+                setLoading(true);
+                setError("");
+
+                try {
+                    const response =
+                        await validateBulkAdminCode(
+                            {
+                                schemeId:
+                                    selectedScheme.schemeId,
+                                code,
+                            }
+                        );
+
+                    if (
+                        !response.valid
+                    ) {
+                        setAdminCodeVerified(
+                            false
+                        );
+
+                        setError(
+                            response.message ??
+                            "Invalid admin code."
+                        );
+
+                        return;
+                    }
+
+                    if (
+                        response.schemeId &&
+                        response.schemeId !==
+                            selectedScheme.schemeId
+                    ) {
+                        setAdminCodeVerified(
+                            false
+                        );
+
+                        setError(
+                            "This Admin Code is not valid for the selected bulk scheme."
+                        );
+
+                        return;
+                    }
+
+                    setAdminCodeVerified(
+                        true
+                    );
+
+                    setError("");
+                } catch (error) {
+                    console.error(
+                        "Bulk admin code validation failed:",
+                        error
+                    );
+
+                    setAdminCodeVerified(
+                        false
+                    );
+
+                    setError(
+                        error instanceof Error &&
+                        error.message
+                            ? error.message
+                            : "Unable to validate the admin code. Please try again."
+                    );
+                } finally {
+                    setLoading(false);
+                }
+            },
+            [
+                adminCode,
+                selectedScheme,
+                setAdminCodeVerified,
+            ]
+        );
+
+    const canContinue =
+        !!selectedScheme &&
+        (
+            !requiresAdminCode ||
+            adminCodeVerified
+        );
+
+    const handleContinue =
+        useCallback(() => {
+            if (!canContinue) {
+                return;
+            }
+
+            nextStep();
+        }, [
+            canContinue,
+            nextStep,
+        ]);
 
     return (
         <div className="space-y-8">
-
             <div>
-
                 <h2 className="text-2xl font-bold">
                     Select Your Bulk Scheme
                 </h2>
@@ -112,54 +302,81 @@ export default function SchemeStep() {
                     Choose the pricing scheme applicable
                     to your bulk purchase.
                 </p>
-
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            {bulkSchemes.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
+                    <p className="font-medium text-gray-700">
+                        No bulk schemes are currently
+                        available.
+                    </p>
 
-                {BULK_SCHEMES.map((scheme) => (
-                    <BulkSchemeCard
-                        key={scheme.id}
-                        scheme={scheme}
-                        selected={
-                            scheme.id === selectedScheme?.id
-                        }
-                        onSelect={handleSchemeSelect}
-                    />
-                ))}
-
-            </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Please try again later.
+                    </p>
+                </div>
+            ) : (
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {bulkSchemes.map(
+                        (bulkScheme) => (
+                            <BulkSchemeCard
+                                key={
+                                    bulkScheme.schemeId
+                                }
+                                scheme={
+                                    bulkScheme
+                                }
+                                selected={
+                                    bulkScheme.schemeId ===
+                                    selectedScheme?.schemeId
+                                }
+                                onSelect={
+                                    handleSchemeSelect
+                                }
+                            />
+                        )
+                    )}
+                </div>
+            )}
 
             {requiresAdminCode && (
                 <AdminCodeSection
                     code={adminCode}
-                    verified={adminCodeVerified}
+                    verified={
+                        adminCodeVerified
+                    }
                     loading={loading}
                     error={error}
-                    onChange={setAdminCode}
-                    onValidate={handleValidate}
+                    onChange={
+                        handleAdminCodeChange
+                    }
+                    onValidate={
+                        handleValidate
+                    }
                 />
             )}
 
             <div className="flex justify-end border-t pt-6">
-
                 <button
                     type="button"
-                    disabled={!canContinue}
-                    onClick={handleContinue}
+                    disabled={
+                        !canContinue ||
+                        loading
+                    }
+                    onClick={
+                        handleContinue
+                    }
                     className={[
                         "rounded-xl px-8 py-3 font-semibold transition",
-
-                        canContinue
+                        canContinue &&
+                        !loading
                             ? "bg-primary text-white hover:opacity-90"
                             : "cursor-not-allowed bg-gray-300 text-gray-500",
                     ].join(" ")}
                 >
                     Continue
                 </button>
-
             </div>
-
         </div>
     );
 }
