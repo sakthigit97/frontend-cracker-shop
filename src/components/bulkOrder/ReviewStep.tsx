@@ -1,12 +1,21 @@
-import { useCallback, useMemo } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+import { Loader2 } from "lucide-react";
+
 import BulkStepLayout from "./BulkStepLayout";
 import BulkPricingCard from "./BulkPricingCard";
 import BulkReviewSummary from "./BulkReviewSummary";
+
 import { bulkOrderStore } from "../../store/bulkOrder.store";
 import { useBulkOrderPricing } from "../../hooks/useBulkOrderPricing";
-import { useBulkOrderSubmit } from "../../hooks/useBulkOrderSubmit";
 import { validateSchemeAmount } from "../../utils/bulkPricing";
 import { useAlert } from "../../store/alert.store";
+import { useBulkOrderSubmit } from "../../hooks/useBulkOrderSubmit";
+import { useConfigStore } from "../../store/config.store";
 
 export default function ReviewStep() {
     const {
@@ -19,8 +28,43 @@ export default function ReviewStep() {
     const { showAlert } = useAlert();
 
     const {
+        refreshConfig,
+    } = useConfigStore();
+
+    const [configRefreshing, setConfigRefreshing] =
+        useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadLatestConfig = async () => {
+            setConfigRefreshing(true);
+
+            try {
+                await refreshConfig();
+            } catch (error) {
+                console.error(
+                    "Failed to refresh bulk order config:",
+                    error
+                );
+            } finally {
+                if (mounted) {
+                    setConfigRefreshing(false);
+                }
+            }
+        };
+
+        loadLatestConfig();
+
+        return () => {
+            mounted = false;
+        };
+    }, [refreshConfig]);
+
+    const {
         pricing,
         orderItems,
+        pricingReady,
     } = useBulkOrderPricing({
         state: selectedAddress?.state ?? "",
     });
@@ -30,17 +74,15 @@ export default function ReviewStep() {
         submitOrder,
     } = useBulkOrderSubmit();
 
-    const schemeValidation = useMemo(
-        () =>
-            validateSchemeAmount(
-                scheme,
-                pricing.productTotal
-            ),
-        [
+    const schemeValidation = useMemo(() => {
+        return validateSchemeAmount(
             scheme,
-            pricing.productTotal,
-        ]
-    );
+            pricing.productTotal
+        );
+    }, [
+        scheme,
+        pricing.productTotal,
+    ]);
 
     const hasItems =
         items.length > 0;
@@ -52,7 +94,13 @@ export default function ReviewStep() {
         !!selectedAddress?.pincode &&
         selectedAddress.pincode.length === 6;
 
+    /*
+     * Don't allow submit until the fresh config
+     * has completed loading.
+     */
     const canSubmit =
+        !configRefreshing &&
+        pricingReady &&
         !loading &&
         hasItems &&
         hasAddress &&
@@ -61,6 +109,16 @@ export default function ReviewStep() {
 
     const handleSubmit = useCallback(() => {
         if (loading) {
+            return;
+        }
+
+        if (configRefreshing || !pricingReady) {
+            showAlert({
+                type: "error",
+                message:
+                    "Pricing configuration is still loading. Please wait a moment.",
+            });
+
             return;
         }
 
@@ -131,6 +189,8 @@ export default function ReviewStep() {
         submitOrder();
     }, [
         loading,
+        configRefreshing,
+        pricingReady,
         scheme,
         hasItems,
         selectedAddress,
@@ -141,6 +201,41 @@ export default function ReviewStep() {
 
     if (!selectedAddress) {
         return null;
+    }
+
+    if (
+        configRefreshing ||
+        !pricingReady
+    ) {
+        return (
+            <BulkStepLayout
+                title="Review Order"
+                description="Preparing your order summary..."
+                previousLabel="Back"
+                nextLabel="Loading..."
+                previousDisabled={true}
+                nextDisabled={true}
+                onPrevious={previousStep}
+                onNext={() => undefined}
+            >
+                <div className="flex min-h-[320px] items-center justify-center px-4">
+                    <div className="flex max-w-sm flex-col items-center text-center">
+                        <Loader2
+                            size={34}
+                            className="animate-spin text-primary"
+                        />
+
+                        <p className="mt-4 text-base font-semibold text-gray-900">
+                            Preparing your order summary
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-gray-500">
+                            Loading the latest pricing and tax configuration...
+                        </p>
+                    </div>
+                </div>
+            </BulkStepLayout>
+        );
     }
 
     const hasPackaging =
@@ -185,40 +280,43 @@ export default function ReviewStep() {
             onPrevious={previousStep}
             onNext={handleSubmit}
         >
-            <div className="grid gap-8 xl:grid-cols-[2fr_420px]">
-                <BulkReviewSummary
-                    address={selectedAddress}
-                    items={orderItems}
-                />
-
-                <div className="space-y-5 xl:sticky xl:top-24 xl:h-fit">
-                    <BulkPricingCard
-                        pricing={pricing}
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+                {/* Left */}
+                <div className="min-w-0">
+                    <BulkReviewSummary
+                        address={selectedAddress}
+                        items={orderItems}
                     />
 
-                    <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+                    {/* Below products */}
+                    <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
                         <h4 className="font-semibold text-green-800">
                             Before placing your order
                         </h4>
 
-                        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-green-700">
+                        <ul className="mt-3 space-y-2 text-sm text-green-700">
                             <li>
-                                Product prices are net bulk prices.
+                                • Product prices are net bulk prices.
                             </li>
 
                             <li>
-                                {chargesDescription}
+                                • {chargesDescription}
                             </li>
 
                             <li>
-                                Our sales team will contact you after receiving your order.
+                                • Our sales team will contact you after receiving your order.
                             </li>
 
                             <li>
-                                Your order will be processed after confirmation.
+                                • Your order will be processed after confirmation.
                             </li>
                         </ul>
                     </div>
+                </div>
+
+                {/* Right */}
+                <div className="min-w-0 xl:sticky xl:top-24 xl:h-fit">
+                    <BulkPricingCard pricing={pricing} />
                 </div>
             </div>
         </BulkStepLayout>

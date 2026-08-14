@@ -54,6 +54,7 @@ import ListBulkOrders from "../pages/ListBulkOrders";
 import AdminBulkOrders from "../pages/admin/AdminBulkOrders";
 import AdminBulkOrderDetails from "../pages/admin/AdminBulkOrderDetails";
 import AdminCodes from "../pages/admin/AdminCodes";
+import AdjustBulkOrder from "../pages/BulkAdjustOrder";
 
 export default function AppRoutes() {
   return (
@@ -83,7 +84,6 @@ export default function AppRoutes() {
           <Route path="/register" element={<Register />} />
         </Route>
 
-        {/* ================= PROTECTED USER ROUTES ================= */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/cart" element={<Cart />} />
@@ -97,10 +97,10 @@ export default function AppRoutes() {
             <Route path="/bulk-order/success/:orderId" element={<BulkOrderSuccess />} />
             <Route path="/bulk-orders" element={<ListBulkOrders />} />
             <Route path="/bulk-orders/:orderId" element={<BulkOrderDetails />} />
+            <Route path="/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />
           </Route>
         </Route>
 
-        {/* ================= ADMIN ================= */}
         <Route element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
@@ -128,6 +128,7 @@ export default function AppRoutes() {
             <Route path="/admin/bulk-orders" element={<AdminBulkOrders />} />
             <Route path="/admin/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
             <Route path="/admin/admin-codes" element={<AdminCodes />} />
+            <Route path="/admin/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />
           </Route>
         </Route>
       </Routes>

@@ -96,6 +96,7 @@ export default function AdminBulkOrderDetails() {
         STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
+    const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
 
     const currentIndex = order
         ? STATUS_ORDER.indexOf(order.status)
@@ -215,9 +216,6 @@ export default function AdminBulkOrderDetails() {
         );
 
     if (!order) return;
-
-
-    console.log(order.statusHistory)
     return (
 
         <div className="space-y-6">
@@ -765,9 +763,7 @@ export default function AdminBulkOrderDetails() {
                 <div className="bg-white border rounded-xl p-4 space-y-4">
 
                     <h3 className="text-sm font-semibold">
-
                         Admin Actions
-
                     </h3>
 
                     <div>
@@ -825,7 +821,25 @@ export default function AdminBulkOrderDetails() {
 
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex flex-wrap justify-end gap-2">
+                        {canAdjust && (
+                            <Button
+                                variant="secondary"
+                                onClick={() =>
+                                    navigate(
+                                        `/admin/bulk-orders/${order.orderId}/adjust`,
+                                        {
+                                            state: {
+                                                order,
+                                                isAdmin: true,
+                                            },
+                                        }
+                                    )
+                                }
+                            >
+                                Adjust Order
+                            </Button>
+                        )}
 
                         <Button
                             disabled={
@@ -833,30 +847,22 @@ export default function AdminBulkOrderDetails() {
                                 submitting
                             }
                             onClick={() => {
-
                                 setPendingPayload({
-
                                     status:
                                         selectedStatus,
-
                                     adminComment:
                                         comment,
-
                                 });
 
                                 setShowConfirm(
                                     true
                                 );
-
                             }}
                         >
-
                             {submitting
                                 ? "Updating..."
                                 : "Update Order"}
-
                         </Button>
-
                     </div>
 
                 </div>

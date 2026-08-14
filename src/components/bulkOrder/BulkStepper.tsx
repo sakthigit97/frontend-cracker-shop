@@ -11,94 +11,93 @@ function BulkStepper({
     currentStep,
 }: BulkStepperProps) {
     return (
-        <div className="w-full overflow-x-auto">
-            <div className="flex min-w-[640px] items-center justify-between">
-                {BULK_ORDER_STEP_LIST.map((step, index) => {
+        <div className="w-full">
+            <div className="flex w-full items-center justify-between">
+                {BULK_ORDER_STEP_LIST.map(
+                    (step, index) => {
+                        const completed =
+                            currentStep > step.id;
 
-                    const completed = currentStep > step.id;
-                    const active = currentStep === step.id;
-                    const last =
-                        index === BULK_ORDER_STEP_LIST.length - 1;
+                        const active =
+                            currentStep === step.id;
 
-                    return (
+                        const last =
+                            index ===
+                            BULK_ORDER_STEP_LIST.length - 1;
 
-                        <div
-                            key={step.id}
-                            className="flex flex-1 items-center"
-                        >
+                        return (
+                            <div
+                                key={step.id}
+                                className="flex flex-1 items-center"
+                            >
+                                {/* Step */}
+                                <div className="flex min-w-0 flex-col items-center">
+                                    <div
+                                        className={[
+                                            "flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all duration-300 sm:h-10 sm:w-10 sm:text-sm",
 
-                            <div className="flex min-w-[90px] flex-col items-center">
+                                            completed &&
+                                            "border-green-600 bg-green-600 text-white",
 
-                                <div
-                                    className={[
-                                        "flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border-2 text-xs sm:text-sm font-semibold transition-all duration-300",
+                                            active &&
+                                            "border-primary bg-primary text-white shadow-md",
 
-                                        completed &&
-                                        "border-green-600 bg-green-600 text-white",
+                                            !completed &&
+                                            !active &&
+                                            "border-gray-300 bg-white text-gray-500",
+                                        ]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                    >
+                                        {completed ? (
+                                            <Check
+                                                size={16}
+                                                strokeWidth={3}
+                                            />
+                                        ) : (
+                                            index + 1
+                                        )}
+                                    </div>
 
-                                        active &&
-                                        "border-primary bg-primary text-white shadow-lg",
+                                    <span
+                                        className={[
+                                            "mt-1.5 text-center text-xs font-medium leading-4 sm:text-sm",
 
-                                        !completed &&
-                                        !active &&
-                                        "border-gray-300 bg-white text-gray-500",
-                                    ]
-                                        .filter(Boolean)
-                                        .join(" ")}
-                                >
-                                    {completed ? (
-                                        <Check
-                                            size={18}
-                                            strokeWidth={3}
-                                        />
-                                    ) : (
-                                        index + 1
-                                    )}
+                                            active &&
+                                            "text-primary",
+
+                                            completed &&
+                                            "text-green-600",
+
+                                            !completed &&
+                                            !active &&
+                                            "text-gray-500",
+                                        ]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                    >
+                                        {step.title}
+                                    </span>
                                 </div>
 
-                                <span
-                                    className={[
-                                        "mt-3 text-center text-sm font-medium",
+                                {/* Connector */}
+                                {!last && (
+                                    <div
+                                        className={[
+                                            "mx-1.5 h-0.5 flex-1 rounded-full transition-all duration-300 sm:mx-3",
 
-                                        active &&
-                                        "text-primary",
-
-                                        completed &&
-                                        "text-green-600",
-
-                                        !completed &&
-                                        !active &&
-                                        "text-gray-500",
-                                    ]
-                                        .filter(Boolean)
-                                        .join(" ")}
-                                >
-                                    {step.title}
-                                </span>
-
+                                            currentStep >
+                                                step.id
+                                                ? "bg-green-600"
+                                                : "bg-gray-200",
+                                        ].join(" ")}
+                                    />
+                                )}
                             </div>
-
-                            {!last && (
-
-                                <div
-                                    className={[
-                                        "mx-2 sm:mx-4 h-1 flex-1 rounded-full transition-all duration-300",
-
-                                        currentStep > step.id
-                                            ? "bg-green-600"
-                                            : "bg-gray-200",
-                                    ].join(" ")}
-                                />
-
-                            )}
-
-                        </div>
-
-                    );
-                })}
-
+                        );
+                    }
+                )}
             </div>
-
         </div>
     );
 }

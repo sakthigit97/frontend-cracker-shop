@@ -63,8 +63,8 @@ export default function ProductStep() {
 
     return (
         <BulkStepLayout
-            title="Select Products"
-            description="Choose products and quantities for your bulk order."
+            title="Choose Products"
+            description="Select products and set the required carton quantity."
             previousLabel="Back"
             nextLabel="Continue"
             previousDisabled={false}
@@ -79,29 +79,6 @@ export default function ProductStep() {
                     onChange={setSearch}
                 />
 
-                <div className="flex items-center justify-between border-b pb-4">
-                    <button
-                        type="button"
-                        onClick={previousStep}
-                        className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium transition hover:bg-gray-100"
-                    >
-                        Back
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={nextStep}
-                        disabled={!canContinue}
-                        className={[
-                            "rounded-lg px-4 py-1.5 text-sm font-medium text-white transition",
-                            canContinue
-                                ? "bg-primary hover:opacity-90"
-                                : "cursor-not-allowed bg-gray-300",
-                        ].join(" ")}
-                    >
-                        Continue
-                    </button>
-                </div>
                 <BulkProductTable
                     products={products}
                     search={search}

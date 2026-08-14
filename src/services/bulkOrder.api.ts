@@ -1,6 +1,8 @@
 import { apiFetch } from "./api";
 
 import type {
+    BulkOrderAdjustRequestItem,
+    BulkOrderAdjustResponse,
     BulkOrderDetailsResponse,
     BulkOrderResponse,
     BulkSchemeId,
@@ -40,6 +42,21 @@ export async function createBulkOrder(
         {
             method: "POST",
             body: JSON.stringify(payload),
+        }
+    );
+}
+
+export async function adjustBulkOrder(
+    orderId: string,
+    items: BulkOrderAdjustRequestItem[]
+): Promise<BulkOrderAdjustResponse> {
+    return apiFetch(
+        `/bulk-order/${orderId}/adjust`,
+        {
+            method: "PUT",
+            body: JSON.stringify({
+                items,
+            }),
         }
     );
 }
