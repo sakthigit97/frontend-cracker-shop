@@ -191,7 +191,7 @@ function BulkProductTable({
     }
 
     return (
-        <div className="space-y-6">
+        <div className="3">
             {groupedProducts.map(
                 (group) => (
                     <BulkCategorySection

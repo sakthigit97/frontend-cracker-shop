@@ -15,9 +15,16 @@ export function useBulkOrderPricing({
         items,
     } = bulkOrderStore();
 
-
     const config = useConfigStore(
         (store) => store.config
+    );
+
+    const configReady = useConfigStore(
+        (store) => store.configReady
+    );
+
+    const loading = useConfigStore(
+        (store) => store.loading
     );
 
     const pricing = useMemo(
@@ -36,7 +43,13 @@ export function useBulkOrderPricing({
         ]
     );
 
-    const selectedProducts = items.length;
+    const pricingReady =
+        configReady &&
+        !loading &&
+        !!config;
+
+    const selectedProducts =
+        items.length;
 
     const totalBoxes = useMemo(
         () =>
@@ -64,6 +77,7 @@ export function useBulkOrderPricing({
         selectedScheme: scheme,
         orderItems: items,
         pricing,
+        pricingReady,
         selectedProducts,
         totalBoxes,
         totalPieces,

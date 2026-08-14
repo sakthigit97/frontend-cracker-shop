@@ -1,5 +1,9 @@
 import { memo } from "react";
-import { CheckCircle2, Lock } from "lucide-react";
+import {
+    Check,
+    CheckCircle2,
+    Lock,
+} from "lucide-react";
 import type { BulkScheme } from "../../types/bulkOrder";
 
 interface BulkSchemeCardProps {
@@ -26,83 +30,79 @@ function BulkSchemeCard({
         <button
             type="button"
             onClick={() => onSelect(scheme)}
+            aria-pressed={selected}
             className={[
-                "group relative w-full rounded-2xl border bg-white p-4 text-left transition-all duration-300 sm:p-6",
-                "hover:-translate-y-1 hover:border-primary hover:shadow-lg",
+                "group relative w-full rounded-xl border bg-white text-left",
+                "px-4 py-4 sm:px-5 sm:py-4",
+                "transition-all duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20",
+                "hover:border-primary/50 hover:shadow-sm",
+
                 selected
-                    ? "border-primary ring-2 ring-primary/20 shadow-lg"
+                    ? "border-primary bg-primary/[0.015] shadow-sm ring-1 ring-primary"
                     : "border-gray-200",
             ].join(" ")}
         >
-            {/* Selection / Approval Icon */}
-            <div className="absolute right-4 top-4">
-                {selected ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <CheckCircle2
-                            size={24}
-                            className="text-primary"
-                        />
-                    </div>
-                ) : requiresAdminApproval ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                        <Lock
-                            size={18}
-                            className="text-amber-600"
-                        />
-                    </div>
-                ) : null}
+            {/* Header */}
+            <div className="flex items-center justify-between gap-3">
+                <h3 className="min-w-0 truncate text-base font-bold text-gray-900 sm:text-lg">
+                    {scheme.schemeName}
+                </h3>
+
+                {/* Selection indicator */}
+                <span
+                    className={[
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
+                        "transition-all duration-200",
+
+                        selected
+                            ? "border-primary bg-primary text-white"
+                            : "border-gray-300 bg-white text-transparent group-hover:border-primary",
+                    ].join(" ")}
+                >
+                    <Check size={15} strokeWidth={3} />
+                </span>
             </div>
 
-            {/* Scheme Details */}
-            <div className="mt-5 space-y-3">
-                {/* Scheme Name */}
-                <div>
-                    <span className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                        {scheme.schemeName}
-                    </span>
-                </div>
+            {/* Approval */}
+            <div
+                className={[
+                    "mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
 
-                {/* Approval Status */}
+                    requiresAdminApproval
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-green-50 text-green-700",
+                ].join(" ")}
+            >
                 {requiresAdminApproval ? (
-                    <div className="flex items-start gap-2 text-sm font-semibold text-amber-600">
-                        <Lock
-                            size={16}
-                            className="mt-0.5 shrink-0"
-                        />
-
-                        <span>
-                            Admin Approval Required
-                        </span>
-                    </div>
+                    <Lock size={13} />
                 ) : (
-                    <div className="flex items-start gap-2 text-sm font-semibold text-green-600">
-                        <CheckCircle2
-                            size={16}
-                            className="mt-0.5 shrink-0"
-                        />
-
-                        <span>
-                            No Approval Required
-                        </span>
-                    </div>
+                    <CheckCircle2 size={13} />
                 )}
+
+                <span>
+                    {requiresAdminApproval
+                        ? "Admin approval required"
+                        : "No approval required"}
+                </span>
             </div>
 
-            {/* Order Range */}
-            <div className="mt-4 rounded-xl bg-gray-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Order Value
+            {/* Order value */}
+            <div className="mt-4 border-t border-gray-100 pt-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    Order value
                 </p>
 
-                <p className="mt-2 text-lg font-bold text-gray-900">
+                <p className="mt-1 text-base font-bold text-gray-900 sm:text-lg">
                     {orderRange}
                 </p>
             </div>
 
             {/* Footer */}
-            <div className="mt-5 flex flex-col gap-3 pr-4 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
-                <span className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                    Bulk Pricing
+            <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span>
+                    Exclusive bulk pricing
                 </span>
             </div>
         </button>

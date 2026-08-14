@@ -1,7 +1,6 @@
 import { BULK_ORDER_STEPS } from "../constants/bulkOrderSteps";
 
-export type BulkOrderStep =
-    (typeof BULK_ORDER_STEPS)[keyof typeof BULK_ORDER_STEPS];
+export type BulkOrderStep = (typeof BULK_ORDER_STEPS)[keyof typeof BULK_ORDER_STEPS];
 
 export type BulkSchemeId = string;
 
@@ -19,7 +18,7 @@ export interface BulkScheme {
 
 export interface BulkOrderDetailsResponse {
     orderId: string;
-    createdAt: string;
+    createdAt: number;
     status: string;
     schemeName: string;
     schemeId: BulkSchemeId;
@@ -27,6 +26,25 @@ export interface BulkOrderDetailsResponse {
     items: BulkOrderProduct[];
     pricing: BulkOrderPricing;
     remarks?: string;
+    statusHistory?: any;
+}
+
+export interface BulkOrderAdjustRequestItem {
+    productId: string;
+    quantity: number;
+    cartonQty?: number;
+}
+
+export interface BulkOrderAdjustResponse {
+    orderId: string;
+    items: BulkOrderProduct[];
+    pricing: BulkOrderPricing;
+    updatedAt: number;
+}
+
+export interface BulkOrderAdjustRequest {
+    orderId: string;
+    items: BulkOrderAdjustRequestItem[];
 }
 
 export interface BulkOrderProduct {
@@ -95,4 +113,16 @@ export interface BulkOrderResponse {
 export interface CreateBulkOrderItem {
     productId: string;
     quantity: number;
+}
+
+export interface BulkOrderAddProduct {
+    productId: string;
+    name: string;
+    image?: string;
+    brand?: string;
+    categoryId?: string;
+    bulkOrderBasePrice: number;
+    cartonQty: number;
+    unitPrice: number;
+    schemePrice?: number;
 }

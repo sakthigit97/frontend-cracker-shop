@@ -4,6 +4,7 @@ import {
     useMemo,
     useState,
 } from "react";
+import { Loader2 } from "lucide-react";
 
 import BulkStepLayout from "./BulkStepLayout";
 import BulkPricingCard from "./BulkPricingCard";
@@ -94,9 +95,6 @@ export default function CheckoutStep() {
         setPincodeError,
     ] = useState("");
 
-    /*
-     * Load profile address.
-     */
     useEffect(() => {
         let mounted = true;
 
@@ -152,15 +150,11 @@ export default function CheckoutStep() {
         };
     }, []);
 
-    /*
-     * Current pincode depends on the
-     * selected address mode.
-     */
     const currentPincode = useMemo(
         () =>
             addressMode === "PROFILE"
                 ? profileAddress?.pincode?.trim() ??
-                  ""
+                ""
                 : newAddress.pincode.trim(),
         [
             addressMode,
@@ -169,12 +163,6 @@ export default function CheckoutStep() {
         ]
     );
 
-    /*
-     * Validate the current pincode.
-     *
-     * This is intentionally kept in CheckoutStep
-     * as the single source of truth.
-     */
     useEffect(() => {
         if (
             !currentPincode ||
@@ -225,7 +213,7 @@ export default function CheckoutStep() {
                 if (
                     !data ||
                     data[0]?.Status !==
-                        "Success" ||
+                    "Success" ||
                     !data[0]?.PostOffice?.length
                 ) {
                     setValidatedLocation(
@@ -272,10 +260,7 @@ export default function CheckoutStep() {
                         ?.PostOffice?.[0]
                         ?.District?.trim() ?? "";
 
-                /*
-                 * Pincode exists but state
-                 * could not be determined.
-                 */
+
                 if (!state) {
                     setValidatedLocation(
                         null
@@ -294,15 +279,10 @@ export default function CheckoutStep() {
                     return;
                 }
 
-                /*
-                 * Make sure the pincode has not
-                 * changed while the API request
-                 * was running.
-                 */
                 if (
                     addressMode === "NEW" &&
                     newAddress.pincode.trim() !==
-                        currentPincode
+                    currentPincode
                 ) {
                     return;
                 }
@@ -313,10 +293,7 @@ export default function CheckoutStep() {
                     state,
                 });
 
-                /*
-                 * State and city are derived
-                 * from the validated pincode.
-                 */
+
                 if (
                     addressMode === "NEW"
                 ) {
@@ -375,29 +352,19 @@ export default function CheckoutStep() {
         showAlert,
     ]);
 
-    /*
-     * State used for pricing must always
-     * come from the validated pincode.
-     */
     const validatedState =
         validatedLocation?.state ?? "";
 
-    const { pricing } =
-        useBulkOrderPricing({
-            state: validatedState,
-        });
+    const { pricing } = useBulkOrderPricing({
+        state: validatedState,
+    });
 
-    /*
-     * Current active address.
-     */
     const activeAddress =
         addressMode === "PROFILE"
             ? profileAddress
             : newAddress;
 
-    /*
-     * Basic address validation.
-     */
+
     const addressValid = useMemo(() => {
         if (
             addressMode === "PROFILE"
@@ -418,45 +385,33 @@ export default function CheckoutStep() {
         newAddress,
     ]);
 
-    /*
-     * Pincode is valid only when:
-     *
-     * 1. Exactly 6 digits
-     * 2. API validated the same pincode
-     * 3. A state was returned
-     */
     const pincodeValid =
         !!currentPincode &&
         /^\d{6}$/.test(
             currentPincode
         ) &&
         validatedLocation?.pincode ===
-            currentPincode &&
+        currentPincode &&
         !!validatedState;
 
-    /*
-     * Validate bulk scheme amount
-     * using product total only.
-     */
+
     const schemeValidation =
         validateSchemeAmount(
             scheme,
             pricing.productTotal
         );
 
-    /*
-     * Continue is allowed only when
-     * everything required is valid.
-     */
-    const canContinue =
-        addressValid &&
-        pincodeValid &&
+    const pricingReady =
+        !loading &&
         !validatingPincode &&
+        pincodeValid &&
+        !!validatedState;
+
+    const canContinue =
+        pricingReady &&
+        addressValid &&
         schemeValidation.valid;
 
-    /*
-     * Address mode change.
-     */
     const handleAddressModeChange =
         useCallback(
             (
@@ -479,12 +434,6 @@ export default function CheckoutStep() {
             []
         );
 
-    /*
-     * New address change.
-     *
-     * BulkAddressSection clears state/city
-     * when pincode changes.
-     */
     const handleNewAddressChange =
         useCallback(
             (
@@ -497,11 +446,19 @@ export default function CheckoutStep() {
                 setNewAddress(address);
 
                 if (pincodeChanged) {
+                    /*
+                     * Immediately remove the
+                     * previous validation.
+                     */
                     setValidatedLocation(
                         null
                     );
 
                     setPincodeError("");
+
+                    setValidatingPincode(
+                        false
+                    );
                 }
             },
             [newAddress.pincode]
@@ -556,11 +513,11 @@ export default function CheckoutStep() {
              */
             const finalAddress:
                 BulkOrderAddress = {
-                    ...activeAddress,
-                    state: validatedState,
-                    pincode:
-                        currentPincode,
-                };
+                ...activeAddress,
+                state: validatedState,
+                pincode:
+                    currentPincode,
+            };
 
             setAddress(finalAddress);
 
@@ -576,6 +533,12 @@ export default function CheckoutStep() {
             setAddress,
             nextStep,
         ]);
+
+    const showPricingLoader =
+        loading ||
+        validatingPincode ||
+        !pincodeValid ||
+        !validatedState;
 
     return (
         <BulkStepLayout
@@ -596,61 +559,94 @@ export default function CheckoutStep() {
                 handleContinue
             }
         >
-            <div className="grid gap-8 xl:grid-cols-[2fr_420px]">
+            <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
 
-                <BulkAddressSection
-                    loading={loading}
-                    addressMode={
-                        addressMode
-                    }
-                    profileAddress={
-                        profileAddress
-                    }
-                    newAddress={
-                        newAddress
-                    }
-                    onModeChange={
-                        handleAddressModeChange
-                    }
-                    onAddressChange={
-                        handleNewAddressChange
-                    }
-                />
-
-                <div className="xl:sticky xl:top-24 xl:h-fit">
-                    <BulkPricingCard
-                        pricing={pricing}
+                {/* LEFT — ADDRESS */}
+                <div className="min-w-0">
+                    <BulkAddressSection
+                        loading={loading}
+                        addressMode={
+                            addressMode
+                        }
+                        profileAddress={
+                            profileAddress
+                        }
+                        newAddress={
+                            newAddress
+                        }
+                        onModeChange={
+                            handleAddressModeChange
+                        }
+                        onAddressChange={
+                            handleNewAddressChange
+                        }
                     />
+
+                    {/* Validation status belongs with
+                        the address, not below the
+                        entire two-column layout. */}
+                    <div className="mt-3">
+                        {validatingPincode && (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Loader2
+                                    size={16}
+                                    className="animate-spin"
+                                />
+
+                                <span>
+                                    Validating delivery pincode...
+                                </span>
+                            </div>
+                        )}
+
+                        {!validatingPincode &&
+                            pincodeError && (
+                                <p className="text-sm font-medium text-red-600">
+                                    {pincodeError}
+                                </p>
+                            )}
+
+                        {!validatingPincode &&
+                            !pincodeError &&
+                            validatedLocation && (
+                                <p className="text-sm font-medium text-green-600">
+                                    Delivery location
+                                    verified:{" "}
+                                    {
+                                        validatedLocation.state
+                                    }
+                                </p>
+                            )}
+                    </div>
                 </div>
 
-            </div>
+                {/* RIGHT — PRICING */}
+                <div className="min-w-0 xl:sticky xl:top-24 xl:h-fit">
+                    {showPricingLoader ? (
+                        <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <div className="flex flex-col items-center text-center">
+                                <Loader2
+                                    size={30}
+                                    className="animate-spin text-primary"
+                                />
 
-            <div className="mt-4">
+                                <p className="mt-3 text-sm font-semibold text-gray-900">
+                                    Preparing pricing
+                                </p>
 
-                {validatingPincode && (
-                    <p className="text-sm text-gray-500">
-                        Validating pincode...
-                    </p>
-                )}
-
-                {!validatingPincode &&
-                    pincodeError && (
-                        <p className="text-sm font-medium text-red-600">
-                            {pincodeError}
-                        </p>
+                                <p className="mt-1 max-w-[240px] text-xs leading-5 text-gray-500">
+                                    Verifying your delivery
+                                    location before
+                                    calculating charges.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <BulkPricingCard
+                            pricing={pricing}
+                        />
                     )}
-
-                {!validatingPincode &&
-                    !pincodeError &&
-                    validatedLocation && (
-                        <p className="text-sm font-medium text-green-600">
-                            Delivery location verified:{" "}
-                            {
-                                validatedLocation.state
-                            }
-                        </p>
-                    )}
-
+                </div>
             </div>
         </BulkStepLayout>
     );
