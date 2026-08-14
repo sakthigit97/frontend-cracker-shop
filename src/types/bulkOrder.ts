@@ -18,7 +18,7 @@ export interface BulkScheme {
 
 export interface BulkOrderDetailsResponse {
     orderId: string;
-    createdAt: number;
+    createdAt: string;
     status: string;
     schemeName: string;
     schemeId: BulkSchemeId;
