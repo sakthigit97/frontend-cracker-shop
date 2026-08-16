@@ -88,6 +88,7 @@ export default function QuickEstimateModal({
     };
     const displayProducts = sortProductsBySequence(
         products,
+        true
     );
 
     const downloadPdf = (customer: {

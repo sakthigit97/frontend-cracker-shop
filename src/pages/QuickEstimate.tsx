@@ -49,7 +49,8 @@ export default function QuickEstimate() {
 
     displayProducts = sortProductsByCategoryAndSequence(
         displayProducts,
-        categories
+        categories,
+        true
     );
 
     const selectedProducts = Object.values(items).reduce(
