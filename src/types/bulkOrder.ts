@@ -1,7 +1,5 @@
 import { BULK_ORDER_STEPS } from "../constants/bulkOrderSteps";
-
 export type BulkOrderStep = (typeof BULK_ORDER_STEPS)[keyof typeof BULK_ORDER_STEPS];
-
 export type BulkSchemeId = string;
 
 export interface BulkScheme {
@@ -53,12 +51,14 @@ export interface BulkOrderProduct {
     image?: string;
     brand?: string;
     categoryId?: string;
+    packUnit?: string;
     bulkOrderBasePrice: number;
     cartonQty: number;
     unitPrice: number;
     schemePrice?: number;
     quantity: number;
     total: number;
+    sequenceNumber?: number;
 }
 
 export interface BulkOrderAddress {
@@ -74,6 +74,7 @@ export interface BulkOrderAddress {
 
 export interface BulkOrderPricing {
     productTotal: number;
+    cartonBoxCount: number;
     packagingPercent: number;
     packagingCharge: number;
     gstPercent: number;

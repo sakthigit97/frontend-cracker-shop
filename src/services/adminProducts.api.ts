@@ -54,9 +54,16 @@ export const updateAdminProduct = async (
         description?: string;
         searchText?: string;
         isActive?: "true" | "false";
-        isComboPackage: boolean;
+        isComboPackage?: boolean;
         packageTagIds?: string[];
         aiTags?: string[];
+        isRetailOnly?: boolean;
+        bulkOrderBasePrice?: number | null;
+        cartonQty?: number | null;
+        isBulkOrderOnly?: boolean;
+        packQuantity?: number | null;
+        packUnit?: string | null;
+        isGiftPack?: boolean;
     }
 ) => {
     return apiFetch(`/admin/products/${productId}`, {

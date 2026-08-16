@@ -77,11 +77,11 @@ export default function ReviewStep() {
     const schemeValidation = useMemo(() => {
         return validateSchemeAmount(
             scheme,
-            pricing.productTotal
+            pricing.grandTotal
         );
     }, [
         scheme,
-        pricing.productTotal,
+        pricing.grandTotal,
     ]);
 
     const hasItems =
@@ -94,10 +94,6 @@ export default function ReviewStep() {
         !!selectedAddress?.pincode &&
         selectedAddress.pincode.length === 6;
 
-    /*
-     * Don't allow submit until the fresh config
-     * has completed loading.
-     */
     const canSubmit =
         !configRefreshing &&
         pricingReady &&
@@ -238,12 +234,8 @@ export default function ReviewStep() {
         );
     }
 
-    const hasPackaging =
-        pricing.packagingCharge > 0;
-
-    const hasGst =
-        pricing.gstAmount > 0;
-
+    const hasPackaging =  pricing.packagingCharge > 0;
+    const hasGst = pricing.gstAmount > 0;
     const includedCharges: string[] = [];
 
     if (hasGst) {
@@ -295,18 +287,20 @@ export default function ReviewStep() {
                         </h4>
 
                         <ul className="mt-3 space-y-2 text-sm text-green-700">
+                            <li>• Carton contents, GST, and prices may vary at the time of dispatch. Any difference in the final amount will be adjusted accordingly, and the balance will be collected from or refunded to the customer.</li>
                             <li>
                                 • Product prices are net bulk prices.
                             </li>
-
                             <li>
                                 • {chargesDescription}
                             </li>
-
+                            
+                            <li>
+                                • Transportation charges are not included in the order total and must be paid by the customer.
+                            </li>
                             <li>
                                 • Our sales team will contact you after receiving your order.
                             </li>
-
                             <li>
                                 • Your order will be processed after confirmation.
                             </li>

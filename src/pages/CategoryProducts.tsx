@@ -34,7 +34,8 @@ export default function CategoryProducts() {
         ? items.filter((p) =>
           p.name.toLowerCase().includes(query)
         )
-        : items
+        : items,
+      true
     );
   }, [items, isSearching, query]);
 

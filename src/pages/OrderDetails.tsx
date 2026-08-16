@@ -8,7 +8,7 @@ import {
   ReceiptIndianRupee,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
@@ -30,6 +30,7 @@ import { useConfigStore } from "../store/config.store";
 import { downloadInvoice } from "../utils/pdf/downloadInvoice";
 import { formatDateTime } from "../utils/date";
 import defaultImage from "../assets/default-image.png";
+import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 const TERMINAL_STATUS = "CANCELLED";
 
@@ -156,6 +157,11 @@ export default function OrderDetails() {
         total + item.quantity,
       0
     ) ?? 0;
+
+  const sortedItems = useMemo(
+    () => sortProductsBySequence(order.items),
+    [order.items]
+  );
 
   async function handleRestore() {
     try {
@@ -737,8 +743,8 @@ export default function OrderDetails() {
             />
 
             <p className="mt-1 text-xs text-gray-500">
-              {order.items.length}{" "}
-              {order.items.length === 1
+              {sortedItems.length}{" "}
+              {sortedItems.length === 1
                 ? "Product"
                 : "Products"}{" "}
               • {totalQuantity} Qty
@@ -753,60 +759,60 @@ export default function OrderDetails() {
 
           <div className="divide-y divide-gray-100">
 
-            {order.items.map(
+            {sortedItems.map(
               (item: any) => (
                 <div
                   key={item.productId}
                   className="flex gap-3 py-3 first:pt-0 last:pb-0 sm:gap-4"
                 >
-
-                  {item.image && (
-                    <img
-                      src={
-                        item.image ||
-                        defaultImage
-                      }
-                      alt={item.name}
-                      onError={(event) => {
-                        event.currentTarget.onerror =
-                          null;
-                        event.currentTarget.src =
-                          defaultImage;
-                      }}
-                      className="
-                        h-16 w-16
-                        shrink-0
-                        rounded-xl
-                        border
-                        object-cover
-                        sm:h-20 sm:w-20
-                      "
-                    />
-                  )}
-
+                  <img
+                    src={item.image?.trim() || defaultImage}
+                    alt={item.name}
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = defaultImage;
+                    }}
+                    className="
+                      h-16 w-16
+                      shrink-0
+                      rounded-xl
+                      border
+                      object-cover
+                      sm:h-20 sm:w-20
+                    "
+                  />
                   <div className="min-w-0 flex-1">
 
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
 
                       <div className="min-w-0">
+                        <div className="min-w-0">
 
-                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Product Name + Combo */}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold leading-5 text-gray-900">
+                              {item.name}
+                            </p>
 
-                          <p className="font-semibold leading-5 text-gray-900">
-                            {item.name}
-                          </p>
+                            {item.isComboPackage && (
+                              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                Combo
+                              </span>
+                            )}
+                          </div>
 
-                          {item.isComboPackage && (
-                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                              Combo
+                          {/* Pack Unit */}
+                          {Number(item.packQuantity) > 0 && item.packUnit?.trim() && (
+                            <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                              📦 {item.packQuantity} {item.packUnit}
                             </span>
                           )}
 
                         </div>
 
-                        {item.discountText && (
+                        {(item.discountText || !item.isComboPackage) && (
                           <p className="mt-0.5 text-xs text-green-600">
-                            {item.discountText}
+                            {item.discountText || "NET RATE"}
                           </p>
                         )}
 

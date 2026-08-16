@@ -253,7 +253,7 @@ export default function AdminCategories() {
                                             className="border-t"
                                         >
                                             <td className="p-3">{c.name}</td>
-                                            <td className="p-3 font-mono text-xs break-all">
+                                            <td className="p-3">
                                                 {c.categoryId}
                                             </td>
                                             <td className="p-3">

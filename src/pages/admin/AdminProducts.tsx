@@ -358,12 +358,7 @@ export default function AdminProducts() {
                                             </div>
                                         </td>
                                         <td className="p-3">
-                                            <div
-                                                className="font-mono text-xs break-all"
-                                                title={p.productId}
-                                            >
-                                                {p.productId}
-                                            </div>
+                                            {p.productId}
                                         </td>
                                         <td className="p-3">₹{p.price}</td>
                                         <td className="p-3">{p.quantity || 0}</td>

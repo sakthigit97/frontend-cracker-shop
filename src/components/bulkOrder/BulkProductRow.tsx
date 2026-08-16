@@ -1,15 +1,9 @@
 import { memo, useMemo } from "react";
-import {
-    Minus,
-    Plus,
-    Package,
-} from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 
 import defaultImage from "../../assets/default-image.png";
-
 import type { Product } from "../../types/product";
 import type { BulkScheme } from "../../types/bulkOrder";
-
 import { calculateBulkUnitPrice } from "../../utils/bulkPricing";
 
 interface BulkProductRowProps {
@@ -28,6 +22,10 @@ function BulkProductRow({
     quantity,
     onQuantityChange,
 }: BulkProductRowProps) {
+    /* --------------------------------
+     * Pricing
+     * -------------------------------- */
+
     const unitPrice = useMemo(
         () =>
             calculateBulkUnitPrice(
@@ -53,6 +51,10 @@ function BulkProductRow({
         ]
     );
 
+    /* --------------------------------
+     * Quantity handlers
+     * -------------------------------- */
+
     const increase = () => {
         onQuantityChange(
             product.id,
@@ -67,6 +69,37 @@ function BulkProductRow({
         );
     };
 
+    const handleQuantityInput = (
+        value: string
+    ) => {
+        if (value === "") {
+            onQuantityChange(
+                product.id,
+                0
+            );
+
+            return;
+        }
+
+        const parsed = Number(value);
+
+        if (
+            !Number.isInteger(parsed) ||
+            parsed < 0
+        ) {
+            return;
+        }
+
+        onQuantityChange(
+            product.id,
+            parsed
+        );
+    };
+
+    /* --------------------------------
+     * Formatting
+     * -------------------------------- */
+
     const formattedUnitPrice =
         unitPrice.toLocaleString("en-IN");
 
@@ -76,231 +109,594 @@ function BulkProductRow({
     const formattedTotal =
         total.toLocaleString("en-IN");
 
+    /* --------------------------------
+     * Image
+     * -------------------------------- */
+
+    const productImage =
+        product.images?.[0]?.trim() ||
+        defaultImage;
+
     return (
         <>
-            {/* =====================================================
+            {/* =========================================================
                 DESKTOP
-            ===================================================== */}
+                ========================================================= */}
 
-            <div className="hidden lg:grid grid-cols-[56px_minmax(0,1fr)_130px_150px] items-center gap-4 border-b border-gray-100 px-3 py-2.5 transition hover:bg-gray-50">
+            <tr
+                className="
+                    hidden
+                    lg:table-row
+                    border-b
+                    border-gray-100
+                    transition-colors
+                    hover:bg-gray-50
+                "
+            >
+                {/* Product */}
+                <td
+                    className="
+                        w-auto
+                        min-w-0
+                        px-5
+                        py-4
+                    "
+                >
+                    <div
+                        className="
+                            flex
+                            min-w-0
+                            items-center
+                            gap-3
+                        "
+                    >
+                        {/* Image */}
+                        <img
+                            src={productImage}
+                            alt={product.name}
+                            className="
+                                h-12
+                                w-12
+                                shrink-0
+                                rounded-lg
+                                border
+                                border-gray-200
+                                bg-white
+                                object-contain
+                                p-1
+                            "
+                            loading="lazy"
+                            onError={(e) => {
+                                e.currentTarget.onerror =
+                                    null;
 
-                {/* Product Image */}
-                <img
-                    src={
-                        product.images?.[0]?.trim() ||
-                        defaultImage
-                    }
-                    alt={product.name}
-                    className="h-14 w-14 rounded-lg border bg-white object-contain p-1"
-                    loading="lazy"
-                    onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                            defaultImage;
-                    }}
-                />
+                                e.currentTarget.src =
+                                    defaultImage;
+                            }}
+                        />
 
-                {/* Product Information */}
-                <div className="min-w-0">
-                    <h3 className="truncate text-[15px] font-semibold text-blue-600">
-                        {product.name}
-                    </h3>
-
-                    <div className="mt-1.5 flex items-center gap-2">
-                        {/* Bulk Price */}
-                        <span className="whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold">
-                            ₹{formattedUnitPrice} / Piece
-                        </span>
-
-                        {/* Carton Quantity */}
-                        <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-0.5 text-xs text-gray-700">
-                            <Package
-                                size={13}
-                                className="text-amber-600"
-                            />
-
-                            <strong>
-                                {formattedCartonQty} Pieces / Carton
-                            </strong>
-                        </span>
+                        {/* Name */}
+                        <div className="min-w-0">
+                            <p
+                                className="
+                                    truncate
+                                    text-sm
+                                    font-semibold
+                                    text-gray-900
+                                    xl:text-base
+                                "
+                                title={product.name}
+                            >
+                                {product.name}
+                            </p>
+                        </div>
                     </div>
-                </div>
+                </td>
 
-                {/* Carton Quantity */}
-                <div className="flex flex-col items-center justify-center">
-                    <span className="mb-1 text-[10px] text-gray-500">
-                        Cartons
-                    </span>
-
-                    <div className="flex overflow-hidden rounded-md border bg-white">
-                        <button
-                            type="button"
-                            onClick={decrease}
-                            disabled={quantity === 0}
-                            aria-label={`Decrease cartons for ${product.name}`}
-                            className="flex h-8 w-8 items-center justify-center border-r bg-gray-100 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                {/* Carton */}
+                <td
+                    className="
+                        w-[160px]
+                        px-4
+                        py-4
+                        text-center
+                    "
+                >
+                    <div className="flex justify-center">
+                        <div
+                            className="
+                                inline-flex
+                                overflow-hidden
+                                rounded-md
+                                border
+                                border-gray-300
+                                bg-white
+                            "
                         >
-                            <Minus size={15} />
-                        </button>
-
-                        <div className="flex h-8 w-10 items-center justify-center text-sm font-semibold">
-                            {quantity}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={increase}
-                            aria-label={`Increase cartons for ${product.name}`}
-                            className="flex h-8 w-8 items-center justify-center border-l bg-primary text-white transition hover:opacity-90"
-                        >
-                            <Plus size={15} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Total */}
-                <div className="min-w-0 text-right">
-                    {quantity > 0 ? (
-                        <>
-                            <div className="text-[11px] text-gray-500">
-                                {quantity}{" "}
-                                {quantity === 1
-                                    ? "Carton"
-                                    : "Cartons"}{" "}
-                                × ₹{formattedTotal}
-                            </div>
-
-                            <div className="mt-0.5 text-xl font-bold text-primary">
-                                ₹{formattedTotal}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="text-xs text-gray-400">
-                            Select quantity
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* =====================================================
-                MOBILE / TABLET
-            ===================================================== */}
-
-            <div className="lg:hidden border-b border-gray-100 px-3 py-3 transition hover:bg-gray-50">
-
-                {/* Product Information */}
-                <div className="flex min-w-0 items-start gap-3">
-
-                    {/* Image */}
-                    <img
-                        src={
-                            product.images?.[0]?.trim() ||
-                            defaultImage
-                        }
-                        alt={product.name}
-                        className="h-12 w-12 shrink-0 rounded-lg border bg-white object-contain p-1 sm:h-14 sm:w-14"
-                        loading="lazy"
-                        onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src =
-                                defaultImage;
-                        }}
-                    />
-
-                    {/* Product Details */}
-                    <div className="min-w-0 flex-1">
-
-                        <h3 className="truncate text-[15px] font-semibold text-blue-600 sm:text-base">
-                            {product.name}
-                        </h3>
-
-                        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-
-                            {/* Bulk Price */}
-                            <span className="whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold sm:text-xs">
-                                ₹{formattedUnitPrice} / Piece
-                            </span>
-
-                            {/* Carton Quantity */}
-                            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-gray-700 sm:text-xs">
-                                <Package
-                                    size={11}
-                                    className="shrink-0 text-amber-600"
-                                />
-
-                                <strong>
-                                    {formattedCartonQty} Pieces / Carton
-                                </strong>
-                            </span>
-
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quantity + Total */}
-                <div className="mt-2.5 flex items-end justify-between gap-3 border-t border-gray-100 pt-2.5">
-
-                    {/* Quantity */}
-                    <div className="flex shrink-0 flex-col items-start">
-                        <span className="mb-1 text-[10px] text-gray-500">
-                            Cartons
-                        </span>
-
-                        <div className="flex overflow-hidden rounded-md border bg-white">
-
                             <button
                                 type="button"
                                 onClick={decrease}
-                                disabled={quantity === 0}
+                                disabled={
+                                    quantity === 0
+                                }
                                 aria-label={`Decrease cartons for ${product.name}`}
-                                className="flex h-8 w-9 items-center justify-center border-r bg-gray-100 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="
+                                    flex
+                                    h-9
+                                    w-9
+                                    shrink-0
+                                    items-center
+                                    justify-center
+                                    border-r
+                                    border-gray-300
+                                    bg-gray-100
+                                    text-gray-700
+                                    transition
+                                    hover:bg-gray-200
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-40
+                                "
                             >
-                                <Minus size={14} />
+                                <Minus
+                                    size={14}
+                                />
                             </button>
 
-                            <div className="flex h-8 w-10 items-center justify-center text-sm font-semibold">
-                                {quantity}
-                            </div>
+                            <input
+                                type="number"
+                                min={0}
+                                step={1}
+                                value={quantity}
+                                onChange={(e) =>
+                                    handleQuantityInput(
+                                        e.target.value
+                                    )
+                                }
+                                aria-label={`Carton quantity for ${product.name}`}
+                                className="
+                                    h-9
+                                    w-12
+                                    border-0
+                                    bg-white
+                                    text-center
+                                    text-sm
+                                    font-semibold
+                                    text-gray-900
+                                    outline-none
+                                    focus:ring-0
+                                "
+                            />
 
                             <button
                                 type="button"
                                 onClick={increase}
                                 aria-label={`Increase cartons for ${product.name}`}
-                                className="flex h-8 w-9 items-center justify-center border-l bg-primary text-white transition hover:opacity-90"
+                                className="
+                                    flex
+                                    h-9
+                                    w-9
+                                    shrink-0
+                                    items-center
+                                    justify-center
+                                    border-l
+                                    border-primary
+                                    bg-primary
+                                    text-white
+                                    transition
+                                    hover:opacity-90
+                                "
                             >
-                                <Plus size={14} />
+                                <Plus
+                                    size={14}
+                                />
                             </button>
-
                         </div>
                     </div>
+                </td>
 
-                    {/* Total */}
-                    <div className="min-w-0 flex-1 text-right">
-                        {quantity > 0 ? (
-                            <>
-                                <div className="truncate text-[11px] text-gray-500 sm:text-xs">
-                                    {quantity}{" "}
-                                    {quantity === 1
-                                        ? "Carton"
-                                        : "Cartons"}{" "}
-                                    × ₹{formattedTotal}
-                                </div>
+                {/* Carton Content */}
+                <td
+                    className="
+                        w-[150px]
+                        px-4
+                        py-4
+                        text-center
+                    "
+                >
+                    <span
+                        className="
+                            whitespace-nowrap
+                            text-sm
+                            text-gray-600
+                        "
+                    >
+                        {formattedCartonQty}{" "}
+                        {product.packUnit}
+                    </span>
+                </td>
 
-                                <div className="mt-0.5 text-lg font-bold text-primary sm:text-xl">
-                                    ₹{formattedTotal}
-                                </div>
-                            </>
-                        ) : (
-                            <div className="text-xs text-gray-400">
-                                Select quantity
+                {/* Price */}
+                <td
+                    className="
+                        w-[120px]
+                        px-4
+                        py-4
+                        text-right
+                    "
+                >
+                    <span
+                        className="
+                            whitespace-nowrap
+                            text-sm
+                            font-semibold
+                            text-gray-800
+                        "
+                    >
+                        ₹{formattedUnitPrice}
+                    </span>
+                </td>
+
+                {/* Total */}
+                <td
+                    className="
+                        w-[150px]
+                        px-5
+                        py-4
+                        text-right
+                    "
+                >
+                    {quantity > 0 ? (
+                        <span
+                            className="
+                                whitespace-nowrap
+                                text-lg
+                                font-bold
+                                text-gray-900
+                            "
+                        >
+                            ₹{formattedTotal}
+                        </span>
+                    ) : (
+                        <span
+                            className="
+                                whitespace-nowrap
+                                text-sm
+                                text-gray-400
+                            "
+                        >
+                            Select quantity
+                        </span>
+                    )}
+                </td>
+            </tr>
+
+            {/* =========================================================
+                MOBILE / TABLET
+                ========================================================= */}
+
+            <tr className="lg:hidden">
+                <td
+                    colSpan={5}
+                    className="
+                        border-b
+                        border-gray-100
+                        p-0
+                    "
+                >
+                    <div
+                        className="
+                            w-full
+                            px-3
+                            py-4
+                            sm:px-4
+                            sm:py-4
+                        "
+                    >
+                        {/* Product */}
+                        <div
+                            className="
+                                flex
+                                min-w-0
+                                items-center
+                                gap-3
+                            "
+                        >
+                            {/* Image */}
+                            <img
+                                src={productImage}
+                                alt={product.name}
+                                className="
+                                    h-12
+                                    w-12
+                                    shrink-0
+                                    rounded-lg
+                                    border
+                                    border-gray-200
+                                    bg-white
+                                    object-contain
+                                    p-1
+                                    sm:h-14
+                                    sm:w-14
+                                "
+                                loading="lazy"
+                                onError={(e) => {
+                                    e.currentTarget.onerror =
+                                        null;
+
+                                    e.currentTarget.src =
+                                        defaultImage;
+                                }}
+                            />
+
+                            {/* Product name */}
+                            <div className="min-w-0 flex-1">
+                                <p
+                                    className="
+                                        truncate
+                                        text-sm
+                                        font-semibold
+                                        text-gray-900
+                                        sm:text-base
+                                    "
+                                    title={
+                                        product.name
+                                    }
+                                >
+                                    {product.name}
+                                </p>
                             </div>
-                        )}
-                    </div>
+                        </div>
 
-                </div>
-            </div>
+                        {/* Mobile details */}
+                        <div
+                            className="
+                                mt-4
+                                grid
+                                grid-cols-2
+                                gap-3
+                                border-t
+                                border-gray-100
+                                pt-4
+                                sm:grid-cols-4
+                                sm:items-end
+                            "
+                        >
+                            {/* Carton */}
+                            <div className="min-w-0">
+                                <p
+                                    className="
+                                        mb-1.5
+                                        text-[11px]
+                                        font-medium
+                                        uppercase
+                                        tracking-wide
+                                        text-gray-500
+                                    "
+                                >
+                                    Carton
+                                </p>
+
+                                <div
+                                    className="
+                                        flex
+                                        w-fit
+                                        overflow-hidden
+                                        rounded-md
+                                        border
+                                        border-gray-300
+                                        bg-white
+                                    "
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            decrease
+                                        }
+                                        disabled={
+                                            quantity ===
+                                            0
+                                        }
+                                        aria-label={`Decrease cartons for ${product.name}`}
+                                        className="
+                                            flex
+                                            h-9
+                                            w-9
+                                            shrink-0
+                                            items-center
+                                            justify-center
+                                            border-r
+                                            border-gray-300
+                                            bg-gray-100
+                                            text-gray-700
+                                            disabled:cursor-not-allowed
+                                            disabled:opacity-40
+                                        "
+                                    >
+                                        <Minus
+                                            size={14}
+                                        />
+                                    </button>
+
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        step={1}
+                                        value={
+                                            quantity
+                                        }
+                                        onChange={(e) =>
+                                            handleQuantityInput(
+                                                e.target
+                                                    .value
+                                            )
+                                        }
+                                        aria-label={`Carton quantity for ${product.name}`}
+                                        className="
+                                            h-9
+                                            w-12
+                                            border-0
+                                            bg-white
+                                            text-center
+                                            text-sm
+                                            font-semibold
+                                            text-gray-900
+                                            outline-none
+                                            focus:ring-0
+                                        "
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            increase
+                                        }
+                                        aria-label={`Increase cartons for ${product.name}`}
+                                        className="
+                                            flex
+                                            h-9
+                                            w-9
+                                            shrink-0
+                                            items-center
+                                            justify-center
+                                            border-l
+                                            border-primary
+                                            bg-primary
+                                            text-white
+                                        "
+                                    >
+                                        <Plus
+                                            size={14}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Carton content */}
+                            <div
+                                className="
+                                    min-w-0
+                                    text-right
+                                    sm:text-center
+                                "
+                            >
+                                <p
+                                    className="
+                                        text-[11px]
+                                        font-medium
+                                        uppercase
+                                        tracking-wide
+                                        text-gray-500
+                                    "
+                                >
+                                    Carton Content
+                                </p>
+
+                                <p
+                                    className="
+                                        mt-1
+                                        whitespace-nowrap
+                                        text-sm
+                                        font-medium
+                                        text-gray-700
+                                    "
+                                >
+                                    {formattedCartonQty}{" "}
+                                    {
+                                        product.packUnit
+                                    }
+                                </p>
+                            </div>
+
+                            {/* Price */}
+                            <div
+                                className="
+                                    min-w-0
+                                    text-left
+                                    sm:text-center
+                                "
+                            >
+                                <p
+                                    className="
+                                        text-[11px]
+                                        font-medium
+                                        uppercase
+                                        tracking-wide
+                                        text-gray-500
+                                    "
+                                >
+                                    Price
+                                </p>
+
+                                <p
+                                    className="
+                                        mt-1
+                                        whitespace-nowrap
+                                        text-sm
+                                        font-semibold
+                                        text-gray-800
+                                    "
+                                >
+                                    ₹
+                                    {
+                                        formattedUnitPrice
+                                    }
+                                </p>
+                            </div>
+
+                            {/* Total */}
+                            <div
+                                className="
+                                    min-w-0
+                                    text-right
+                                "
+                            >
+                                <p
+                                    className="
+                                        text-[11px]
+                                        font-medium
+                                        uppercase
+                                        tracking-wide
+                                        text-gray-500
+                                    "
+                                >
+                                    Total
+                                </p>
+
+                                {quantity > 0 ? (
+                                    <p
+                                        className="
+                                            mt-1
+                                            whitespace-nowrap
+                                            text-lg
+                                            font-bold
+                                            text-primary
+                                        "
+                                    >
+                                        ₹
+                                        {
+                                            formattedTotal
+                                        }
+                                    </p>
+                                ) : (
+                                    <p
+                                        className="
+                                            mt-1
+                                            text-xs
+                                            text-gray-400
+                                        "
+                                    >
+                                        Select quantity
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
         </>
     );
 }
 
-export default memo(BulkProductRow);
+export default memo(
+    BulkProductRow
+);

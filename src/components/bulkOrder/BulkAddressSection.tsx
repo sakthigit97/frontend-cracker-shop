@@ -80,12 +80,6 @@ function BulkAddressSection({
         });
     };
 
-    /*
-     * Resolve state and city automatically
-     * from the pincode.
-     *
-     * Only NEW addresses need pincode lookup.
-     */
     useEffect(() => {
         if (addressMode !== "NEW") {
             setPincodeLoading(false);
@@ -96,10 +90,6 @@ function BulkAddressSection({
         const pincode =
             newAddress.pincode.trim();
 
-        /*
-         * Do not call the API until we have
-         * exactly 6 digits.
-         */
         if (pincode.length !== 6) {
             setPincodeLoading(false);
             setPincodeError("");
@@ -148,10 +138,6 @@ function BulkAddressSection({
                             postOffice?.District?.trim() ??
                             "";
 
-                        /*
-                         * Pincode does not exist
-                         * or API did not return a state.
-                         */
                         if (
                             result?.Status !==
                             "Success" ||
@@ -194,12 +180,6 @@ function BulkAddressSection({
                             return;
                         }
 
-                        /*
-                         * Valid pincode:
-                         *
-                         * State comes from the pincode.
-                         * City is populated when available.
-                         */
                         onAddressChange({
                             ...latestAddressRef.current,
                             state,
@@ -439,29 +419,26 @@ function BulkAddressSection({
                             />
 
                             {/* City */}
-
                             <input
                                 type="text"
                                 placeholder="City *"
-                                value={
-                                    newAddress.city
+                                value={newAddress.city}
+                                onChange={(e) =>
+                                    update("city", e.target.value)
                                 }
-                                readOnly
-                                className="w-full cursor-not-allowed rounded-xl border bg-gray-100 p-3 text-gray-600 outline-none"
+                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
                             />
-
                             {/* State */}
 
                             <input
                                 type="text"
                                 placeholder="State *"
-                                value={
-                                    newAddress.state
+                                value={newAddress.state}
+                                onChange={(e) =>
+                                    update("state", e.target.value)
                                 }
-                                readOnly
-                                className="w-full cursor-not-allowed rounded-xl border bg-gray-100 p-3 text-gray-600 outline-none"
+                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
                             />
-
                             {/* Pincode */}
 
                             <div>

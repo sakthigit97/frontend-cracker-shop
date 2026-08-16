@@ -6,6 +6,15 @@ export interface GetAdminUsersParams {
     limit?: number;
 }
 
+export interface UpdateAdminUserRequest {
+    name?: string;
+    role?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+}
+
 export interface AdminUser {
     mobile: string;
     name?: string;
@@ -56,4 +65,18 @@ export async function deleteUser(
     return apiFetch(`/admin/users/${mobile}`, {
         method: "DELETE",
     });
+}
+
+
+export async function updateAdminUser(
+    mobile: string,
+    payload: UpdateAdminUserRequest
+) {
+    return apiFetch(
+        `/admin/users/${encodeURIComponent(mobile)}`,
+        {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+    }
+    );
 }

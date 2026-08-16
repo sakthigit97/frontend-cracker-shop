@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useAdminCodeStore } from "../../store/adminCode.store";
-
+import { useAlert } from "../../store/alert.store";
 import type {
     AdminCode,
 } from "../../types/adminCode";
+
 import { formatDateTime } from "../../utils/date";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 
 interface Props {
     codes: AdminCode[];
@@ -18,32 +21,58 @@ export default function AdminCodeTable({
         deleting,
     } = useAdminCodeStore();
 
-    async function handleDelete(
-        code: string
-    ) {
+    const { showAlert } = useAlert();
 
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this Admin Code?"
-        );
+    const [showDeleteConfirm, setShowDeleteConfirm] =
+        useState(false);
 
-        if (!confirmed) {
+    const [selectedCode, setSelectedCode] =
+        useState<string | null>(null);
+
+
+    function handleDeleteClick(code: string) {
+
+        setSelectedCode(code);
+
+        setShowDeleteConfirm(true);
+
+    }
+
+
+    async function handleDeleteConfirm() {
+
+        if (!selectedCode) {
             return;
         }
 
         try {
 
-            await deleteCode(code);
+            await deleteCode(selectedCode);
+
+            showAlert({
+                type: "success",
+                message: "Admin Code deleted successfully",
+            });
 
         } catch (e: any) {
 
-            alert(
-                e.message ||
-                "Unable to delete Admin Code."
-            );
+            showAlert({
+                type: "error",
+                message:
+                    e?.message ||
+                    "Unable to delete Admin Code.",
+            });
+
+        } finally {
+
+            setShowDeleteConfirm(false);
+
+            setSelectedCode(null);
 
         }
 
     }
+
 
     function getStatus(
         code: AdminCode
@@ -75,6 +104,7 @@ export default function AdminCodeTable({
         };
 
     }
+
 
     if (!codes.length) {
 
@@ -121,177 +151,223 @@ export default function AdminCodeTable({
 
     }
 
+
     return (
 
-        <div
-            className="
-                overflow-x-auto
-                rounded-xl
-                border
-                bg-white
-                shadow-sm
-            "
-        >
+        <>
 
-            <table
+            <div
                 className="
-                    min-w-full
-                    text-sm
+                    overflow-x-auto
+                    rounded-xl
+                    border
+                    bg-white
+                    shadow-sm
                 "
             >
 
-                <thead
+                <table
                     className="
-                        bg-gray-50
+                        min-w-full
+                        text-sm
                     "
                 >
 
-                    <tr>
+                    <thead
+                        className="
+                            bg-gray-50
+                        "
+                    >
 
-                        <th className="px-4 py-3 text-left">
-                            Code
-                        </th>
+                        <tr>
 
-                        <th className="px-4 py-3 text-left">
-                            Scheme
-                        </th>
+                            <th className="px-4 py-3 text-left">
+                                Code
+                            </th>
 
-                        <th className="px-4 py-3 text-left">
-                            Expiry
-                        </th>
+                            <th className="px-4 py-3 text-left">
+                                User Mobile
+                            </th>
 
-                        <th className="px-4 py-3 text-left">
-                            Created
-                        </th>
+                            <th className="px-4 py-3 text-left">
+                                Scheme
+                            </th>
 
-                        <th className="px-4 py-3 text-center">
-                            Status
-                        </th>
+                            <th className="px-4 py-3 text-left">
+                                Expiry
+                            </th>
 
-                        <th className="px-4 py-3 text-center">
-                            Action
-                        </th>
+                            <th className="px-4 py-3 text-left">
+                                Created
+                            </th>
 
-                    </tr>
+                            <th className="px-4 py-3 text-center">
+                                Status
+                            </th>
 
-                </thead>
+                            <th className="px-4 py-3 text-center">
+                                Action
+                            </th>
 
-                <tbody>
+                        </tr>
 
-                    {codes.map(code => {
+                    </thead>
 
-                        const status =
-                            getStatus(code);
 
-                        return (
+                    <tbody>
 
-                            <tr
-                                key={code.code}
-                                className="
-                                    border-t
-                                "
-                            >
+                        {codes.map(code => {
 
-                                <td
+                            const status = getStatus(code);
+                            return (
+
+                                <tr
+                                    key={code.code}
                                     className="
-                                        px-4
-                                        py-4
-                                        font-mono
-                                        font-semibold
-                                        tracking-widest
-                                    "
-                                >
-                                    {code.code}
-                                </td>
-
-                                <td className="px-4 py-4">
-
-                                    {
-                                        code.schemeId === "2_TO_5_LAKH"
-                                            ? "₹2 Lakh - ₹5 Lakh"
-                                            : "Above ₹5 Lakh"
-                                    }
-                                </td>
-
-                                <td className="px-4 py-4">
-
-                                    {formatDateTime(
-                                        code.expiryDate
-                                    )}
-
-                                </td>
-
-                                <td className="px-4 py-4">
-
-                                    {formatDateTime(
-                                        code.createdAt
-                                    )}
-
-                                </td>
-
-                                <td
-                                    className="
-                                        px-4
-                                        py-4
-                                        text-center
+                                        border-t
                                     "
                                 >
 
-                                    <span
-                                        className={`
-                                            rounded-full
-                                            px-3
-                                            py-1
-                                            text-xs
+                                    <td
+                                        className="
+                                            px-4
+                                            py-4
+                                            font-mono
                                             font-semibold
-                                            ${status.className}
-                                        `}
+                                            tracking-widest
+                                        "
+                                    >
+                                        {code.code}
+                                    </td>
+
+
+                                    <td className="px-4 py-4">
+
+                                        {
+                                            code.userId
+                                        }
+
+                                    </td>
+
+                                    <td className="px-4 py-4">
+
+                                        {
+                                            code.schemeId
+                                        }
+
+                                    </td>
+
+
+                                    <td className="px-4 py-4">
+
+                                        {formatDateTime(
+                                            code.expiryDate
+                                        )}
+
+                                    </td>
+
+
+                                    <td className="px-4 py-4">
+
+                                        {formatDateTime(
+                                            code.createdAt
+                                        )}
+
+                                    </td>
+
+
+                                    <td
+                                        className="
+                                            px-4
+                                            py-4
+                                            text-center
+                                        "
                                     >
 
-                                        {status.label}
+                                        <span
+                                            className={`
+                                                rounded-full
+                                                px-3
+                                                py-1
+                                                text-xs
+                                                font-semibold
+                                                ${status.className}
+                                            `}
+                                        >
 
-                                    </span>
+                                            {status.label}
 
-                                </td>
+                                        </span>
 
-                                <td
-                                    className="
+                                    </td>
+
+                                    <td
+                                        className="
                                         px-4
                                         py-4
                                         text-center
                                     "
-                                >
-
-                                    <button
-                                        disabled={
-                                            code.status ===
-                                            "USED"
-                                        }
-                                        onClick={() =>
-                                            handleDelete(
-                                                code.code
-                                            )
-                                        }
                                     >
+                                        <button
+                                            disabled={
+                                                code.status === "USED" ||
+                                                (deleting && selectedCode === code.code)
+                                            }
+                                            onClick={() =>
+                                                handleDeleteClick(code.code)
+                                            }
+                                            className="
+                                                text-red-600
+                                                hover:text-red-700
+                                                font-medium
+                                                disabled:opacity-50
+                                                disabled:cursor-not-allowed
+                                            "
+                                        >
+                                            {deleting && selectedCode === code.code
+                                                ? "Deleting..."
+                                                : "Delete"}
+                                        </button>
+                                    </td>
 
-                                        {deleting
-                                            ? "Deleting..."
-                                            : "Delete"}
-                                    </button>
+                                </tr>
 
-                                </td>
+                            );
 
-                            </tr>
+                        })}
 
-                        );
+                    </tbody>
 
-                    })}
+                </table>
 
-                </tbody>
+            </div>
 
-            </table>
 
-        </div>
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                title="Delete Admin Code?"
+                message={
+                    <>
+                        Are you sure you want to delete this
+                        Admin Code?
+                        <br />
+
+                        <span className="text-red-500 font-medium">
+                            This action cannot be undone.
+                        </span>
+                    </>
+                }
+                confirmText="Yes, Delete"
+                cancelText="Cancel"
+                loading={deleting}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setSelectedCode(null);
+                }}
+                onConfirm={handleDeleteConfirm}
+            />
+
+        </>
 
     );
 

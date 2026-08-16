@@ -9,13 +9,10 @@ import { Loader2 } from "lucide-react";
 import BulkStepLayout from "./BulkStepLayout";
 import BulkPricingCard from "./BulkPricingCard";
 import BulkAddressSection from "./BulkAddressSection";
-
 import { bulkOrderStore } from "../../store/bulkOrder.store";
 import { useBulkOrderPricing } from "../../hooks/useBulkOrderPricing";
 import { apiFetch } from "../../services/api";
-
 import type { BulkOrderAddress } from "../../types/bulkOrder";
-
 import { useAlert } from "../../store/alert.store";
 import { validateSchemeAmount } from "../../utils/bulkPricing";
 
@@ -340,7 +337,6 @@ export default function CheckoutStep() {
         }
 
         validatePincode();
-
         return () => {
             active = false;
         };
@@ -352,18 +348,14 @@ export default function CheckoutStep() {
         showAlert,
     ]);
 
-    const validatedState =
-        validatedLocation?.state ?? "";
-
+    const validatedState = validatedLocation?.state ?? "";
     const { pricing } = useBulkOrderPricing({
         state: validatedState,
     });
 
-    const activeAddress =
-        addressMode === "PROFILE"
-            ? profileAddress
-            : newAddress;
-
+    const activeAddress = addressMode === "PROFILE"
+        ? profileAddress
+        : newAddress;
 
     const addressValid = useMemo(() => {
         if (
@@ -394,11 +386,10 @@ export default function CheckoutStep() {
         currentPincode &&
         !!validatedState;
 
-
     const schemeValidation =
         validateSchemeAmount(
             scheme,
-            pricing.productTotal
+            pricing.grandTotal
         );
 
     const pricingReady =

@@ -214,16 +214,20 @@ export default function QuickEstimateTable({
 
                                         <div
                                             className="
-                                    flex
-                                    gap-3
-                                    cursor-pointer
-                                "
+                                                flex
+                                                gap-3
+                                                cursor-pointer
+                                            "
                                             onClick={() => onProductClick(product.id)}
                                         >
 
                                             <img
-                                                src={product.image || defaultImage}
+                                                src={product.image?.trim() || defaultImage}
                                                 alt={product.name}
+                                                onError={(e) => {
+                                                    e.currentTarget.onerror = null;
+                                                    e.currentTarget.src = defaultImage;
+                                                }}
                                                 className="h-11 w-11 object-contain border rounded-md"
                                             />
 
@@ -244,20 +248,61 @@ export default function QuickEstimateTable({
                                                     {product.name}
                                                 </span>
 
-                                                {product.discountText && (
-                                                    <span className="
-                                                        mt-1
-                                                        inline-block
-                                                        rounded-full
-                                                        bg-green-100
-                                                        text-green-700
-                                                        text-[11px]
-                                                        px-2
-                                                        py-0.5
-                                                    ">
-                                                        {product.discountText}
-                                                    </span>
-                                                )}
+                                                {Number(product.packQuantity) > 0 &&
+                                                    product.packUnit?.trim() && (
+                                                        <div className="mt-1">
+                                                            <span className="
+                                                                    inline-flex
+                                                                    items-center
+                                                                    rounded-full
+                                                                    bg-gray-100
+                                                                    px-2 py-0.5
+                                                                    text-[11px]
+                                                                    font-semibold
+                                                                    text-gray-700
+                                                                ">
+                                                                📦 {product.packQuantity} {product.packUnit}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                <div className="mt-1 min-h-[20px]">
+                                                    {!product.isComboPackage && (
+                                                        <span
+                                                            className="
+                                                                inline-flex
+                                                                items-center
+                                                                rounded-full
+                                                                bg-green-100
+                                                                px-2
+                                                                py-0.5
+                                                                text-[11px]
+                                                                font-semibold
+                                                                text-green-700
+                                                            "
+                                                        >
+                                                            {product.discountText || "NET RATE"}
+                                                        </span>
+                                                    )}
+
+                                                    {product.isComboPackage && product.discountText && (
+                                                        <span
+                                                            className="
+                                                                inline-flex
+                                                                items-center
+                                                                rounded-full
+                                                                bg-green-100
+                                                                px-2
+                                                                py-0.5
+                                                                text-[11px]
+                                                                font-semibold
+                                                                text-green-700
+                                                            "
+                                                        >
+                                                            {product.discountText}
+                                                        </span>
+                                                    )}
+                                                </div>
 
                                                 <div className="mt-2">
                                                     <span className="font-bold text-[var(--color-primary)]">

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaDownload } from "react-icons/fa";
 import {
     STATUS_LABELS,
     STATUS_COLORS,
@@ -14,10 +15,12 @@ import { useLocation } from "react-router-dom";
 import EmptyState from "../../components/ui/EmptyState";
 import defaultImage from "../../assets/default-image.png";
 import { downloadInvoice } from "../../utils/pdf/downloadInvoice";
+import { downloadStaffPackingList } from "../../utils/pdf/staffInvoice";
 import { useConfigStore } from "../../store/config.store";
 import { useAdminOrdersStore } from "../../store/adminOrders.store";
 import { restoreOrderApi } from "../../services/order.api";
 import { useOrdersStore } from "../../store/orders.store";
+import { sortProductsBySequence } from "../../utils/sequncerUtil";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -25,6 +28,7 @@ export default function AdminOrderDetails() {
     const { showAlert } = useAlert();
     const location = useLocation();
     const [downloading, setDownloading] = useState(false);
+    const [downloadingPackingList, setDownloadingPackingList] = useState(false);
     const { cache, fetchOrder, loading, updateOrder } = useAdminOrderDetailsStore();
     const updateOrderListCache = useAdminOrdersStore((s) => s.updateOrderInCache);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -56,6 +60,11 @@ export default function AdminOrderDetails() {
             (total: number, item: any) => total + item.quantity,
             0
         ) ?? 0;
+
+    const sortedItems = useMemo(
+        () => sortProductsBySequence(order?.items ?? []),
+        [order?.items]
+    );
 
     useEffect(() => {
         const shouldForce = (location.state as any)?.forceRefresh === true;
@@ -133,6 +142,32 @@ export default function AdminOrderDetails() {
         }
     }
 
+    async function handleDownloadPackingList() {
+        if (downloadingPackingList || !order) return;
+
+        try {
+            setDownloadingPackingList(true);
+
+            await new Promise((resolve) =>
+                setTimeout(resolve, 0)
+            );
+
+            await downloadStaffPackingList({
+                order,
+                config,
+            });
+        } catch (err: any) {
+            showAlert({
+                type: "error",
+                message:
+                    err.message ||
+                    "Unable to download packing list",
+            });
+        } finally {
+            setDownloadingPackingList(false);
+        }
+    }
+
 
     async function handleDownloadInvoice() {
         if (downloading) return;
@@ -154,6 +189,7 @@ export default function AdminOrderDetails() {
             setDownloading(false);
         }
     }
+
     if (!order && loading) {
         return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -301,6 +337,69 @@ export default function AdminOrderDetails() {
                             </Button>
                         )}
 
+                        <div className="relative group">
+                            <button
+                                type="button"
+                                onClick={handleDownloadPackingList}
+                                disabled={downloadingPackingList}
+                                aria-label="Download packing list"
+                                className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-lg
+                border
+                border-gray-300
+                bg-white
+                text-gray-700
+                transition
+                hover:bg-gray-100
+                hover:text-[var(--color-primary)]
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+            "
+                            >
+                                <FaDownload
+                                    size={15}
+                                    className={
+                                        downloadingPackingList
+                                            ? "animate-pulse"
+                                            : ""
+                                    }
+                                />
+                            </button>
+
+                            <div
+                                className="
+                                    pointer-events-none
+                                    invisible
+                                    absolute
+                                    right-0
+                                    top-full
+                                    z-50
+                                    mt-2
+                                    whitespace-nowrap
+                                    rounded-md
+                                    bg-gray-900
+                                    px-3
+                                    py-2
+                                    text-xs
+                                    font-medium
+                                    text-white
+                                    opacity-0
+                                    shadow-lg
+                                    transition-all
+                                    duration-150
+                                    group-hover:visible
+                                    group-hover:opacity-100
+                                "
+                            >
+                                Download Packing List
+                            </div>
+                        </div>
+
                         <span
                             className="inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full"
                             style={{
@@ -312,33 +411,12 @@ export default function AdminOrderDetails() {
                         </span>
                     </div>
                 </div>
-
-                {/* <div className="h-px bg-gray-100" />
-
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                    <div>
-                        <span className="text-gray-500">Total</span>{" "}
-                        <span className="font-semibold text-gray-900">
-                            ₹{order.finalPayable}
-                        </span>
-                    </div>
-
-                    {order.expectedDelivery && (
-                        <div>
-                            <span className="text-gray-500">Expected Delivery</span>{" "}
-                            <span className="font-medium text-gray-800">
-                                {new Date(order.expectedDelivery).toLocaleDateString("en-IN")}
-                            </span>
-                        </div>
-                    )}
-                </div> */}
-
             </div>
 
 
             {/* ITEMS */}
             <div className="bg-white border rounded-xl divide-y max-h-[60vh] overflow-y-auto">
-                {order.items.map((item: any, idx: number) => (
+                {sortedItems.map((item: any, idx: number) => (
                     <div key={item.productId || idx} className="p-4 flex gap-4">
                         <img
                             src={item.image || defaultImage}
@@ -351,13 +429,16 @@ export default function AdminOrderDetails() {
 
                         <div className="flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-semibold">{item.name}</p>
+                                <p className="text-sm font-semibold">
+                                    {item.name}
+                                </p>
 
                                 {item.isComboPackage && (
                                     <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">
                                         Combo
                                     </span>
                                 )}
+
                             </div>
 
                             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -379,6 +460,27 @@ export default function AdminOrderDetails() {
                                     </span>
                                 )}
                             </div>
+
+
+
+                            {Number(item.packQuantity) > 0 &&
+                                item.packUnit?.trim() && (
+                                    <span
+                                        className="
+                                                inline-flex
+                                                items-center
+                                                rounded-full
+                                                bg-gray-100
+                                                px-2
+                                                py-0.5
+                                                text-[11px]
+                                                font-medium
+                                                text-gray-700
+                                            "
+                                    >
+                                        📦 {item.packQuantity} {item.packUnit}
+                                    </span>
+                                )}
 
                             <div className="mt-1 text-xs text-gray-500">
                                 ₹{item.price} × {item.quantity}

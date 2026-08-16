@@ -24,11 +24,18 @@ export default function AdminCreateProduct() {
         categoryId: "",
         isActive: true,
         isComboPackage: false,
+        isRetailOnly: false,
+        bulkOrderBasePrice: "",
+        cartonQty: "",
+        isBulkOrderOnly: false,
         images: [],
         videoUrl: "",
         description: "",
         packageTagIds: [],
-        aiTags: []
+        aiTags: [],
+        packQuantity: "",
+        packUnit: "",
+        isGiftPack: false,
     });
 
     useEffect(() => {
@@ -66,6 +73,22 @@ export default function AdminCreateProduct() {
             return;
         }
 
+        if (!form.packQuantity || Number(form.packQuantity) <= 0) {
+            showAlert({
+                type: "error",
+                message: "Please enter a valid pack quantity",
+            });
+            return;
+        }
+
+        if (!form.packUnit) {
+            showAlert({
+                type: "error",
+                message: "Please select a pack unit",
+            });
+            return;
+        }
+
         if (form.description.trim().length < 10) {
             showAlert({
                 type: "error",
@@ -80,6 +103,32 @@ export default function AdminCreateProduct() {
                 message: "Please upload at least one product image",
             });
             return;
+        }
+
+        if (form.isBulkOrderOnly) {
+            if (
+                !form.bulkOrderBasePrice ||
+                Number(form.bulkOrderBasePrice) <= 0
+            ) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "Please enter a valid bulk order base price",
+                });
+                return;
+            }
+
+            if (
+                !form.cartonQty ||
+                Number(form.cartonQty) <= 0
+            ) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "Please enter a valid carton quantity",
+                });
+                return;
+            }
         }
 
         const brandName = brands.find((b) => b.id === form.brandId)?.name || "";
@@ -99,6 +148,14 @@ export default function AdminCreateProduct() {
                 price: Number(form.price),
                 quantity: Number(form.quantity),
                 brandId: form.brandId,
+                isRetailOnly: form.isRetailOnly,
+                bulkOrderBasePrice: form.bulkOrderBasePrice
+                    ? Number(form.bulkOrderBasePrice)
+                    : null,
+                cartonQty: form.cartonQty
+                    ? Number(form.cartonQty)
+                    : null,
+                isBulkOrderOnly: form.isBulkOrderOnly,
                 categoryId: form.categoryId,
                 imageUrls: presignRes.uploads.map((u: any) => u.fileUrl),
                 videoUrl: form.videoUrl.trim(),
@@ -108,7 +165,11 @@ export default function AdminCreateProduct() {
                 isComboPackage: form.isComboPackage,
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
-
+                packQuantity: form.packQuantity
+                    ? Number(form.packQuantity)
+                    : null,
+                packUnit: form.packUnit || null,
+                isGiftPack: form.isGiftPack,
             });
 
             showAlert({

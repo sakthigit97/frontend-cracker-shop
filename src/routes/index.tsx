@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import AdminLayout from "../layouts/AdminLayout";
-import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Products from "../pages/Products";
 import CategoryProducts from "../pages/CategoryProducts";
@@ -55,6 +54,9 @@ import AdminBulkOrders from "../pages/admin/AdminBulkOrders";
 import AdminBulkOrderDetails from "../pages/admin/AdminBulkOrderDetails";
 import AdminCodes from "../pages/admin/AdminCodes";
 import AdjustBulkOrder from "../pages/BulkAdjustOrder";
+import StaffRoute from "./StaffRoute";
+import StaffLayout from "../layouts/StaffLayout";
+import RootPage from "./RootPage";
 
 export default function AppRoutes() {
   return (
@@ -64,7 +66,7 @@ export default function AppRoutes() {
 
         {/* ================= PUBLIC USER APP ================= */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RootPage />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/category/:categoryId" element={<CategoryProducts />} />
           <Route path="/products/brand/:brandId" element={<BrandProducts />} />
@@ -125,10 +127,20 @@ export default function AppRoutes() {
             <Route path="/admin/reports/products" element={<ProductReport />} />
             <Route path="/admin/queries" element={<AdminContacts />} />
             <Route path="/admin/coupons" element={<AdminCoupons />} />
+            <Route path="/admin/admin-codes" element={<AdminCodes />} />
             <Route path="/admin/bulk-orders" element={<AdminBulkOrders />} />
             <Route path="/admin/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
-            <Route path="/admin/admin-codes" element={<AdminCodes />} />
             <Route path="/admin/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />
+          </Route>
+        </Route>
+
+        <Route element={<StaffRoute />}>
+          <Route element={<StaffLayout />}>
+            <Route path="/staff/orders" element={<AdminOrders />} />
+            <Route path="/staff/orders/:orderId" element={<AdminOrderDetails />} />
+            <Route path="/staff/bulk-orders" element={<AdminBulkOrders />} />
+            <Route path="/staff/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
+            <Route path="/staff/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />
           </Route>
         </Route>
       </Routes>

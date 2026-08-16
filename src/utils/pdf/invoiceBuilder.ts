@@ -1,14 +1,18 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDF_THEME } from "../../utils/pdf/invoiceTheme";
-import { money, line, text, formatStatus } from "../../utils/pdf/invoiceHelpers";
+import {
+    money,
+    line,
+    text,
+    formatStatus,
+} from "../../utils/pdf/invoiceHelpers";
 import Icon from "../../assets/icon-new.png";
 
 export async function buildInvoicePdf(
     order: any,
     config: any
 ) {
-
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -18,13 +22,19 @@ export async function buildInvoicePdf(
 
     const normal = () => doc.setFont("helvetica", "normal");
     const bold = () => doc.setFont("helvetica", "bold");
+
     normal();
     doc.setFontSize(8);
 
     const LEFT = PDF_THEME.LEFT;
     const RIGHT = PDF_THEME.RIGHT;
     const COLORS = PDF_THEME.colors;
+
     let y = 10;
+
+    // ============================================================
+    // HEADER
+    // ============================================================
 
     doc.addImage(
         Icon,
@@ -38,8 +48,13 @@ export async function buildInvoicePdf(
     bold();
     doc.setFontSize(18);
     doc.setTextColor(0);
-    const packagingPercent = config?.packagingPercent ?? 0;
-    const gstPercent = config?.gstPercent ?? 0;
+
+    const packagingPercent =
+        config?.packagingPercent ?? 0;
+
+    const gstPercent =
+        config?.gstPercent ?? 0;
+
     text(
         doc,
         config?.companyName ||
@@ -60,6 +75,10 @@ export async function buildInvoicePdf(
         LEFT + 17,
         y + 9
     );
+
+    // ============================================================
+    // IMPORTANT NOTICE
+    // ============================================================
 
     const boxX = 138;
     const boxY = 8;
@@ -128,43 +147,81 @@ export async function buildInvoicePdf(
         boxY + 15
     );
 
+    // ============================================================
+    // COMPANY CONTACT
+    // ============================================================
+
     y = 26;
+
     doc.setFontSize(7.5);
     doc.setTextColor(
         ...COLORS.dark
     );
 
     if (config?.displayMobile) {
-        text(doc, config.displayMobile, LEFT, y);
+        text(
+            doc,
+            config.displayMobile,
+            LEFT,
+            y
+        );
+
         y += 4;
     }
 
     if (config?.adminEmail) {
-        text(doc, config.adminEmail, LEFT, y);
+        text(
+            doc,
+            config.adminEmail,
+            LEFT,
+            y
+        );
+
         y += 4;
     }
 
     if (config?.website) {
-        text(doc, config.website, LEFT, y);
+        text(
+            doc,
+            config.website,
+            LEFT,
+            y
+        );
+
         y += 4;
     }
 
     if (config?.adminAddress) {
-        const address = doc.splitTextToSize(config.adminAddress, 110);
-        text(doc, address, LEFT, y);
+        const address = doc.splitTextToSize(
+            config.adminAddress,
+            110
+        );
+
+        text(
+            doc,
+            address,
+            LEFT,
+            y
+        );
+
         y += address.length * 3.4;
     }
 
     y += 2;
-    line(
-        doc,
-        y
-    );
+
+    line(doc, y);
+
+    // ============================================================
+    // INVOICE DETAILS
+    // ============================================================
 
     y += 5;
+
     bold();
+
     doc.setFontSize(8);
     doc.setTextColor(0);
+
     text(
         doc,
         `Invoice No : ${order.orderId}`,
@@ -172,14 +229,17 @@ export async function buildInvoicePdf(
         y
     );
 
-    const orderDate = new Date(Number(order.updatedAt)).toLocaleDateString(
-        "en-IN",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-        }
-    );
+    const orderDate =
+        new Date(
+            Number(order.updatedAt)
+        ).toLocaleDateString(
+            "en-IN",
+            {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+            }
+        );
 
     text(
         doc,
@@ -190,7 +250,6 @@ export async function buildInvoicePdf(
 
     y += 4;
 
-
     text(
         doc,
         `Status : ${formatStatus(order.status)}`,
@@ -199,14 +258,25 @@ export async function buildInvoicePdf(
     );
 
     y += 6;
+
     line(
         doc,
         y
     );
 
-    line(doc, y);
+    // ============================================================
+    // CUSTOMER DETAILS
+    // ============================================================
+
+    line(
+        doc,
+        y
+    );
+
     y += 5;
+
     bold();
+
     doc.setFontSize(8);
     doc.setTextColor(0);
 
@@ -218,52 +288,165 @@ export async function buildInvoicePdf(
     );
 
     y += 5;
-    const customerLines = doc.splitTextToSize(
-        (order.address ?? "").trim(),
-        150
+
+    const customerLines =
+        doc.splitTextToSize(
+            (order.address ?? "").trim(),
+            150
+        );
+
+    text(
+        doc,
+        customerLines,
+        LEFT,
+        y
     );
 
-    text(doc, customerLines, LEFT, y);
     y += customerLines.length * 3.8;
 
     y += 2;
 
-    line(doc, y);
+    line(
+        doc,
+        y
+    );
+
     y += 4;
+
+    // ============================================================
+    // SORT PRODUCTS BY SEQUENCE
+    // ============================================================
+
+    const invoiceItems =
+        Array.isArray(order.items)
+            ? [...order.items].sort(
+                (a: any, b: any) => {
+                    const aSequence =
+                        Number(
+                            a.sequenceNumber
+                        );
+
+                    const bSequence =
+                        Number(
+                            b.sequenceNumber
+                        );
+
+                    if (
+                        Number.isFinite(
+                            aSequence
+                        ) &&
+                        Number.isFinite(
+                            bSequence
+                        )
+                    ) {
+                        return (
+                            aSequence -
+                            bSequence
+                        );
+                    }
+
+                    if (
+                        Number.isFinite(
+                            aSequence
+                        )
+                    ) {
+                        return -1;
+                    }
+
+                    if (
+                        Number.isFinite(
+                            bSequence
+                        )
+                    ) {
+                        return 1;
+                    }
+
+                    return 0;
+                }
+            )
+            : [];
+
     const tableStartY = y;
+
+    // ============================================================
+    // PRODUCT TABLE
+    // ============================================================
+
     autoTable(doc, {
         startY: tableStartY,
+
         theme: "grid",
+
         tableLineWidth: 0,
+
+        // Product | Qty | Unit | MRP | Discount | Offer Price | Total
         head: [[
             "Product",
             "Qty",
+            "Unit",
             "MRP",
             "Discount",
             "Offer Price",
-            "Total"
+            "Total",
         ]],
-        body: order.items.map((item: any) => [
 
-            item.isComboPackage
-                ? `${item.name} • Combo`
-                : item.name,
+        body: invoiceItems.map(
+            (item: any) => {
+                const packQuantity =
+                    Number(
+                        item.packQuantity
+                    );
 
-            String(item.quantity),
-            item.isComboPackage
-                ? money(item.price)
-                : item.originalPrice
-                    ? money(item.originalPrice)
-                    : "-",
+                const packUnit =
+                    item.packUnit?.trim();
 
-            item.discountText ?? "-",
+                const unitText =
+                    packQuantity > 0 &&
+                    packUnit
+                        ? `${packQuantity} ${packUnit}`
+                        : "-";
 
-            money(item.price),
+                const productName =
+                    item.isComboPackage
+                        ? `${item.name} • Combo`
+                        : item.name;
 
-            money(item.total)
-        ]),
+                return [
+                    // Product
+                    productName,
+
+                    // Ordered quantity
+                    String(item.quantity),
+
+                    // Pack / Unit
+                    unitText,
+
+                    // MRP
+                    item.isComboPackage
+                        ? money(item.price)
+                        : item.originalPrice
+                            ? money(
+                                item.originalPrice
+                            )
+                            : "-",
+
+                    // Discount
+                    item.discountText ?? "-",
+
+                    // Offer Price
+                    money(item.price),
+
+                    // Total
+                    money(item.total),
+                ];
+            }
+        ),
+
+        // ========================================================
+        // TABLE STYLES
+        // ========================================================
+
         styles: {
-
             font: "helvetica",
 
             fontStyle: "normal",
@@ -276,34 +459,42 @@ export async function buildInvoicePdf(
                 top: 1.2,
                 bottom: 1.2,
                 left: 2.2,
-                right: 2.2
+                right: 2.2,
             },
 
-            minCellHeight: 6,
+            minCellHeight: 8,
 
             lineWidth: 0.08,
 
-            lineColor: COLORS.border,
+            lineColor:
+                COLORS.border,
 
             valign: "middle",
 
-            textColor: COLORS.dark
-
+            textColor:
+                COLORS.dark,
         },
+
         alternateRowStyles: {
-            fillColor: COLORS.alternate,
+            fillColor:
+                COLORS.alternate,
         },
-        headStyles: {
 
+        headStyles: {
             font: "helvetica",
 
             fontStyle: "bold",
 
             fontSize: 8,
 
-            fillColor: COLORS.primary,
+            fillColor:
+                COLORS.primary,
 
-            textColor: [255, 255, 255],
+            textColor: [
+                255,
+                255,
+                255,
+            ],
 
             halign: "center",
 
@@ -313,139 +504,197 @@ export async function buildInvoicePdf(
                 top: 2,
                 bottom: 2,
                 left: 2,
-                right: 2
-            }
-
+                right: 2,
+            },
         },
-        columnStyles: {
 
+        // ========================================================
+        // COLUMN WIDTHS
+        // ========================================================
+
+        columnStyles: {
+            // Product
             0: {
-                cellWidth: 72,
-                halign: "left"
+                cellWidth: 55,
+                halign: "left",
             },
 
+            // Qty
             1: {
                 cellWidth: 12,
-                halign: "center"
+                halign: "center",
             },
 
+            // Unit
             2: {
-                cellWidth: 24,
-                halign: "right"
+                cellWidth: 20,
+                halign: "center",
             },
 
+            // MRP
             3: {
-                cellWidth: 24,
-                halign: "center"
+                cellWidth: 22,
+                halign: "right",
             },
 
+            // Discount
             4: {
-                cellWidth: 24,
-                halign: "right"
+                cellWidth: 22,
+                halign: "center",
             },
 
+            // Offer Price
             5: {
-                cellWidth: 28,
-                halign: "right"
-            }
+                cellWidth: 24,
+                halign: "right",
+            },
 
+            // Total
+            6: {
+                cellWidth: 25,
+                halign: "right",
+            },
         },
-        didParseCell: (data) => {
 
-            if (data.section === "head") {
+        // ========================================================
+        // CELL STYLING
+        // ========================================================
 
+        didParseCell: (
+            data
+        ) => {
+
+            // Header
+            if (
+                data.section === "head"
+            ) {
                 data.cell.styles.lineColor =
                     COLORS.primary;
 
                 return;
-
             }
 
+            // Product
             if (
                 data.section === "body" &&
                 data.column.index === 0
             ) {
-
                 const item =
-                    order.items[data.row.index];
+                    invoiceItems[
+                        data.row.index
+                    ];
 
-                if (item?.isComboPackage) {
-
-                    data.cell.styles.fontStyle = "bold";
+                if (
+                    item?.isComboPackage
+                ) {
+                    data.cell.styles.fontStyle =
+                        "bold";
 
                     data.cell.styles.textColor = [
                         25,
                         70,
-                        140
+                        140,
                     ];
-
-                }
-
-            }
-
-            if (
-                data.section === "body" &&
-                data.column.index === 2
-            ) {
-                const item = order.items[data.row.index];
-
-                data.cell.styles.textColor = item?.isComboPackage
-                    ? COLORS.dark
-                    : [120, 120, 120];
-
-                data.cell.styles.fillColor = [
-                    248,
-                    248,
-                    248
-                ];
-
-                if (item?.isComboPackage) {
-                    data.cell.styles.fontStyle = "bold";
                 }
             }
 
+            // MRP
             if (
                 data.section === "body" &&
                 data.column.index === 3
             ) {
-                data.cell.styles.textColor = [22, 163, 74];
-                data.cell.styles.fontStyle = "bold";
-                data.cell.styles.halign = "center";
+                const item =
+                    invoiceItems[
+                        data.row.index
+                    ];
+
+                data.cell.styles.textColor =
+                    item?.isComboPackage
+                        ? COLORS.dark
+                        : [
+                            120,
+                            120,
+                            120,
+                        ];
+
+                data.cell.styles.fillColor = [
+                    248,
+                    248,
+                    248,
+                ];
+
+                if (
+                    item?.isComboPackage
+                ) {
+                    data.cell.styles.fontStyle =
+                        "bold";
+                }
             }
 
+            // Discount
             if (
                 data.section === "body" &&
                 data.column.index === 4
             ) {
+                data.cell.styles.textColor = [
+                    22,
+                    163,
+                    74,
+                ];
 
-                data.cell.styles.fontStyle = "bold";
+                data.cell.styles.fontStyle =
+                    "bold";
 
-                data.cell.styles.textColor =
-                    COLORS.primary;
-
+                data.cell.styles.halign =
+                    "center";
             }
 
+            // Offer Price
             if (
                 data.section === "body" &&
                 data.column.index === 5
             ) {
-
-                data.cell.styles.fontStyle = "bold";
+                data.cell.styles.fontStyle =
+                    "bold";
 
                 data.cell.styles.textColor =
                     COLORS.primary;
-
             }
 
-        }
+            // Total
+            if (
+                data.section === "body" &&
+                data.column.index === 6
+            ) {
+                data.cell.styles.fontStyle =
+                    "bold";
+
+                data.cell.styles.textColor =
+                    COLORS.primary;
+            }
+        },
     });
-    let summaryStartY = (doc as any).lastAutoTable.finalY + 2;
+
+    // ============================================================
+    // INVOICE SUMMARY
+    // ============================================================
+
+    let summaryStartY =
+        (doc as any)
+            .lastAutoTable
+            .finalY + 2;
+
     const SUMMARY_WIDTH = 80;
-    const SUMMARY_X = RIGHT - SUMMARY_WIDTH;
+
+    const SUMMARY_X =
+        RIGHT - SUMMARY_WIDTH;
+
     bold();
+
     doc.setFontSize(9);
 
     summaryStartY += 10;
+
     text(
         doc,
         "Invoice Summary",
@@ -454,15 +703,17 @@ export async function buildInvoicePdf(
     );
 
     summaryStartY += 5;
+
     const drawSummaryRow = (
         label: string,
         value: number | string,
         bold = false
     ) => {
-
         doc.setFont(
             "helvetica",
-            bold ? "bold" : "normal"
+            bold
+                ? "bold"
+                : "normal"
         );
 
         text(
@@ -471,10 +722,13 @@ export async function buildInvoicePdf(
             SUMMARY_X,
             summaryStartY
         );
+
         const displayValue =
             typeof value === "number"
                 ? money(value)
-                : String(value ?? "");
+                : String(
+                    value ?? ""
+                );
 
         text(
             doc,
@@ -489,14 +743,18 @@ export async function buildInvoicePdf(
         summaryStartY += 5;
     };
 
-    if (order.comboPackageTotal > 0) {
+    if (
+        order.comboPackageTotal > 0
+    ) {
         drawSummaryRow(
             "Combo Total (Incl. Packaging)",
             order.comboPackageTotal
         );
     }
 
-    if (order.nonComboProductTotal > 0) {
+    if (
+        order.nonComboProductTotal > 0
+    ) {
         drawSummaryRow(
             "Non Combo Total",
             order.nonComboProductTotal
@@ -508,14 +766,18 @@ export async function buildInvoicePdf(
         order.totalProductAmount || 0
     );
 
-    if (order.packagingCharge > 0) {
+    if (
+        order.packagingCharge > 0
+    ) {
         drawSummaryRow(
             `Packaging Charge (${packagingPercent}%)`,
             order.packagingCharge
         );
     }
 
-    if (order.couponDiscount > 0) {
+    if (
+        order.couponDiscount > 0
+    ) {
         drawSummaryRow(
             "Amount Before Discount",
             order.amountBeforeDiscount
@@ -532,7 +794,9 @@ export async function buildInvoicePdf(
         );
     }
 
-    if (order.gstAmount > 0) {
+    if (
+        order.gstAmount > 0
+    ) {
         drawSummaryRow(
             `GST (${gstPercent}%)`,
             order.gstAmount
@@ -544,13 +808,19 @@ export async function buildInvoicePdf(
         order.grandTotal || 0
     );
 
-    if (order.walletUsed > 0) {
+    if (
+        order.walletUsed > 0
+    ) {
         drawSummaryRow(
             "Wallet Used",
             -order.walletUsed
         );
     }
-    doc.setDrawColor(...COLORS.border);
+
+    doc.setDrawColor(
+        ...COLORS.border
+    );
+
     doc.line(
         SUMMARY_X,
         summaryStartY,
@@ -559,7 +829,9 @@ export async function buildInvoicePdf(
     );
 
     summaryStartY += 4;
+
     bold();
+
     doc.setFontSize(10);
 
     text(
@@ -579,11 +851,21 @@ export async function buildInvoicePdf(
         }
     );
 
+    // ============================================================
+    // FOOTER
+    // ============================================================
+
     summaryStartY += 8;
+
     normal();
+
     doc.setFontSize(8);
 
-    doc.setFont("helvetica", "italic");
+    doc.setFont(
+        "helvetica",
+        "italic"
+    );
+
     doc.setFontSize(7);
 
     text(
@@ -603,5 +885,6 @@ export async function buildInvoicePdf(
     );
 
     summaryStartY += 6;
+
     return doc;
 }

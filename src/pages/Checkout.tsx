@@ -11,6 +11,8 @@ import { INDIA_STATES } from "../utils/states";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import PrivacyPolicy from "./PrivacyPolicy";
+import { FiGift } from "react-icons/fi";
+
 import {
   FiChevronDown,
   FiChevronUp
@@ -73,6 +75,7 @@ export default function Checkout() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [mobile, setMobile] = useState("");
   const disableGstForTN = config?.disableGstForTN || false;
+  const companyName = config?.companyName || 'Sivakaasi Pyro Park';
   const [validatedLocation, setValidatedLocation] = useState<{
     pincode: string;
     state: string;
@@ -697,41 +700,136 @@ export default function Checkout() {
         <div className="bg-white rounded-xl border p-5 space-y-4">
           <h2 className="font-semibold text-lg">Order Summary</h2>
 
-          <div className="space-y-2 max-h-[280px] overflow-y-auto">
-            {products.map((p) => (
+          <div className="
+                rounded-lg
+                border border-green-200
+                bg-green-50
+                px-4 py-3
+              ">
+            <div className="flex items-start gap-2">
+              <span className="text-base"> <FiGift size={17} /></span>
 
+              <div className="text-sm">
+                <p className="font-semibold text-green-800">
+                  Special Discount Available
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-green-700">
+                  Orders above ₹1,00,000 are eligible for an additional discount.
+                  Contact the <b>{companyName}</b> team to get your exclusive coupon
+                  code.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
+            {products.map((p) => (
               <div
                 key={p.id}
-                className="flex justify-between items-start text-sm py-2"
+                className="
+        flex
+        items-center
+        justify-between
+        gap-3
+        text-sm
+        py-1.5
+        border-b
+        border-gray-100
+        last:border-0
+      "
               >
-                <div>
-                  <div>{p.name} × {p.quantity}</div>
-                  <div className="flex items-center gap-2 mt-1">
+                {/* Product Details */}
+                <div className="min-w-0 flex-1">
+                  {/* Product Name */}
+                  <div
+                    className="
+            font-medium
+            text-[var(--color-primary)]
+            leading-tight
+            line-clamp-2
+          "
+                    title={p.name}
+                  >
+                    {p.name}
+                  </div>
+
+                  {/* Pack + Quantity */}
+                  <div className="flex items-center flex-wrap gap-1.5 mt-1">
+                    {Number(p.packQuantity) > 0 &&
+                      p.packUnit?.trim() && (
+                        <span
+                          className="
+                  inline-flex
+                  items-center
+                  gap-1
+                  rounded-full
+                  bg-gray-100
+                  border
+                  border-gray-200
+                  px-2
+                  py-0.5
+                  text-[10px]
+                  font-semibold
+                  text-[var(--color-primary)]
+                  whitespace-nowrap
+                "
+                        >
+                          📦 {p.packQuantity} {p.packUnit}
+                        </span>
+                      )}
+
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      × {p.quantity}
+                    </span>
+                  </div>
+
+                  {/* Price + Discount */}
+                  <div className="flex items-center flex-wrap gap-1.5 mt-1">
                     {p.originalPrice && p.originalPrice > p.price ? (
                       <>
                         <span className="line-through text-gray-400 text-xs">
                           ₹{p.originalPrice}
                         </span>
 
-                        <span className="text-green-600 font-semibold">
+                        <span className="text-[var(--color-primary)] font-semibold text-sm">
                           ₹{p.price}
                         </span>
                       </>
                     ) : (
-                      <span className="font-medium">
+                      <span className="font-semibold text-[var(--color-primary)] text-sm">
                         ₹{p.price}
                       </span>
                     )}
 
                     {(p.discountText || !p.isComboPackage) && (
-                      <span className="text-green-600 text-xs font-medium bg-green-50 px-1 rounded">
+                      <span
+                        className="
+                text-green-600
+                text-[10px]
+                font-medium
+                bg-green-50
+                px-1.5
+                py-0.5
+                rounded
+                whitespace-nowrap
+              "
+                      >
                         {p.discountText || "NET RATE"}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="font-medium">
+                {/* Product Total */}
+                <div
+                  className="
+          shrink-0
+          font-semibold
+          text-[var(--color-primary)]
+          text-sm
+        "
+                >
                   ₹{p.price * p.quantity}
                 </div>
               </div>

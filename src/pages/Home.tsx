@@ -202,8 +202,10 @@ export default function Home() {
 
   displayProducts = sortProductsByCategoryAndSequence(
     displayProducts,
-    categories
+    categories,
+    true
   );
+
   const tabs = useMemo(() => {
     const items: {
       key: HomeTab;

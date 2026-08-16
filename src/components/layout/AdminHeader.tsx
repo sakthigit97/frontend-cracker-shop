@@ -24,7 +24,6 @@ import HeaderDropdown from "./HeaderDropdown";
 import type { HeaderDropdownItem } from "./HeaderDropdown";
 import MobileAccordion from "./MobileAccordion";
 import type { MobileAccordionItem } from "./MobileAccordion";
-
 import { useAuth } from "../../store/auth.store";
 
 export default function AdminHeader() {

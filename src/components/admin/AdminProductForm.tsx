@@ -14,11 +14,19 @@ export interface ProductFormData {
     categoryId: string;
     isActive: boolean;
     isComboPackage: boolean;
+    isRetailOnly: boolean;
+    bulkOrderBasePrice: string;
+    cartonQty: string;
+    isBulkOrderOnly: boolean;
     images: File[];
     videoUrl: string;
     description: string;
     packageTagIds: string[],
     aiTags: string[];
+    packQuantity: string;
+    packUnit: string;
+    isGiftPack: boolean;
+
 }
 
 interface Props {
@@ -167,6 +175,46 @@ export default function ProductForm({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Pack Quantity *
+                        </label>
+
+                        <input
+                            type="number"
+                            min="1"
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.packQuantity}
+                            onChange={(e) =>
+                                update("packQuantity", e.target.value)
+                            }
+                            placeholder="e.g. 2"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Pack Unit *
+                        </label>
+
+                        <select
+                            className="border rounded-md px-3 py-2 text-sm w-full"
+                            value={value.packUnit}
+                            onChange={(e) =>
+                                update("packUnit", e.target.value)
+                            }
+                        >
+                            <option value="">Select Unit</option>
+                            <option value="BOX">Box</option>
+                            <option value="PIECE">Piece</option>
+                            <option value="PACKET">Packet</option>
+                            <option value="SET">Set</option>
+                            <option value="NOS">Nos</option>
+                            <option value="GRAM">Gram</option>
+                            <option value="KG">Kg</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                             Brand *
                         </label>
 
@@ -206,6 +254,192 @@ export default function ProductForm({
                     </div>
 
                     <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Product Type
+                        </label>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                            {/* Retail Only */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        update("isRetailOnly", !value.isRetailOnly)
+                                    }
+                                    className={`w-11 h-6 rounded-full p-1 transition ${value.isRetailOnly
+                                            ? "bg-green-500"
+                                            : "bg-gray-300"
+                                        }`}
+                                >
+                                    <div
+                                        className={`w-4 h-4 bg-white rounded-full transition ${value.isRetailOnly
+                                                ? "translate-x-5"
+                                                : ""
+                                            }`}
+                                    />
+                                </button>
+
+                                <span className="text-sm font-medium text-gray-700">
+                                    Retail Only
+                                </span>
+                            </div>
+
+                            {/* Gift Pack */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        update("isGiftPack", !value.isGiftPack)
+                                    }
+                                    className={`w-11 h-6 rounded-full p-1 transition ${value.isGiftPack
+                                            ? "bg-green-500"
+                                            : "bg-gray-300"
+                                        }`}
+                                >
+                                    <div
+                                        className={`w-4 h-4 bg-white rounded-full transition ${value.isGiftPack
+                                                ? "translate-x-5"
+                                                : ""
+                                            }`}
+                                    />
+                                </button>
+
+                                <span className="text-sm font-medium text-gray-700">
+                                    Gift Pack
+                                </span>
+                            </div>
+
+                            {/* Combo Package */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        update("isComboPackage", !value.isComboPackage)
+                                    }
+                                    className={`w-11 h-6 rounded-full p-1 transition ${value.isComboPackage
+                                            ? "bg-green-500"
+                                            : "bg-gray-300"
+                                        }`}
+                                >
+                                    <div
+                                        className={`w-4 h-4 bg-white rounded-full transition ${value.isComboPackage
+                                                ? "translate-x-5"
+                                                : ""
+                                            }`}
+                                    />
+                                </button>
+
+                                <span className="text-sm font-medium text-gray-700">
+                                    Combo Package
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-2 bg-white border rounded-xl p-5 space-y-5">
+
+                        <div>
+                            <h2 className="text-sm font-semibold text-gray-700">
+                                Bulk Order Settings
+                            </h2>
+
+                            <p className="text-xs text-gray-500 mt-1">
+                                Configure this product for bulk order purchases.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-gray-700">
+                                    Bulk Order
+                                </p>
+
+                                <p className="text-xs text-gray-500">
+                                    Enable bulk order pricing for this product
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        update(
+                                            "isBulkOrderOnly",
+                                            !value.isBulkOrderOnly
+                                        )
+                                    }
+                                    className={`w-11 h-6 rounded-full p-1 transition ${value.isBulkOrderOnly
+                                        ? "bg-green-500"
+                                        : "bg-gray-300"
+                                        }`}
+                                >
+                                    <div
+                                        className={`w-4 h-4 bg-white rounded-full transition ${value.isBulkOrderOnly
+                                            ? "translate-x-5"
+                                            : ""
+                                            }`}
+                                    />
+                                </button>
+
+                                <span className="text-sm font-medium">
+                                    {value.isBulkOrderOnly
+                                        ? "Bulk Only"
+                                        : "No"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Bulk Fields */}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Bulk Order Base Price (₹)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    className="border rounded-md px-3 py-2 text-sm w-full"
+                                    value={value.bulkOrderBasePrice}
+                                    onChange={(e) =>
+                                        update(
+                                            "bulkOrderBasePrice",
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Enter bulk order price"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Carton Quantity
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="1"
+                                    className="border rounded-md px-3 py-2 text-sm w-full"
+                                    value={value.cartonQty}
+                                    onChange={(e) =>
+                                        update(
+                                            "cartonQty",
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Enter carton quantity"
+                                />
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div className="sm:col-span-2">
                         <label className="block text-sm font-semibold text-gray-700 mb-3">
                             Package Tags
                         </label>
@@ -239,6 +473,8 @@ export default function ProductForm({
                             </div>
                         )}
                     </div>
+
+
 
 
                     <div className="sm:col-span-2">
@@ -348,35 +584,6 @@ export default function ProductForm({
                     </button>
                     <span className="text-sm font-medium">
                         {value.isActive ? "Active" : "Inactive"}
-                    </span>
-                </div>
-            </div>
-
-            <div className="bg-white border rounded-xl p-5 flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-semibold text-gray-700">
-                        Combo Package
-                    </p>
-                    <p className="text-xs text-gray-500">
-                        Mark this product as a combo package
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => update("isComboPackage", !value.isComboPackage)}
-                        className={`w-11 h-6 rounded-full p-1 transition ${value.isComboPackage ? "bg-green-500" : "bg-gray-300"
-                            }`}
-                    >
-                        <div
-                            className={`w-4 h-4 bg-white rounded-full transition ${value.isComboPackage ? "translate-x-5" : ""
-                                }`}
-                        />
-                    </button>
-
-                    <span className="text-sm font-medium">
-                        {value.isComboPackage ? "Yes" : "No"}
                     </span>
                 </div>
             </div>

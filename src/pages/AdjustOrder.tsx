@@ -11,6 +11,7 @@ import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import { useConfigStore } from "../store/config.store";
 import defaultImage from "../assets/default-image.png";
 import { calculateCouponDiscount } from "../utils/coupon";
+import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 type AdjustOrderItem = {
     productId: string;
@@ -21,6 +22,9 @@ type AdjustOrderItem = {
     discountText?: string;
     originalPrice?: number;
     isComboPackage?: boolean;
+    packQuantity?: number;
+    packUnit?: string;
+    sequenceNumber?: number;
 };
 
 export default function AdjustOrder() {
@@ -46,6 +50,7 @@ export default function AdjustOrder() {
     const isAdmin = location.state?.isAdmin === true;
     const canAdjust = isAdmin || order.status === "ORDER_PLACED";
 
+
     const [items, setItems] = useState<AdjustOrderItem[]>(() =>
         order.items.map((i: any) => ({
             productId: i.productId,
@@ -55,8 +60,15 @@ export default function AdjustOrder() {
             image: i.image,
             discountText: i.discountText,
             originalPrice: i.originalPrice,
-            isComboPackage: i.isComboPackage
+            isComboPackage: i.isComboPackage,
+            packQuantity: i.packQuantity,
+            packUnit: i.packUnit,
+            sequenceNumber: i.sequenceNumber,
         }))
+    );
+    const sortedItems = useMemo(
+        () => sortProductsBySequence(items),
+        [items]
     );
 
     if (!order) {
@@ -384,84 +396,196 @@ export default function AdjustOrder() {
             )}
 
             <div className="bg-white rounded-2xl border shadow-sm">
+
                 <div className="divide-y">
-                    {items.map((item) => (
+                    {sortedItems.map((item) => (
                         <div
                             key={item.productId}
-                            className="p-4 flex gap-4 sm:flex-row flex-col"
+                            className="
+                                px-4 py-3
+                                flex
+                                items-center
+                                gap-3
+                            "
                         >
+                            {/* Image */}
                             <img
-                                src={item.image || defaultImage}
-                                className="w-16 h-16 object-contain rounded-md"
+                                src={item.image?.trim() || defaultImage}
+                                alt={item.name}
+                                onError={(event) => {
+                                    event.currentTarget.onerror = null;
+                                    event.currentTarget.src = defaultImage;
+                                }}
+                                className="
+                    w-16
+                    h-16
+                    shrink-0
+                    object-contain
+                    rounded-xl
+                    border
+                    border-gray-200
+                    bg-white
+                "
                             />
 
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <h3 className="font-medium text-[var(--color-primary)]">
+                            {/* Product information */}
+                            <div className="min-w-0 flex-1">
+
+                                {/* Product name */}
+                                <div className="flex items-center gap-2">
+                                    <h3
+                                        className="
+                            text-base
+                            sm:text-lg
+                            font-semibold
+                            text-[var(--color-primary)]
+                            leading-tight
+                        "
+                                    >
                                         {item.name}
                                     </h3>
 
                                     {item.isComboPackage && (
-                                        <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                        <span
+                                            className="
+                                shrink-0
+                                rounded-full
+                                bg-blue-100
+                                px-2
+                                py-0.5
+                                text-[10px]
+                                font-medium
+                                text-blue-700
+                            "
+                                        >
                                             Combo
                                         </span>
                                     )}
                                 </div>
-                                <div className="text-xs mt-1 flex flex-col gap-1">
-                                    {(item.discountText || !item.isComboPackage) && (
-                                        <span className="text-green-600 font-semibold">
-                                            {item.discountText || "NET RATE"}
-                                        </span>
+
+                                {/* Unit */}
+                                {Number(item.packQuantity) > 0 &&
+                                    item.packUnit?.trim() && (
+                                        <div className="mt-1">
+                                            <span
+                                                className="
+                                    inline-flex
+                                    items-center
+                                    gap-1
+                                    rounded-full
+                                    bg-gray-100
+                                    px-2
+                                    py-0.5
+                                    text-xs
+                                    font-medium
+                                    text-gray-700
+                                "
+                                            >
+                                                📦 {item.packQuantity} {item.packUnit}
+                                            </span>
+                                        </div>
                                     )}
 
-                                    <div className="flex items-center gap-2 flex-wrap text-gray-600">
-                                        {item.originalPrice && item.originalPrice > item.price && (
-                                            <span className="line-through text-gray-400">
-                                                ₹{item.originalPrice}
-                                            </span>
-                                        )}
-
-                                        <span className="font-medium text-[var(--color-primary)]">
-                                            ₹{item.price}
-                                        </span>
-
-                                        <span>
-                                            × {item.quantity}
+                                {/* Discount / Net Rate */}
+                                {(item.discountText || !item.isComboPackage) && (
+                                    <div className="mt-1">
+                                        <span className="text-xs font-semibold text-green-600">
+                                            {item.discountText || "NET RATE"}
                                         </span>
                                     </div>
+                                )}
+
+                                {/* Qty + Price */}
+                                <div
+                                    className="
+                        mt-1
+                        flex
+                        items-center
+                        gap-3
+                        text-sm
+                        text-gray-600
+                    "
+                                >
+                                    <span>
+                                        Qty:{" "}
+                                        <span className="font-medium text-gray-800">
+                                            {item.quantity}
+                                        </span>
+                                    </span>
+
+                                    <span>
+                                        Price:{" "}
+                                        <span className="font-semibold text-[var(--color-primary)]">
+                                            ₹{item.price}
+                                        </span>
+                                    </span>
                                 </div>
-                                <p className="font-semibold">
-                                    ₹{item.price * item.quantity}
-                                </p>
                             </div>
 
-                            <div className="flex gap-3 sm:flex-col sm:items-end">
+                            {/* Quantity controls */}
+                            <div
+                                className="
+                    shrink-0
+                    flex
+                    flex-col
+                    items-end
+                    gap-1
+                "
+                            >
                                 <div
-                                    className={`w-[120px] h-[38px] flex items-center justify-between px-3 rounded-lg
-                                    ${canAdjust
+                                    className={`
+                        w-[120px]
+                        h-[38px]
+                        flex
+                        items-center
+                        justify-between
+                        px-3
+                        rounded-lg
+                        ${canAdjust
                                             ? "bg-[var(--color-primary)] text-white"
                                             : "bg-gray-200 text-gray-400"
-                                        }`}
+                                        }
+                    `}
                                 >
                                     <button
+                                        type="button"
                                         disabled={!canAdjust || item.quantity === 1}
-                                        onClick={() => updateQty(item.productId, -1)}
+                                        onClick={() =>
+                                            updateQty(item.productId, -1)
+                                        }
+                                        className="text-lg disabled:opacity-40"
                                     >
                                         −
                                     </button>
-                                    <span>{item.quantity}</span>
+
+                                    <span className="font-medium">
+                                        {item.quantity}
+                                    </span>
+
                                     <button
+                                        type="button"
                                         disabled={!canAdjust}
-                                        onClick={() => updateQty(item.productId, 1)}
+                                        onClick={() =>
+                                            updateQty(item.productId, 1)
+                                        }
+                                        className="text-lg disabled:opacity-40"
                                     >
                                         +
                                     </button>
                                 </div>
 
                                 <button
+                                    type="button"
                                     disabled={!canAdjust}
-                                    onClick={() => removeItem(item.productId)}
-                                    className="text-xs text-red-500"
+                                    onClick={() =>
+                                        removeItem(item.productId)
+                                    }
+                                    className="
+                        text-xs
+                        text-red-500
+                        hover:text-red-600
+                        disabled:opacity-40
+                    "
                                 >
                                     Remove
                                 </button>
@@ -469,6 +593,7 @@ export default function AdjustOrder() {
                         </div>
                     ))}
                 </div>
+
                 <div className="border-t bg-white p-6">
 
                     <div className="grid lg:grid-cols-[160px_1fr] gap-8 items-start">

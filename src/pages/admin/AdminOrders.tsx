@@ -10,6 +10,8 @@ import { useDebounce } from "../../utils/useDebounce";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import { useNavigate } from "react-router-dom";
 import { formatDateTime } from "../../utils/date";
+import { useAuth } from "../../store/auth.store";
+
 
 const DATE_OPTIONS = [
     { label: "All", value: "all" },
@@ -28,6 +30,7 @@ export default function AdminOrders() {
     const [orderIdInput, setOrderIdInput] = useState("");
     const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const {
         filters,
@@ -181,7 +184,7 @@ export default function AdminOrders() {
                         key={s}
                         onClick={() => setStatus(s)}
                         className={`px-4 py-2 rounded-full text-sm whitespace-nowrap
-              ${status === s
+                            ${status === s
                                 ? "bg-[var(--color-primary)] text-white"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
@@ -277,19 +280,25 @@ export default function AdminOrders() {
 
                             {/* Arrow */}
                             <button
-                                onClick={() => navigate(`/admin/orders/${o.orderId}`)}
+                               onClick={() =>
+                                    navigate(
+                                        user?.role === "STAFF"
+                                            ? `/staff/orders/${o.orderId}`
+                                            : `/admin/orders/${o.orderId}`
+                                    )
+                                }
                                 className="
-          shrink-0
-          w-9
-          h-9
-          rounded-full
-          border
-          flex
-          items-center
-          justify-center
-          hover:bg-gray-100
-          mt-1
-        "
+                                    shrink-0
+                                    w-9
+                                    h-9
+                                    rounded-full
+                                    border
+                                    flex
+                                    items-center
+                                    justify-center
+                                    hover:bg-gray-100
+                                    mt-1
+                                    "
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"

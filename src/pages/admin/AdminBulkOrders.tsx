@@ -10,6 +10,7 @@ import {
 } from "../../utils/orderStatus";
 import { useAdminBulkOrdersStore } from "../../store/adminBulkOrders.store";
 import { formatCurrency } from "../../utils/pricing";
+import { useAuth } from "../../store/auth.store";
 
 const DATE_OPTIONS = [
     { label: "All", value: "all" },
@@ -23,6 +24,7 @@ type DateRange = "all" | "today" | "7" | "30";
 export default function AdminBulkOrders() {
 
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [status, setStatus] = useState("ORDER_PLACED");
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
@@ -284,13 +286,12 @@ export default function AdminBulkOrders() {
 
                             <button
                                 onClick={(e) => {
-
                                     e.stopPropagation();
-
                                     navigate(
-                                        `/admin/bulk-orders/${order.orderId}`
+                                        user?.role === "STAFF" ?
+                                            `/staff/bulk-orders/${order.orderId}`
+                                            : `/admin/bulk-orders/${order.orderId}`
                                     );
-
                                 }}
                                 className="
                                     flex

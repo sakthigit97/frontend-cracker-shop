@@ -12,6 +12,7 @@ import Icon from "../../assets/icon-new.png";
 import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
 import EstimateDownloadDialog from "./EstimateDownloadDialog";
 import { apiFetch } from "../../services/api";
+import { sortProductsBySequence } from "../../utils/sequncerUtil";
 
 interface Props {
     open: boolean;
@@ -85,6 +86,10 @@ export default function QuickEstimateModal({
         clear();
         onClose();
     };
+    const displayProducts = sortProductsBySequence(
+        products,
+        true
+    );
 
     const downloadPdf = (customer: {
         customerName: string;
@@ -244,6 +249,28 @@ export default function QuickEstimateModal({
 
         const tableStartY = y + 3;
 
+        const sortedProducts = [...products].sort((a: any, b: any) => {
+            const aSequence = Number(a.sequenceNumber);
+            const bSequence = Number(b.sequenceNumber);
+
+            if (
+                Number.isFinite(aSequence) &&
+                Number.isFinite(bSequence)
+            ) {
+                return aSequence - bSequence;
+            }
+
+            if (Number.isFinite(aSequence)) {
+                return -1;
+            }
+
+            if (Number.isFinite(bSequence)) {
+                return 1;
+            }
+
+            return 0;
+        });
+
         autoTable(doc, {
 
             startY: tableStartY,
@@ -251,29 +278,42 @@ export default function QuickEstimateModal({
             head: [[
                 "Product",
                 "Qty",
+                "Unit",
                 "MRP",
                 "Discount",
                 "Offer Price",
                 "Total"
             ]],
 
-            body: products.map((product) => [
-                product.isComboPackage
-                    ? `${product.name} • Combo`
-                    : product.name,
+            body: sortedProducts.map((product) => {
+                const packQuantity = Number(product.packQuantity);
+                const packUnit = product.packUnit?.trim();
 
-                String(product.quantity),
+                const unitText =
+                    packQuantity > 0 && packUnit
+                        ? `${packQuantity} ${packUnit}`
+                        : "-";
 
-                product.isComboPackage
-                    ? formatMoney(product.price)
-                    : product.originalPrice
-                        ? formatMoney(product.originalPrice)
-                        : "-",
+                return [
+                    product.isComboPackage
+                        ? `${product.name} • Combo`
+                        : product.name,
 
-                product.discountText ?? "-",
-                formatMoney(product.price),
-                formatMoney(product.price * product.quantity),
-            ]),
+                    String(product.quantity),
+
+                    unitText,
+
+                    product.isComboPackage
+                        ? formatMoney(product.price)
+                        : product.originalPrice
+                            ? formatMoney(product.originalPrice)
+                            : "-",
+
+                    product.discountText ?? "-",
+                    formatMoney(product.price),
+                    formatMoney(product.price * product.quantity),
+                ];
+            }),
             theme: "grid",
 
             tableLineWidth: 0,
@@ -289,7 +329,7 @@ export default function QuickEstimateModal({
                     left: 2.2,
                     right: 2.2,
                 },
-                minCellHeight: 6,
+                minCellHeight: 8,
                 lineWidth: 0.08,
                 lineColor: COLORS.border,
                 valign: "middle",
@@ -315,12 +355,13 @@ export default function QuickEstimateModal({
                 },
             },
             columnStyles: {
-                0: { cellWidth: 72, halign: "left" },     // Product
+                0: { cellWidth: 60, halign: "left" },     // Product
                 1: { cellWidth: 12, halign: "center" },   // Qty
-                2: { cellWidth: 24, halign: "right" },    // MRP
-                3: { cellWidth: 24, halign: "center" },   // Discount
-                4: { cellWidth: 24, halign: "right" },    // Offer
-                5: { cellWidth: 28, halign: "right" },    // Total
+                2: { cellWidth: 20, halign: "center" },   // Unit
+                3: { cellWidth: 22, halign: "right" },    // MRP
+                4: { cellWidth: 24, halign: "center" },   // Discount
+                5: { cellWidth: 24, halign: "right" },    // Offer
+                6: { cellWidth: 24, halign: "right" },    // Total
             },
 
             didParseCell: (data) => {
@@ -338,7 +379,7 @@ export default function QuickEstimateModal({
                     data.column.index === 0
                 ) {
 
-                    const product = products[data.row.index];
+                    const product = sortedProducts[data.row.index];
                     if (product?.isComboPackage) {
                         data.cell.styles.fontStyle = "bold";
                         data.cell.styles.textColor = [
@@ -351,9 +392,9 @@ export default function QuickEstimateModal({
 
                 if (
                     data.section === "body" &&
-                    data.column.index === 2
+                    data.column.index === 3
                 ) {
-                    const product = products[data.row.index];
+                    const product = sortedProducts[data.row.index];
 
                     data.cell.styles.textColor = product?.isComboPackage
                         ? COLORS.dark
@@ -372,7 +413,7 @@ export default function QuickEstimateModal({
 
                 if (
                     data.section === "body" &&
-                    data.column.index === 3
+                    data.column.index === 4
                 ) {
                     data.cell.styles.textColor = [22, 163, 74];
                     data.cell.styles.fontStyle = "bold";
@@ -383,7 +424,7 @@ export default function QuickEstimateModal({
 
                 if (
                     data.section === "body" &&
-                    data.column.index === 4
+                    data.column.index === 6
                 ) {
 
                     data.cell.styles.fontStyle = "bold";
@@ -405,6 +446,8 @@ export default function QuickEstimateModal({
                 }
             },
         });
+
+
         const summaryStartY =
             (doc as any).lastAutoTable.finalY + 2;
         const summaryWidth = RIGHT - LEFT;
@@ -881,7 +924,7 @@ export default function QuickEstimateModal({
                     "
                 >
 
-                    {products.map(
+                    {displayProducts.map(
                         (
                             product
                         ) => (
@@ -900,6 +943,9 @@ export default function QuickEstimateModal({
                                     src={
                                         product.image || defaultImage
                                     }
+                                    onError={(e) => {
+                                        e.currentTarget.src = defaultImage;
+                                    }}
                                     className="
                                         w-16
                                         h-16
@@ -917,11 +963,54 @@ export default function QuickEstimateModal({
                                             font-medium
                                         "
                                     >
-                                        {
-                                            product.name
-                                        }
+                                        {product.name}
                                     </p>
-                                    <div className="flex gap-2 items-center">
+
+                                    {/* Discount / Net Rate */}
+                                    {(product.discountText || !product.isComboPackage) && (
+                                        <span
+                                            className="
+                                                    mt-1
+                                                    w-fit
+                                                    inline-flex
+                                                    items-center
+                                                    rounded-full
+                                                    bg-green-50
+                                                    border
+                                                    border-green-200
+                                                    px-2
+                                                    py-0.5
+                                                    text-[11px]
+                                                    font-semibold
+                                                    text-green-700
+                                                    leading-4
+                                                "
+                                        >
+                                            {product.discountText || "NET RATE"}
+                                        </span>
+                                    )}
+                                    {Number(product.packQuantity) > 0 &&
+                                        product.packUnit?.trim() && (
+                                            <div className="mt-1">
+                                                <span
+                                                    className="
+                        inline-flex
+                        items-center
+                        rounded-full
+                        bg-gray-100
+                        px-2
+                        py-0.5
+                        text-[11px]
+                        font-medium
+                        text-gray-700
+                    "
+                                                >
+                                                    📦 {product.packQuantity} {product.packUnit}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                    <div className="flex gap-2 items-center mt-1">
                                         {product.isComboPackage ? (
                                             <span className="text-sm text-gray-500">
                                                 ₹{product.price}
@@ -940,6 +1029,8 @@ export default function QuickEstimateModal({
                                             </>
                                         )}
                                     </div>
+
+
                                     <div
                                         className="
                                             mt-2

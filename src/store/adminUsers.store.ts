@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 import {
     getAdminUsers,
     type GetAdminUsersParams,
@@ -16,16 +17,20 @@ interface UserState {
     clearCache: () => void;
 }
 
-export const useAdminUsersStore = create<UserState>(
-    (set, get) => ({
+export const useAdminUsersStore =
+    create<UserState>((set, get) => ({
         cache: {},
         loading: false,
 
         async fetchPage(params) {
+            const search = params.search?.trim() || "";
+            const cursor = params.cursor || null;
+            const limit = params.limit || 20;
+
             const key = JSON.stringify({
-                search: params.search?.trim() || "",
-                cursor: params.cursor || null,
-                limit: params.limit || 20,
+                search,
+                cursor,
+                limit,
             });
 
             const cached = get().cache[key];
@@ -34,11 +39,16 @@ export const useAdminUsersStore = create<UserState>(
                 return cached;
             }
 
-            set({ loading: true });
+            set({
+                loading: true,
+            });
 
             try {
-                const response =
-                    await getAdminUsers(params);
+                const response = await getAdminUsers({
+                    search: search || undefined,
+                    cursor: cursor || undefined,
+                    limit,
+                });
 
                 set((state) => ({
                     cache: {
@@ -49,12 +59,15 @@ export const useAdminUsersStore = create<UserState>(
 
                 return response;
             } finally {
-                set({ loading: false });
+                set({
+                    loading: false,
+                });
             }
         },
 
         clearCache() {
-            set({ cache: {} });
+            set({
+                cache: {},
+            });
         },
-    })
-);
+    }));
