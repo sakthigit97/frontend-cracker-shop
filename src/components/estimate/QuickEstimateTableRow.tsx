@@ -21,16 +21,32 @@ function QuickEstimateTableRow({
 }: Props) {
     const availableQty = product.qty || 0;
     const total = product.price * quantity;
-    const imageSrc = product.image?.trim() || defaultImage;
+
+    const imageSrc =
+        product.image?.trim() || defaultImage;
+
+    const hasPack =
+        Number(product.packQuantity) > 0 &&
+        Boolean(product.packUnit?.trim());
 
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-
-            {/* Product Image */}
+        <tr
+            className="
+                border-b
+                border-gray-100
+                hover:bg-gray-50
+                transition-colors
+            "
+        >
+            {/* =====================================================
+                PRODUCT IMAGE
+            ===================================================== */}
             <td className="py-2 px-3 w-24">
                 <img
                     src={imageSrc}
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = defaultImage;
@@ -48,8 +64,10 @@ function QuickEstimateTableRow({
                 />
             </td>
 
-            {/* Product Details */}
-            <td className="py-2 px-3">
+            {/* =====================================================
+                PRODUCT
+            ===================================================== */}
+            <td className="py-2 px-3 min-w-[260px]">
                 <div className="flex flex-col justify-center min-w-0">
 
                     {/* Product Name */}
@@ -67,15 +85,17 @@ function QuickEstimateTableRow({
                             hover:underline
                             transition-colors
                             leading-5
+                            break-words
                         "
                     >
                         {product.name}
                     </button>
 
                     {/* Discount / Net Rate */}
-                    {(product.discountText || !product.isComboPackage) && (
-                        <span
-                            className="
+                    {(product.discountText ||
+                        !product.isComboPackage) && (
+                            <span
+                                className="
                                 mt-1
                                 w-fit
                                 inline-flex
@@ -90,32 +110,56 @@ function QuickEstimateTableRow({
                                 font-semibold
                                 text-green-700
                                 leading-4
+                                whitespace-nowrap
                             "
-                        >
-                            {product.discountText || "NET RATE"}
-                        </span>
-                    )}
-
-                    {/* Pack Unit */}
-                    {Number(product.packQuantity) > 0 &&
-                        product.packUnit?.trim() && (
-                            <span
-                                className="
-                                    mt-1
-                                    text-xs
-                                    font-medium
-                                    text-gray-600
-                                "
                             >
-                                📦 {product.packQuantity} {product.packUnit}
+                                {product.discountText || "NET RATE"}
                             </span>
                         )}
-
                 </div>
             </td>
 
-            {/* Original Price */}
-            <td className="text-center py-2 px-3">
+            {/* =====================================================
+                PACK
+            ===================================================== */}
+            <td className="py-2 px-3 text-center min-w-[120px]">
+                {hasPack ? (
+                    <span
+                        className="
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-1.5
+                            rounded-full
+                            bg-gray-100
+                            px-3
+                            py-1.5
+                            text-xs
+                            font-semibold
+                            text-gray-700
+                            whitespace-nowrap
+                        "
+                    >
+                        <span className="text-gray-500">
+                            📦
+                        </span>
+
+                        <span>
+                            {product.packQuantity}{"/"}
+                            {product.packUnit}
+                        </span>
+                    </span>
+                ) : (
+                    <span className="text-gray-400">
+                        -
+                    </span>
+                )}
+            </td>
+
+            {/* =====================================================
+                MRP
+            ===================================================== */}
+            <td className="text-center py-2 px-3 whitespace-nowrap">
                 {product.isComboPackage ? (
                     <span className="text-gray-500">
                         ₹{product.price}
@@ -129,8 +173,10 @@ function QuickEstimateTableRow({
                 )}
             </td>
 
-            {/* Current Price */}
-            <td className="text-center py-2 px-3">
+            {/* =====================================================
+                CURRENT PRICE
+            ===================================================== */}
+            <td className="text-center py-2 px-3 whitespace-nowrap">
                 <span
                     className="
                         text-lg
@@ -142,17 +188,15 @@ function QuickEstimateTableRow({
                 </span>
             </td>
 
-            {/* Quantity */}
+            {/* =====================================================
+                QUANTITY
+            ===================================================== */}
             <td className="text-center py-2 px-3">
-
                 {availableQty === 0 ? (
-
-                    <span className="text-red-500 text-sm">
+                    <span className="text-red-500 text-sm whitespace-nowrap">
                         Out of Stock
                     </span>
-
                 ) : (
-
                     <div
                         className="
                             inline-flex
@@ -164,7 +208,6 @@ function QuickEstimateTableRow({
                             bg-white
                         "
                     >
-
                         <button
                             type="button"
                             onClick={onDecrease}
@@ -187,9 +230,12 @@ function QuickEstimateTableRow({
                             min={0}
                             step={1}
                             onChange={(e) => {
-                                const qty = Number(e.target.value);
+                                const qty =
+                                    Number(e.target.value);
 
-                                if (Number.isNaN(qty)) return;
+                                if (Number.isNaN(qty)) {
+                                    return;
+                                }
 
                                 onChange(qty);
                             }}
@@ -221,20 +267,18 @@ function QuickEstimateTableRow({
                         >
                             +
                         </button>
-
                     </div>
-
                 )}
-
             </td>
 
-            {/* Total */}
-            <td className="text-right py-2 px-3">
+            {/* =====================================================
+                TOTAL
+            ===================================================== */}
+            <td className="text-right py-2 px-3 whitespace-nowrap">
                 <span className="font-bold text-gray-900">
                     ₹{total}
                 </span>
             </td>
-
         </tr>
     );
 }

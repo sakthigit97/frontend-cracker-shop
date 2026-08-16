@@ -291,7 +291,7 @@ export default function QuickEstimateModal({
 
                 const unitText =
                     packQuantity > 0 && packUnit
-                        ? `${packQuantity} ${packUnit}`
+                        ? `${packQuantity}/${packUnit}`
                         : "-";
 
                 return [
@@ -1005,7 +1005,7 @@ export default function QuickEstimateModal({
                         text-gray-700
                     "
                                                 >
-                                                    📦 {product.packQuantity} {product.packUnit}
+                                                    📦 {product.packQuantity}/{product.packUnit}
                                                 </span>
                                             </div>
                                         )}

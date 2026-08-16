@@ -9,9 +9,9 @@ import {
   User,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import { formatCurrency } from "../utils/pricing";
 
 import {
   ORDER_STATUS_CONFIG,
@@ -566,7 +566,6 @@ export default function OrderDetails() {
 
         <div className="grid gap-5 md:grid-cols-3">
 
-          {/* Customer */}
 
           <div>
             <SectionTitle
@@ -734,11 +733,11 @@ export default function OrderDetails() {
 
       <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
 
+        {/* Header */}
         <div className="mb-4 flex items-center justify-between">
 
           <div>
-            <SectionTitle
-              icon={<Package size={18} />}
+            <SectionTitle icon={<Package size={18} />}
               title="Products"
             />
 
@@ -753,115 +752,176 @@ export default function OrderDetails() {
 
         </div>
 
-        {/* Product List */}
+        <div className="w-full overflow-hidden rounded-xl border border-gray-200">
 
-        <div className="max-h-[520px] overflow-y-auto pr-1">
+          <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
 
-          <div className="divide-y divide-gray-100">
+            <table className="w-full min-w-[620px] text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50 text-left">
 
-            {sortedItems.map(
-              (item: any) => (
-                <div
-                  key={item.productId}
-                  className="flex gap-3 py-3 first:pt-0 last:pb-0 sm:gap-4"
-                >
-                  <img
-                    src={item.image?.trim() || defaultImage}
-                    alt={item.name}
-                    onError={(event) => {
-                      event.currentTarget.onerror = null;
-                      event.currentTarget.src = defaultImage;
-                    }}
-                    className="
-                      h-16 w-16
-                      shrink-0
-                      rounded-xl
-                      border
-                      object-cover
-                      sm:h-20 sm:w-20
-                    "
-                  />
-                  <div className="min-w-0 flex-1">
+                  <th className="px-4 py-3 font-semibold text-gray-700">
+                    Product
+                  </th>
 
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                    Unit
+                  </th>
 
-                      <div className="min-w-0">
-                        <div className="min-w-0">
+                  <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                    Qty
+                  </th>
 
-                          {/* Product Name + Combo */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold leading-5 text-gray-900">
-                              {item.name}
-                            </p>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                    Price
+                  </th>
 
-                            {item.isComboPackage && (
-                              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                                Combo
-                              </span>
-                            )}
+                  <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                    Amount
+                  </th>
+
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-100">
+
+                {sortedItems.map(
+                  (item: any) => {
+
+                    const packQuantity =
+                      Number(
+                        item.packQuantity ?? 0
+                      );
+
+                    const packUnit =
+                      item.packUnit?.trim();
+
+                    const hasPack =
+                      packQuantity > 0 &&
+                      Boolean(packUnit);
+
+                    return (
+                      <tr key={item.productId} className="align-middle">
+
+                        {/* Product */}
+                        <td className="px-4 py-3">
+
+                          <div className="flex min-w-0 items-center gap-3">
+
+                            <img src={item.image?.trim() || defaultImage} alt={item.name} onError={(event) => {
+                              event.currentTarget.onerror =
+                                null;
+
+                              event.currentTarget.src =
+                                defaultImage;
+                            }}
+                              className="
+                            h-12
+                            w-12
+                            shrink-0
+                            rounded-lg
+                            border
+                            object-cover
+                            "
+                            />
+
+                            <div className="min-w-0">
+
+                              <div className="flex flex-wrap items-center gap-2">
+
+                                <p className="font-semibold text-gray-900">
+                                  {item.name}
+                                </p>
+
+                                {item.isComboPackage && (
+                                  <span
+                                    className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                    Combo
+                                  </span>
+                                )}
+
+                              </div>
+
+                              {(item.discountText ||
+                                !item.isComboPackage) && (
+                                  <p className="mt-0.5 text-xs text-green-600">
+                                    {item.discountText ||
+                                      "NET RATE"}
+                                  </p>
+                                )}
+
+                            </div>
+
                           </div>
 
-                          {/* Pack Unit */}
-                          {Number(item.packQuantity) > 0 && item.packUnit?.trim() && (
-                            <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
-                              📦 {item.packQuantity} {item.packUnit}
+                        </td>
+
+                        {/* Pack */}
+                        <td className="px-4 py-3 text-center">
+
+                          {hasPack ? (
+                            <span
+                              className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                              {packQuantity}{" "}
+                              {packUnit}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">
+                              -
                             </span>
                           )}
 
-                        </div>
+                        </td>
 
-                        {(item.discountText || !item.isComboPackage) && (
-                          <p className="mt-0.5 text-xs text-green-600">
-                            {item.discountText || "NET RATE"}
-                          </p>
-                        )}
+                        {/* Quantity */}
+                        <td className="px-4 py-3 text-center">
 
-                      </div>
+                          <span className="font-medium text-gray-800">
+                            {item.quantity}
+                          </span>
 
-                      <p className="shrink-0 font-semibold text-gray-900">
-                        ₹{item.total}
-                      </p>
+                        </td>
 
-                    </div>
+                        {/* Price */}
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
 
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                          <span className="font-medium text-gray-700">
+                            ₹{formatCurrency(item.price)}
+                          </span>
 
-                      <span>
-                        Qty:{" "}
-                        <strong className="font-medium text-gray-700">
-                          {item.quantity}
-                        </strong>
-                      </span>
+                        </td>
 
-                      <span>
-                        Price:{" "}
-                        <strong className="font-medium text-gray-700">
-                          ₹{item.price}
-                        </strong>
-                      </span>
+                        {/* Amount */}
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
 
-                    </div>
+                          <span className="font-semibold text-gray-900">
+                            ₹{formatCurrency(item.total)}
+                          </span>
 
-                  </div>
+                        </td>
 
-                </div>
-              )
-            )}
+                      </tr>
+                    );
+                  }
+                )}
+
+              </tbody>
+
+            </table>
 
           </div>
-
         </div>
+        {/* Mobile hint */}
+        <p className="mt-2 text-[11px] text-gray-400 sm:hidden">
+          Swipe horizontally to view all columns.
+        </p>
 
         {/* Pricing */}
-
         <div className="mt-4 border-t border-gray-200 pt-4">
 
           <div className="mb-3 flex items-center gap-2">
 
-            <ReceiptIndianRupee
-              size={17}
-              className="text-primary"
-            />
+            <ReceiptIndianRupee size={17} className="text-primary" />
 
             <div>
               <h3 className="font-semibold text-gray-900">
@@ -877,54 +937,28 @@ export default function OrderDetails() {
 
           <div className="space-y-2.5 text-sm">
 
-            <PriceRow
-              label="Products Total"
-              value={
-                order.totalProductAmount ??
-                0
-              }
-            />
+            <PriceRow label="Products Total" value={order.totalProductAmount ?? 0} />
 
             {(order.comboPackageTotal ?? 0) >
               0 && (
-                <PriceRow
-                  label="Combo Packages"
-                  value={
-                    order.comboPackageTotal
-                  }
-                  helper="Inclusive Of Packaging Charges"
-                />
+                <PriceRow label="Combo Packages" value={order.comboPackageTotal}
+                  helper="Inclusive Of Packaging Charges" />
               )}
 
             {(order.nonComboProductTotal ??
               0) > 0 && (
-                <PriceRow
-                  label="Non Combo Products"
-                  value={
-                    order.nonComboProductTotal
-                  }
-                />
+                <PriceRow label="Non Combo Products" value={order.nonComboProductTotal} />
               )}
 
             {(order.packagingCharge ?? 0) >
               0 && (
-                <PriceRow
-                  label={`Packaging Charge (${packagingPercent}%)`}
-                  value={
-                    order.packagingCharge
-                  }
-                />
+                <PriceRow label={`Packaging Charge (${packagingPercent}%)`} value={order.packagingCharge} />
               )}
 
             {(order.couponDiscount ?? 0) >
               0 && (
                 <>
-                  <PriceRow
-                    label="Amount Before Discount"
-                    value={
-                      order.amountBeforeDiscount
-                    }
-                  />
+                  <PriceRow label="Amount Before Discount" value={order.amountBeforeDiscount} />
 
                   <div className="flex justify-between gap-4 text-green-600">
                     <span>
@@ -940,21 +974,13 @@ export default function OrderDetails() {
                     </span>
                   </div>
 
-                  <PriceRow
-                    label="Amount After Discount"
-                    value={
-                      order.amountAfterDiscount
-                    }
-                  />
+                  <PriceRow label="Amount After Discount" value={order.amountAfterDiscount} />
                 </>
               )}
 
             {(order.gstAmount ?? 0) >
               0 && (
-                <PriceRow
-                  label={`GST (${gstPercent}%)`}
-                  value={order.gstAmount}
-                />
+                <PriceRow label={`GST (${gstPercent}%)`} value={order.gstAmount} />
               )}
 
             <div className="my-3 border-t border-dashed border-gray-300" />
@@ -975,7 +1001,7 @@ export default function OrderDetails() {
               </div>
 
               <span className="whitespace-nowrap text-xl font-bold text-[var(--color-primary)]">
-                ₹{order.grandTotal}
+                ₹{formatCurrency(order.grandTotal)}
               </span>
 
             </div>
@@ -985,11 +1011,7 @@ export default function OrderDetails() {
                 <>
                   <div className="my-3 border-t border-dashed border-gray-300" />
 
-                  <PriceRow
-                    label="Wallet Applied"
-                    value={-order.walletUsed}
-                    valueClassName="text-green-700"
-                  />
+                  <PriceRow label="Wallet Applied" value={-order.walletUsed} valueClassName="text-green-700" />
 
                   <div className="flex items-end justify-between gap-4">
 
@@ -1004,7 +1026,7 @@ export default function OrderDetails() {
                     </div>
 
                     <span className="whitespace-nowrap text-xl font-bold text-[var(--color-primary)]">
-                      ₹{order.finalPayable}
+                      ₹{formatCurrency(order.finalPayable)}
                     </span>
 
                   </div>
@@ -1012,13 +1034,12 @@ export default function OrderDetails() {
               )}
 
           </div>
+
+
         </div>
 
       </section>
 
-      {/* =====================================================
-          ACTIONS
-      ====================================================== */}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
 
@@ -1171,7 +1192,6 @@ interface PriceRowProps {
   helper?: string;
   valueClassName?: string;
 }
-
 function PriceRow({
   label,
   value,
@@ -1180,11 +1200,8 @@ function PriceRow({
 }: PriceRowProps) {
   return (
     <div className="flex items-center justify-between gap-4">
-
       <div className="min-w-0">
-        <span className="text-gray-600">
-          {label}
-        </span>
+        <span className="text-gray-600">{label}</span>
 
         {helper && (
           <span className="ml-2 inline-flex rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
@@ -1197,9 +1214,8 @@ function PriceRow({
         className={`shrink-0 font-medium ${valueClassName}`}
       >
         {value < 0 ? "-" : "₹"}
-        {Math.abs(value)}
+        {formatCurrency(Math.abs(value))}
       </span>
-
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { downloadBulkStaffPackingList } from "../../utils/pdf/downloadBulkStaffP
 import {
     useAdminBulkOrderDetailsStore,
 } from "../../store/adminBulkOrderDetails.store";
+import { formatDateTime } from "../../utils/date";
 
 export default function AdminBulkOrderDetails() {
 
@@ -267,106 +268,139 @@ export default function AdminBulkOrderDetails() {
 
             <div className="bg-white border rounded-xl p-4 space-y-3">
 
+                {/* Header */}
                 <div className="flex items-center gap-3 mb-4">
 
                     <button
                         onClick={() => navigate(-1)}
                         className="
-                            flex
-                            items-center
-                            justify-center
-                            w-9
-                            h-9
-                            rounded-full
-                            bg-[var(--color-primary)]
-                            text-white
-                            shadow-sm
-                            hover:scale-105
-                            active:scale-95
-                            transition-all
-                        "
+                flex items-center justify-center
+                w-9 h-9
+                rounded-full
+                bg-[var(--color-primary)]
+                text-white
+                shadow-sm
+                hover:scale-105
+                active:scale-95
+                transition-all
+            "
                     >
                         ←
                     </button>
 
-                    <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
-
+                    <h1 className="
+            text-xl
+            md:text-2xl
+            font-semibold
+            text-[var(--color-primary)]
+        ">
                         Bulk Order Details
-
                     </h1>
 
                 </div>
 
+                {/* Order ID */}
                 <div className="space-y-2">
 
                     <div className="flex items-center gap-2">
 
-                        <h1 className="text-base font-semibold text-[var(--color-primary)] break-all">
-
+                        <h1 className="
+                            text-base
+                            font-semibold
+                            text-[var(--color-primary)]
+                            break-all
+                        ">
                             {order.orderId}
-
                         </h1>
 
                         <button
-                            onClick={() =>
+                            onClick={() => {
                                 navigator.clipboard.writeText(
                                     order.orderId
-                                )
-                            }
-                            className="p-1.5 rounded-md border hover:bg-gray-100"
+                                );
+
+                                showAlert({
+                                    type: "success",
+                                    message: "Order ID copied",
+                                });
+                            }}
+                            className="
+                                p-1.5
+                                rounded-md
+                                border
+                                hover:bg-gray-100
+                                active:bg-gray-200
+                            "
+                            aria-label="Copy Order ID"
+                            title="Copy Order ID"
                         >
-
-
-
-                            📋
-
+                            <svg
+                                className="h-4 w-4 text-gray-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M16 8h2a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2"
+                                />
+                            </svg>
                         </button>
 
                     </div>
 
-                    <p className="text-xs text-gray-500">
+                    <div className="
+                        flex
+                        flex-wrap
+                        items-center
+                        gap-x-4
+                        gap-y-1
+                    ">
 
-                        Created on{" "}
+                        <p className="text-xs text-gray-500">
+                            Created on{" "}
+                            {formatDateTime(
+                                order.createdAt
+                            )}
+                        </p>
+                    </div>
 
-                        {new Date(
-                            order.createdAt
-                        ).toLocaleString(
-                            "en-IN"
-                        )}
-
-                    </p>
-
-                    <p className="text-xs text-gray-500">
-
-                        Scheme :{" "}
-
-                        <span className="font-semibold">
-
-                            {order.schemeId}
-
-                        </span>
-
-                    </p>
-
+                    {/* Actions */}
                     <div className="flex flex-wrap items-center gap-2">
 
-                        {canDownloadInvoice && (
-
+                        {canAdjust && (
                             <Button
-                                variant="secondary"
-                                onClick={
-                                    handleDownloadInvoice
+                                variant="outline"
+                                className="px-3 py-1.5 text-xs"
+                                disabled={!canAdjust || submitting}
+                                onClick={() =>
+                                    navigate(
+                                        `/admin/bulk-orders/${order.orderId}/adjust`,
+                                        {
+                                            state: {
+                                                order,
+                                                isAdmin: true,
+                                            },
+                                        }
+                                    )
                                 }
                             >
-
-                                {downloading
-
-                                    ? "Downloading..."
-
-                                    : "Download Invoice"}
-
+                                Adjust Order
                             </Button>
+                        )}
 
+                        {canDownloadInvoice && (
+                            <Button
+                                variant="secondary"
+                                className="px-3 py-1.5 text-xs"
+                                onClick={handleDownloadInvoice}
+                            >
+                                {downloading
+                                    ? "Downloading Invoice..."
+                                    : "Download Invoice"}
+                            </Button>
                         )}
 
                         <div className="relative group">
@@ -377,22 +411,22 @@ export default function AdminBulkOrderDetails() {
                                 disabled={downloadingPackingList}
                                 aria-label="Download packing list"
                                 className="
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-lg
-                    border
-                    border-gray-300
-                    bg-white
-                    text-gray-700
-                    transition-all
-                    hover:bg-gray-100
-                    hover:text-[var(--color-primary)]
-                    disabled:cursor-not-allowed
-                    disabled:opacity-50
-                "
+                        flex
+                        h-10
+                        w-10
+                        items-center
+                        justify-center
+                        rounded-lg
+                        border
+                        border-gray-300
+                        bg-white
+                        text-gray-700
+                        transition
+                        hover:bg-gray-100
+                        hover:text-[var(--color-primary)]
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                    "
                             >
                                 <FaDownload
                                     size={15}
@@ -404,40 +438,47 @@ export default function AdminBulkOrderDetails() {
                                 />
                             </button>
 
-                            {/* Tooltip */}
-
                             <div
                                 className="
-                                pointer-events-none
-                                invisible
-                                absolute
-                                left-0
-                                top-full
-                                z-50
-                                mt-2
-                                whitespace-nowrap
-                                rounded-md
-                                bg-gray-900
-                                px-3
-                                py-2
-                                text-xs
-                                font-medium
-                                text-white
-                                opacity-0
-                                shadow-lg
-                                transition-all
-                                duration-150
-                                group-hover:visible
-                                group-hover:opacity-100
-                            "
+                        pointer-events-none
+                        invisible
+                        absolute
+                        right-0
+                        top-full
+                        z-50
+                        mt-2
+                        whitespace-nowrap
+                        rounded-md
+                        bg-gray-900
+                        px-3
+                        py-2
+                        text-xs
+                        font-medium
+                        text-white
+                        opacity-0
+                        shadow-lg
+                        transition-all
+                        duration-150
+                        group-hover:visible
+                        group-hover:opacity-100
+                    "
                             >
                                 Download Packing List
                             </div>
 
                         </div>
 
+                        {/* Status */}
                         <span
-                            className="inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full"
+                            className="
+                    inline-flex
+                    items-center
+                    text-xs
+                    font-semibold
+                    px-3
+                    py-1
+                    rounded-full
+                "
                             style={{
                                 backgroundColor:
                                     `${STATUS_COLORS[order.status]}20`,
@@ -445,46 +486,49 @@ export default function AdminBulkOrderDetails() {
                                     STATUS_COLORS[order.status],
                             }}
                         >
-
-                            {STATUS_LABELS[
-                                order.status
-                            ]}
-
+                            {STATUS_LABELS[order.status]}
                         </span>
 
                     </div>
 
                 </div>
 
-                <div className="h-px bg-gray-100" />
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                {/* Bulk Order Summary */}
+                <div className="
+        flex
+        flex-wrap
+        items-center
+        gap-8
+        border-t
+        pt-4
+    ">
 
-                    <div>
+                    <div className="text-sm">
                         <span className="text-gray-500">
                             Grand Total
                         </span>{" "}
-
-                        <span className="font-semibold">
-                            ₹{order.pricing.grandTotal.toLocaleString("en-IN")}
+                        <span className="font-semibold text-gray-900">
+                            ₹
+                            {Number(
+                                order.pricing?.grandTotal ?? 0
+                            ).toLocaleString("en-IN")}
                         </span>
                     </div>
 
-                    <div>
+                    <div className="text-sm">
                         <span className="text-gray-500">
                             Products
                         </span>{" "}
-
-                        <span className="font-semibold">
-                            {order.items.length}
+                        <span className="font-semibold text-gray-900">
+                            {order.items?.length ?? 0}
                         </span>
                     </div>
 
-                    <div>
+                    <div className="text-sm">
                         <span className="text-gray-500">
                             No. of Cartons
                         </span>{" "}
-
-                        <span className="font-semibold">
+                        <span className="font-semibold text-gray-900">
                             {totalCartons}
                         </span>
                     </div>
@@ -492,274 +536,96 @@ export default function AdminBulkOrderDetails() {
                 </div>
 
             </div>
-            {/* PRODUCTS */}
-
-            <div className="bg-white border rounded-xl overflow-hidden">
-
-                {/* Header */}
-                <div className="px-4 py-4 border-b">
-                    <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-[var(--color-primary)]">
-                            Products
-                        </h3>
-
-                        <span className="text-sm text-gray-500">
-                            {order.items.length} Products
-                        </span>
-                    </div>
-                </div>
-
-                {/* Product Table */}
-                <div className="overflow-x-auto">
-
-                    <table className="w-full min-w-[700px] text-sm">
-
-                        <thead>
-                            <tr className="bg-gray-50 border-b text-gray-600">
-                                <th className="px-4 py-3 text-left font-medium">
-                                    PRODUCT NAME
-                                </th>
-
-                                <th className="px-4 py-3 text-center font-medium">
-                                    CARTON
-                                </th>
-
-                                <th className="px-4 py-3 text-center font-medium">
-                                    CARTON CONTENT
-                                </th>
-
-                                <th className="px-4 py-3 text-center font-medium">
-                                    PRICE
-                                </th>
-
-                                <th className="px-4 py-3 text-right font-medium">
-                                    TOTAL
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {order.items.map(
-                                (item: any, index: number) => (
-                                    <tr
-                                        key={
-                                            item.productId ||
-                                            index
-                                        }
-                                        className="border-b last:border-b-0 hover:bg-gray-50"
-                                    >
-
-                                        {/* Product */}
-                                        <td className="px-4 py-4">
-                                            <div className="flex items-center gap-3">
-
-                                                <img
-                                                    src={
-                                                        item.image ||
-                                                        defaultImage
-                                                    }
-                                                    onError={(e) => {
-                                                        e.currentTarget.src =
-                                                            defaultImage;
-                                                    }}
-                                                    className="w-12 h-12 rounded-lg object-cover border shrink-0"
-                                                    loading="lazy"
-                                                    alt={item.name}
-                                                />
-
-                                                <span className="font-semibold text-gray-900">
-                                                    {item.name}
-                                                </span>
-
-                                            </div>
-                                        </td>
-
-                                        {/* Carton */}
-                                        <td className="px-4 py-4 text-center font-semibold text-gray-900">
-                                            {item.quantity}
-                                        </td>
-
-                                        {/* Carton Content */}
-                                        <td className="px-4 py-4 text-center text-gray-600">
-                                            {item.cartonQty}
-                                            {item.packUnit
-                                                ? ` ${item.packUnit}`
-                                                : ""}
-                                        </td>
-
-                                        {/* Price */}
-                                        <td className="px-4 py-4 text-center font-semibold text-gray-900 whitespace-nowrap">
-                                            ₹
-                                            {Number(
-                                                item.schemePrice
-                                            ).toLocaleString(
-                                                "en-IN"
-                                            )}
-                                        </td>
-
-                                        {/* Total */}
-                                        <td className="px-4 py-4 text-right font-bold text-gray-900 whitespace-nowrap">
-                                            ₹
-                                            {Number(
-                                                item.total
-                                            ).toLocaleString(
-                                                "en-IN"
-                                            )}
-                                        </td>
-
-                                    </tr>
-                                )
-                            )}
-                        </tbody>
-
-                    </table>
-
-                </div>
-            </div>
-
-            {/* ADDRESS + PRICING */}
-
+            {/* ============================================================
+             * ADDRESS / ORDER INFORMATION
+             * Keep the bulk-order data unchanged; the bulk order model
+             * does not currently expose the retail Payment fields.
+             * ============================================================ */}
             <div className="grid md:grid-cols-2 gap-4">
 
-                <div className="bg-white border rounded-xl p-4">
+                <div className="bg-white border border-gray-300 rounded-xl p-5">
 
-                    <h3 className="font-semibold mb-3">
+                    <h3 className="text-lg font-semibold mb-4">
+                        Order Information
+                    </h3>
 
-                        Delivery Address
+                    <div className="text-sm space-y-2">
 
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-500">
+                                Scheme
+                            </span>
+
+                            <span className="font-medium text-right">
+                                {order.schemeId || "-"}
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-500">
+                                Products
+                            </span>
+
+                            <span className="font-medium">
+                                {order.items.length}
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-500">
+                                No. of Cartons
+                            </span>
+
+                            <span className="font-medium">
+                                {totalCartons}
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between gap-4">
+                            <span className="text-gray-500">
+                                Status
+                            </span>
+
+                            <span className="font-medium">
+                                {STATUS_LABELS[order.status]}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div className="bg-white border border-gray-300 rounded-xl p-5">
+
+                    <h3 className="text-lg font-semibold mb-4">
+                        Address
                     </h3>
 
                     <div className="text-sm space-y-1">
 
                         <p className="font-medium">
-
                             {order.address.fullName}
-
                         </p>
 
                         <p>
-
                             {order.address.mobile}
-
                         </p>
 
                         <p>
-
                             {order.address.addressLine1}
-
                         </p>
 
                         {order.address.addressLine2 && (
-
                             <p>
-
                                 {order.address.addressLine2}
-
                             </p>
-
                         )}
 
                         <p>
-
                             {order.address.city},{" "}
-
-                            {order.address.state}
-
-                        </p>
-
-                        <p>
-
+                            {order.address.state} -{" "}
                             {order.address.pincode}
-
                         </p>
-
-                    </div>
-
-                </div>
-
-                <div className="bg-white border rounded-xl p-4">
-
-                    <h3 className="font-semibold mb-3">
-
-                        Pricing Summary
-
-                    </h3>
-
-                    <div className="space-y-3 text-sm">
-
-                        <div className="flex justify-between">
-
-                            <span>
-
-                                Product Total
-
-                            </span>
-
-                            <span>
-
-                                ₹{Number(order.pricing.productTotal).toLocaleString("en-IN")}
-
-                            </span>
-
-                        </div>
-
-
-                        <div className="flex justify-between">
-                            <span>
-                                No. of Cartons
-                            </span>{" "}
-
-                            <span className="">
-                                {totalCartons}
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between">
-
-                            <span>
-
-                                Packaging ({order.pricing.packagingPercent}%)
-
-                            </span>
-
-                            <span>
-
-                                ₹{Number(order.pricing.packagingCharge).toLocaleString("en-IN")}
-
-                            </span>
-
-                        </div>
-
-                        {order.pricing.gstAmount > 0 && (
-
-                            <div className="flex justify-between">
-                                GST ({order.pricing.gstPercent}%)
-
-                                <span>
-
-                                    ₹{Number(order.pricing.gstAmount).toLocaleString("en-IN")}
-
-                                </span>
-
-                            </div>
-                        )}
-
-
-                        <div className="border-t pt-3 flex justify-between font-bold text-[var(--color-primary)]">
-
-                            <span>
-
-                                Grand Total
-
-                            </span>
-
-                            <span>
-
-                                ₹{Number(order.pricing.grandTotal).toLocaleString("en-IN")}
-
-                            </span>
-
-                        </div>
 
                     </div>
 
@@ -767,33 +633,18 @@ export default function AdminBulkOrderDetails() {
 
             </div>
 
-            {order.remarks && (
-
-                <div className="bg-white border rounded-xl p-4">
-
-                    <h3 className="font-semibold mb-2">
-
-                        Remarks
-
-                    </h3>
-
-                    <p className="text-sm whitespace-pre-wrap">
-
-                        {order.remarks}
-
-                    </p>
-
-                </div>
-
-            )}
-
+            {/* ============================================================
+             * ORDER HISTORY
+             * ============================================================ */}
             {order.statusHistory?.length > 0 && (
-                <div className="bg-white border rounded-xl p-5">
-                    <h3 className="font-semibold text-[var(--color-primary)] mb-4">
+                <div className="bg-white border border-gray-300 rounded-xl p-5">
+
+                    <h3 className="text-lg font-semibold text-[var(--color-primary)] mb-4">
                         Order History
                     </h3>
 
                     <div className="space-y-4">
+
                         {[...(order.statusHistory || [])]
                             .sort(
                                 (a, b) =>
@@ -801,6 +652,7 @@ export default function AdminBulkOrderDetails() {
                                     (a.changedAt ?? a.at)
                             )
                             .map((history: any, index: number) => {
+
                                 const status =
                                     history.toStatus ??
                                     history.status;
@@ -816,31 +668,42 @@ export default function AdminBulkOrderDetails() {
                                 return (
                                     <div
                                         key={index}
-                                        className="flex gap-4 items-start border-l-2 border-gray-200 pl-4 relative"
+                                        className="
+                                            flex
+                                            gap-4
+                                            items-start
+                                            border-l-2
+                                            border-gray-200
+                                            pl-4
+                                            relative
+                                        "
                                     >
+
                                         <div
                                             className="
-                                    absolute
-                                    -left-[7px]
-                                    top-1
-                                    w-3
-                                    h-3
-                                    rounded-full
-                                    bg-[var(--color-primary)]
-                                "
+                                                absolute
+                                                -left-[7px]
+                                                top-1
+                                                w-3
+                                                h-3
+                                                rounded-full
+                                                bg-[var(--color-primary)]
+                                            "
                                         />
 
                                         <div className="flex-1">
+
                                             <div
                                                 className="
-                                        flex
-                                        flex-col
-                                        sm:flex-row
-                                        sm:items-center
-                                        sm:justify-between
-                                        gap-1
-                                    "
+                                                    flex
+                                                    flex-col
+                                                    sm:flex-row
+                                                    sm:items-center
+                                                    sm:justify-between
+                                                    gap-1
+                                                "
                                             >
+
                                                 <p className="font-medium">
                                                     {STATUS_LABELS[status] ??
                                                         status?.replaceAll(
@@ -858,6 +721,7 @@ export default function AdminBulkOrderDetails() {
                                                         )
                                                         : "-"}
                                                 </span>
+
                                             </div>
 
                                             {updatedBy && (
@@ -879,14 +743,291 @@ export default function AdminBulkOrderDetails() {
                                                     {history.comment}
                                                 </div>
                                             )}
+
                                         </div>
+
                                     </div>
                                 );
                             })}
+
                     </div>
+
                 </div>
             )}
 
+            {/* ============================================================
+             * PRODUCTS
+             * Same table-style layout as the retail Admin Order Details.
+             * Only bulk-order columns/data are retained.
+             * ============================================================ */}
+            <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+
+                <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
+
+                    <table className="w-full min-w-[760px] text-sm">
+
+                        <thead className="sticky top-0 z-10 bg-gray-50">
+
+                            <tr className="border-b border-gray-200">
+
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                                    Product
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Carton
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Carton Content
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Price
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Amount
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody className="divide-y divide-gray-100">
+
+                            {order.items.map(
+                                (item: any, index: number) => {
+
+                                    const cartonQty =
+                                        Number(item.cartonQty ?? 0);
+
+                                    const packUnit =
+                                        item.packUnit?.trim();
+
+                                    const hasPack =
+                                        cartonQty > 0 &&
+                                        Boolean(packUnit);
+
+                                    return (
+                                        <tr
+                                            key={
+                                                item.productId ||
+                                                index
+                                            }
+                                            className="
+                                                align-middle
+                                                hover:bg-gray-50
+                                            "
+                                        >
+
+                                            {/* Product */}
+                                            <td className="px-4 py-3">
+
+                                                <div className="flex min-w-0 items-center gap-3">
+
+                                                    <img
+                                                        src={
+                                                            item.image ||
+                                                            defaultImage
+                                                        }
+                                                        onError={(e) => {
+                                                            e.currentTarget.onerror =
+                                                                null;
+
+                                                            e.currentTarget.src =
+                                                                defaultImage;
+                                                        }}
+                                                        className="
+                                                            h-12
+                                                            w-12
+                                                            shrink-0
+                                                            rounded-lg
+                                                            border
+                                                            object-cover
+                                                        "
+                                                        loading="lazy"
+                                                        alt={item.name}
+                                                    />
+
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-gray-900">
+                                                            {item.name}
+                                                        </p>
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                            {/* Carton */}
+                                            <td className="px-4 py-3 text-center">
+                                                <span className="font-medium text-gray-800">
+                                                    {item.quantity}
+                                                </span>
+                                            </td>
+
+                                            {/* Carton Content */}
+                                            <td className="px-4 py-3 text-center">
+
+                                                {hasPack ? (
+                                                    <span
+                                                        className="
+                                                            inline-flex
+                                                            whitespace-nowrap
+                                                            rounded-full
+                                                            bg-gray-100
+                                                            px-2.5
+                                                            py-1
+                                                            text-xs
+                                                            font-medium
+                                                            text-gray-700
+                                                        "
+                                                    >
+                                                        {cartonQty}{" "}
+                                                        {packUnit}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        -
+                                                    </span>
+                                                )}
+
+                                            </td>
+
+                                            {/* Price */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                <span className="font-medium text-gray-700">
+                                                    ₹
+                                                    {Number(
+                                                        item.schemePrice ?? 0
+                                                    ).toLocaleString("en-IN")}
+                                                </span>
+                                            </td>
+
+                                            {/* Amount */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                <span className="font-semibold text-gray-900">
+                                                    ₹
+                                                    {Number(
+                                                        item.total ?? 0
+                                                    ).toLocaleString("en-IN")}
+                                                </span>
+                                            </td>
+
+                                        </tr>
+                                    );
+                                }
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            {/* ============================================================
+             * ORDER SUMMARY
+             * ============================================================ */}
+            <div className="bg-white border border-gray-300 rounded-xl p-5">
+
+                <div className="flex items-center justify-between gap-4 mb-5">
+
+                    <h2 className="text-lg font-semibold">
+                        Order Summary
+                    </h2>
+
+                </div>
+
+                <div className="space-y-3 text-sm">
+
+                    <div className="flex justify-between gap-4">
+                        <span>
+                            Product Total
+                        </span>
+
+                        <span>
+                            ₹
+                            {Number(
+                                order.pricing.productTotal
+                            ).toLocaleString("en-IN")}
+                        </span>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                        <span>
+                            No. of Cartons
+                        </span>
+
+                        <span>
+                            {totalCartons}
+                        </span>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                        <span>
+                            Packaging ({order.pricing.packagingPercent}%)
+                        </span>
+
+                        <span>
+                            ₹
+                            {Number(
+                                order.pricing.packagingCharge
+                            ).toLocaleString("en-IN")}
+                        </span>
+                    </div>
+
+                    {order.pricing.gstAmount > 0 && (
+                        <div className="flex justify-between gap-4">
+
+                            <span>
+                                GST ({order.pricing.gstPercent}%)
+                            </span>
+
+                            <span>
+                                ₹
+                                {Number(
+                                    order.pricing.gstAmount
+                                ).toLocaleString("en-IN")}
+                            </span>
+
+                        </div>
+                    )}
+
+                    <div className="border-t pt-4 flex justify-between gap-4 font-bold text-[var(--color-primary)]">
+
+                        <span>
+                            Grand Total
+                        </span>
+
+                        <span>
+                            ₹
+                            {Number(
+                                order.pricing.grandTotal
+                            ).toLocaleString("en-IN")}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {order.remarks && (
+                <div className="bg-white border border-gray-300 rounded-xl p-4">
+
+                    <h3 className="font-semibold mb-2">
+                        Remarks
+                    </h3>
+
+                    <p className="text-sm whitespace-pre-wrap">
+                        {order.remarks}
+                    </p>
+
+                </div>
+            )}
             {!isTerminal && (
 
                 <div className="bg-white border rounded-xl p-4 space-y-4">
@@ -951,24 +1092,6 @@ export default function AdminBulkOrderDetails() {
                     </div>
 
                     <div className="flex flex-wrap justify-end gap-2">
-                        {canAdjust && (
-                            <Button
-                                variant="secondary"
-                                onClick={() =>
-                                    navigate(
-                                        `/admin/bulk-orders/${order.orderId}/adjust`,
-                                        {
-                                            state: {
-                                                order,
-                                                isAdmin: true,
-                                            },
-                                        }
-                                    )
-                                }
-                            >
-                                Adjust Order
-                            </Button>
-                        )}
 
                         <Button
                             disabled={

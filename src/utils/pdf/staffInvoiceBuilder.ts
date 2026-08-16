@@ -15,8 +15,11 @@ export async function buildStaffPackingPdf(
         compress: true,
     });
 
-    const normal = () => doc.setFont("helvetica", "normal");
-    const bold = () => doc.setFont("helvetica", "bold");
+    const normal = () =>
+        doc.setFont("helvetica", "normal");
+
+    const bold = () =>
+        doc.setFont("helvetica", "bold");
 
     const LEFT = PDF_THEME.LEFT;
     const RIGHT = PDF_THEME.RIGHT;
@@ -33,7 +36,9 @@ export async function buildStaffPackingPdf(
      */
 
     const orderDate = order.updatedAt
-        ? new Date(Number(order.updatedAt)).toLocaleDateString(
+        ? new Date(
+            Number(order.updatedAt)
+        ).toLocaleDateString(
             "en-IN",
             {
                 day: "2-digit",
@@ -44,8 +49,12 @@ export async function buildStaffPackingPdf(
         : "-";
 
     bold();
+
     doc.setFontSize(9);
-    doc.setTextColor(...COLORS.dark);
+
+    doc.setTextColor(
+        ...COLORS.dark
+    );
 
     text(
         doc,
@@ -68,25 +77,45 @@ export async function buildStaffPackingPdf(
 
     line(doc, y);
 
+    /*
+     * ============================================================
+     * CUSTOMER DETAILS
+     * ============================================================
+     */
+
     y += 3;
 
     bold();
+
     doc.setFontSize(8);
-    doc.setTextColor(...COLORS.dark);
+
+    doc.setTextColor(
+        ...COLORS.dark
+    );
+
     const customerDetails =
         order.address ??
         order.customer?.address ??
         "-";
 
-    const customerLines = doc.splitTextToSize(
-        String(customerDetails).trim(),
-        RIGHT - LEFT - 6
-    );
+    const customerLines =
+        doc.splitTextToSize(
+            String(
+                customerDetails
+            ).trim(),
+            RIGHT - LEFT - 6
+        );
 
     const customerBoxHeight =
-        Math.max(9, customerLines.length * 3.5 + 5);
+        Math.max(
+            9,
+            customerLines.length * 3.5 + 5
+        );
 
-    doc.setDrawColor(...COLORS.border);
+    doc.setDrawColor(
+        ...COLORS.border
+    );
+
     doc.setLineWidth(0.15);
 
     doc.roundedRect(
@@ -99,8 +128,12 @@ export async function buildStaffPackingPdf(
     );
 
     normal();
+
     doc.setFontSize(8);
-    doc.setTextColor(...COLORS.dark);
+
+    doc.setTextColor(
+        ...COLORS.dark
+    );
 
     text(
         doc,
@@ -111,35 +144,89 @@ export async function buildStaffPackingPdf(
 
     y += customerBoxHeight + 1;
 
-    const items = Array.isArray(order.items)
-        ? [...order.items].sort((a: any, b: any) => {
-            const aSequence = Number(a.sequenceNumber);
-            const bSequence = Number(b.sequenceNumber);
+    /*
+     * ============================================================
+     * SORT ITEMS BY sequenceNumber
+     * ============================================================
+     */
 
-            if (
-                Number.isFinite(aSequence) &&
-                Number.isFinite(bSequence)
-            ) {
-                return aSequence - bSequence;
-            }
+    const items =
+        Array.isArray(order.items)
+            ? [...order.items].sort(
+                (
+                    a: any,
+                    b: any
+                ) => {
 
-            if (Number.isFinite(aSequence)) {
-                return -1;
-            }
+                    const aSequence =
+                        Number(
+                            a.sequenceNumber
+                        );
 
-            if (Number.isFinite(bSequence)) {
-                return 1;
-            }
+                    const bSequence =
+                        Number(
+                            b.sequenceNumber
+                        );
 
-            return 0;
-        })
-        : [];
+                    if (
+                        Number.isFinite(
+                            aSequence
+                        ) &&
+                        Number.isFinite(
+                            bSequence
+                        )
+                    ) {
+                        return (
+                            aSequence -
+                            bSequence
+                        );
+                    }
 
-    const totalQty = items.reduce(
-        (sum: number, item: any) =>
-            sum + Number(item.quantity ?? 0),
-        0
-    );
+                    if (
+                        Number.isFinite(
+                            aSequence
+                        )
+                    ) {
+                        return -1;
+                    }
+
+                    if (
+                        Number.isFinite(
+                            bSequence
+                        )
+                    ) {
+                        return 1;
+                    }
+
+                    return 0;
+                }
+            )
+            : [];
+
+    /*
+     * ============================================================
+     * TOTAL QUANTITY
+     * ============================================================
+     */
+
+    const totalQty =
+        items.reduce(
+            (
+                sum: number,
+                item: any
+            ) =>
+                sum +
+                Number(
+                    item.quantity ?? 0
+                ),
+            0
+        );
+
+    /*
+     * ============================================================
+     * PRODUCTS
+     * ============================================================
+     */
 
     autoTable(doc, {
         startY: y,
@@ -149,15 +236,44 @@ export async function buildStaffPackingPdf(
         head: [[
             "#",
             "Product",
+            "Unit",
             "Qty",
         ]],
 
         body: items.map(
-            (item: any, index: number) => [
-                String(index + 1),
-                item.name ?? "-",
-                String(item.quantity ?? 0),
-            ]
+            (
+                item: any,
+                index: number
+            ) => {
+
+                const packQuantity =
+                    Number(
+                        item.packQuantity ?? 0
+                    );
+
+                const packUnit =
+                    item.packUnit?.trim();
+
+                const cartonText =
+                    packQuantity > 0
+                        ? `${packQuantity}${packUnit
+                            ? ` ${packUnit}`
+                            : ""
+                        }`
+                        : packUnit || "-";
+
+                return [
+                    String(index + 1),
+
+                    item.name ?? "-",
+
+                    cartonText,
+
+                    String(
+                        item.quantity ?? 0
+                    ),
+                ];
+            }
         ),
 
         styles: {
@@ -177,21 +293,34 @@ export async function buildStaffPackingPdf(
             minCellHeight: 6,
 
             lineWidth: 0.08,
-            lineColor: COLORS.border,
+
+            lineColor:
+                COLORS.border,
 
             valign: "middle",
-            textColor: COLORS.dark,
+
+            textColor:
+                COLORS.dark,
         },
 
         headStyles: {
             font: "helvetica",
+
             fontStyle: "bold",
+
             fontSize: 8,
 
-            fillColor: COLORS.primary,
-            textColor: [255, 255, 255],
+            fillColor:
+                COLORS.primary,
+
+            textColor: [
+                255,
+                255,
+                255,
+            ],
 
             halign: "center",
+
             valign: "middle",
 
             cellPadding: {
@@ -203,75 +332,159 @@ export async function buildStaffPackingPdf(
         },
 
         alternateRowStyles: {
-            fillColor: COLORS.alternate,
+            fillColor:
+                COLORS.alternate,
         },
 
         columnStyles: {
+            /*
+             * #
+             */
             0: {
                 cellWidth: 10,
                 halign: "center",
             },
 
+            /*
+             * Product
+             */
             1: {
-                cellWidth: 145,
+                cellWidth: 115,
                 halign: "left",
             },
 
+            /*
+             * Carton
+             *
+             * Example:
+             * 50 Box
+             */
             2: {
+                cellWidth: 30,
+                halign: "center",
+            },
+
+            /*
+             * Qty
+             */
+            3: {
                 cellWidth: 20,
                 halign: "center",
             },
         },
 
-        didParseCell: (data) => {
+        didParseCell: (
+            data
+        ) => {
+
+            /*
+             * #
+             */
             if (
-                data.section === "body" &&
+                data.section ===
+                    "body" &&
                 data.column.index === 0
             ) {
-                data.cell.styles.halign = "center";
+                data.cell.styles.halign =
+                    "center";
             }
 
+            /*
+             * Carton
+             */
             if (
-                data.section === "body" &&
+                data.section ===
+                    "body" &&
                 data.column.index === 2
             ) {
-                data.cell.styles.fontStyle = "bold";
-                data.cell.styles.halign = "center";
+                data.cell.styles.halign =
+                    "center";
+            }
+
+            /*
+             * Qty
+             */
+            if (
+                data.section ===
+                    "body" &&
+                data.column.index === 3
+            ) {
+                data.cell.styles.fontStyle =
+                    "bold";
+
+                data.cell.styles.halign =
+                    "center";
             }
         },
     });
 
     /*
-   * ============================================================
-   * TOTAL QUANTITY
-   * ============================================================
-   */
+     * ============================================================
+     * TOTAL QUANTITY
+     * ============================================================
+     */
 
-    const tableBottom = (doc as any).lastAutoTable?.finalY ?? y;
-    const totalY = tableBottom + 5;
+    const tableBottom =
+        (doc as any)
+            .lastAutoTable
+            ?.finalY ?? y;
 
-    line(doc, totalY);
+    const totalY =
+        tableBottom + 5;
+
+    line(
+        doc,
+        totalY
+    );
 
     bold();
+
     doc.setFontSize(9);
-    doc.setTextColor(...COLORS.dark);
+
+    doc.setTextColor(
+        ...COLORS.dark
+    );
 
     /*
      * Table columns:
      *
      * #       = 10
-     * Product = 145
+     * Product = 115
+     * Carton  = 30
      * Qty     = 20
      *
-     * So the Qty column starts at:
-     * LEFT + 10 + 145
+     * Qty column starts at:
+     *
+     * LEFT + 10 + 115 + 30
      */
-    const qtyColumnLeft = LEFT + 10 + 145;
-    const qtyColumnRight = qtyColumnLeft + 20;
+
+    const qtyColumnLeft =
+        LEFT +
+        10 +
+        115 +
+        30;
+
+    const qtyColumnRight =
+        qtyColumnLeft + 20;
 
     /*
-     * Put the quantity value inside the exact Qty column.
+     * Total Qty label
      */
+
+    text(
+        doc,
+        "Total Qty",
+        qtyColumnLeft - 4,
+        totalY + 5,
+        {
+            align: "right",
+        }
+    );
+
+    /*
+     * Total Qty value
+     */
+
     text(
         doc,
         String(totalQty),
@@ -282,17 +495,5 @@ export async function buildStaffPackingPdf(
         }
     );
 
-    /*
-     * Put "Total Qty" immediately before the Qty column.
-     */
-    text(
-        doc,
-        "Total Qty",
-        qtyColumnLeft - 4,
-        totalY + 5,
-        {
-            align: "right",
-        }
-    );
     return doc;
 }
