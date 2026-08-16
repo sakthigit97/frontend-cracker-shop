@@ -17,6 +17,12 @@ interface UpdatePayload {
     adminComment?: string;
 }
 
+interface ApplyAdjustedOrderPayload {
+    orderId: string;
+    items: any[];
+    pricing: any;
+}
+
 interface AdminBulkOrderDetailsState {
     cache: Record<string, any>;
 
@@ -35,6 +41,21 @@ interface AdminBulkOrderDetailsState {
         orderId: string,
         payload: UpdatePayload
     ) => Promise<any>;
+
+    /**
+     * Immediately synchronize an adjusted bulk order
+     * across:
+     *
+     * 1. Admin order-details cache
+     * 2. Admin bulk-order list cache
+     *
+     * No additional API request is required because
+     * the adjust-order API already returns the latest
+     * items and pricing.
+     */
+    applyAdjustedOrder: (
+        payload: ApplyAdjustedOrderPayload
+    ) => void;
 
     clear: () => void;
 }
@@ -199,15 +220,8 @@ export const useAdminBulkOrderDetailsStore =
                      * Update all matching cached
                      * bulk-order list results.
                      *
-                     * If status changed:
-                     *
-                     * ORDER_PLACED cache
-                     *        ↓
-                     * order is removed
-                     *
-                     * The order will appear in the
-                     * new status cache when that
-                     * status is fetched.
+                     * Existing status-filter behavior
+                     * is preserved.
                      */
                     useAdminBulkOrdersStore
                         .getState()
@@ -252,8 +266,83 @@ export const useAdminBulkOrderDetailsStore =
             },
 
             /* --------------------------------
-             * Clear
+             * Apply Adjusted Order
              * -------------------------------- */
+
+            applyAdjustedOrder: ({
+                orderId,
+                items,
+                pricing,
+            }) => {
+                if (!orderId) {
+                    return;
+                }
+
+                /*
+                 * ------------------------------------------
+                 * 1. Update admin detail-page cache
+                 * ------------------------------------------
+                 *
+                 * The Admin Bulk Order Details page reads:
+                 *
+                 * cache[orderId]
+                 *
+                 * Therefore update the exact same object
+                 * that the page is rendering.
+                 */
+                set((state) => {
+                    const existing =
+                        state.cache[orderId];
+
+                    if (!existing) {
+                        return {
+                            error: null,
+                        };
+                    }
+
+                    return {
+                        cache: {
+                            ...state.cache,
+
+                            [orderId]: {
+                                ...existing,
+
+                                items,
+
+                                pricing,
+                            },
+                        },
+
+                        loaded: true,
+
+                        error: null,
+                    };
+                });
+
+                /*
+                 * ------------------------------------------
+                 * 2. Update admin bulk-order list cache
+                 * ------------------------------------------
+                 *
+                 * Do NOT fetch the API again.
+                 *
+                 * The adjustment API has already returned
+                 * the latest items and pricing.
+                 *
+                 * updateOrderInCache() also preserves the
+                 * existing status-filter behavior.
+                 */
+                useAdminBulkOrdersStore
+                    .getState()
+                    .updateOrderInCache(
+                        orderId,
+                        {
+                            items,
+
+                            pricing,
+                        }
+                    );
+            },
 
             clear: () => {
                 set({

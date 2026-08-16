@@ -587,7 +587,6 @@ export default function AdminConfigPage() {
                 return false;
             }
 
-            // Maximum Amount
             if (
                 scheme.maxAmount === "" ||
                 scheme.maxAmount === undefined ||
@@ -600,7 +599,6 @@ export default function AdminConfigPage() {
                 return false;
             }
 
-            // Max must be greater than Min
             if (
                 Number(scheme.maxAmount) <=
                 Number(scheme.minAmount)
@@ -611,7 +609,6 @@ export default function AdminConfigPage() {
                 return false;
             }
 
-            // Adjustment validation
             if (scheme.bulkPriceAdjustmentType) {
                 const percent =
                     scheme.bulkPriceAdjustmentPercent;

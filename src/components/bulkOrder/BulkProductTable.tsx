@@ -68,46 +68,32 @@ function BulkProductTable({
         [products]
     );
 
-
     const filteredProducts = useMemo(() => {
-        const keyword = search
-            .trim()
-            .toLowerCase();
+        const keyword = search.trim().toLowerCase();
 
         if (!keyword) {
             return bulkOrderProducts;
         }
 
-        return bulkOrderProducts.filter(
-            (product) => {
-                return (
-                    product.name
-                        ?.toLowerCase()
-                        .includes(keyword) ||
-                    product.searchText
-                        ?.toLowerCase()
-                        .includes(keyword) ||
-                    product.categoryId
-                        ?.toLowerCase()
-                        .includes(keyword) ||
-                    product.brand
-                        ?.toLowerCase()
-                        .includes(keyword)
-                );
-            }
-        );
-    }, [bulkOrderProducts, search]);
+        const searchWords = keyword
+            .split(/\s+/)
+            .filter(Boolean);
 
-    const sortedProducts =
-        useMemo(() => {
-            return sortProductsByCategoryAndSequence(
-                filteredProducts,
-                categories
+        return bulkOrderProducts.filter((product) => {
+            const productName =
+                product.name?.toLowerCase() ?? "";
+
+            return searchWords.every((word) =>
+                productName.includes(word)
             );
-        }, [
+        });
+    }, [bulkOrderProducts, search]);
+    const sortedProducts = useMemo(() => {
+        return sortProductsByCategoryAndSequence(
             filteredProducts,
-            categories,
-        ]);
+            categories
+        );
+    }, [filteredProducts, categories]);
 
     const groupedProducts =
         useMemo<CategoryGroup[]>(() => {

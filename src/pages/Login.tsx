@@ -23,7 +23,7 @@ export default function Login() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const cleanMobile = mobile.trim();
   const isMobileValid = /^[6-9]\d{9}$/.test(cleanMobile);
-  const isForgotOTPSend = config?.isForgotOTPEnabled || true;
+  const isForgotOTPSend = config?.isForgotOTPEnabled ?? true;
   const captchaRef = useRef<ReCAPTCHA>(null);
 
   const validateForm = () => {
@@ -74,11 +74,20 @@ export default function Login() {
       });
 
       const { token, user } = res.data;
+      console.log(user)
+      const normalizedRole = String(user.role).toLowerCase();
+
+      const role =
+        normalizedRole === "admin"
+          ? "ADMIN"
+          : normalizedRole === "staff"
+            ? "STAFF"
+            : "USER";
 
       login({
         userId: user.mobile,
         token,
-        role: user.role === "admin" ? "ADMIN" : "USER",
+        role,
         name: user.name || "",
       });
 
@@ -89,8 +98,15 @@ export default function Login() {
       });
 
       setTimeout(() => {
-        navigate(user.role === "admin" ? "/admin" : "/");
+        if (role === "ADMIN") {
+          navigate("/admin");
+        } else if (role === "STAFF") {
+          navigate("/staff/orders");
+        } else {
+          navigate("/");
+        }
       }, 500);
+
     } catch (err: any) {
       let message = "Something went wrong. Try again";
 

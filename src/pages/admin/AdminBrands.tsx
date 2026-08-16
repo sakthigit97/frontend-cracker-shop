@@ -237,7 +237,7 @@ export default function AdminBrands() {
                                 paginatedBrands.map((b: any) => (
                                     <tr key={b.brandId} className="border-t">
                                         <td className="p-3">{b.name}</td>
-                                        <td className="p-3 font-mono text-xs break-all">
+                                        <td className="p-3">
                                             {b.brandId}
                                         </td>
                                         <td className="p-3">

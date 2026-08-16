@@ -6,7 +6,8 @@ import { mergeCartApi, getCartApi } from "../services/cart.api";
 import { cartStore } from "./cart.store";
 import { useCartStorageSync } from "../hooks/useCartStorageSync";
 import { useOrdersStore } from "./orders.store";
-export type UserRole = "USER" | "ADMIN";
+import { bulkOrderStore } from "./bulkOrder.store";
+export type UserRole = "USER" | "ADMIN" | "STAFF";
 
 interface AuthUser {
   userId: string;
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     cartStore.getState().resetToGuest();
     cartStore.getState().unlock();
     useOrdersStore.getState().clear();
+    bulkOrderStore.getState().clearAll();
   }, []);
 
   const updateUser = useCallback((data: Partial<AuthUser>) => {
@@ -166,14 +168,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { items, clear } = cartStore.getState();
 
-      if (Object.keys(items).length > 0 && data.role !== "ADMIN") {
+      if (Object.keys(items).length > 0 && data.role === "USER") {
         await mergeCartApi({ guestItems: items });
       }
 
       clear();
       localStorage.removeItem("guest_cart");
 
-      if (data.role !== "ADMIN") {
+      if (data.role === "USER") {
         const cartRes = await getCartApi();
 
         const normalized: Record<string, number> = {};

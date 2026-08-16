@@ -286,6 +286,13 @@ export default function BulkOrderSuccess() {
                                             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-700" />
 
                                             <span>
+                                                Carton contents, GST, and prices may vary at the time of dispatch. Any difference in the final amount will be adjusted accordingly, and the balance will be collected from or refunded to the customer.
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-700" />
+
+                                            <span>
                                                 Our sales team
                                                 will review your
                                                 bulk order.

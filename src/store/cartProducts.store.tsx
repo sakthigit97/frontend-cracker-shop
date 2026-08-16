@@ -6,10 +6,14 @@ type CartProduct = {
     name: string;
     price: number;
     image?: string;
-    brand?: string;
+    brandId?: string;
+    categoryId?: string;
     originalPrice?: number;
     discountText?: string;
     isComboPackage?: boolean;
+    packQuantity?: number;
+    packUnit?: string;
+    sequenceNumber?: number;
 };
 
 interface CartProductsState {
@@ -33,7 +37,6 @@ export const useCartProductsStore = create<CartProductsState>(
             }
 
             const existing = get().products;
-
             const missingIds = ids.filter(
                 (id) => !existing[id]
             );
@@ -64,10 +67,14 @@ export const useCartProductsStore = create<CartProductsState>(
                             name: p.name,
                             price: p.price,
                             image: p.image,
-                            brand: p.brandId,
+                            brandId: p.brandId,
+                            categoryId: p.categoryId,
                             originalPrice: p.originalPrice,
                             discountText: p.discountText,
                             isComboPackage: !!p.isComboPackage,
+                            packQuantity: p.packQuantity,
+                            packUnit: p.packUnit,
+                            sequenceNumber: p.sequenceNumber
                         };
                     });
 

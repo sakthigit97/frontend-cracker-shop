@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
-
 import Button from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import EmptyState from "../../components/ui/EmptyState";
-
 import { useAdminUsersStore } from "../../store/adminUsers.store";
 import { useAlert } from "../../store/alert.store";
 import { deleteUser } from "../../services/adminUsers.api";
-
 import { useNavigate } from "react-router-dom";
+import AdminUserEditModal from "../admin/AdminUserEditModal";
 
 const PAGE_SIZE = 20;
-
 export default function AdminUsers() {
     const navigate = useNavigate();
 
@@ -22,32 +19,28 @@ export default function AdminUsers() {
     } = useAdminUsersStore();
 
     const { showAlert } = useAlert();
-
     const [page, setPage] = useState(1);
-
     const [data, setData] = useState<any>(null);
-
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [cursorByPage, setCursorByPage] = useState<Record<number, string | undefined>>({});
+    const [deletingMobile, setDeletingMobile] = useState<string | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [selectedMobile, setSelectedMobile] = useState<string | null>(null);
 
-    const [cursorByPage, setCursorByPage] =
-        useState<Record<number, string | undefined>>({});
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setDebouncedSearch(search.trim());
+        }, 300);
 
-    const [deletingMobile, setDeletingMobile] =
-        useState<string | null>(null);
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [search]);
 
-    const [showDeleteConfirm, setShowDeleteConfirm] =
-        useState(false);
-
-    const [selectedMobile, setSelectedMobile] =
-        useState<string | null>(null);
-
-    const query = search.trim();
-
-    /*
-     * ---------------------------------------------------------
-     * Load users
-     * ---------------------------------------------------------
-     */
+    const query = debouncedSearch;
     const loadUsers = async (
         targetPage: number,
         searchValue: string,
@@ -61,11 +54,6 @@ export default function AdminUsers() {
             });
 
             setData(response);
-
-            /*
-             * The cursor returned for the current page
-             * is the cursor required to load the next page.
-             */
             if (response?.nextCursor) {
                 setCursorByPage((previous) => ({
                     ...previous,
@@ -83,45 +71,82 @@ export default function AdminUsers() {
         }
     };
 
-    /*
-     * ---------------------------------------------------------
-     * Initial load + page/search changes
-     * ---------------------------------------------------------
-     */
+    const handleEditClick = (user: any) => {
+        setSelectedUser(user);
+        setShowEditModal(true);
+    };
+
     useEffect(() => {
-        const cursor =
+        let cancelled = false;
+
+        const currentCursor =
             page === 1
                 ? undefined
                 : cursorByPage[page];
 
-        loadUsers(
-            page,
-            query,
-            cursor
-        );
-    }, [page, query]);
+        const load = async () => {
+            try {
+                const response =
+                    await fetchPage({
+                        search:
+                            query || undefined,
+                        cursor: currentCursor,
+                        limit: PAGE_SIZE,
+                    });
 
-    /*
-     * ---------------------------------------------------------
-     * Search change
-     *
-     * Whenever search changes:
-     * - Go back to page 1
-     * - Clear old cursors
-     * - Old page cursors cannot be reused for a new search
-     * ---------------------------------------------------------
-     */
-    useEffect(() => {
-        setPage(1);
-        setCursorByPage({});
-        setData(null);
-    }, [query]);
+                if (cancelled) {
+                    return;
+                }
 
-    /*
-     * ---------------------------------------------------------
-     * Delete
-     * ---------------------------------------------------------
-     */
+                setData(response);
+
+                if (response.nextCursor) {
+                    setCursorByPage(
+                        (previous) => {
+                            const nextPage =
+                                page + 1;
+
+                            if (
+                                previous[nextPage] ===
+                                response.nextCursor
+                            ) {
+                                return previous;
+                            }
+
+                            return {
+                                ...previous,
+                                [nextPage]:
+                                    response.nextCursor,
+                            };
+                        }
+                    );
+                }
+            } catch (error: any) {
+                if (cancelled) {
+                    return;
+                }
+
+                showAlert({
+                    type: "error",
+                    message:
+                        error?.message ||
+                        "Failed to load users",
+                });
+            }
+        };
+
+        load();
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        page,
+        query,
+        cursorByPage[page],
+        fetchPage,
+        showAlert,
+    ]);
+
     const handleDeleteClick = (
         mobile: string
     ) => {
@@ -136,7 +161,6 @@ export default function AdminUsers() {
 
         try {
             setDeletingMobile(selectedMobile);
-
             await deleteUser(selectedMobile);
 
             showAlert({
@@ -145,21 +169,8 @@ export default function AdminUsers() {
                     "User deleted successfully",
             });
 
-            /*
-             * Clear cached pages because deleting a user
-             * can change pagination results.
-             */
             clearCache();
-
-            /*
-             * Reload current page.
-             *
-             * If the current page becomes empty after deletion,
-             * go to previous page.
-             */
-            const currentItems =
-                data?.items ?? [];
-
+            const currentItems = data?.items ?? [];
             if (
                 currentItems.length === 1 &&
                 page > 1
@@ -193,25 +204,12 @@ export default function AdminUsers() {
         }
     };
 
-    /*
-     * ---------------------------------------------------------
-     * Current page users
-     * ---------------------------------------------------------
-     */
     const users = data?.items ?? [];
-
-    /*
-     * DynamoDB cursor pagination:
-     *
-     * If nextCursor exists -> another page exists.
-     */
     const hasNextPage =
         Boolean(data?.nextCursor);
 
     return (
         <div className="space-y-4">
-
-            {/* Header */}
             <div className="flex items-center gap-3 mb-4">
 
                 <button
@@ -400,27 +398,38 @@ export default function AdminUsers() {
                                             </td>
 
                                             <td className="p-3">
-                                                <Button
-                                                    variant="outline"
-                                                    className="
-                                                        border-red-500
-                                                        text-red-600
-                                                    "
-                                                    disabled={
-                                                        deletingMobile ===
-                                                        user.mobile
-                                                    }
-                                                    onClick={() =>
-                                                        handleDeleteClick(
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            handleEditClick(user)
+                                                        }
+                                                    >
+                                                        Edit
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="outline"
+                                                        className="
+                border-red-500
+                text-red-600
+            "
+                                                        disabled={
+                                                            deletingMobile ===
                                                             user.mobile
-                                                        )
-                                                    }
-                                                >
-                                                    {deletingMobile ===
-                                                        user.mobile
-                                                        ? "Deleting…"
-                                                        : "Delete"}
-                                                </Button>
+                                                        }
+                                                        onClick={() =>
+                                                            handleDeleteClick(
+                                                                user.mobile
+                                                            )
+                                                        }
+                                                    >
+                                                        {deletingMobile ===
+                                                            user.mobile
+                                                            ? "Deleting…"
+                                                            : "Delete"}
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     )
@@ -540,6 +549,28 @@ export default function AdminUsers() {
                 onConfirm={
                     confirmDelete
                 }
+            />
+
+            <AdminUserEditModal
+                open={showEditModal}
+                user={selectedUser}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setSelectedUser(null);
+                }}
+                onUpdated={async () => {
+                    clearCache();
+
+                    const cursor = page === 1
+                        ? undefined
+                        : cursorByPage[page];
+
+                    await loadUsers(
+                        page,
+                        query,
+                        cursor
+                    );
+                }}
             />
         </div>
     );

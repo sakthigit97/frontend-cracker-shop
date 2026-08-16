@@ -3,6 +3,7 @@ import { memo } from "react";
 import defaultImage from "../../assets/default-image.png";
 import type { Product } from "../../types/product";
 import Button from "../ui/Button";
+import { useCatalog } from "../../store/catalog.store";
 
 interface Props {
   product: Product;
@@ -24,14 +25,23 @@ function ProductCard({
   buttonLabel = "Add to Cart",
 }: Props) {
   const navigate = useNavigate();
-
   const available_qty = product?.qty || 0;
+  const { categories, brands } = useCatalog();
+  const brandName = brands.find(
+    (brand) => brand.id === product.brandId
+  )?.name;
+
+  const categoryName = categories.find(
+    (category) => category.id === product.categoryId
+  )?.name;
 
   const handleCardClick = () => {
     navigate(`/product/${product.id}`);
   };
 
-  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const stop = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
   return (
     <div
@@ -58,6 +68,7 @@ function ProductCard({
         hover:ring-opacity-30
       "
     >
+      {/* Product Image */}
       <div className="relative bg-white aspect-[4/3] flex items-center justify-center">
         <img
           src={product.image?.trim() || defaultImage}
@@ -84,13 +95,28 @@ function ProductCard({
         />
 
         {product.discountText && (
-          <span className="absolute top-2 left-2 bg-[var(--color-secondary)] text-white text-xs font-semibold px-2 py-1 rounded">
+          <span
+            className="
+              absolute
+              top-2
+              left-2
+              bg-[var(--color-secondary)]
+              text-white
+              text-xs
+              font-semibold
+              px-2
+              py-1
+              rounded
+            "
+          >
             {product.discountText}
           </span>
         )}
       </div>
 
+      {/* Product Information */}
       <div className="p-3 flex flex-col flex-1 gap-0.5">
+        {/* Product Name */}
         <h3
           className="
             text-sm
@@ -104,13 +130,77 @@ function ProductCard({
           {product.name}
         </h3>
 
-        {product.brand && (
-          <p className="text-xs text-[var(--color-muted)]">
-            {product.brand}
-          </p>
+        {/* Category + Brand */}
+        {(categoryName || brandName) && (
+          <div className="mt-1.5 mb-1 space-y-1">
+            {categoryName && (
+              <div className="flex items-start gap-1.5 min-w-0">
+
+                <span
+                  className="
+                    min-w-0
+                    text-xs
+                    text-gray-600
+                    leading-snug
+                    break-words
+                  "
+                >
+                  {categoryName}
+                </span>
+              </div>
+            )}
+
+            {brandName && (
+              <div className="flex items-start gap-1.5 min-w-0">
+
+                <span
+                  className="
+                    min-w-0
+                    text-xs
+                    text-[var(--color-primary)]
+                    font-medium
+                    leading-snug
+                    break-words
+                  "
+                >
+                  {brandName}
+                </span>
+              </div>
+            )}
+          </div>
         )}
 
-        <div className="flex items-center gap-2">
+        {/* Pack Information */}
+        {Number(product.packQuantity) > 0 &&
+          product.packUnit?.trim() && (
+            <div
+              className="
+                inline-flex
+                self-start
+                items-center
+                gap-1.5
+                mt-1
+                mb-1
+                px-2
+                py-1
+                rounded-full
+                bg-gray-100
+                text-xs
+                max-w-full
+              "
+            >
+              <span className="text-gray-500 shrink-0">
+                📦
+              </span>
+
+              <span className="text-[var(--color-primary)] font-semibold break-words">
+                {product.packQuantity} {product.packUnit}
+              </span>
+            </div>
+          )}
+
+        {/* Price */}
+        <div className="flex items-center gap-2 mt-0.5">
           <span className="text-base font-bold text-[var(--color-primary)]">
             ₹{product.price}
           </span>
@@ -122,6 +212,7 @@ function ProductCard({
           )}
         </div>
 
+        {/* Cart Controls */}
         {!hideCartControls && (
           <div className="mt-auto pt-3">
             {quantityInCart === 0 ? (
@@ -136,7 +227,9 @@ function ProductCard({
                   : ""
                   }`}
               >
-                {available_qty === 0 ? "Out of Stock" : buttonLabel}
+                {available_qty === 0
+                  ? "Out of Stock"
+                  : buttonLabel}
               </Button>
             ) : (
               <div
@@ -159,7 +252,13 @@ function ProductCard({
               >
                 <button
                   onClick={() => onDecrease?.(product)}
-                  className="text-lg font-bold px-2 hover:scale-110 transition-transform"
+                  className="
+                    text-lg
+                    font-bold
+                    px-2
+                    hover:scale-110
+                    transition-transform
+                  "
                 >
                   −
                 </button>
@@ -170,7 +269,13 @@ function ProductCard({
 
                 <button
                   onClick={() => onIncrease?.(product)}
-                  className="text-lg font-bold px-2 hover:scale-110 transition-transform"
+                  className="
+                    text-lg
+                    font-bold
+                    px-2
+                    hover:scale-110
+                    transition-transform
+                  "
                 >
                   +
                 </button>

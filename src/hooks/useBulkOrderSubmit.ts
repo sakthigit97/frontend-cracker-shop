@@ -115,7 +115,7 @@ export function useBulkOrderSubmit() {
             const schemeValidation =
                 validateSchemeAmount(
                     scheme,
-                    pricing.productTotal
+                    pricing.grandTotal
                 );
 
             if (

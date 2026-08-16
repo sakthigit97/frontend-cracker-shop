@@ -8,7 +8,7 @@ interface UseBulkOrderPricingProps {
 }
 
 export function useBulkOrderPricing({
-    state = "",
+    state = "Tamil Nadu",
 }: UseBulkOrderPricingProps = {}) {
     const {
         scheme,

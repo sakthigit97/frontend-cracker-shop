@@ -9,6 +9,7 @@ import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
 import { useNavigate } from "react-router-dom";
 import defaultImage from "../assets/default-image.png";
+import { useCatalog } from "../store/catalog.store";
 
 function getYouTubeId(url: string) {
   const regExp =
@@ -274,6 +275,12 @@ export default function ProductDetails() {
   const { productId = "" } = useParams();
   const fetchProduct = useFetchProductDetails();
   const { data: product, loading } = useProductDetails(productId);
+  const {
+    categories,
+    brands,
+    fetchCategories,
+    fetchBrands,
+  } = useCatalog();
   const addItem = cartStore((s) => s.addItem);
   const navigate = useNavigate();
   const cartQty = cartStore(
@@ -282,7 +289,32 @@ export default function ProductDetails() {
 
   useEffect(() => {
     fetchProduct(productId);
-  }, [productId, fetchProduct]);
+
+    if (categories.length === 0) {
+      fetchCategories();
+    }
+
+    if (brands.length === 0) {
+      fetchBrands();
+    }
+  }, [
+    productId,
+    fetchProduct,
+    categories.length,
+    brands.length,
+    fetchCategories,
+    fetchBrands,
+  ]);
+
+  const categoryName =
+    categories.find(
+      (category: any) => category.id === product?.categoryId
+    )?.name || "";
+
+  const brandName =
+    brands.find(
+      (brand: any) => brand.id === product?.brandId
+    )?.name || "";
 
   if (loading && !product) {
     return (
@@ -371,12 +403,83 @@ export default function ProductDetails() {
         {/* INFO */}
         <div className="flex flex-col gap-5">
           <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              {product.categoryName}
-            </p>
-            <h1 className="text-2xl font-bold text-[var(--color-primary)] mt-1">
+            {/* Category */}
+            {categoryName && (
+              <span
+                className="
+        inline-flex
+        items-center
+        rounded-full
+        bg-gray-100
+        px-3
+        py-1
+        text-xs
+        font-medium
+        uppercase
+        tracking-wide
+        text-gray-500
+      "
+              >
+                {categoryName}
+              </span>
+            )}
+
+            {/* Product Name */}
+            <h1
+              className="
+      mt-3
+      text-2xl
+      md:text-3xl
+      font-bold
+      text-[var(--color-primary)]
+      leading-tight
+    "
+            >
               {product.name}
             </h1>
+
+            {/* Brand */}
+            {brandName && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                <span className="text-base">🏷️</span>
+                <span>Brand:</span>
+                <span className="font-semibold text-gray-700">
+                  {brandName}
+                </span>
+              </div>
+            )}
+
+            {/* Pack information */}
+            {Number(product.packQuantity) > 0 &&
+              product.packUnit?.trim() && (
+                <div className="mt-4">
+                  <span
+                    className="
+            inline-flex
+            items-center
+            gap-2
+            rounded-xl
+            border
+            border-gray-200
+            bg-gray-50
+            px-3
+            py-2
+            text-sm
+            text-gray-600
+          "
+                  >
+                    <span className="text-base">📦</span>
+
+                    <span className="font-medium">
+                      Pack:
+                    </span>
+
+                    <span className="font-bold text-[var(--color-primary)]">
+                      {product.packQuantity} {product.packUnit}
+                    </span>
+                  </span>
+                </div>
+              )}
           </div>
 
           <div className="flex items-center gap-4 flex-wrap">

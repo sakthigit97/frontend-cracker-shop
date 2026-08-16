@@ -156,25 +156,55 @@ export async function buildBulkInvoicePdf(
 
     line(doc, y);
     y += 4;
+
+    const bulkInvoiceItems = Array.isArray(order.items)
+        ? [...order.items].sort((a: any, b: any) => {
+            const aSequence = Number(a.sequenceNumber);
+            const bSequence = Number(b.sequenceNumber);
+
+            if (
+                Number.isFinite(aSequence) &&
+                Number.isFinite(bSequence)
+            ) {
+                return aSequence - bSequence;
+            }
+
+            if (Number.isFinite(aSequence)) {
+                return -1;
+            }
+
+            if (Number.isFinite(bSequence)) {
+                return 1;
+            }
+
+            return 0;
+        })
+        : [];
+
     const tableStartY = y;
+
     autoTable(doc, {
         startY: tableStartY,
         theme: "grid",
+
         tableLineWidth: 0,
+
         head: [[
             "Product",
-            "Carton Qty",
-            "Boxes",
-            "Rate / Box",
-            "Amount"
+            "Units/Carton",
+            "Rate/Unit",
+            "No. of Cartons",
+            "Amount",
         ]],
-        body: order.items.map((item: any) => [
+
+        body: bulkInvoiceItems.map((item: any) => [
             item.name,
-            item.cartonQty,
-            item.quantity,
+            `${item.cartonQty ?? ""} ${item.packUnit ?? ""}`.trim(),
             money(item.schemePrice),
+            item.quantity,
             money(item.total),
         ]),
+
         styles: {
             font: "helvetica",
             fontStyle: "normal",
@@ -184,101 +214,109 @@ export async function buildBulkInvoicePdf(
                 top: 1.2,
                 bottom: 1.2,
                 left: 2.2,
-                right: 2.2
+                right: 2.2,
             },
+
             minCellHeight: 6,
             lineWidth: 0.08,
             lineColor: COLORS.border,
             valign: "middle",
-            textColor: COLORS.dark
+            textColor: COLORS.dark,
         },
+
         alternateRowStyles: {
             fillColor: COLORS.alternate,
         },
+
         headStyles: {
-
             font: "helvetica",
-
             fontStyle: "bold",
-
             fontSize: 8,
-
             fillColor: COLORS.primary,
-
             textColor: [255, 255, 255],
-
             halign: "center",
-
             valign: "middle",
 
             cellPadding: {
                 top: 2,
                 bottom: 2,
                 left: 2,
-                right: 2
-            }
-
+                right: 2,
+            },
         },
-        columnStyles: {
 
+        columnStyles: {
             0: {
-                cellWidth: 72,
-                halign: "left"
+                cellWidth: 65,
+                halign: "left",
             },
 
             1: {
-                cellWidth: 22,
-                halign: "center"
+                cellWidth: 25,
+                halign: "center",
             },
 
             2: {
-                cellWidth: 18,
-                halign: "right"
+                cellWidth: 27,
+                halign: "center",
             },
 
             3: {
-                cellWidth: 30,
-                halign: "center"
+                cellWidth: 25,
+                halign: "center",
             },
 
             4: {
-                cellWidth: 34,
-                halign: "right"
-            }
+                cellWidth: 35,
+                halign: "right",
+            },
         },
+
         didParseCell: (data) => {
 
             if (data.section === "head") {
-
                 data.cell.styles.lineColor =
                     COLORS.primary;
 
                 return;
-
             }
 
-
+            // Rate / Unit
             if (
                 data.section === "body" &&
-                data.column.index === 3
+                data.column.index === 2
             ) {
-                data.cell.styles.textColor = [22, 163, 74];
-                data.cell.styles.fontStyle = "bold";
-                data.cell.styles.halign = "center";
+                data.cell.styles.textColor =
+                    [22, 163, 74];
+
+                data.cell.styles.fontStyle =
+                    "bold";
+
+                data.cell.styles.halign =
+                    "center";
             }
 
+            // Amount
             if (
                 data.section === "body" &&
                 data.column.index === 4
             ) {
+                data.cell.styles.fontStyle =
+                    "bold";
 
-                data.cell.styles.fontStyle = "bold";
-                data.cell.styles.textColor = COLORS.primary;
+                data.cell.styles.textColor =
+                    COLORS.primary;
 
+                data.cell.styles.halign =
+                    "right";
             }
-
-        }
+        },
     });
+    const totalCartons = bulkInvoiceItems.reduce(
+        (sum: number, item: any) =>
+            sum + Number(item.quantity || 0),
+        0
+    );
     let summaryStartY = (doc as any).lastAutoTable.finalY + 2;
     const SUMMARY_WIDTH = 80;
     const SUMMARY_X = RIGHT - SUMMARY_WIDTH;
@@ -294,6 +332,36 @@ export async function buildBulkInvoicePdf(
     );
 
     summaryStartY += 5;
+
+    const drawCartonSummaryRow = (
+        label: string,
+        value: number
+    ) => {
+        doc.setFont(
+            "helvetica",
+            "normal"
+        );
+
+        text(
+            doc,
+            label,
+            SUMMARY_X,
+            summaryStartY
+        );
+
+        text(
+            doc,
+            String(value),
+            RIGHT,
+            summaryStartY,
+            {
+                align: "right",
+            }
+        );
+
+        summaryStartY += 5;
+    };
+
     const drawSummaryRow = (
         label: string,
         value: number | string,
@@ -311,10 +379,9 @@ export async function buildBulkInvoicePdf(
             SUMMARY_X,
             summaryStartY
         );
-        const displayValue =
-            typeof value === "number"
-                ? money(value)
-                : String(value ?? "");
+        const displayValue = typeof value === "number"
+            ? money(value)
+            : String(value ?? "");
 
         text(
             doc,
@@ -332,6 +399,10 @@ export async function buildBulkInvoicePdf(
     drawSummaryRow(
         "Product Total",
         order.pricing.productTotal
+    );
+    drawCartonSummaryRow(
+        "Total Cartons",
+        totalCartons
     );
 
     drawSummaryRow(

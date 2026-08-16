@@ -61,10 +61,29 @@ export default function AdminEditProduct() {
                     description: data.description || "",
                     isActive: data.isActive === "true",
                     isComboPackage: data.isComboPackage ?? false,
+                    isRetailOnly: data.isRetailOnly ?? false,
+                    bulkOrderBasePrice:
+                        data.bulkOrderBasePrice !== null &&
+                            data.bulkOrderBasePrice !== undefined
+                            ? String(data.bulkOrderBasePrice)
+                            : "",
+                    cartonQty:
+                        data.cartonQty !== null &&
+                            data.cartonQty !== undefined
+                            ? String(data.cartonQty)
+                            : "",
+                    isBulkOrderOnly: data.isBulkOrderOnly ?? false,
                     images: [],
                     videoUrl: data.videoUrl || "",
                     packageTagIds: data.packageTagIds || [],
-                    aiTags: data.aiTags || []
+                    aiTags: data.aiTags || [],
+                    packQuantity:
+                        data.packQuantity !== null &&
+                            data.packQuantity !== undefined
+                            ? String(data.packQuantity)
+                            : "",
+                    packUnit: data.packUnit || "",
+                    isGiftPack: data.isGiftPack ?? false,
                 };
 
                 setForm(formData);
@@ -126,7 +145,14 @@ export default function AdminEditProduct() {
             initialData.description !== form.description ||
             initialData.isComboPackage !== form.isComboPackage ||
             initialData.videoUrl !== form.videoUrl ||
-            initialData.isActive !== form.isActive
+            initialData.isActive !== form.isActive ||
+            initialData.isRetailOnly !== form.isRetailOnly ||
+            initialData.bulkOrderBasePrice !== form.bulkOrderBasePrice ||
+            initialData.cartonQty !== form.cartonQty ||
+            initialData.isBulkOrderOnly !== form.isBulkOrderOnly ||
+            initialData.packQuantity !== form.packQuantity ||
+            initialData.packUnit !== form.packUnit ||
+            initialData.isGiftPack !== form.isGiftPack
         ) {
             return true;
         }
@@ -201,6 +227,46 @@ export default function AdminEditProduct() {
             return;
         }
 
+        if (!form.packQuantity || Number(form.packQuantity) <= 0) {
+            showAlert({
+                type: "error",
+                message: "Please enter a valid pack quantity",
+            });
+            return;
+        }
+
+        if (!form.packUnit) {
+            showAlert({
+                type: "error",
+                message: "Please select a pack unit",
+            });
+            return;
+        }
+
+        if (form.isBulkOrderOnly) {
+            if (
+                !form.bulkOrderBasePrice ||
+                Number(form.bulkOrderBasePrice) <= 0
+            ) {
+                showAlert({
+                    type: "error",
+                    message: "Please enter a valid bulk order base price",
+                });
+                return;
+            }
+
+            if (
+                !form.cartonQty ||
+                Number(form.cartonQty) <= 0
+            ) {
+                showAlert({
+                    type: "error",
+                    message: "Please enter a valid carton quantity",
+                });
+                return;
+            }
+        }
+
         if (form.description.trim().length < 10) {
             showAlert({
                 type: "error",
@@ -270,9 +336,26 @@ export default function AdminEditProduct() {
                 isActive: form.isActive ? "true" : "false",
                 searchText,
                 isComboPackage: form.isComboPackage,
+                isRetailOnly: form.isRetailOnly,
+                bulkOrderBasePrice:
+                    form.bulkOrderBasePrice !== ""
+                        ? Number(form.bulkOrderBasePrice)
+                        : null,
+                cartonQty:
+                    form.cartonQty !== ""
+                        ? Number(form.cartonQty)
+                        : null,
+                isBulkOrderOnly: form.isBulkOrderOnly,
                 imageUrls: finalImageUrls,
                 packageTagIds: form.packageTagIds || [],
                 aiTags: form.aiTags || [],
+                packQuantity:
+                    form.packQuantity !== ""
+                        ? Number(form.packQuantity)
+                        : null,
+                packUnit: form.packUnit || null,
+                isGiftPack:
+                    form.isGiftPack,
             });
 
             if (removedImages.length > 0) {

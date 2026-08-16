@@ -7,7 +7,7 @@ export interface Product {
   image?: string;
   price: number;
   originalPrice?: number;
-  brand?: string;
+  brandId?: string;
   discountText?: string;
   categoryId?: string;
   sequenceNumber?: number;
@@ -17,6 +17,8 @@ export interface Product {
   bulkOrderBasePrice?: number;
   isBulkOrderOnly?: boolean;
   isRetailOnly?: boolean;
+  packQuantity?: number;
+  packUnit?: string;
 }
 
 export type ProductDetails = {
@@ -31,4 +33,8 @@ export type ProductDetails = {
   youtubeUrl?: string | null;
   discountText?: string;
   isComboPackage?: boolean;
+  packQuantity?: number;
+  packUnit?: string;
+  brandId?: string;
+  categoryId?: string;
 };

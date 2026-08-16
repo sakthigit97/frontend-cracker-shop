@@ -204,6 +204,7 @@ export default function Home() {
     displayProducts,
     categories
   );
+
   const tabs = useMemo(() => {
     const items: {
       key: HomeTab;

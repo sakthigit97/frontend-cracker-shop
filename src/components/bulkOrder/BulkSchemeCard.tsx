@@ -82,7 +82,7 @@ function BulkSchemeCard({
 
                 <span>
                     {requiresAdminApproval
-                        ? "Admin approval required"
+                        ? "Submit your valid crackers shop license, GST, or business details to our Sales Team to get your access code."
                         : "No approval required"}
                 </span>
             </div>

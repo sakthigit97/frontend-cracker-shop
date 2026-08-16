@@ -8,7 +8,6 @@ import type {
 } from "../types/adminCode";
 
 interface AdminCodeStore {
-
     codes: AdminCode[];
 
     loading: boolean;

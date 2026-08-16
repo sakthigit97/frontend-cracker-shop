@@ -25,6 +25,7 @@ function BulkPricingCard({
 
     const hasGst = pricing.gstAmount > 0 &&
         pricing.gstPercent > 0;
+    console.log(pricing)
 
     const includedCharges: string[] = [];
     if (hasGst) {
@@ -60,11 +61,9 @@ function BulkPricingCard({
                 </p>
             </div>
 
-            {/* Content */}
             <div className="space-y-4 p-4 sm:space-y-5 sm:p-6">
-
-                {/* Product total */}
                 <PriceRow
+                    isPrice={false}
                     icon={
                         <Package size={18} />
                     }
@@ -72,7 +71,14 @@ function BulkPricingCard({
                     value={pricing.productTotal}
                 />
 
-                {/* Packaging */}
+                <PriceRow
+                    icon={
+                        <Package size={18} />
+                    }
+                    label="Carton Box Total"
+                    value={pricing.cartonBoxCount}
+                />
+
                 {hasPackaging && (
                     <PriceRow
                         icon={
@@ -125,7 +131,6 @@ function BulkPricingCard({
                     </div>
                 </div>
 
-                {/* Estimated delivery */}
                 <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
                     <p className="font-medium leading-5 text-blue-900">
                         Estimated Delivery
@@ -133,11 +138,7 @@ function BulkPricingCard({
 
                     <div className="mt-2 space-y-1 text-sm leading-5 text-blue-700">
                         <p>
-                            • Tamil Nadu: 3–5 Working Days
-                        </p>
-
-                        <p>
-                            • Other States: 7–10 Working Days
+                            Delivery timeline will be confirmed by our team after full payment is received. Order submission or confirmation does not confirm the delivery date.
                         </p>
                     </div>
                 </div>
@@ -147,6 +148,7 @@ function BulkPricingCard({
 }
 
 interface PriceRowProps {
+    isPrice?: boolean;
     icon: React.ReactNode;
     label: string;
     value: number;
@@ -154,6 +156,7 @@ interface PriceRowProps {
 }
 
 function PriceRow({
+    isPrice = true,
     icon,
     label,
     value,
@@ -188,7 +191,7 @@ function PriceRow({
             </div>
 
             <span className="shrink-0 whitespace-nowrap text-right text-sm font-semibold text-gray-900 sm:text-base">
-                ₹
+                {!isPrice ? "₹" : ""}
                 {value.toLocaleString(
                     "en-IN"
                 )}

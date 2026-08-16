@@ -75,12 +75,14 @@ export default function AdjustBulkOrder() {
         order: userOrder,
         fetchingOrder: userFetchingOrder,
         fetchOrder: fetchUserOrder,
+        applyAdjustedOrder,
     } = useBulkOrderHistoryStore();
 
     const {
         cache: adminOrderCache,
         loading: adminFetchingOrder,
         fetchOrder: fetchAdminOrder,
+        applyAdjustedOrder: applyAdminAdjustedOrder,
     } = useAdminBulkOrderDetailsStore();
 
     const {
@@ -299,6 +301,12 @@ export default function AdjustBulkOrder() {
         previewPackagingCharge +
         previewGstAmount;
 
+    const totalCartons = useMemo(() => {
+        return calculatedItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0
+        );
+    }, [calculatedItems]);
 
     const hasProductChanges = useMemo(() => {
         if (!currentOrder) {
@@ -477,14 +485,10 @@ export default function AdjustBulkOrder() {
                 image: product.image,
                 brand: product.brand,
                 categoryId: product.categoryId,
-                bulkOrderBasePrice:
-                    product.bulkOrderBasePrice,
-                cartonQty:
-                    product.cartonQty,
-                unitPrice:
-                    product.unitPrice,
-                schemePrice:
-                    product.schemePrice ??
+                bulkOrderBasePrice: product.bulkOrderBasePrice,
+                cartonQty: product.cartonQty,
+                unitPrice: product.unitPrice,
+                schemePrice: product.schemePrice ??
                     product.unitPrice,
                 quantity: 1,
                 total:
@@ -538,9 +542,6 @@ export default function AdjustBulkOrder() {
             return;
         }
 
-        /*
-         * Validate all items before sending.
-         */
         for (const item of calculatedItems) {
             if (
                 !Number.isInteger(item.quantity) ||
@@ -601,20 +602,28 @@ export default function AdjustBulkOrder() {
                 result.pricing
             );
 
+            if (isAdmin) {
+                applyAdminAdjustedOrder({
+                    orderId: result.orderId,
+                    items: result.items,
+                    pricing: result.pricing,
+                });
+            } else {
+                applyAdjustedOrder({
+                    orderId: result.orderId,
+                    items: result.items,
+                    pricing: result.pricing,
+                });
+            }
+
             showAlert({
                 type: "success",
-                message:
-                    "Bulk order updated successfully.",
+                message: "Bulk order updated successfully.",
             });
-
             navigate(
-                isAdmin ? `/admin/bulk-orders/${result.orderId}` :
-                    `/bulk-orders/${result.orderId}`,
+                orderDetailsPath,
                 {
                     replace: true,
-                    state: {
-                        forceRefresh: true,
-                    },
                 }
             );
         } catch (error: any) {
@@ -926,8 +935,15 @@ export default function AdjustBulkOrder() {
                         </div>
                     ) : (
                         <div>
-
-                            <div className="divide-y divide-gray-100">
+                            <div className="overflow-hidden">
+                                {/* Desktop table header */}
+                                <div className="hidden grid-cols-[minmax(180px,1fr)_130px_120px_100px_130px] items-center gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 sm:grid sm:px-5">
+                                    <span>Product</span>
+                                    <span className="text-center">Carton</span>
+                                    <span className="text-center">Carton Content</span>
+                                    <span className="text-center">Price</span>
+                                    <span className="text-right">Total</span>
+                                </div>
                                 {calculatedItems.map(
                                     (item) => (
                                         <BulkOrderItemRow
@@ -1016,6 +1032,13 @@ export default function AdjustBulkOrder() {
                                 }
                             />
 
+                            <SummaryRow
+                                isnotPrice={true}
+                                label="Cartonbox Total"
+                                value={
+                                    totalCartons
+                                }
+                            />
 
                             {packagingPercent > 0 && (
                                 <SummaryRow
@@ -1241,17 +1264,12 @@ interface BulkOrderItemRowProps {
     onIncrease: () => void;
     onDecrease: () => void;
 
-    onQuantityChange: (
-        value: number
-    ) => void;
+    onQuantityChange: (value: number) => void;
 
-    onCartonQtyChange: (
-        value: number
-    ) => void;
+    onCartonQtyChange: (value: number) => void;
 
     onRemove: () => void;
 }
-
 
 function BulkOrderItemRow({
     item,
@@ -1262,256 +1280,324 @@ function BulkOrderItemRow({
     onCartonQtyChange,
     onRemove,
 }: BulkOrderItemRowProps) {
+    const packUnit =
+        (item as EditableBulkOrderItem & {
+            packUnit?: string;
+        }).packUnit || "";
+
     return (
-        <div className="p-4 sm:p-5">
+        <div className="border-b border-gray-100 last:border-b-0">
 
-            <div className="flex gap-3 sm:gap-4">
+            {/* Desktop / Tablet */}
+            <div className="hidden grid-cols-[minmax(180px,1fr)_130px_120px_100px_130px] items-center gap-3 px-4 py-4 sm:grid sm:px-5">
+                {/* Product */}
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                        <img
+                            src={item.image || defaultImage}
+                            alt={item.name}
+                            className="h-full w-full object-contain"
+                            onError={(event) => {
+                                event.currentTarget.src =
+                                    defaultImage;
+                            }}
+                        />
+                    </div>
 
-                {/* Image */}
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 sm:h-24 sm:w-24">
+                    <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-gray-900">
+                            {item.name}
+                        </h3>
 
-                    <img
-                        src={
-                            item.image ||
-                            defaultImage
-                        }
-                        alt={item.name}
-                        className="h-full w-full object-contain"
-                        onError={(event) => {
-                            event.currentTarget.src =
-                                defaultImage;
-                        }}
-                    />
-
+                        {item.brand && (
+                            <p className="mt-0.5 truncate text-xs text-gray-500">
+                                {item.brand}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
-
-                {/* Details */}
-                <div className="min-w-0 flex-1">
-
-                    <div className="flex items-start justify-between gap-2">
-
-                        <div className="min-w-0">
-
-                            <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-gray-900 sm:text-base">
-                                {item.name}
-                            </h3>
-
-                            {item.brand && (
-                                <p className="mt-0.5 truncate text-xs text-gray-500">
-                                    {item.brand}
-                                </p>
-                            )}
-
-                        </div>
-
+                {/* Carton / Quantity */}
+                <div className="flex justify-center">
+                    <div className="flex items-center rounded-lg border border-gray-300 bg-white">
 
                         <button
                             type="button"
-                            onClick={
-                                onRemove
-                            }
+                            onClick={onDecrease}
+                            disabled={item.quantity <= 1}
                             className="
-                                shrink-0
-                                rounded-lg
-                                p-2
-                                text-gray-400
-                                transition
-                                hover:bg-red-50
-                                hover:text-red-600
+                                flex h-9 w-9 items-center justify-center
+                                text-gray-600 transition
+                                hover:bg-gray-50
+                                disabled:cursor-not-allowed
+                                disabled:opacity-40
                             "
-                            aria-label={`Remove ${item.name}`}
+                            aria-label="Decrease quantity"
                         >
-                            <Trash2 size={17} />
+                            <Minus size={15} />
                         </button>
 
+                        <input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(event) =>
+                                onQuantityChange(
+                                    Number(event.target.value)
+                                )
+                            }
+                            className="
+                                h-9 w-14
+                                border-x border-gray-300
+                                text-center text-sm font-semibold
+                                outline-none
+                            "
+                        />
+
+                        <button
+                            type="button"
+                            onClick={onIncrease}
+                            className="
+                                flex h-9 w-9 items-center justify-center
+                                text-gray-600 transition
+                                hover:bg-gray-50
+                            "
+                            aria-label="Increase quantity"
+                        >
+                            <Plus size={15} />
+                        </button>
                     </div>
+                </div>
 
-
-                    {/* Price */}
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm">
-
-                        <span className="text-gray-500">
-                            Unit Price:
-
-                            <span className="ml-1 font-semibold text-gray-800">
-                                ₹
-                                {formatCurrency(
-                                    item.unitPrice
-                                )}
-                            </span>
+                {/* Carton Content */}
+                <div className="text-center">
+                    {isAdmin ? (
+                        <input
+                            type="number"
+                            min={1}
+                            value={item.cartonQty}
+                            onChange={(event) =>
+                                onCartonQtyChange(
+                                    Number(event.target.value)
+                                )
+                            }
+                            className="
+                                h-9 w-20 rounded-lg
+                                border border-gray-300
+                                bg-white px-2
+                                text-center text-sm font-medium
+                                outline-none
+                                focus:border-[var(--color-primary)]
+                                focus:ring-2
+                                focus:ring-[var(--color-primary)]/10
+                            "
+                            aria-label={`Carton content for ${item.name}`}
+                        />
+                    ) : (
+                        <span className="text-sm font-medium text-gray-700">
+                            {item.cartonQty} {packUnit}
                         </span>
-
-
-                        <span className="text-gray-500">
-                            Carton:
-
-                            <span className="ml-1 font-semibold text-gray-800">
-                                {item.cartonQty}
-                            </span>
-                        </span>
-
-                    </div>
-
-
-                    {/* Admin carton edit */}
-                    {isAdmin && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-
-                            <label className="text-xs font-medium text-gray-600">
-                                Carton Qty
-                            </label>
-
-                            <input
-                                type="number"
-                                min={1}
-                                value={
-                                    item.cartonQty
-                                }
-                                onChange={(event) =>
-                                    onCartonQtyChange(
-                                        Number(
-                                            event
-                                                .target
-                                                .value
-                                        )
-                                    )
-                                }
-                                className="
-                                    h-9
-                                    w-24
-                                    rounded-lg
-                                    border
-                                    border-gray-300
-                                    bg-white
-                                    px-2
-                                    text-sm
-                                    font-medium
-                                    outline-none
-                                    focus:border-[var(--color-primary)]
-                                    focus:ring-2
-                                    focus:ring-[var(--color-primary)]/10
-                                "
-                            />
-
-                        </div>
                     )}
+                </div>
 
+                {/* Price */}
+                <div className="text-center">
+                    <span className="text-sm font-semibold text-gray-800">
+                        ₹{formatCurrency(item.unitPrice)}
+                    </span>
+                </div>
 
-                    {/* Quantity */}
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                {/* Total */}
+                <div className="flex items-center justify-end gap-2">
+                    <div className="text-right">
+                        <p className="text-[11px] text-gray-500">
+                            Item Total
+                        </p>
 
-                        <div className="flex items-center rounded-lg border border-gray-300">
+                        <p className="whitespace-nowrap text-base font-bold text-[var(--color-primary)]">
+                            ₹{formatCurrency(item.total)}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={onRemove}
+                        className="
+                            rounded-lg p-2
+                            text-gray-400 transition
+                            hover:bg-red-50
+                            hover:text-red-600
+                        "
+                        aria-label={`Remove ${item.name}`}
+                    >
+                        <Trash2 size={17} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile */}
+            <div className="p-4 sm:hidden">
+
+                <div className="flex gap-3">
+
+                    {/* Image */}
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                        <img
+                            src={item.image || defaultImage}
+                            alt={item.name}
+                            className="h-full w-full object-contain"
+                            onError={(event) => {
+                                event.currentTarget.src =
+                                    defaultImage;
+                            }}
+                        />
+                    </div>
+
+                    {/* Name + Remove */}
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+
+                            <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-gray-900">
+                                {item.name}
+                            </h3>
 
                             <button
                                 type="button"
-                                onClick={
-                                    onDecrease
-                                }
-                                disabled={
-                                    item.quantity <=
-                                    1
-                                }
+                                onClick={onRemove}
                                 className="
-                                    flex
-                                    h-9
-                                    w-9
-                                    items-center
-                                    justify-center
-                                    text-gray-600
-                                    transition
-                                    hover:bg-gray-50
-                                    disabled:cursor-not-allowed
+                                    shrink-0 rounded-lg p-1.5
+                                    text-gray-400
+                                    hover:bg-red-50
+                                    hover:text-red-600
+                                "
+                                aria-label={`Remove ${item.name}`}
+                            >
+                                <Trash2 size={17} />
+                            </button>
+
+                        </div>
+
+                        {item.brand && (
+                            <p className="mt-0.5 truncate text-xs text-gray-500">
+                                {item.brand}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Mobile details */}
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+
+                    {/* Carton */}
+                    <div>
+                        <p className="text-xs text-gray-500">
+                            Carton
+                        </p>
+
+                        <div className="mt-1 flex items-center rounded-lg border border-gray-300 w-fit">
+
+                            <button
+                                type="button"
+                                onClick={onDecrease}
+                                disabled={item.quantity <= 1}
+                                className="
+                                    flex h-8 w-8 items-center
+                                    justify-center text-gray-600
                                     disabled:opacity-40
                                 "
                                 aria-label="Decrease quantity"
                             >
-                                <Minus size={15} />
+                                <Minus size={14} />
                             </button>
-
 
                             <input
                                 type="number"
                                 min={1}
-                                value={
-                                    item.quantity
-                                }
+                                value={item.quantity}
                                 onChange={(event) =>
                                     onQuantityChange(
-                                        Number(
-                                            event
-                                                .target
-                                                .value
-                                        )
+                                        Number(event.target.value)
                                     )
                                 }
                                 className="
-                                    h-9
-                                    w-14
-                                    border-x
-                                    border-gray-300
-                                    text-center
-                                    text-sm
-                                    font-semibold
+                                    h-8 w-12
+                                    border-x border-gray-300
+                                    text-center text-sm font-semibold
                                     outline-none
                                 "
                             />
 
-
                             <button
                                 type="button"
-                                onClick={
-                                    onIncrease
-                                }
+                                onClick={onIncrease}
                                 className="
-                                    flex
-                                    h-9
-                                    w-9
-                                    items-center
-                                    justify-center
-                                    text-gray-600
-                                    transition
-                                    hover:bg-gray-50
+                                    flex h-8 w-8 items-center
+                                    justify-center text-gray-600
                                 "
                                 aria-label="Increase quantity"
                             >
-                                <Plus size={15} />
+                                <Plus size={14} />
                             </button>
-
                         </div>
+                    </div>
 
+                    {/* Carton Content */}
+                    <div>
+                        <p className="text-xs text-gray-500">
+                            Carton Content
+                        </p>
 
-                        <div className="text-right">
-
-                            <p className="text-[11px] text-gray-500 sm:text-xs">
-                                Item Total
+                        {isAdmin ? (
+                            <input
+                                type="number"
+                                min={1}
+                                value={item.cartonQty}
+                                onChange={(event) =>
+                                    onCartonQtyChange(
+                                        Number(event.target.value)
+                                    )
+                                }
+                                className="
+                                    mt-1 h-8 w-20 rounded-lg
+                                    border border-gray-300
+                                    px-2 text-center text-sm
+                                    font-medium outline-none
+                                "
+                            />
+                        ) : (
+                            <p className="mt-1 text-sm font-semibold text-gray-800">
+                                {item.cartonQty} {packUnit}
                             </p>
+                        )}
+                    </div>
 
-                            <p className="text-base font-bold text-[var(--color-primary)] sm:text-lg">
-                                ₹
-                                {formatCurrency(
-                                    item.total
-                                )}
-                            </p>
+                    {/* Price */}
+                    <div>
+                        <p className="text-xs text-gray-500">
+                            Price
+                        </p>
 
-                        </div>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">
+                            ₹{formatCurrency(item.unitPrice)}
+                        </p>
+                    </div>
 
+                    {/* Total */}
+                    <div className="text-right">
+                        <p className="text-xs text-gray-500">
+                            Total
+                        </p>
+
+                        <p className="mt-1 text-base font-bold text-[var(--color-primary)]">
+                            ₹{formatCurrency(item.total)}
+                        </p>
                     </div>
 
                 </div>
-
             </div>
-
         </div>
     );
 }
-
-
-/*
- * ------------------------------------------------------
- * Helpers
- * ------------------------------------------------------
- */
 
 function mapOrderItem(
     item: BulkOrderProduct
@@ -1541,12 +1627,6 @@ function mapOrderItem(
         unitPrice:
             item.unitPrice,
 
-        /*
-         * The actual BulkOrderProduct type has
-         * schemePrice?: number.
-         *
-         * Normalize it for the editable UI.
-         */
         schemePrice:
             item.schemePrice ??
             item.unitPrice,
@@ -1567,6 +1647,7 @@ function mapOrderItem(
  */
 
 interface SummaryRowProps {
+    isnotPrice?: boolean;
     label: string;
     value: number;
     muted?: boolean;
@@ -1574,6 +1655,7 @@ interface SummaryRowProps {
 
 
 function SummaryRow({
+    isnotPrice = false,
     label,
     value,
     muted = false,
@@ -1599,7 +1681,7 @@ function SummaryRow({
                         : "whitespace-nowrap text-sm font-semibold text-gray-900"
                 }
             >
-                ₹
+                {!isnotPrice ? "₹" : ""}
                 {formatCurrency(value)}
             </span>
 

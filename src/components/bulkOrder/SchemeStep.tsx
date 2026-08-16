@@ -135,10 +135,6 @@ export default function SchemeStep() {
         setAdminCodeVerified,
     ]);
 
-    /*
-     * Changing the admin code invalidates
-     * the previous verification.
-     */
     const handleAdminCodeChange =
         useCallback(
             (value: string) => {
@@ -160,9 +156,6 @@ export default function SchemeStep() {
             ]
         );
 
-    /*
-     * Scheme selection.
-     */
     const handleSchemeSelect =
         useCallback(
             (selected: BulkScheme) => {

@@ -705,69 +705,240 @@ export default function BulkOrderDetails() {
                     </p>
 
                 </div>
-
                 {/* Product List */}
 
-                <div className="max-h-[520px] overflow-y-auto pr-1">
+                <div className="overflow-hidden rounded-xl border border-gray-200">
 
-                    <div className="divide-y divide-gray-100">
+                    {/* Desktop Table */}
+                    <div className="hidden lg:block overflow-x-auto">
 
-                        {order.items.map(
-                            (
-                                item: BulkOrderProduct
-                            ) => (
+                        <table className="w-full min-w-[760px] border-collapse">
 
-                                <div
-                                    key={item.productId}
-                                    className="flex gap-3 py-3 first:pt-0 last:pb-0 sm:gap-4"
-                                >
+                            <thead>
+                                <tr className="border-b border-gray-200 bg-gray-50">
 
-                                    <img
-                                        src={
-                                            item.image ||
-                                            defaultImage
-                                        }
-                                        alt={item.name}
-                                        onError={(event) => {
-                                            event.currentTarget.onerror =
-                                                null;
+                                    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
+                                        Product
+                                    </th>
 
-                                            event.currentTarget.src =
-                                                defaultImage;
-                                        }}
-                                        className="
-                      h-16 w-16
-                      shrink-0
-                      rounded-xl
-                      border
-                      object-cover
-                      sm:h-20 sm:w-20
-                    "
-                                    />
+                                    <th className="w-[130px] px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-gray-600">
+                                        Carton
+                                    </th>
 
-                                    <div className="min-w-0 flex-1">
+                                    <th className="w-[170px] px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-gray-600">
+                                        Carton Content
+                                    </th>
 
-                                        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                                    <th className="w-[130px] px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">
+                                        Price
+                                    </th>
 
-                                            <div className="min-w-0">
+                                    <th className="w-[160px] px-5 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">
+                                        Total
+                                    </th>
 
-                                                <div className="flex flex-wrap items-center gap-2">
+                                </tr>
+                            </thead>
 
-                                                    <p className="font-semibold leading-5 text-gray-900">
-                                                        {item.name}
-                                                    </p>
+                            <tbody>
+
+                                {order.items.map(
+                                    (item: BulkOrderProduct) => (
+
+                                        <tr
+                                            key={item.productId}
+                                            className="
+                                border-b
+                                border-gray-100
+                                last:border-b-0
+                                transition-colors
+                                hover:bg-gray-50
+                            "
+                                        >
+
+                                            {/* Product */}
+                                            <td className="px-5 py-4">
+
+                                                <div className="flex min-w-0 items-center gap-3">
+
+                                                    <img
+                                                        src={
+                                                            item.image ||
+                                                            defaultImage
+                                                        }
+                                                        alt={item.name}
+                                                        onError={(event) => {
+                                                            event.currentTarget.onerror =
+                                                                null;
+
+                                                            event.currentTarget.src =
+                                                                defaultImage;
+                                                        }}
+                                                        className="
+                                            h-12
+                                            w-12
+                                            shrink-0
+                                            rounded-lg
+                                            border
+                                            border-gray-200
+                                            bg-white
+                                            object-contain
+                                            p-1
+                                        "
+                                                        loading="lazy"
+                                                    />
+
+                                                    <div className="min-w-0">
+
+                                                        <p
+                                                            className="
+                                                truncate
+                                                text-sm
+                                                font-semibold
+                                                text-gray-900
+                                                xl:text-base
+                                            "
+                                                            title={item.name}
+                                                        >
+                                                            {item.name}
+                                                        </p>
+
+                                                        {item.brand && (
+                                                            <p className="mt-0.5 text-xs text-gray-500">
+                                                                {item.brand}
+                                                            </p>
+                                                        )}
+
+                                                    </div>
 
                                                 </div>
 
-                                                {item.brand && (
-                                                    <p className="mt-0.5 text-xs text-gray-500">
-                                                        {item.brand}
-                                                    </p>
-                                                )}
+                                            </td>
 
-                                            </div>
+                                            {/* Carton */}
+                                            <td className="px-4 py-4 text-center">
 
-                                            <p className="shrink-0 font-semibold text-gray-900">
+                                                <span className="text-sm font-medium text-gray-800">
+                                                    {item.quantity}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Carton Content */}
+                                            <td className="px-4 py-4 text-center">
+
+                                                <span className="whitespace-nowrap text-sm text-gray-600">
+                                                    {item.cartonQty}{" "}
+                                                    {item.packUnit}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Price */}
+                                            <td className="px-4 py-4 text-right">
+
+                                                <span className="whitespace-nowrap text-sm font-semibold text-gray-800">
+                                                    ₹
+                                                    {formatCurrency(
+                                                        item.schemePrice
+                                                    )}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Total */}
+                                            <td className="px-5 py-4 text-right">
+
+                                                <span className="whitespace-nowrap text-lg font-bold text-gray-900">
+                                                    ₹
+                                                    {formatCurrency(
+                                                        item.total
+                                                    )}
+                                                </span>
+
+                                            </td>
+
+                                        </tr>
+
+                                    )
+                                )}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    {/* Mobile / Tablet */}
+                    <div className="lg:hidden divide-y divide-gray-100">
+
+                        {order.items.map(
+                            (item: BulkOrderProduct) => (
+
+                                <div
+                                    key={item.productId}
+                                    className="p-4"
+                                >
+
+                                    {/* Product */}
+                                    <div className="flex min-w-0 items-center gap-3">
+
+                                        <img
+                                            src={
+                                                item.image ||
+                                                defaultImage
+                                            }
+                                            alt={item.name}
+                                            onError={(event) => {
+                                                event.currentTarget.onerror =
+                                                    null;
+
+                                                event.currentTarget.src =
+                                                    defaultImage;
+                                            }}
+                                            className="
+                                h-12
+                                w-12
+                                shrink-0
+                                rounded-lg
+                                border
+                                border-gray-200
+                                bg-white
+                                object-contain
+                                p-1
+                                sm:h-14
+                                sm:w-14
+                            "
+                                            loading="lazy"
+                                        />
+
+                                        <div className="min-w-0 flex-1">
+
+                                            <p
+                                                className="
+                                    truncate
+                                    text-sm
+                                    font-semibold
+                                    text-gray-900
+                                    sm:text-base
+                                "
+                                                title={item.name}
+                                            >
+                                                {item.name}
+                                            </p>
+
+                                            {item.brand && (
+                                                <p className="mt-0.5 text-xs text-gray-500">
+                                                    {item.brand}
+                                                </p>
+                                            )}
+
+                                        </div>
+
+                                        <div className="shrink-0 text-right">
+
+                                            <p className="text-lg font-bold text-gray-900">
                                                 ₹
                                                 {formatCurrency(
                                                     item.total
@@ -776,28 +947,81 @@ export default function BulkOrderDetails() {
 
                                         </div>
 
-                                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                                    </div>
 
-                                            <span>
-                                                Qty:{" "}
-                                                <strong className="font-medium text-gray-700">
-                                                    {item.quantity}
-                                                </strong>
-                                            </span>
 
-                                            <span>
-                                                Rate: ₹
+                                    {/* Details */}
+                                    <div
+                                        className="
+                            mt-4
+                            grid
+                            grid-cols-3
+                            gap-3
+                            border-t
+                            border-gray-100
+                            pt-3
+                        "
+                                    >
+
+                                        {/* Carton */}
+                                        <div className="min-w-0">
+
+                                            <p className="
+                                text-[11px]
+                                font-medium
+                                uppercase
+                                tracking-wide
+                                text-gray-500
+                            ">
+                                                Carton
+                                            </p>
+
+                                            <p className="mt-1 text-sm font-medium text-gray-800">
+                                                {item.quantity}
+                                            </p>
+
+                                        </div>
+
+
+                                        {/* Carton Content */}
+                                        <div className="min-w-0">
+
+                                            <p className="
+                                text-[11px]
+                                font-medium
+                                uppercase
+                                tracking-wide
+                                text-gray-500
+                            ">
+                                                Carton Content
+                                            </p>
+
+                                            <p className="mt-1 whitespace-nowrap text-sm font-medium text-gray-700">
+                                                {item.cartonQty}
+                                            </p>
+
+                                        </div>
+
+
+                                        {/* Price */}
+                                        <div className="min-w-0 text-right">
+
+                                            <p className="
+                                text-[11px]
+                                font-medium
+                                uppercase
+                                tracking-wide
+                                text-gray-500
+                            ">
+                                                Price
+                                            </p>
+
+                                            <p className="mt-1 whitespace-nowrap text-sm font-semibold text-gray-800">
+                                                ₹
                                                 {formatCurrency(
                                                     item.schemePrice
                                                 )}
-                                            </span>
-
-                                            <span>
-                                                Carton Qty:{" "}
-                                                <strong className="font-medium text-gray-700">
-                                                    {item.cartonQty}
-                                                </strong>
-                                            </span>
+                                            </p>
 
                                         </div>
 
@@ -811,7 +1035,6 @@ export default function BulkOrderDetails() {
                     </div>
 
                 </div>
-
                 {/* Pricing */}
 
                 <div className="mt-4 border-t border-gray-200 pt-4">
@@ -845,6 +1068,13 @@ export default function BulkOrderDetails() {
                             value={
                                 order.pricing
                                     .productTotal
+                            }
+                        />
+                        <PriceRow
+                            isPrice={false}
+                            label="Cartonbox Total"
+                            value={
+                                order.pricing.cartonBoxCount
                             }
                         />
 
@@ -1013,10 +1243,6 @@ export default function BulkOrderDetails() {
     );
 }
 
-/* ============================================================
-   SHARED UI HELPERS
-============================================================ */
-
 interface SectionTitleProps {
     icon: React.ReactNode;
     title: string;
@@ -1069,11 +1295,13 @@ function InfoItem({
 }
 
 interface PriceRowProps {
+    isPrice?: boolean;
     label: string;
     value: number;
 }
 
 function PriceRow({
+    isPrice = true,
     label,
     value,
 }: PriceRowProps) {
@@ -1085,7 +1313,7 @@ function PriceRow({
             </span>
 
             <span className="shrink-0 font-medium text-gray-900">
-                ₹{formatCurrency(value)}
+                {isPrice ? "₹" : ""} {formatCurrency(value)}
             </span>
 
         </div>
