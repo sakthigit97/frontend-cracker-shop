@@ -1,5 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import { memo } from "react";
+import { useNavigate } from "react-router-dom";
+
 import defaultImage from "../../assets/default-image.png";
 import type { Product } from "../../types/product";
 import Button from "../ui/Button";
@@ -25,8 +26,11 @@ function ProductCard({
   buttonLabel = "Add to Cart",
 }: Props) {
   const navigate = useNavigate();
-  const available_qty = product?.qty || 0;
+
+  const availableQty = product?.qty || 0;
+
   const { categories, brands } = useCatalog();
+
   const brandName = brands.find(
     (brand) => brand.id === product.brandId
   )?.name;
@@ -43,33 +47,54 @@ function ProductCard({
     e.stopPropagation();
   };
 
+  const hasPack =
+    Number(product.packQuantity) > 0 &&
+    Boolean(product.packUnit?.trim());
+
   return (
     <div
-      onClick={buttonLabel === "Add to Cart" ? handleCardClick : undefined}
+      onClick={
+        buttonLabel === "Add to Cart"
+          ? handleCardClick
+          : undefined
+      }
       className="
+        group
         cursor-pointer
         bg-[var(--color-surface)]
         rounded-xl
         border
         border-gray-200
-        shadow-sm md:shadow-md
+        shadow-sm
         flex
         flex-col
         h-full
         overflow-hidden
         transition-all
-        duration-300
+        duration-200
         ease-out
-        hover:-translate-0.5
+        hover:-translate-y-0.5
         hover:shadow-lg
         hover:border-[var(--color-primary)]
-        hover:ring-2
+        hover:ring-1
         hover:ring-[var(--color-primary)]
-        hover:ring-opacity-30
+        hover:ring-opacity-20
       "
     >
-      {/* Product Image */}
-      <div className="relative bg-white aspect-[4/3] flex items-center justify-center">
+      {/* ============================================================
+          PRODUCT IMAGE
+          ============================================================ */}
+      <div
+        className="
+          relative
+          bg-white
+          aspect-[4/3]
+          flex
+          items-center
+          justify-center
+          overflow-hidden
+        "
+      >
         <img
           src={product.image?.trim() || defaultImage}
           alt={product.name}
@@ -84,13 +109,16 @@ function ProductCard({
             e.currentTarget.classList.add("opacity-100");
           }}
           className="
-            max-h-full
+            w-full
+            h-full
             max-w-full
+            max-h-full
             object-contain
             p-3
+            opacity-0
             transition-opacity
             duration-300
-            opacity-0
+            group-hover:scale-[1.02]
           "
         />
 
@@ -102,11 +130,13 @@ function ProductCard({
               left-2
               bg-[var(--color-secondary)]
               text-white
-              text-xs
-              font-semibold
+              text-[11px]
+              font-bold
               px-2
               py-1
-              rounded
+              rounded-md
+              shadow-sm
+              whitespace-nowrap
             "
           >
             {product.discountText}
@@ -114,17 +144,28 @@ function ProductCard({
         )}
       </div>
 
-      {/* Product Information */}
-      <div className="p-3 flex flex-col flex-1 gap-0.5">
+      {/* ============================================================
+          PRODUCT INFORMATION
+          ============================================================ */}
+      <div
+        className="
+          px-3
+          pt-2.5
+          pb-3
+          flex
+          flex-col
+          flex-1
+        "
+      >
         {/* Product Name */}
         <h3
           className="
             text-sm
+            sm:text-[15px]
             font-semibold
             text-[var(--color-primary)]
-            line-clamp-2
-            min-h-[2.25rem]
             leading-snug
+            break-words
           "
         >
           {product.name}
@@ -132,87 +173,127 @@ function ProductCard({
 
         {/* Category + Brand */}
         {(categoryName || brandName) && (
-          <div className="mt-1.5 mb-1 space-y-1">
+          <div className="mt-1.5">
             {categoryName && (
-              <div className="flex items-start gap-1.5 min-w-0">
-
-                <span
-                  className="
-                    min-w-0
-                    text-xs
-                    text-gray-600
-                    leading-snug
-                    break-words
-                  "
-                >
-                  {categoryName}
-                </span>
+              <div
+                className="
+                  text-[11px]
+                  sm:text-xs
+                  text-gray-500
+                  uppercase
+                  tracking-wide
+                  leading-snug
+                  break-words
+                "
+              >
+                {categoryName}
               </div>
             )}
 
             {brandName && (
-              <div className="flex items-start gap-1.5 min-w-0">
-
-                <span
-                  className="
-                    min-w-0
-                    text-xs
-                    text-[var(--color-primary)]
-                    font-medium
-                    leading-snug
-                    break-words
-                  "
-                >
-                  {brandName}
-                </span>
+              <div
+                className="
+                  mt-0.5
+                  text-xs
+                  sm:text-[13px]
+                  text-[var(--color-primary)]
+                  font-medium
+                  leading-snug
+                  break-words
+                "
+              >
+                {brandName}
               </div>
             )}
           </div>
         )}
 
-        {/* Pack Information */}
-        {Number(product.packQuantity) > 0 &&
-          product.packUnit?.trim() && (
+        {/* ============================================================
+            PACK + PRICE
+            ============================================================ */}
+        <div
+          className="
+            mt-2
+            flex
+            flex-col
+            gap-1.5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+            sm:gap-2
+            min-w-0
+          "
+        >
+          {/* Pack Information */}
+          {hasPack && (
             <div
               className="
                 inline-flex
                 self-start
                 items-center
-                gap-1.5
-                mt-1
-                mb-1
+                gap-1
                 px-2
                 py-1
                 rounded-full
                 bg-gray-100
                 text-xs
+                whitespace-nowrap
                 max-w-full
               "
             >
-              <span className="text-gray-500 shrink-0">
+              <span className="shrink-0 text-gray-500">
                 📦
               </span>
 
-              <span className="text-[var(--color-primary)] font-semibold break-words">
+              <span
+                className="
+                  font-semibold
+                  text-[var(--color-primary)]
+                  truncate
+                "
+              >
                 {product.packQuantity} {product.packUnit}
               </span>
             </div>
           )}
 
-        {/* Price */}
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-base font-bold text-[var(--color-primary)]">
-            ₹{product.price}
-          </span>
-
-          {product.originalPrice && (
-            <span className="text-sm line-through text-[var(--color-muted)]">
-              ₹{product.originalPrice}
+          {/* Price */}
+          <div
+            className="
+              flex
+              items-baseline
+              gap-1.5
+              whitespace-nowrap
+              shrink-0
+            "
+          >
+            <span
+              className="
+                text-base
+                font-bold
+                text-[var(--color-primary)]
+              "
+            >
+              ₹{product.price}
             </span>
-          )}
+
+            {product.originalPrice && (
+              <span
+                className="
+                  text-xs
+                  line-through
+                  text-[var(--color-muted)]
+                "
+              >
+                ₹{product.originalPrice}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Cart Controls */}
+        {/* ============================================================
+            CART CONTROLS
+            ============================================================ */}
         {!hideCartControls && (
           <div className="mt-auto pt-3">
             {quantityInCart === 0 ? (
@@ -221,13 +302,18 @@ function ProductCard({
                   stop(e);
                   onAddToCart?.(product);
                 }}
-                disabled={available_qty === 0}
-                className={`mt-2 w-full text-sm ${available_qty === 0
-                  ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                  : ""
-                  }`}
+                disabled={availableQty === 0}
+                className={`
+                  w-full
+                  text-sm
+                  font-medium
+                  ${availableQty === 0
+                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                    : ""
+                  }
+                `}
               >
-                {available_qty === 0
+                {availableQty === 0
                   ? "Out of Stock"
                   : buttonLabel}
               </Button>
@@ -235,7 +321,6 @@ function ProductCard({
               <div
                 onClick={stop}
                 className="
-                  mt-2
                   flex
                   items-center
                   justify-between
@@ -246,11 +331,12 @@ function ProductCard({
                   text-white
                   border
                   border-[var(--color-primary)]
-                  hover:opacity-90
                   transition-all
+                  hover:opacity-90
                 "
               >
                 <button
+                  type="button"
                   onClick={() => onDecrease?.(product)}
                   className="
                     text-lg
@@ -268,6 +354,7 @@ function ProductCard({
                 </span>
 
                 <button
+                  type="button"
                   onClick={() => onIncrease?.(product)}
                   className="
                     text-lg

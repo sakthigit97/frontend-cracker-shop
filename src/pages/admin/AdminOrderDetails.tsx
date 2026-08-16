@@ -413,87 +413,6 @@ export default function AdminOrderDetails() {
                 </div>
             </div>
 
-
-            {/* ITEMS */}
-            <div className="bg-white border rounded-xl divide-y max-h-[60vh] overflow-y-auto">
-                {sortedItems.map((item: any, idx: number) => (
-                    <div key={item.productId || idx} className="p-4 flex gap-4">
-                        <img
-                            src={item.image || defaultImage}
-                            onError={(e) => {
-                                e.currentTarget.src = defaultImage;
-                            }}
-                            className="w-14 h-14 rounded object-cover"
-                            loading="lazy"
-                        />
-
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-semibold">
-                                    {item.name}
-                                </p>
-
-                                {item.isComboPackage && (
-                                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">
-                                        Combo
-                                    </span>
-                                )}
-
-                            </div>
-
-                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-
-                                {item.originalPrice &&
-                                    item.originalPrice > item.price && (
-                                        <span className="line-through text-gray-400">
-                                            ₹{item.originalPrice}
-                                        </span>
-                                    )}
-
-                                <span className="font-semibold text-[var(--color-primary)]">
-                                    ₹{item.price}
-                                </span>
-
-                                {item.discountText && (
-                                    <span className="rounded-full bg-green-100 text-green-700 px-2 py-0.5 font-semibold">
-                                        {item.discountText}
-                                    </span>
-                                )}
-                            </div>
-
-
-
-                            {Number(item.packQuantity) > 0 &&
-                                item.packUnit?.trim() && (
-                                    <span
-                                        className="
-                                                inline-flex
-                                                items-center
-                                                rounded-full
-                                                bg-gray-100
-                                                px-2
-                                                py-0.5
-                                                text-[11px]
-                                                font-medium
-                                                text-gray-700
-                                            "
-                                    >
-                                        📦 {item.packQuantity} {item.packUnit}
-                                    </span>
-                                )}
-
-                            <div className="mt-1 text-xs text-gray-500">
-                                ₹{item.price} × {item.quantity}
-                            </div>
-                        </div>
-
-                        <p className="text-sm font-medium">
-                            ₹{item.total}
-                        </p>
-                    </div>
-                ))}
-            </div>
-
             {/* PAYMENT + ADDRESS */}
             <div className="grid sm:grid-cols-2 gap-4">
                 <div className="bg-white border rounded-xl p-4">
@@ -606,6 +525,233 @@ export default function AdminOrderDetails() {
                 </div>
             )}
 
+            {/* ITEMS */}
+            <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+
+                {/* Scroll only the product table */}
+                <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
+
+                    <table className="w-full min-w-[700px] text-sm">
+
+                        <thead className="sticky top-0 z-10 bg-gray-50">
+
+                            <tr className="border-b border-gray-200">
+
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                                    Product
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Unit
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Qty
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Price
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Amount
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody className="divide-y divide-gray-100">
+
+                            {sortedItems.map(
+                                (item: any, idx: number) => {
+
+                                    const packQuantity =
+                                        Number(
+                                            item.packQuantity ?? 0
+                                        );
+
+                                    const packUnit = item.packUnit?.trim();
+
+                                    const hasPack =
+                                        packQuantity > 0 &&
+                                        Boolean(packUnit);
+
+                                    return (
+                                        <tr
+                                            key={
+                                                item.productId ||
+                                                idx
+                                            }
+                                            className="align-middle hover:bg-gray-50"
+                                        >
+
+                                            {/* Product */}
+                                            <td className="px-4 py-3">
+
+                                                <div className="flex min-w-0 items-center gap-3">
+
+                                                    <img
+                                                        src={
+                                                            item.image ||
+                                                            defaultImage
+                                                        }
+                                                        onError={(e) => {
+                                                            e.currentTarget.onerror =
+                                                                null;
+
+                                                            e.currentTarget.src =
+                                                                defaultImage;
+                                                        }}
+                                                        className="
+                                                h-12
+                                                w-12
+                                                shrink-0
+                                                rounded-lg
+                                                border
+                                                object-cover
+                                            "
+                                                        loading="lazy"
+                                                        alt={item.name}
+                                                    />
+
+                                                    <div className="min-w-0">
+
+                                                        <div className="flex flex-wrap items-center gap-2">
+
+                                                            <p className="font-semibold text-gray-900">
+                                                                {item.name}
+                                                            </p>
+
+                                                            {item.isComboPackage && (
+                                                                <span className="
+                                                        shrink-0
+                                                        rounded-full
+                                                        bg-blue-100
+                                                        px-2
+                                                        py-0.5
+                                                        text-[10px]
+                                                        font-semibold
+                                                        text-blue-700
+                                                    ">
+                                                                    Combo
+                                                                </span>
+                                                            )}
+
+                                                        </div>
+
+                                                        <div className="
+                                                mt-1
+                                                flex
+                                                flex-wrap
+                                                items-center
+                                                gap-2
+                                                text-xs
+                                            ">
+
+                                                            {item.originalPrice &&
+                                                                item.originalPrice >
+                                                                item.price && (
+                                                                    <span className="text-gray-400 line-through">
+                                                                        ₹
+                                                                        {
+                                                                            item.originalPrice
+                                                                        }
+                                                                    </span>
+                                                                )}
+
+                                                            <span className="font-semibold text-[var(--color-primary)]">
+                                                                ₹{item.price}
+                                                            </span>
+
+                                                            {item.discountText && (
+                                                                <span className="
+                                                        rounded-full
+                                                        bg-green-100
+                                                        px-2
+                                                        py-0.5
+                                                        font-semibold
+                                                        text-green-700
+                                                    ">
+                                                                    {
+                                                                        item.discountText
+                                                                    }
+                                                                </span>
+                                                            )}
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                            {/* Pack */}
+                                            <td className="px-4 py-3 text-center">
+
+                                                {hasPack ? (
+                                                    <span className="
+                                            inline-flex
+                                            whitespace-nowrap
+                                            rounded-full
+                                            bg-gray-100
+                                            px-2.5
+                                            py-1
+                                            text-xs
+                                            font-medium
+                                            text-gray-700
+                                        ">
+                                                        {packQuantity}{" "}
+                                                        {packUnit}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        -
+                                                    </span>
+                                                )}
+
+                                            </td>
+
+                                            {/* Qty */}
+                                            <td className="px-4 py-3 text-center">
+
+                                                <span className="font-medium text-gray-800">
+                                                    {item.quantity}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Price */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+
+                                                <span className="font-medium text-gray-700">
+                                                    ₹{item.price}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Amount */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+
+                                                <span className="font-semibold text-gray-900">
+                                                    ₹{item.total}
+                                                </span>
+
+                                            </td>
+
+                                        </tr>
+                                    );
+                                }
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
 
             {/* ORDER SUMMARY */}
             <div className="bg-white border rounded-xl p-5">
@@ -792,25 +938,6 @@ export default function AdminOrderDetails() {
                                 </span>
                             </div>
                         </>
-                    )}
-
-                    {/* No Wallet */}
-                    {(order.walletUsed ?? 0) <= 0 && (
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p className="font-semibold text-[var(--color-primary)]">
-                                    Amount Payable
-                                </p>
-
-                                <p className="text-xs text-gray-500">
-                                    Amount to be paid
-                                </p>
-                            </div>
-
-                            <span className="text-xl font-bold text-[var(--color-primary)]">
-                                ₹{order.finalPayable}
-                            </span>
-                        </div>
                     )}
                 </div>
             </div>
