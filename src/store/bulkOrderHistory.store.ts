@@ -4,7 +4,9 @@ import {
     createBulkOrder,
     getBulkOrder,
     getBulkOrders,
+    restoreBulkOrder,
 } from "../services/bulkOrder.api";
+
 import type {
     BulkOrderDetailsResponse,
     BulkOrderResponse,
@@ -41,11 +43,9 @@ interface BulkOrderHistoryStore {
     fetchingOrders: boolean;
     fetchingOrder: boolean;
     cancelling: boolean;
-
+    restoring: boolean;
     nextCursor?: any;
-
     ordersLoaded: boolean;
-
     orderCache: Record<
         string,
         BulkOrderDetailsResponse
@@ -67,11 +67,9 @@ interface BulkOrderHistoryStore {
     cancelOrder: (
         orderId: string
     ) => Promise<void>;
-
-    /*
-     * Update the currently cached order/list immediately
-     * after a successful bulk-order adjustment.
-     */
+    restoreOrder: (
+        orderId: string
+    ) => Promise<void>;
     applyAdjustedOrder: (params: {
         orderId: string;
         items: BulkOrderProduct[];
@@ -94,7 +92,7 @@ export const useBulkOrderHistoryStore =
         fetchingOrders: false,
         fetchingOrder: false,
         cancelling: false,
-
+        restoring: false,
         nextCursor: undefined,
 
         ordersLoaded: false,
@@ -131,6 +129,28 @@ export const useBulkOrderHistoryStore =
             }
         },
 
+        async restoreOrder(orderId) {
+            set({
+                restoring: true,
+            });
+
+            try {
+                await restoreBulkOrder(orderId);
+
+                await get().fetchOrder(
+                    orderId,
+                    true
+                );
+
+                set({
+                    ordersLoaded: false,
+                });
+            } finally {
+                set({
+                    restoring: false,
+                });
+            }
+        },
         /*
          * --------------------------------------------------
          * FETCH ORDERS
@@ -438,6 +458,8 @@ export const useBulkOrderHistoryStore =
                 fetchingOrder: false,
 
                 cancelling: false,
+
+                restoring: false,
             });
         },
     }));

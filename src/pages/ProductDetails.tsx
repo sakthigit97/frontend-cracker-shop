@@ -475,7 +475,7 @@ export default function ProductDetails() {
                     </span>
 
                     <span className="font-bold text-[var(--color-primary)]">
-                      {product.packQuantity} {product.packUnit}
+                      {product.packQuantity}/{product.packUnit}
                     </span>
                   </span>
                 </div>

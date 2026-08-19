@@ -11,6 +11,7 @@ import {
 import { useAdminBulkOrdersStore } from "../../store/adminBulkOrders.store";
 import { formatCurrency } from "../../utils/pricing";
 import { useAuth } from "../../store/auth.store";
+import { formatDateTime } from "../../utils/date";
 
 const DATE_OPTIONS = [
     { label: "All", value: "all" },
@@ -26,6 +27,9 @@ export default function AdminBulkOrders() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [status, setStatus] = useState("ORDER_PLACED");
+    const [stateFilter, setStateFilter] = useState<
+        "ALL" | "TN" | "OTHER"
+    >("ALL");
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
     const debouncedOrderId = useDebounce(
@@ -69,12 +73,37 @@ export default function AdminBulkOrders() {
     );
 
     const orders = useMemo(() => {
-        return [...(data[key]?.items || [])].sort(
+
+        let list = [
+            ...(data[key]?.items || []),
+        ];
+
+
+        if (stateFilter === "TN") {
+            list = list.filter(
+                (order) =>
+                    order.deliveryState?.toLowerCase() ===
+                    "tamil nadu"
+            );
+        }
+
+        if (stateFilter === "OTHER") {
+            list = list.filter(
+                (order) =>
+                    order.deliveryState &&
+                    order.deliveryState.toLowerCase() !==
+                    "tamil nadu"
+            );
+        }
+
+        return list.sort(
             (a, b) =>
-                b.createdAt - a.createdAt
+                Number(b.createdAt) -
+                Number(a.createdAt)
         );
 
-    }, [data, key]);
+    }, [data, key, stateFilter]);
+    console.log(orders)
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
@@ -175,6 +204,30 @@ export default function AdminBulkOrders() {
                     ))}
 
                 </select>
+                <select
+                    value={stateFilter}
+                    onChange={(e) =>
+                        setStateFilter(
+                            e.target.value as
+                            | "ALL"
+                            | "TN"
+                            | "OTHER"
+                        )
+                    }
+                    className="border px-3 py-2 rounded text-sm"
+                >
+                    <option value="ALL">
+                        All States
+                    </option>
+
+                    <option value="TN">
+                        Tamil Nadu
+                    </option>
+
+                    <option value="OTHER">
+                        Other States
+                    </option>
+                </select>
 
             </div>
 
@@ -232,9 +285,9 @@ export default function AdminBulkOrders() {
 
                             <p className="text-xs text-gray-500 mt-1">
 
-                                {new Date(
+                                {formatDateTime(
                                     order.createdAt
-                                ).toLocaleDateString("en-IN")}
+                                )}
 
                             </p>
 

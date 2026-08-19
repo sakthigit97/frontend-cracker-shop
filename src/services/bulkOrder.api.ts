@@ -21,6 +21,20 @@ export interface ValidateAdminCodeResponse {
     success?: boolean;
 }
 
+export async function restoreBulkOrder(
+    orderId: string
+) {
+    return apiFetch(
+        "/bulk-orders/restore",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                orderId,
+            }),
+        }
+    );
+}
+
 export async function validateBulkAdminCode(
     payload: ValidateAdminCodeRequest
 ): Promise<ValidateAdminCodeResponse> {

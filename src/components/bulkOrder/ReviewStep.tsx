@@ -302,7 +302,7 @@ export default function ReviewStep() {
                                 • Our sales team will contact you after receiving your order.
                             </li>
                             <li>
-                                • Your order will be processed after confirmation.
+                                • Your order will be processed after completion of full payment.
                             </li>
                         </ul>
                     </div>

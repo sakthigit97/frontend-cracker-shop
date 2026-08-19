@@ -51,14 +51,6 @@ function BulkAddressSection({
         setPincodeError,
     ] = useState("");
 
-    /*
-     * Keep the latest address available to
-     * asynchronous pincode validation.
-     *
-     * This prevents an API response from
-     * overwriting other fields that the user
-     * changed while the lookup was running.
-     */
     const latestAddressRef =
         useRef(newAddress);
 
@@ -67,9 +59,6 @@ function BulkAddressSection({
             newAddress;
     }, [newAddress]);
 
-    /*
-     * Update a single address field.
-     */
     const update = (
         key: keyof BulkOrderAddress,
         value: BulkOrderAddress[keyof BulkOrderAddress]
@@ -418,27 +407,7 @@ function BulkAddressSection({
                                 className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
                             />
 
-                            {/* City */}
-                            <input
-                                type="text"
-                                placeholder="City *"
-                                value={newAddress.city}
-                                onChange={(e) =>
-                                    update("city", e.target.value)
-                                }
-                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
-                            />
-                            {/* State */}
 
-                            <input
-                                type="text"
-                                placeholder="State *"
-                                value={newAddress.state}
-                                onChange={(e) =>
-                                    update("state", e.target.value)
-                                }
-                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
-                            />
                             {/* Pincode */}
 
                             <div>
@@ -495,22 +464,30 @@ function BulkAddressSection({
                                         }
                                     </p>
                                 )}
-
-                                {!pincodeError &&
-                                    newAddress.pincode.length ===
-                                    6 &&
-                                    newAddress.state && (
-                                        <p className="mt-1 text-sm text-green-600">
-                                            State detected:{" "}
-                                            <strong>
-                                                {
-                                                    newAddress.state
-                                                }
-                                            </strong>
-                                        </p>
-                                    )}
-
                             </div>
+
+                            {/* City */}
+                            <input
+                                type="text"
+                                placeholder="City *"
+                                value={newAddress.city}
+                                onChange={(e) =>
+                                    update("city", e.target.value)
+                                }
+                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
+                            />
+                            {/* State */}
+
+                            <input
+                                type="text"
+                                placeholder="State *"
+                                value={newAddress.state}
+                                onChange={(e) =>
+                                    update("state", e.target.value)
+                                }
+                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
+                            />
+
 
                         </div>
                     )}

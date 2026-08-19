@@ -46,6 +46,7 @@ export default function Header() {
   const deliveryState = cartStore((s) => s.deliveryState);
   const packagingPercent = Number(config?.packagingPercent || 0);
   const gstPercent = Number(config?.gstPercent || 0);
+  const isEnableBulkOrder = config?.isEnableBulkOrder || false;
   const profile = useProfileStore((s) => s.profile);
 
   const {
@@ -129,16 +130,21 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    {
-      label: "Bulk Order",
-      to: "/bulk-order",
-      icon: <FaBoxOpen />,
-    },
-    {
-      label: "View Bulk Order",
-      to: "/bulk-orders",
-      icon: <FaBoxOpen />,
-    },
+
+    ...(isEnableBulkOrder
+      ? [
+        {
+          label: "Bulk Order",
+          to: "/bulk-order",
+          icon: <FaBoxOpen />,
+        },
+        {
+          label: "View Bulk Order",
+          to: "/bulk-orders",
+          icon: <FaBoxOpen />,
+        },
+      ]
+      : []),
   ];
 
   const supportMenu: HeaderDropdownItem[] = [
@@ -198,16 +204,21 @@ export default function Header() {
       to: "/combo-packages",
       icon: <FaBoxOpen />,
     },
-    {
-      label: "Bulk Order",
-      to: "/bulk-order",
-      icon: <FaBoxOpen />,
-    },
-    {
-      label: "View Bulk Order",
-      to: "/bulk-orders",
-      icon: <FaBoxOpen />,
-    },
+
+    ...(isEnableBulkOrder
+      ? [
+        {
+          label: "Bulk Order",
+          to: "/bulk-order",
+          icon: <FaBoxOpen />,
+        },
+        {
+          label: "View Bulk Order",
+          to: "/bulk-orders",
+          icon: <FaBoxOpen />,
+        },
+      ]
+      : []),
   ];
 
   const mobileSupport: MobileAccordionItem[] = [

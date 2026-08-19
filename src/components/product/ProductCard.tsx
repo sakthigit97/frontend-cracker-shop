@@ -252,7 +252,7 @@ function ProductCard({
                   truncate
                 "
               >
-                {product.packQuantity} {product.packUnit}
+                {product.packQuantity}/{product.packUnit}
               </span>
             </div>
           )}

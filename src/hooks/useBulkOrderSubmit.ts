@@ -2,12 +2,17 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { bulkOrderStore } from "../store/bulkOrder.store";
 import { useBulkOrderPricing } from "./useBulkOrderPricing";
-import { createBulkOrder } from "../services/bulkOrder.api";
 import { useAlert } from "../store/alert.store";
 import { validateSchemeAmount } from "../utils/bulkPricing";
+import {
+    useBulkOrderHistoryStore,
+} from "../store/bulkOrderHistory.store";
 
 export function useBulkOrderSubmit() {
     const navigate = useNavigate();
+    const {
+        createOrder,
+    } = useBulkOrderHistoryStore();
 
     const {
         address: selectedAddress,
@@ -134,7 +139,7 @@ export function useBulkOrderSubmit() {
 
             try {
                 const response =
-                    await createBulkOrder({
+                    await createOrder({
                         schemeId:
                             scheme.schemeId,
 
@@ -190,6 +195,7 @@ export function useBulkOrderSubmit() {
             showAlert,
             clearAll,
             navigate,
+            createOrder,
         ]);
 
     return {

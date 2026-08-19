@@ -8,7 +8,6 @@ import {
     FaSignOutAlt,
     FaServer,
 } from "react-icons/fa";
-
 import { useAuth } from "../../store/auth.store";
 
 export default function StaffHeader() {
@@ -21,14 +20,12 @@ export default function StaffHeader() {
         setMobileOpen(false);
         navigate("/");
     };
-
     const closeMobile = () => setMobileOpen(false);
 
     return (
         <header className="bg-[var(--color-primary)] text-white">
             <div className="w-full px-8 py-3 flex items-center">
 
-                {/* ================= BRAND ================= */}
                 <Link
                     to="/staff/orders"
                     className="flex items-center gap-3 flex-shrink-0"

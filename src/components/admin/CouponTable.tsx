@@ -4,6 +4,7 @@ import { useAdminCouponStore } from "../../store/adminCoupon.store";
 import { useAlert } from "../../store/alert.store";
 import { FaTrash, FaTicketAlt } from "react-icons/fa";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import { formatDateTime } from "../../utils/date";
 
 interface Props {
     coupons: Coupon[];
@@ -123,14 +124,7 @@ export default function CouponTable({ coupons }: Props) {
                                 </td>
 
                                 <td className="px-4 py-3">
-                                    {new Date(coupon.expiryDate).toLocaleString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                    })}
+                                    {formatDateTime(coupon.expiryDate)}
                                 </td>
 
                                 <td className="px-4 py-3 text-center">

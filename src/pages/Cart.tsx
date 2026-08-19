@@ -387,7 +387,7 @@ export default function Cart() {
                         >
                           <span>📦</span>
                           <span>
-                            {p.packQuantity} {p.packUnit}
+                            {p.packQuantity}/{p.packUnit}
                           </span>
                         </span>
                       )}

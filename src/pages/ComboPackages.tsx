@@ -28,7 +28,6 @@ export default function ComboPackages() {
             !EXCLUDED_PACKAGE_IDS.has(p.id)
     );
 
-
     return (
         <div className="max-w-7xl mx-auto px-4 py-6">
 

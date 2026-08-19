@@ -49,6 +49,7 @@ export default function AdminConfigPage() {
                     displayMobile: res.displayMobile || "",
                     website: res.website || "",
                     disableGstForTN: res.disableGstForTN || false,
+                    isEnableBulkOrder: res.isEnableBulkOrder ?? false,
                     bulkOrderSchemes: (res.bulkOrderSchemes || []).map(
                         (scheme: any) => ({
                             schemeId: scheme.schemeId || "",
@@ -545,10 +546,7 @@ export default function AdminConfigPage() {
 
         for (let i = 0; i < schemes.length; i++) {
             const scheme = schemes[i];
-
             const schemeNumber = i + 1;
-
-            // Scheme ID
             if (!scheme.schemeId?.trim()) {
                 alert(`Scheme ${schemeNumber}: Scheme ID is required.`);
                 return false;
@@ -574,7 +572,6 @@ export default function AdminConfigPage() {
                 return false;
             }
 
-            // Minimum Amount
             if (
                 scheme.minAmount === "" ||
                 scheme.minAmount === undefined ||
@@ -984,6 +981,7 @@ export default function AdminConfigPage() {
                                     ["isJoinBonusEnabled", "Join Bonus Enabled"],
                                     ["isEmailEnabled", "Email Enabled"],
                                     ["isSmsEnabled", "SMS Enabled"],
+                                    ["isEnableBulkOrder", "Bulk Order Enabled"],
                                 ].map(([key, label]) => (
                                     <label
                                         key={key}

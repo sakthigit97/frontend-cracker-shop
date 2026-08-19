@@ -138,6 +138,7 @@ export default function AppRoutes() {
           <Route element={<StaffLayout />}>
             <Route path="/staff/orders" element={<AdminOrders />} />
             <Route path="/staff/orders/:orderId" element={<AdminOrderDetails />} />
+            <Route path="/staff/orders/:orderId/adjust" element={<AdjustOrder />} />
             <Route path="/staff/bulk-orders" element={<AdminBulkOrders />} />
             <Route path="/staff/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
             <Route path="/staff/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />

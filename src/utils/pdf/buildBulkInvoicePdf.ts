@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { PDF_THEME } from "../../utils/pdf/invoiceTheme";
 import { money, line, text, formatStatus } from "../../utils/pdf/invoiceHelpers";
 import Icon from "../../assets/icon-new.png";
+import { formatDateTime } from "../date";
 
 export async function buildBulkInvoicePdf(
     order: any,
@@ -99,24 +100,14 @@ export async function buildBulkInvoicePdf(
     doc.setFontSize(8);
     doc.setTextColor(0);
 
-    const orderDate = new Date(order.createdAt).toLocaleDateString(
-        "en-IN",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-        }
-    );
-
+    const orderDate = formatDateTime(order.createdAt);
     text(doc, `Invoice No : ${order.orderId}`, LEFT, y);
-
     text(doc, `Scheme : ${order.schemeId}`, 110, y);
     y += 5;
     text(doc, `Status : ${formatStatus(order.status)}`, LEFT, y);
     text(doc, `Order Date : ${orderDate}`, 110, y);
 
     y += 5;
-
     line(doc, y);
 
     y += 6;
@@ -199,7 +190,9 @@ export async function buildBulkInvoicePdf(
 
         body: bulkInvoiceItems.map((item: any) => [
             item.name,
-            `${item.cartonQty ?? ""} ${item.packUnit ?? ""}`.trim(),
+            item.cartonQty != null
+                ? `${item.cartonQty}${item.packUnit ? `/${item.packUnit}` : ""}`
+                : "",
             money(item.schemePrice),
             item.quantity,
             money(item.total),

@@ -40,10 +40,6 @@ interface AdminBulkOrdersState {
     clear: () => void;
 }
 
-/* ---------------------------------------------------------
- * Cache Key
- * --------------------------------------------------------- */
-
 function buildCacheKey(
     filters: AdminBulkOrderFilters
 ) {
@@ -53,10 +49,6 @@ function buildCacheKey(
         orderId: filters.orderId || null,
     });
 }
-
-/* ---------------------------------------------------------
- * API Params
- * --------------------------------------------------------- */
 
 function buildApiParams(
     filters: AdminBulkOrderFilters
@@ -99,10 +91,6 @@ function buildApiParams(
     };
 }
 
-/* ---------------------------------------------------------
- * Store
- * --------------------------------------------------------- */
-
 export const useAdminBulkOrdersStore =
     create<AdminBulkOrdersState>(
         (set, get) => ({
@@ -118,20 +106,12 @@ export const useAdminBulkOrdersStore =
 
             error: null,
 
-            /* -------------------------------------------------
-             * Filters
-             * ------------------------------------------------- */
-
             setFilters: (filters) => {
                 set({
                     filters,
                     error: null,
                 });
             },
-
-            /* -------------------------------------------------
-             * Initial Fetch
-             * ------------------------------------------------- */
 
             fetchInitial: async (
                 force = false
@@ -212,21 +192,6 @@ export const useAdminBulkOrdersStore =
                 }
             },
 
-            /* -------------------------------------------------
-             * Update Existing Cached Orders
-             *
-             * Same behavior as Retail Admin Orders:
-             *
-             * If status changes from:
-             *
-             * ORDER_PLACED -> PAID
-             *
-             * the order is removed from ORDER_PLACED cache.
-             *
-             * It is NOT artificially inserted into PAID cache.
-             * PAID cache will be fetched normally.
-             * ------------------------------------------------- */
-
             updateOrderInCache: (
                 orderId,
                 updates
@@ -287,10 +252,6 @@ export const useAdminBulkOrdersStore =
                         data: updatedData,
                     };
                 }),
-
-            /* -------------------------------------------------
-             * Fetch More
-             * ------------------------------------------------- */
 
             fetchMore: async () => {
                 const {

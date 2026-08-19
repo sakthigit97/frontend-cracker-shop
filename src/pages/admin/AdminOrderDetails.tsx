@@ -21,6 +21,9 @@ import { useAdminOrdersStore } from "../../store/adminOrders.store";
 import { restoreOrderApi } from "../../services/order.api";
 import { useOrdersStore } from "../../store/orders.store";
 import { sortProductsBySequence } from "../../utils/sequncerUtil";
+import { formatCurrency } from "../../utils/pricing";
+import { formatDateTime } from "../../utils/date";
+import { useAuth } from "../../store/auth.store";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -32,6 +35,7 @@ export default function AdminOrderDetails() {
     const { cache, fetchOrder, loading, updateOrder } = useAdminOrderDetailsStore();
     const updateOrderListCache = useAdminOrdersStore((s) => s.updateOrderInCache);
     const [showConfirm, setShowConfirm] = useState(false);
+    const { user } = useAuth();
     const [pendingPayload, setPendingPayload] = useState<{
         status?: string;
         adminComment?: string;
@@ -298,7 +302,7 @@ export default function AdminOrderDetails() {
                     </div>
 
                     <p className="text-xs text-gray-500">
-                        Created on {new Date(order.createdAt).toLocaleString("en-IN")}
+                        Created on {formatDateTime(order.createdAt)}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -308,9 +312,17 @@ export default function AdminOrderDetails() {
                                 className="px-3 py-1.5 text-xs"
                                 disabled={!canAdjust || submitting}
                                 onClick={() =>
-                                    navigate(`/admin/orders/${order.orderId}/adjust`, {
-                                        state: { order, isAdmin: true },
-                                    })
+                                    navigate(
+                                        user?.role === "STAFF"
+                                            ? `/staff/orders/${order.orderId}/adjust`
+                                            : `/admin/orders/${order.orderId}/adjust`,
+                                        {
+                                            state: {
+                                                order,
+                                                isAdmin: user?.role !== "STAFF",
+                                            },
+                                        }
+                                    )
                                 }
                             >
                                 Adjust Order
@@ -412,22 +424,443 @@ export default function AdminOrderDetails() {
                     </div>
                 </div>
             </div>
+            {/* ITEMS */}
 
-            {/* PAYMENT + ADDRESS */}
-            <div className="grid sm:grid-cols-2 gap-4">
-                <div className="bg-white border rounded-xl p-4">
-                    <h3 className="text-sm font-semibold mb-2">Payment</h3>
-                    <p className="text-sm">{order.paymentMode}</p>
-                    <p className="text-xs text-gray-500">{order.paymentStatus}</p>
+            <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+
+                {/* Scroll only the product table */}
+                <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
+
+                    <table className="w-full min-w-[900px] table-fixed text-sm">
+
+                        <colgroup>
+                            <col className="w-[32%]" />
+                            <col className="w-[13%]" />
+                            <col className="w-[11%]" />
+                            <col className="w-[12%]" />
+                            <col className="w-[12%]" />
+                            <col className="w-[8%]" />
+                            <col className="w-[12%]" />
+                        </colgroup>
+
+                        <thead className="sticky top-0 z-10 bg-gray-50">
+
+                            <tr className="border-b border-gray-200">
+
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                                    Product
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Unit
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    MRP
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Discount
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Offer Price
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Qty
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Total
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody className="divide-y divide-gray-100">
+
+                            {sortedItems.map(
+                                (item: any, idx: number) => {
+
+                                    const packQuantity =
+                                        Number(
+                                            item.packQuantity ?? 0
+                                        );
+
+                                    const packUnit =
+                                        item.packUnit?.trim();
+
+                                    const hasPack =
+                                        packQuantity > 0 &&
+                                        Boolean(packUnit);
+
+                                    return (
+                                        <tr
+                                            key={
+                                                item.productId ||
+                                                idx
+                                            }
+                                            className="
+                                    align-middle
+                                    hover:bg-gray-50
+                                "
+                                        >
+
+                                            {/* Product */}
+                                            <td className="px-4 py-3">
+
+                                                <div className="flex min-w-0 items-center gap-3">
+
+                                                    <img
+                                                        src={
+                                                            item.image ||
+                                                            defaultImage
+                                                        }
+                                                        onError={(e) => {
+                                                            e.currentTarget.onerror =
+                                                                null;
+
+                                                            e.currentTarget.src =
+                                                                defaultImage;
+                                                        }}
+                                                        className="
+                                                h-12
+                                                w-12
+                                                shrink-0
+                                                rounded-lg
+                                                border
+                                                object-cover
+                                            "
+                                                        loading="lazy"
+                                                        alt={item.name}
+                                                    />
+
+                                                    <div className="min-w-0">
+
+                                                        <div className="flex flex-wrap items-center gap-2">
+
+                                                            <p className="font-semibold text-gray-900 truncate">
+                                                                {item.name}
+                                                            </p>
+
+                                                            {item.isComboPackage && (
+                                                                <span className="
+                                                        shrink-0
+                                                        rounded-full
+                                                        bg-blue-100
+                                                        px-2
+                                                        py-0.5
+                                                        text-[10px]
+                                                        font-semibold
+                                                        text-blue-700
+                                                    ">
+                                                                    Combo
+                                                                </span>
+                                                            )}
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                            {/* Unit */}
+                                            <td className="px-4 py-3 text-center">
+
+                                                {hasPack ? (
+                                                    <span className="
+                                            inline-flex
+                                            whitespace-nowrap
+                                            rounded-full
+                                            bg-gray-100
+                                            px-2.5
+                                            py-1
+                                            text-xs
+                                            font-medium
+                                            text-gray-700
+                                        ">
+                                                        {packQuantity}/{packUnit}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        -
+                                                    </span>
+                                                )}
+
+                                            </td>
+
+                                            {/* MRP */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+
+                                                {item.originalPrice &&
+                                                    item.originalPrice > item.price ? (
+                                                    <span className="font-medium text-gray-400 line-through">
+                                                        ₹{formatCurrency(item.originalPrice)}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        ₹{formatCurrency(item.price)}
+                                                    </span>
+                                                )}
+
+                                            </td>
+
+                                            {/* Discount */}
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+
+                                                {item.discountText ? (
+                                                    <span className="
+                                                        inline-flex
+                                                        rounded-full
+                                                        bg-green-100
+                                                        px-2
+                                                        py-0.5
+                                                        text-xs
+                                                        font-semibold
+                                                        text-green-700
+                                                    ">
+                                                        {item.discountText}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        NET RATE
+                                                    </span>
+                                                )}
+
+                                            </td>
+
+                                            {/* Offer Price */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+
+                                                <span className="font-semibold text-[var(--color-primary)]">
+                                                    ₹{formatCurrency(item.price)}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Qty */}
+                                            <td className="px-4 py-3 text-center">
+
+                                                <span className="font-medium text-gray-800">
+                                                    {item.quantity}
+                                                </span>
+
+                                            </td>
+
+                                            {/* Total */}
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+
+                                                <span className="font-semibold text-gray-900">
+                                                    ₹{formatCurrency(item.total)}
+                                                </span>
+
+                                            </td>
+
+                                        </tr>
+                                    );
+                                }
+                            )}
+
+                        </tbody>
+
+                    </table>
+
                 </div>
 
-                <div className="bg-white border rounded-xl p-4">
-                    <h3 className="text-sm font-semibold mb-2">Address</h3>
+            </div>
+
+
+            {/* ADDRESS + ORDER SUMMARY */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+                <div className="rounded-xl border bg-white p-5 h-full">
+                    <h3 className="font-semibold text-[var(--color-primary)] mb-4">
+                        Address
+                    </h3>
                     <p className="text-sm whitespace-pre-line">{order.address}</p>
+                </div>
+
+                <div className="rounded-xl border bg-white p-5 h-full">
+
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-[var(--color-primary)]">
+                            Order Summary
+                        </h3>
+
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p>Products Total</p>
+                                <p className="text-xs text-gray-500">
+                                    {order.items.length} Products • {totalQuantity} Qty
+                                </p>
+                            </div>
+
+                            <span>
+                                ₹{formatCurrency(order.totalProductAmount)}
+                            </span>
+                        </div>
+
+                        {(order.comboPackageTotal ?? 0) > 0 && (
+                            <div className="flex justify-between items-center text-gray-600">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span>Combo Packages</span>
+
+                                    <span
+                                        className="
+                                        rounded-full
+                                        bg-green-100
+                                        text-green-700
+                                        text-[10px]
+                                        font-medium
+                                        px-2
+                                        py-0.5
+                                    "
+                                    >
+                                        Inclusive Of Packaging Charges
+                                    </span>
+                                </div>
+
+                                <span>
+                                    ₹{formatCurrency(order.comboPackageTotal)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Non Combo Products */}
+                        {(order.nonComboProductTotal ?? 0) > 0 && (
+                            <div className="flex justify-between text-gray-600">
+                                <span>Non Combo Products</span>
+                                <span>
+                                    ₹{formatCurrency(order.nonComboProductTotal)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Packaging */}
+                        {(order.packagingCharge ?? 0) > 0 && (
+                            <div className="flex justify-between text-gray-600">
+                                <span>
+                                    Packaging Charge ({packagingPercent}%)
+                                </span>
+                                <span>
+                                    ₹{formatCurrency(order.packagingCharge)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Coupon */}
+                        {(order.couponDiscount ?? 0) > 0 && (
+                            <>
+                                <div className="flex justify-between font-medium pt-2 border-t">
+                                    <span>Amount Before Discount</span>
+
+                                    <span>
+                                        ₹{formatCurrency(order.amountBeforeDiscount)}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between text-green-600 font-medium">
+                                    <span>
+                                        Coupon Savings{" "}
+                                        {order.couponType === "PERCENTAGE"
+                                            ? `(${order.couponValue}%)`
+                                            : `(Flat ₹${order.couponValue})`}
+                                    </span>
+
+                                    <span>
+                                        -₹{formatCurrency(order.couponDiscount)}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between font-medium">
+                                    <span>Amount After Discount</span>
+
+                                    <span>
+                                        ₹{formatCurrency(order.amountAfterDiscount)}
+                                    </span>
+                                </div>
+                            </>
+                        )}
+
+                        {/* GST */}
+                        {(order.gstAmount ?? 0) > 0 && (
+                            <div className="flex justify-between text-gray-600">
+                                <span>
+                                    GST ({gstPercent}%)
+                                </span>
+
+                                <span>
+                                    ₹{formatCurrency(order.gstAmount)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Grand Total */}
+                        <div className="border-t my-4" />
+
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p className="font-semibold text-[var(--color-primary)]">
+                                    Grand Total
+                                </p>
+
+                                <p className="text-xs text-gray-500">
+                                    {disableGstForTN && isTamilNadu
+                                        ? "Inclusive of Packaging Charges"
+                                        : "Inclusive of GST & Packaging Charges"}
+                                </p>
+                            </div>
+
+                            <span className="text-xl font-bold text-[var(--color-primary)]">
+                                ₹{formatCurrency(order.grandTotal)}
+                            </span>
+                        </div>
+
+                        {/* Wallet */}
+                        {(order.walletUsed ?? 0) > 0 && (
+                            <>
+                                <div className="border-t my-4" />
+
+                                <div className="flex justify-between text-green-700 font-medium">
+                                    <span>Wallet Applied</span>
+
+                                    <span>
+                                        - ₹{formatCurrency(order.walletUsed)}
+                                    </span>
+                                </div>
+
+                                {/* Amount Payable */}
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="font-semibold text-[var(--color-primary)]">
+                                            Amount Payable
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                            Amount to be paid
+                                        </p>
+                                    </div>
+
+                                    <span className="text-xl font-bold text-[var(--color-primary)]">
+                                        ₹{formatCurrency(order.finalPayable)}
+                                    </span>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
                 </div>
             </div>
 
             {/* ORDER HISTORY */}
+
             {order.statusHistory?.length > 0 && (
                 <div className="bg-white border rounded-xl p-5">
                     <h3 className="font-semibold text-[var(--color-primary)] mb-4">
@@ -489,10 +922,8 @@ export default function AdminOrderDetails() {
 
                                                 <span className="text-xs text-gray-500">
                                                     {updatedAt
-                                                        ? new Date(
+                                                        ? formatDateTime(
                                                             updatedAt
-                                                        ).toLocaleString(
-                                                            "en-IN"
                                                         )
                                                         : "-"}
                                                 </span>
@@ -525,478 +956,63 @@ export default function AdminOrderDetails() {
                 </div>
             )}
 
-            {/* ITEMS */}
-            <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
 
-                {/* Scroll only the product table */}
-                <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
+            {/* ADMIN ACTIONS */}
 
-                    <table className="w-full min-w-[700px] text-sm">
+            <div className="bg-white border rounded-xl p-4 space-y-4">
+                <h3 className="text-sm font-semibold">Admin Actions</h3>
 
-                        <thead className="sticky top-0 z-10 bg-gray-50">
+                <div>
+                    <label className="text-xs text-gray-500 block mb-1">
+                        Update Status
+                    </label>
 
-                            <tr className="border-b border-gray-200">
-
-                                <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                                    Product
-                                </th>
-
-                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                                    Unit
-                                </th>
-
-                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                                    Qty
-                                </th>
-
-                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
-                                    Price
-                                </th>
-
-                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
-                                    Amount
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody className="divide-y divide-gray-100">
-
-                            {sortedItems.map(
-                                (item: any, idx: number) => {
-
-                                    const packQuantity =
-                                        Number(
-                                            item.packQuantity ?? 0
-                                        );
-
-                                    const packUnit = item.packUnit?.trim();
-
-                                    const hasPack =
-                                        packQuantity > 0 &&
-                                        Boolean(packUnit);
-
-                                    return (
-                                        <tr
-                                            key={
-                                                item.productId ||
-                                                idx
-                                            }
-                                            className="align-middle hover:bg-gray-50"
-                                        >
-
-                                            {/* Product */}
-                                            <td className="px-4 py-3">
-
-                                                <div className="flex min-w-0 items-center gap-3">
-
-                                                    <img
-                                                        src={
-                                                            item.image ||
-                                                            defaultImage
-                                                        }
-                                                        onError={(e) => {
-                                                            e.currentTarget.onerror =
-                                                                null;
-
-                                                            e.currentTarget.src =
-                                                                defaultImage;
-                                                        }}
-                                                        className="
-                                                h-12
-                                                w-12
-                                                shrink-0
-                                                rounded-lg
-                                                border
-                                                object-cover
-                                            "
-                                                        loading="lazy"
-                                                        alt={item.name}
-                                                    />
-
-                                                    <div className="min-w-0">
-
-                                                        <div className="flex flex-wrap items-center gap-2">
-
-                                                            <p className="font-semibold text-gray-900">
-                                                                {item.name}
-                                                            </p>
-
-                                                            {item.isComboPackage && (
-                                                                <span className="
-                                                        shrink-0
-                                                        rounded-full
-                                                        bg-blue-100
-                                                        px-2
-                                                        py-0.5
-                                                        text-[10px]
-                                                        font-semibold
-                                                        text-blue-700
-                                                    ">
-                                                                    Combo
-                                                                </span>
-                                                            )}
-
-                                                        </div>
-
-                                                        <div className="
-                                                mt-1
-                                                flex
-                                                flex-wrap
-                                                items-center
-                                                gap-2
-                                                text-xs
-                                            ">
-
-                                                            {item.originalPrice &&
-                                                                item.originalPrice >
-                                                                item.price && (
-                                                                    <span className="text-gray-400 line-through">
-                                                                        ₹
-                                                                        {
-                                                                            item.originalPrice
-                                                                        }
-                                                                    </span>
-                                                                )}
-
-                                                            <span className="font-semibold text-[var(--color-primary)]">
-                                                                ₹{item.price}
-                                                            </span>
-
-                                                            {item.discountText && (
-                                                                <span className="
-                                                        rounded-full
-                                                        bg-green-100
-                                                        px-2
-                                                        py-0.5
-                                                        font-semibold
-                                                        text-green-700
-                                                    ">
-                                                                    {
-                                                                        item.discountText
-                                                                    }
-                                                                </span>
-                                                            )}
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </td>
-
-                                            {/* Pack */}
-                                            <td className="px-4 py-3 text-center">
-
-                                                {hasPack ? (
-                                                    <span className="
-                                            inline-flex
-                                            whitespace-nowrap
-                                            rounded-full
-                                            bg-gray-100
-                                            px-2.5
-                                            py-1
-                                            text-xs
-                                            font-medium
-                                            text-gray-700
-                                        ">
-                                                        {packQuantity}{" "}
-                                                        {packUnit}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-400">
-                                                        -
-                                                    </span>
-                                                )}
-
-                                            </td>
-
-                                            {/* Qty */}
-                                            <td className="px-4 py-3 text-center">
-
-                                                <span className="font-medium text-gray-800">
-                                                    {item.quantity}
-                                                </span>
-
-                                            </td>
-
-                                            {/* Price */}
-                                            <td className="px-4 py-3 text-right whitespace-nowrap">
-
-                                                <span className="font-medium text-gray-700">
-                                                    ₹{item.price}
-                                                </span>
-
-                                            </td>
-
-                                            {/* Amount */}
-                                            <td className="px-4 py-3 text-right whitespace-nowrap">
-
-                                                <span className="font-semibold text-gray-900">
-                                                    ₹{item.total}
-                                                </span>
-
-                                            </td>
-
-                                        </tr>
-                                    );
-                                }
-                            )}
-
-                        </tbody>
-
-                    </table>
-
+                    <div className="relative">
+                        <select
+                            value={selectedStatus}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
+                        >
+                            {availableStatuses.map((status) => (
+                                <option key={status} value={status}>
+                                    {STATUS_LABELS[status] ?? status}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
+                <div>
+                    <label className="text-xs text-gray-500 block mb-1">
+                        Admin Comment
+                    </label>
+                    <textarea
+                        rows={3}
+                        value={(selectedStatus != 'ORDER_PLACED') ? comment : ''}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="w-full border rounded px-3 py-2 text-sm"
+                    />
+                </div>
+
+                <Button
+                    disabled={!canSubmit || submitting}
+                    onClick={() => {
+                        if (!canSubmit) return;
+                        setPendingPayload({
+                            status: selectedStatus !== order.status
+                                ? selectedStatus
+                                : undefined,
+                            adminComment: comment.trim() || undefined,
+                            mobile: order.userId || '',
+                            amount: order.totalAmount || 0
+                        });
+                        setShowConfirm(true);
+                    }}
+                >
+                    Submit
+                </Button>
             </div>
 
-            {/* ORDER SUMMARY */}
-            <div className="bg-white border rounded-xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-[var(--color-primary)]">
-                        Order Summary
-                    </h3>
-
-                    {order.expectedDelivery && (
-                        <div className="text-xs text-gray-500">
-                            Expected Delivery:{" "}
-                            <span className="font-medium text-gray-800">
-                                {new Date(
-                                    order.expectedDelivery
-                                ).toLocaleDateString("en-IN")}
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                <div className="space-y-2 text-sm">
-
-                    {/* Products Total */}
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p>Products Total</p>
-
-                            <p className="text-xs text-gray-500">
-                                {order.items.length} Products • {totalQuantity} Qty
-                            </p>
-                        </div>
-
-                        <span>
-                            ₹{order.totalProductAmount}
-                        </span>
-                    </div>
-
-                    {/* Combo Packages */}
-                    {(order.comboPackageTotal ?? 0) > 0 && (
-                        <div className="flex justify-between items-center text-gray-600">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span>Combo Packages</span>
-
-                                <span
-                                    className="
-                            rounded-full
-                            bg-green-100
-                            text-green-700
-                            text-[10px]
-                            font-medium
-                            px-2
-                            py-0.5
-                        "
-                                >
-                                    Inclusive Of Packaging Charges
-                                </span>
-                            </div>
-
-                            <span>
-                                ₹{order.comboPackageTotal}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Non Combo Products */}
-                    {(order.nonComboProductTotal ?? 0) > 0 && (
-                        <div className="flex justify-between text-gray-600">
-                            <span>Non Combo Products</span>
-
-                            <span>
-                                ₹{order.nonComboProductTotal}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Packaging */}
-                    {(order.packagingCharge ?? 0) > 0 && (
-                        <div className="flex justify-between text-gray-600">
-                            <span>
-                                Packaging Charge ({packagingPercent}%)
-                            </span>
-
-                            <span>
-                                ₹{order.packagingCharge}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Coupon */}
-                    {(order.couponDiscount ?? 0) > 0 && (
-                        <>
-                            <div className="flex justify-between font-medium pt-2 border-t">
-                                <span>Amount Before Discount</span>
-
-                                <span>
-                                    ₹{order.amountBeforeDiscount}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between text-green-600 font-medium">
-                                <span>
-                                    Coupon Savings{" "}
-                                    {order.couponType === "PERCENTAGE"
-                                        ? `(${order.couponValue}%)`
-                                        : `(Flat ₹${order.couponValue})`}
-                                </span>
-
-                                <span>
-                                    -₹{order.couponDiscount}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between font-medium">
-                                <span>Amount After Discount</span>
-
-                                <span>
-                                    ₹{order.amountAfterDiscount}
-                                </span>
-                            </div>
-                        </>
-                    )}
-
-                    {/* GST */}
-                    {(order.gstAmount ?? 0) > 0 && (
-                        <div className="flex justify-between text-gray-600">
-                            <span>
-                                GST ({gstPercent}%)
-                            </span>
-
-                            <span>
-                                ₹{order.gstAmount}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Grand Total */}
-                    <div className="border-t my-4" />
-
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <p className="font-semibold text-[var(--color-primary)]">
-                                Grand Total
-                            </p>
-
-                            <p className="text-xs text-gray-500">
-                                {disableGstForTN && isTamilNadu
-                                    ? "Inclusive of Packaging Charges"
-                                    : "Inclusive of GST & Packaging Charges"}
-                            </p>
-                        </div>
-
-                        <span className="text-xl font-bold text-[var(--color-primary)]">
-                            ₹{order.grandTotal}
-                        </span>
-                    </div>
-
-                    {/* Wallet */}
-                    {(order.walletUsed ?? 0) > 0 && (
-                        <>
-                            <div className="border-t my-4" />
-
-                            <div className="flex justify-between text-green-700 font-medium">
-                                <span>Wallet Applied</span>
-
-                                <span>
-                                    -₹{order.walletUsed}
-                                </span>
-                            </div>
-
-                            {/* Amount Payable */}
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="font-semibold text-[var(--color-primary)]">
-                                        Amount Payable
-                                    </p>
-
-                                    <p className="text-xs text-gray-500">
-                                        Amount to be paid
-                                    </p>
-                                </div>
-
-                                <span className="text-xl font-bold text-[var(--color-primary)]">
-                                    ₹{order.finalPayable}
-                                </span>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {!isTerminal && (
-                <div className="bg-white border rounded-xl p-4 space-y-4">
-                    <h3 className="text-sm font-semibold">Admin Actions</h3>
-
-                    <div>
-                        <label className="text-xs text-gray-500 block mb-1">
-                            Update Status
-                        </label>
-
-                        <div className="relative">
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value)}
-                                className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
-                            >
-                                {availableStatuses.map((status) => (
-                                    <option key={status} value={status}>
-                                        {STATUS_LABELS[status] ?? status}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="text-xs text-gray-500 block mb-1">
-                            Admin Comment
-                        </label>
-                        <textarea
-                            rows={3}
-                            value={(selectedStatus != 'ORDER_PLACED') ? comment : ''}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="w-full border rounded px-3 py-2 text-sm"
-                        />
-                    </div>
-
-                    <Button
-                        disabled={!canSubmit || submitting}
-                        onClick={() => {
-                            if (!canSubmit) return;
-                            setPendingPayload({
-                                status: selectedStatus !== order.status
-                                    ? selectedStatus
-                                    : undefined,
-                                adminComment: comment.trim() || undefined,
-                                mobile: order.userId || '',
-                                amount: order.totalAmount || 0
-                            });
-                            setShowConfirm(true);
-                        }}
-                    >
-                        Submit
-                    </Button>
-                </div>
-            )}
             {isTerminal && (
                 <p className="text-xs text-gray-500">
                     This order is completed and cannot be modified.
