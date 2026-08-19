@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 
 import { PDF_THEME } from "./invoiceTheme";
 import { line, text } from "./invoiceHelpers";
+import { formatDateTime } from "../date";
 
 export async function buildBulkStaffPackingPdf(
     order: any,
@@ -36,15 +37,8 @@ export async function buildBulkStaffPackingPdf(
      */
 
     const orderDate = order.createdAt
-        ? new Date(
+        ? formatDateTime(
             order.createdAt
-        ).toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-            }
         )
         : "-";
 
@@ -250,7 +244,7 @@ export async function buildBulkStaffPackingPdf(
 
                     item.name ?? "-",
 
-                    `${item.cartonQty ?? 0}${item.packUnit
+                    `${item.cartonQty ?? 0}/${item.packUnit
                         ? ` ${item.packUnit}`
                         : ""
                     }`,

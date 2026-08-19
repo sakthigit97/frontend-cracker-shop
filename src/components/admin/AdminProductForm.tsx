@@ -56,7 +56,6 @@ interface Props {
 
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-
 export default function ProductForm({
     value,
     brands,
@@ -72,9 +71,7 @@ export default function ProductForm({
 }: Props) {
     const { showAlert } = useAlert();
 
-    const update = (key: keyof ProductFormData, v: any) =>
-        onChange({ ...value, [key]: v });
-
+    const update = (key: keyof ProductFormData, v: any) => onChange({ ...value, [key]: v });
     const togglePackageTag = (tagId: string) => {
         const current = value.packageTagIds || [];
 
@@ -123,8 +120,6 @@ export default function ProductForm({
             value.images.filter((_, i) => i !== index)
         );
     };
-
-
 
     return (
         <div className="space-y-8">
@@ -206,6 +201,7 @@ export default function ProductForm({
                             <option value="BOX">Box</option>
                             <option value="PIECE">Piece</option>
                             <option value="PACKET">Packet</option>
+                            <option value="BUNDLE">Bundle</option>
                             <option value="SET">Set</option>
                             <option value="NOS">Nos</option>
                             <option value="GRAM">Gram</option>
@@ -268,14 +264,14 @@ export default function ProductForm({
                                         update("isRetailOnly", !value.isRetailOnly)
                                     }
                                     className={`w-11 h-6 rounded-full p-1 transition ${value.isRetailOnly
-                                            ? "bg-green-500"
-                                            : "bg-gray-300"
+                                        ? "bg-green-500"
+                                        : "bg-gray-300"
                                         }`}
                                 >
                                     <div
                                         className={`w-4 h-4 bg-white rounded-full transition ${value.isRetailOnly
-                                                ? "translate-x-5"
-                                                : ""
+                                            ? "translate-x-5"
+                                            : ""
                                             }`}
                                     />
                                 </button>
@@ -293,14 +289,14 @@ export default function ProductForm({
                                         update("isGiftPack", !value.isGiftPack)
                                     }
                                     className={`w-11 h-6 rounded-full p-1 transition ${value.isGiftPack
-                                            ? "bg-green-500"
-                                            : "bg-gray-300"
+                                        ? "bg-green-500"
+                                        : "bg-gray-300"
                                         }`}
                                 >
                                     <div
                                         className={`w-4 h-4 bg-white rounded-full transition ${value.isGiftPack
-                                                ? "translate-x-5"
-                                                : ""
+                                            ? "translate-x-5"
+                                            : ""
                                             }`}
                                     />
                                 </button>
@@ -318,14 +314,14 @@ export default function ProductForm({
                                         update("isComboPackage", !value.isComboPackage)
                                     }
                                     className={`w-11 h-6 rounded-full p-1 transition ${value.isComboPackage
-                                            ? "bg-green-500"
-                                            : "bg-gray-300"
+                                        ? "bg-green-500"
+                                        : "bg-gray-300"
                                         }`}
                                 >
                                     <div
                                         className={`w-4 h-4 bg-white rounded-full transition ${value.isComboPackage
-                                                ? "translate-x-5"
-                                                : ""
+                                            ? "translate-x-5"
+                                            : ""
                                             }`}
                                     />
                                 </button>

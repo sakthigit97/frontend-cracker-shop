@@ -74,7 +74,6 @@ export default function Login() {
       });
 
       const { token, user } = res.data;
-      console.log(user)
       const normalizedRole = String(user.role).toLowerCase();
 
       const role =

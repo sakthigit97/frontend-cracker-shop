@@ -132,15 +132,9 @@ export default function OrderDetails() {
     ) &&
     order.status !== TERMINAL_STATUS;
 
-  const hideCancelled =
-    order.status === "ORDER_PACKED" ||
-    order.status === "DISPATCHED";
-
-  const trackingStatuses = hideCancelled
-    ? STATUS_KEYS.filter(
-      (status) => status !== "CANCELLED"
-    )
-    : STATUS_KEYS;
+  const trackingStatuses = STATUS_KEYS.filter(
+    (status) => status !== "CANCELLED"
+  );
 
   const isTamilNadu =
     order.address
@@ -862,7 +856,7 @@ export default function OrderDetails() {
                           {hasPack ? (
                             <span
                               className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                              {packQuantity}{" "}
+                              {packQuantity}{"/"}
                               {packUnit}
                             </span>
                           ) : (

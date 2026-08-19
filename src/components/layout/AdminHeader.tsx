@@ -25,11 +25,14 @@ import type { HeaderDropdownItem } from "./HeaderDropdown";
 import MobileAccordion from "./MobileAccordion";
 import type { MobileAccordionItem } from "./MobileAccordion";
 import { useAuth } from "../../store/auth.store";
+import { useConfigStore } from "../../store/config.store";
 
 export default function AdminHeader() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logout } = useAuth();
+  const config = useConfigStore((s) => s.config);
+  const isEnableBulkOrder = config?.isEnableBulkOrder ?? false;
 
   const handleLogout = () => {
     logout();
@@ -38,6 +41,7 @@ export default function AdminHeader() {
   };
 
   const closeMobile = () => setMobileOpen(false);
+
   const catalogMenu: HeaderDropdownItem[] = [
     {
       label: "Products",
@@ -64,11 +68,16 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-    {
-      label: "Admin Bulk Order Codes",
-      to: "/admin/admin-codes",
-      icon: <FaTicketAlt />,
-    },
+
+    ...(isEnableBulkOrder
+      ? [
+        {
+          label: "Admin Bulk Order Codes",
+          to: "/admin/admin-codes",
+          icon: <FaTicketAlt />,
+        },
+      ]
+      : []),
   ];
 
   const salesMenu: HeaderDropdownItem[] = [
@@ -77,11 +86,17 @@ export default function AdminHeader() {
       to: "/admin/orders",
       icon: <FaShoppingBag />,
     },
-    {
-      label: "Bulk Orders",
-      to: "/admin/bulk-orders",
-      icon: <FaShoppingBag />,
-    },
+
+    ...(isEnableBulkOrder
+      ? [
+        {
+          label: "Bulk Orders",
+          to: "/admin/bulk-orders",
+          icon: <FaShoppingBag />,
+        },
+      ]
+      : []),
+
     {
       label: "Revenue Report",
       to: "/admin/reports/revenue",
@@ -144,11 +159,16 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-    {
-      label: "Admin Bulk Order Codes",
-      to: "/admin/admin-codes",
-      icon: <FaTicketAlt />,
-    },
+
+    ...(isEnableBulkOrder
+      ? [
+        {
+          label: "Admin Bulk Order Codes",
+          to: "/admin/admin-codes",
+          icon: <FaTicketAlt />,
+        },
+      ]
+      : []),
   ];
 
   const mobileSales: MobileAccordionItem[] = [

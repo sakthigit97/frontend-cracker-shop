@@ -102,8 +102,8 @@ export default function AdminBulkOrderDetails() {
         STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
-    const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
 
+    const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
     const currentIndex = order
         ? STATUS_ORDER.indexOf(order.status)
         : -1;
@@ -536,224 +536,6 @@ export default function AdminBulkOrderDetails() {
                 </div>
 
             </div>
-            {/* ============================================================
-             * ADDRESS / ORDER INFORMATION
-             * Keep the bulk-order data unchanged; the bulk order model
-             * does not currently expose the retail Payment fields.
-             * ============================================================ */}
-            <div className="grid md:grid-cols-2 gap-4">
-
-                <div className="bg-white border border-gray-300 rounded-xl p-5">
-
-                    <h3 className="text-lg font-semibold mb-4">
-                        Order Information
-                    </h3>
-
-                    <div className="text-sm space-y-2">
-
-                        <div className="flex justify-between gap-4">
-                            <span className="text-gray-500">
-                                Scheme
-                            </span>
-
-                            <span className="font-medium text-right">
-                                {order.schemeId || "-"}
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between gap-4">
-                            <span className="text-gray-500">
-                                Products
-                            </span>
-
-                            <span className="font-medium">
-                                {order.items.length}
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between gap-4">
-                            <span className="text-gray-500">
-                                No. of Cartons
-                            </span>
-
-                            <span className="font-medium">
-                                {totalCartons}
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between gap-4">
-                            <span className="text-gray-500">
-                                Status
-                            </span>
-
-                            <span className="font-medium">
-                                {STATUS_LABELS[order.status]}
-                            </span>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div className="bg-white border border-gray-300 rounded-xl p-5">
-
-                    <h3 className="text-lg font-semibold mb-4">
-                        Address
-                    </h3>
-
-                    <div className="text-sm space-y-1">
-
-                        <p className="font-medium">
-                            {order.address.fullName}
-                        </p>
-
-                        <p>
-                            {order.address.mobile}
-                        </p>
-
-                        <p>
-                            {order.address.addressLine1}
-                        </p>
-
-                        {order.address.addressLine2 && (
-                            <p>
-                                {order.address.addressLine2}
-                            </p>
-                        )}
-
-                        <p>
-                            {order.address.city},{" "}
-                            {order.address.state} -{" "}
-                            {order.address.pincode}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {/* ============================================================
-             * ORDER HISTORY
-             * ============================================================ */}
-            {order.statusHistory?.length > 0 && (
-                <div className="bg-white border border-gray-300 rounded-xl p-5">
-
-                    <h3 className="text-lg font-semibold text-[var(--color-primary)] mb-4">
-                        Order History
-                    </h3>
-
-                    <div className="space-y-4">
-
-                        {[...(order.statusHistory || [])]
-                            .sort(
-                                (a, b) =>
-                                    (b.changedAt ?? b.at) -
-                                    (a.changedAt ?? a.at)
-                            )
-                            .map((history: any, index: number) => {
-
-                                const status =
-                                    history.toStatus ??
-                                    history.status;
-
-                                const updatedBy =
-                                    history.changedBy ??
-                                    history.by;
-
-                                const updatedAt =
-                                    history.changedAt ??
-                                    history.at;
-
-                                return (
-                                    <div
-                                        key={index}
-                                        className="
-                                            flex
-                                            gap-4
-                                            items-start
-                                            border-l-2
-                                            border-gray-200
-                                            pl-4
-                                            relative
-                                        "
-                                    >
-
-                                        <div
-                                            className="
-                                                absolute
-                                                -left-[7px]
-                                                top-1
-                                                w-3
-                                                h-3
-                                                rounded-full
-                                                bg-[var(--color-primary)]
-                                            "
-                                        />
-
-                                        <div className="flex-1">
-
-                                            <div
-                                                className="
-                                                    flex
-                                                    flex-col
-                                                    sm:flex-row
-                                                    sm:items-center
-                                                    sm:justify-between
-                                                    gap-1
-                                                "
-                                            >
-
-                                                <p className="font-medium">
-                                                    {STATUS_LABELS[status] ??
-                                                        status?.replaceAll(
-                                                            "_",
-                                                            " "
-                                                        )}
-                                                </p>
-
-                                                <span className="text-xs text-gray-500">
-                                                    {updatedAt
-                                                        ? new Date(
-                                                            updatedAt
-                                                        ).toLocaleString(
-                                                            "en-IN"
-                                                        )
-                                                        : "-"}
-                                                </span>
-
-                                            </div>
-
-                                            {updatedBy && (
-                                                <p className="text-sm text-gray-500 mt-1">
-                                                    Changed By :{" "}
-                                                    {updatedBy.startsWith(
-                                                        "ADMIN"
-                                                    )
-                                                        ? "Admin"
-                                                        : updatedBy.replace(
-                                                            "USER#",
-                                                            ""
-                                                        )}
-                                                </p>
-                                            )}
-
-                                            {history.comment && (
-                                                <div className="mt-2 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-                                                    {history.comment}
-                                                </div>
-                                            )}
-
-                                        </div>
-
-                                    </div>
-                                );
-                            })}
-
-                    </div>
-
-                </div>
-            )}
 
             {/* ============================================================
              * PRODUCTS
@@ -884,7 +666,7 @@ export default function AdminBulkOrderDetails() {
                                                             text-gray-700
                                                         "
                                                     >
-                                                        {cartonQty}{" "}
+                                                        {cartonQty}{"/"}
                                                         {packUnit}
                                                     </span>
                                                 ) : (
@@ -929,91 +711,253 @@ export default function AdminBulkOrderDetails() {
             </div>
 
             {/* ============================================================
-             * ORDER SUMMARY
+             * ADDRESS / ORDER SUMMARY
              * ============================================================ */}
-            <div className="bg-white border border-gray-300 rounded-xl p-5">
+            <div className="grid md:grid-cols-2 gap-4">
 
-                <div className="flex items-center justify-between gap-4 mb-5">
+                {/* Address */}
+                <div className="bg-white border border-gray-300 rounded-xl p-5">
 
-                    <h2 className="text-lg font-semibold">
-                        Order Summary
-                    </h2>
+                    <h3 className="text-lg font-semibold mb-4">
+                        Address
+                    </h3>
+
+                    <div className="text-sm space-y-1">
+
+                        <p className="font-medium">
+                            {order.address.fullName}
+                        </p>
+
+                        <p>
+                            {order.address.mobile}
+                        </p>
+
+                        <p>
+                            {order.address.addressLine1}
+                        </p>
+
+                        {order.address.addressLine2 && (
+                            <p>
+                                {order.address.addressLine2}
+                            </p>
+                        )}
+
+                        <p>
+                            {order.address.city},{" "}
+                            {order.address.state} -{" "}
+                            {order.address.pincode}
+                        </p>
+
+                    </div>
 
                 </div>
 
-                <div className="space-y-3 text-sm">
+                {/* Order Summary */}
+                <div className="bg-white border border-gray-300 rounded-xl p-5">
 
-                    <div className="flex justify-between gap-4">
-                        <span>
-                            Product Total
-                        </span>
+                    <div className="flex items-center justify-between gap-4 mb-5">
 
-                        <span>
-                            ₹
-                            {Number(
-                                order.pricing.productTotal
-                            ).toLocaleString("en-IN")}
-                        </span>
+                        <h2 className="text-lg font-semibold">
+                            Order Summary
+                        </h2>
+
                     </div>
 
-                    <div className="flex justify-between gap-4">
-                        <span>
-                            No. of Cartons
-                        </span>
+                    <div className="space-y-3 text-sm">
 
-                        <span>
-                            {totalCartons}
-                        </span>
-                    </div>
-
-                    <div className="flex justify-between gap-4">
-                        <span>
-                            Packaging ({order.pricing.packagingPercent}%)
-                        </span>
-
-                        <span>
-                            ₹
-                            {Number(
-                                order.pricing.packagingCharge
-                            ).toLocaleString("en-IN")}
-                        </span>
-                    </div>
-
-                    {order.pricing.gstAmount > 0 && (
                         <div className="flex justify-between gap-4">
-
                             <span>
-                                GST ({order.pricing.gstPercent}%)
+                                Product Total
                             </span>
 
                             <span>
                                 ₹
                                 {Number(
-                                    order.pricing.gstAmount
+                                    order.pricing.productTotal
+                                ).toLocaleString("en-IN")}
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between gap-4">
+                            <span>
+                                No. of Cartons
+                            </span>
+
+                            <span>
+                                {totalCartons}
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between gap-4">
+                            <span>
+                                Packaging ({order.pricing.packagingPercent}%)
+                            </span>
+
+                            <span>
+                                ₹
+                                {Number(
+                                    order.pricing.packagingCharge
+                                ).toLocaleString("en-IN")}
+                            </span>
+                        </div>
+
+                        {order.pricing.gstAmount > 0 && (
+                            <div className="flex justify-between gap-4">
+
+                                <span>
+                                    GST ({order.pricing.gstPercent}%)
+                                </span>
+
+                                <span>
+                                    ₹
+                                    {Number(
+                                        order.pricing.gstAmount
+                                    ).toLocaleString("en-IN")}
+                                </span>
+
+                            </div>
+                        )}
+
+                        <div className="border-t pt-4 flex justify-between gap-4 font-bold text-[var(--color-primary)]">
+
+                            <span>
+                                Grand Total
+                            </span>
+
+                            <span>
+                                ₹
+                                {Number(
+                                    order.pricing.grandTotal
                                 ).toLocaleString("en-IN")}
                             </span>
 
                         </div>
-                    )}
-
-                    <div className="border-t pt-4 flex justify-between gap-4 font-bold text-[var(--color-primary)]">
-
-                        <span>
-                            Grand Total
-                        </span>
-
-                        <span>
-                            ₹
-                            {Number(
-                                order.pricing.grandTotal
-                            ).toLocaleString("en-IN")}
-                        </span>
 
                     </div>
 
                 </div>
 
             </div>
+
+            {/* ============================================================
+             * ORDER HISTORY
+             * ============================================================ */}
+            {order.statusHistory?.length > 0 && (
+                <div className="bg-white border border-gray-300 rounded-xl p-5">
+
+                    <h3 className="text-lg font-semibold text-[var(--color-primary)] mb-4">
+                        Order History
+                    </h3>
+
+                    <div className="space-y-4">
+
+                        {[...(order.statusHistory || [])]
+                            .sort(
+                                (a, b) =>
+                                    (b.changedAt ?? b.at) -
+                                    (a.changedAt ?? a.at)
+                            )
+                            .map((history: any, index: number) => {
+
+                                const status =
+                                    history.toStatus ??
+                                    history.status;
+
+                                const updatedBy =
+                                    history.changedBy ??
+                                    history.by;
+
+                                const updatedAt =
+                                    history.changedAt ??
+                                    history.at;
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="
+                                            flex
+                                            gap-4
+                                            items-start
+                                            border-l-2
+                                            border-gray-200
+                                            pl-4
+                                            relative
+                                        "
+                                    >
+
+                                        <div
+                                            className="
+                                                absolute
+                                                -left-[7px]
+                                                top-1
+                                                w-3
+                                                h-3
+                                                rounded-full
+                                                bg-[var(--color-primary)]
+                                            "
+                                        />
+
+                                        <div className="flex-1">
+
+                                            <div
+                                                className="
+                                                    flex
+                                                    flex-col
+                                                    sm:flex-row
+                                                    sm:items-center
+                                                    sm:justify-between
+                                                    gap-1
+                                                "
+                                            >
+
+                                                <p className="font-medium">
+                                                    {STATUS_LABELS[status] ??
+                                                        status?.replaceAll(
+                                                            "_",
+                                                            " "
+                                                        )}
+                                                </p>
+
+                                                <span className="text-xs text-gray-500">
+                                                    {updatedAt
+                                                        ? formatDateTime(
+                                                            updatedAt
+                                                        )
+                                                        : "-"}
+                                                </span>
+
+                                            </div>
+
+                                            {updatedBy && (
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    Changed By :{" "}
+                                                    {updatedBy.startsWith(
+                                                        "ADMIN"
+                                                    )
+                                                        ? "Admin"
+                                                        : updatedBy.replace(
+                                                            "USER#",
+                                                            ""
+                                                        )}
+                                                </p>
+                                            )}
+
+                                            {history.comment && (
+                                                <div className="mt-2 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                                                    {history.comment}
+                                                </div>
+                                            )}
+
+                                        </div>
+
+                                    </div>
+                                );
+                            })}
+
+                    </div>
+
+                </div>
+            )}
 
             {order.remarks && (
                 <div className="bg-white border border-gray-300 rounded-xl p-4">
@@ -1028,6 +972,7 @@ export default function AdminBulkOrderDetails() {
 
                 </div>
             )}
+
             {!isTerminal && (
 
                 <div className="bg-white border rounded-xl p-4 space-y-4">
@@ -1115,6 +1060,7 @@ export default function AdminBulkOrderDetails() {
                                 ? "Updating..."
                                 : "Update Order"}
                         </Button>
+
                     </div>
 
                 </div>
@@ -1168,6 +1114,7 @@ export default function AdminBulkOrderDetails() {
 
                     try {
                         if (!order) return;
+
                         await updateOrder(
                             order.orderId,
                             pendingPayload

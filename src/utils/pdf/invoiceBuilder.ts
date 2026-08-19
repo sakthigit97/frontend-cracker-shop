@@ -8,6 +8,7 @@ import {
     formatStatus,
 } from "../../utils/pdf/invoiceHelpers";
 import Icon from "../../assets/icon-new.png";
+import { formatDateTime } from "../date";
 
 export async function buildInvoicePdf(
     order: any,
@@ -230,15 +231,8 @@ export async function buildInvoicePdf(
     );
 
     const orderDate =
-        new Date(
+        formatDateTime(
             Number(order.updatedAt)
-        ).toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-            }
         );
 
     text(
@@ -402,8 +396,8 @@ export async function buildInvoicePdf(
 
                 const unitText =
                     packQuantity > 0 &&
-                    packUnit
-                        ? `${packQuantity} ${packUnit}`
+                        packUnit
+                        ? `${packQuantity}/${packUnit}`
                         : "-";
 
                 const productName =
@@ -581,7 +575,7 @@ export async function buildInvoicePdf(
             ) {
                 const item =
                     invoiceItems[
-                        data.row.index
+                    data.row.index
                     ];
 
                 if (
@@ -605,7 +599,7 @@ export async function buildInvoicePdf(
             ) {
                 const item =
                     invoiceItems[
-                        data.row.index
+                    data.row.index
                     ];
 
                 data.cell.styles.textColor =

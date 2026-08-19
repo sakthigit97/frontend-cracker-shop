@@ -38,14 +38,18 @@ export default function BulkOrderDetails() {
     const gstPercentage = config?.gstPercent ?? 0;
 
     const packagePercent = config?.packagingPercent ?? 0;
-
-    const { order, fetchingOrder, cancelling, fetchOrder, cancelOrder } =
-        useBulkOrderHistoryStore();
+    const {
+        order,
+        fetchingOrder,
+        cancelling,
+        restoring,
+        fetchOrder,
+        cancelOrder,
+        restoreOrder,
+    } = useBulkOrderHistoryStore();
 
     const { showAlert } = useAlert();
-
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-
     const [downloading, setDownloading] = useState(false);
     useEffect(() => {
         if (!orderId) {
@@ -60,7 +64,6 @@ export default function BulkOrderDetails() {
             )?.forceRefresh === true;
 
         fetchOrder(orderId, forceRefresh);
-
         if (forceRefresh) {
             navigate(location.pathname, {
                 replace: true,
@@ -90,6 +93,33 @@ export default function BulkOrderDetails() {
             });
         } finally {
             setShowCancelConfirm(false);
+        }
+    }
+
+    async function handleRestore() {
+        if (!order || restoring) {
+            return;
+        }
+
+        try {
+            await restoreOrder(order.orderId);
+
+            showAlert({
+                type: "success",
+                message: "Bulk Order Reopened Successfully",
+                duration: 1500,
+            });
+
+            navigate("/bulk-orders", {
+                replace: true,
+            });
+        } catch (err: any) {
+            showAlert({
+                type: "error",
+                message:
+                    err?.message ||
+                    "Unable to reopen bulk order.",
+            });
         }
     }
 
@@ -156,8 +186,11 @@ export default function BulkOrderDetails() {
         );
     }
 
-    const STATUS_KEYS = Object.keys(ORDER_STATUS_CONFIG);
-
+    const STATUS_KEYS = Object.keys(
+        ORDER_STATUS_CONFIG
+    ).filter(
+        (status) => status !== "CANCELLED"
+    );
     const currentIndex = STATUS_KEYS.indexOf(order.status);
 
     const isCancelled = order.status === TERMINAL_STATUS;
@@ -627,7 +660,7 @@ export default function BulkOrderDetails() {
 
                                         <td className="px-4 py-3 text-center">
                                             <span className="whitespace-nowrap text-sm text-gray-600">
-                                                {item.cartonQty} {item.packUnit}
+                                                {item.cartonQty}/{item.packUnit}
                                             </span>
                                         </td>
 
@@ -753,11 +786,10 @@ export default function BulkOrderDetails() {
                                         </p>
 
                                         <p className="mt-1 whitespace-nowrap text-sm font-medium text-gray-700">
-                                            {item.cartonQty} {item.packUnit}
+                                            {item.cartonQty}/{item.packUnit}
                                         </p>
                                     </div>
 
-                                    {/* Price */}
 
                                     <div className="min-w-0 text-right">
                                         <p
@@ -841,6 +873,19 @@ export default function BulkOrderDetails() {
             </section>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+
+                {isCancelled && (
+                    <Button
+                        disabled={restoring}
+                        onClick={handleRestore}
+                        className="bg-green-600 text-white hover:bg-green-700"
+                    >
+                        {restoring
+                            ? "Reopening..."
+                            : "Reopen Order"}
+                    </Button>
+                )}
+
                 {canDownloadInvoice && (
                     <Button variant="secondary" onClick={handleDownloadInvoice}>
                         {downloading ? "Downloading..." : "Download Invoice"}
@@ -872,6 +917,8 @@ export default function BulkOrderDetails() {
                         Adjust Order
                     </Button>
                 )}
+
+
             </div>
 
             <ConfirmDialog

@@ -69,6 +69,8 @@ export default function Checkout() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [profileTitle, setProfileTitle] = useState<"Mr" | "Mrs" | "Ms">("Mr");
+  const [profileName, setProfileName] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCouponSection, setShowCouponSection] = useState(false);
   const [minOrderValid, setMinOrderValid] = useState(true);
@@ -240,10 +242,19 @@ export default function Checkout() {
         const res: ProfileResponse = await apiFetch("/user/profile");
         if (!mounted || !res?.data) return;
         setMobile(res.data.mobile);
+        const profileCustomerTitle: "Mr" | "Mrs" | "Ms" =
+          res.data.title === "Mrs"
+            ? "Mrs"
+            : res.data.title === "Ms"
+              ? "Ms"
+              : "Mr";
+        const profileCustomerName = res.data.name?.trim() || "";
+        setProfileTitle(profileCustomerTitle);
+        setProfileName(profileCustomerName);
 
         const customerName = [
-          res.data.title?.trim(),
-          res.data.name?.trim(),
+          profileCustomerTitle,
+          profileCustomerName,
         ]
           .filter(Boolean)
           .join(" ");
@@ -300,10 +311,31 @@ export default function Checkout() {
       });
       return;
     }
+
     let finalAddress = "";
     let deliveryState = "";
     if (addressMode === "PROFILE") {
-      finalAddress = profileAddress;
+      const customerName = [
+        profileTitle.trim(),
+        profileName.trim(),
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const profileAddressParts = [
+        customerName,
+        mobile.trim(),
+        profileAddress
+          .split("\n")
+          .slice(2)
+          .join("\n")
+          .trim(),
+      ];
+
+      finalAddress = profileAddressParts
+        .filter(Boolean)
+        .join("\n");
+
       deliveryState = profileState;
     } else {
       if (!name.trim()) {
@@ -775,7 +807,7 @@ export default function Checkout() {
                   whitespace-nowrap
                 "
                         >
-                          📦 {p.packQuantity} {p.packUnit}
+                          📦 {p.packQuantity}/{p.packUnit}
                         </span>
                       )}
 

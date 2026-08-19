@@ -24,7 +24,7 @@ export default function AdminCreateProduct() {
         categoryId: "",
         isActive: true,
         isComboPackage: false,
-        isRetailOnly: false,
+        isRetailOnly: true,
         bulkOrderBasePrice: "",
         cartonQty: "",
         isBulkOrderOnly: false,

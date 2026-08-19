@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 
 import { PDF_THEME } from "./invoiceTheme";
 import { line, text } from "./invoiceHelpers";
+import { formatDateTime } from "../date";
 
 export async function buildStaffPackingPdf(
     order: any,
@@ -36,22 +37,13 @@ export async function buildStaffPackingPdf(
      */
 
     const orderDate = order.updatedAt
-        ? new Date(
+        ? formatDateTime(
             Number(order.updatedAt)
-        ).toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-            }
         )
         : "-";
 
     bold();
-
     doc.setFontSize(9);
-
     doc.setTextColor(
         ...COLORS.dark
     );
@@ -256,7 +248,7 @@ export async function buildStaffPackingPdf(
 
                 const cartonText =
                     packQuantity > 0
-                        ? `${packQuantity}${packUnit
+                        ? `${packQuantity}/${packUnit
                             ? ` ${packUnit}`
                             : ""
                         }`
@@ -382,7 +374,7 @@ export async function buildStaffPackingPdf(
              */
             if (
                 data.section ===
-                    "body" &&
+                "body" &&
                 data.column.index === 0
             ) {
                 data.cell.styles.halign =
@@ -394,7 +386,7 @@ export async function buildStaffPackingPdf(
              */
             if (
                 data.section ===
-                    "body" &&
+                "body" &&
                 data.column.index === 2
             ) {
                 data.cell.styles.halign =
@@ -406,7 +398,7 @@ export async function buildStaffPackingPdf(
              */
             if (
                 data.section ===
-                    "body" &&
+                "body" &&
                 data.column.index === 3
             ) {
                 data.cell.styles.fontStyle =

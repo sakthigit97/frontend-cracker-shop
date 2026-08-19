@@ -297,7 +297,7 @@ function BulkReviewSummary({
                                                 <span className="text-sm text-gray-600">
                                                     {cartonQty.toLocaleString(
                                                         "en-IN"
-                                                    )}{" "}
+                                                    )}{"/"}
                                                     {item.packUnit}
                                                 </span>
                                             </td>

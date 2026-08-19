@@ -36,6 +36,7 @@ export type GlobalConfig = {
     bulkOrderSchemes?: any;
     companyName: string;
     whatsAppSupport: any;
+    isEnableBulkOrder: boolean;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {
