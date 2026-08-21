@@ -66,6 +66,7 @@ export default function AdjustBulkOrder() {
     const passedOrder = locationState?.order;
     const isAdmin = user?.role === "ADMIN";
     const isStaff = user?.role === "STAFF";
+    const isAdminOrStaff = isAdmin || isStaff;
 
     const [
         showAddProductModal,
@@ -167,11 +168,9 @@ export default function AdjustBulkOrder() {
         return result;
     }, [homeProducts]);
 
-
-    const currentOrder =
-        isAdmin
-            ? adminOrderCache[orderId ?? ""]
-            : userOrder ?? passedOrder;
+    const currentOrder = isAdminOrStaff
+        ? adminOrderCache[orderId ?? ""]
+        : userOrder ?? passedOrder;
 
     const [items, setItems] =
         useState<EditableBulkOrderItem[]>(
@@ -190,8 +189,11 @@ export default function AdjustBulkOrder() {
             return;
         }
 
-        if (isAdmin) {
-            if (!adminOrderCache[orderId] && !adminFetchingOrder) {
+        if (isAdminOrStaff) {
+            if (
+                !adminOrderCache[orderId] &&
+                !adminFetchingOrder
+            ) {
                 fetchAdminOrder(orderId);
             }
 
@@ -427,7 +429,7 @@ export default function AdjustBulkOrder() {
         productId: string,
         value: number
     ) {
-        if (!isAdmin) {
+        if (!isAdminOrStaff) {
             return;
         }
 
@@ -958,9 +960,7 @@ export default function AdjustBulkOrder() {
                                                 item.productId
                                             }
                                             item={item}
-                                            isAdmin={
-                                                isAdmin
-                                            }
+                                            isAdminOrStaff={isAdminOrStaff}
                                             onIncrease={() =>
                                                 updateQuantity(
                                                     item.productId,
@@ -1266,8 +1266,7 @@ export default function AdjustBulkOrder() {
 
 interface BulkOrderItemRowProps {
     item: EditableBulkOrderItem;
-    isAdmin: boolean;
-
+    isAdminOrStaff: boolean;
     onIncrease: () => void;
     onDecrease: () => void;
 
@@ -1280,7 +1279,7 @@ interface BulkOrderItemRowProps {
 
 function BulkOrderItemRow({
     item,
-    isAdmin,
+    isAdminOrStaff,
     onIncrease,
     onDecrease,
     onQuantityChange,
@@ -1372,7 +1371,7 @@ function BulkOrderItemRow({
 
                 {/* Carton Content */}
                 <div className="text-center">
-                    {isAdmin ? (
+                    {isAdminOrStaff ? (
                         <input
                             type="number"
                             min={1}
@@ -1548,7 +1547,7 @@ function BulkOrderItemRow({
                             Carton Content
                         </p>
 
-                        {isAdmin ? (
+                        {isAdminOrStaff ? (
                             <input
                                 type="number"
                                 min={1}
