@@ -103,7 +103,6 @@ export default function AdminBulkOrders() {
         );
 
     }, [data, key, stateFilter]);
-    console.log(orders)
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
