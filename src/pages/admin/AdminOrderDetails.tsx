@@ -49,6 +49,20 @@ export default function AdminOrderDetails() {
     const [restoring, setRestoring] = useState(false);
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
+    const [
+        selectedPaymentAccountIds,
+        setSelectedPaymentAccountIds,
+    ] = useState<string[]>([]);
+
+    const [
+        generatedPaymentMessage,
+        setGeneratedPaymentMessage,
+    ] = useState("");
+
+    const [
+        copyingPaymentMessage,
+        setCopyingPaymentMessage,
+    ] = useState(false);
 
     const order = cache[orderId];
     const packagingPercent = config?.packagingPercent ?? 0;
@@ -97,8 +111,195 @@ export default function AdminOrderDetails() {
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
 
+    
+
     const isCancelled = order?.status === "CANCELLED";
     const currentIndex = STATUS_ORDER.indexOf(order?.status);
+    const companyName = config?.companyName || 'Sivakaasi Pyro Park';
+    const paymentAccounts =
+        Array.isArray(config?.paymentAccounts)
+            ? config.paymentAccounts
+            : [];
+
+    const finalPayableAmount =
+        Number(order?.finalPayable ?? 0) > 0
+            ? Number(order.finalPayable)
+            : Number(order?.grandTotal ?? 0);
+
+    const generatePaymentMessage = () => {
+        const lines: string[] = [];
+
+        lines.push(
+            `🎉 Your ${companyName} Order is Confirmed!`
+        );
+
+        lines.push(
+            `Order ID: ${order.orderId}`
+        );
+
+        lines.push(
+            `Total: ₹${formatCurrency(
+                finalPayableAmount
+            )}`
+        );
+
+        lines.push("");
+
+        lines.push(
+            "Pay via Bank Transfer:"
+        );
+
+        lines.push(
+            "Payment Details:"
+        );
+
+        lines.push("");
+
+        /*
+         * Only include the payment accounts
+         * selected by the admin.
+         */
+        const selectedAccounts =
+            paymentAccounts.filter(
+                (
+                    account: any,
+                    index: number
+                ) => {
+                    const accountId =
+                        account.id ||
+                        String(index);
+
+                    return selectedPaymentAccountIds.includes(
+                        accountId
+                    );
+                }
+            );
+
+        selectedAccounts.forEach(
+            (
+                account: any,
+                index: number
+            ) => {
+                if (index > 0) {
+                    lines.push("");
+                }
+
+                if (
+                    account.type ===
+                    "BANK"
+                ) {
+                    lines.push(
+                        account.bankName ||
+                        "Bank"
+                    );
+
+                    lines.push(
+                        `Name: ${account.bankUserName ||
+                        ""
+                        }`
+                    );
+
+                    lines.push(
+                        `A/C No: ${account.accountNumber ||
+                        ""
+                        }`
+                    );
+
+                    lines.push(
+                        `IFSC: ${account.ifsc} (${account.accountType === "SAVINGS"
+                            ? "Savings A/C"
+                            : "Current A/C"
+                        })`
+                    );
+
+                    return;
+                }
+
+                const paymentName =
+                    account.type ===
+                        "GPAY"
+                        ? "GPay"
+                        : account.type ===
+                            "PHONEPE"
+                            ? "PhonePe"
+                            : account.type ===
+                                "PAYTM"
+                                ? "Paytm"
+                                : account.type;
+
+                lines.push(
+                    paymentName
+                );
+
+                if (
+                    account.mobileNumber
+                ) {
+                    lines.push(
+                        `Mobile: ${account.mobileNumber}`
+                    );
+                }
+
+                if (
+                    account.upiId
+                ) {
+                    lines.push(
+                        `UPI ID: ${account.upiId}`
+                    );
+                }
+            }
+        );
+
+        lines.push("");
+
+        lines.push(
+            "👉 Please share your payment screenshot here to start dispatch."
+        );
+
+        lines.push(
+            `Track here: ${config?.website}`
+        );
+
+        return lines.join("\n");
+    };
+
+    const handleCopyPaymentMessage = async () => {
+        if (!generatedPaymentMessage) {
+            showAlert({
+                type: "error",
+                message:
+                    "Please generate the payment message first.",
+            });
+
+            return;
+        }
+
+        try {
+            setCopyingPaymentMessage(true);
+
+            await navigator.clipboard.writeText(
+                generatedPaymentMessage
+            );
+
+            showAlert({
+                type: "success",
+                message: "Payment message copied",
+                duration: 1500,
+            });
+        } catch (error) {
+            console.error(
+                "Copy payment message failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    "Unable to copy payment message.",
+            });
+        } finally {
+            setCopyingPaymentMessage(false);
+        }
+    };
 
     const nextStatus =
         currentIndex >= 0 &&
@@ -172,6 +373,30 @@ export default function AdminOrderDetails() {
         }
     }
 
+    const getPaymentAccountLabel = (
+        account: any
+    ) => {
+        if (account.type === "BANK") {
+            return (
+                account.bankName ||
+                "Bank Account"
+            );
+        }
+
+        if (account.type === "GPAY") {
+            return "GPay";
+        }
+
+        if (account.type === "PHONEPE") {
+            return "PhonePe";
+        }
+
+        if (account.type === "PAYTM") {
+            return "Paytm";
+        }
+
+        return "Payment Account";
+    };
 
     async function handleDownloadInvoice() {
         if (downloading) return;
@@ -299,6 +524,7 @@ export default function AdminOrderDetails() {
                                 />
                             </svg>
                         </button>
+
                     </div>
 
                     <p className="text-xs text-gray-500">
@@ -956,6 +1182,321 @@ export default function AdminOrderDetails() {
                 </div>
             )}
 
+
+            {/* =================================================
+                * PAYMENT MESSAGE
+                * ================================================= */}
+
+            {paymentAccounts.length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+                    <div>
+                        <p className="text-sm font-semibold text-gray-800">
+                            Payment Message
+                        </p>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Select the payment account(s) to include
+                            in the customer payment message.
+                        </p>
+                    </div>
+
+                    {/* -----------------------------------------
+         * PAYMENT ACCOUNT SELECTION
+         * ----------------------------------------- */}
+
+                    <div className="space-y-2">
+                        {paymentAccounts.map(
+                            (
+                                account: any,
+                                index: number
+                            ) => {
+                                const accountId =
+                                    account.id ||
+                                    String(index);
+
+                                const isSelected =
+                                    selectedPaymentAccountIds.includes(
+                                        accountId
+                                    );
+
+                                const accountName =
+                                    getPaymentAccountLabel(
+                                        account
+                                    );
+
+                                return (
+                                    <label
+                                        key={accountId}
+                                        className={`
+                                flex
+                                items-center
+                                gap-3
+                                rounded-lg
+                                border
+                                px-3
+                                py-3
+                                cursor-pointer
+                                transition
+                                ${isSelected
+                                                ? "border-[var(--color-primary)] bg-gray-50"
+                                                : "border-gray-200"
+                                            }
+                            `}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                isSelected
+                                            }
+                                            onChange={() => {
+                                                setSelectedPaymentAccountIds(
+                                                    (previous) => {
+                                                        if (
+                                                            previous.includes(
+                                                                accountId
+                                                            )
+                                                        ) {
+                                                            return previous.filter(
+                                                                (id) =>
+                                                                    id !==
+                                                                    accountId
+                                                            );
+                                                        }
+
+                                                        return [
+                                                            ...previous,
+                                                            accountId,
+                                                        ];
+                                                    }
+                                                );
+
+                                                /*
+                                                 * Selected accounts changed,
+                                                 * so previous generated message
+                                                 * is no longer valid.
+                                                 */
+                                                setGeneratedPaymentMessage(
+                                                    ""
+                                                );
+                                            }}
+                                            className="
+                                    h-4
+                                    w-4
+                                    shrink-0
+                                "
+                                        />
+
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-gray-800">
+                                                {accountName}
+                                            </p>
+
+                                            {account.type ===
+                                                "BANK" && (
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        {account.bankUserName ||
+                                                            ""}
+                                                        {account.bankUserName &&
+                                                            account.accountNumber
+                                                            ? " • "
+                                                            : ""}
+                                                        {account.accountNumber ||
+                                                            ""}
+                                                    </p>
+                                                )}
+
+                                            {account.type !==
+                                                "BANK" && (
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        {account.upiId ||
+                                                            account.mobileNumber ||
+                                                            ""}
+                                                    </p>
+                                                )}
+                                        </div>
+                                    </label>
+                                );
+                            }
+                        )}
+                    </div>
+
+                    {/* -----------------------------------------
+         * SELECTED COUNT
+         * ----------------------------------------- */}
+
+                    {selectedPaymentAccountIds.length >
+                        0 && (
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs text-gray-500">
+                                    {
+                                        selectedPaymentAccountIds.length
+                                    }{" "}
+                                    account
+                                    {selectedPaymentAccountIds.length >
+                                        1
+                                        ? "s"
+                                        : ""}{" "}
+                                    selected
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedPaymentAccountIds(
+                                            []
+                                        );
+
+                                        setGeneratedPaymentMessage(
+                                            ""
+                                        );
+                                    }}
+                                    className="
+                        text-xs
+                        font-medium
+                        text-red-600
+                        hover:text-red-700
+                    "
+                                >
+                                    Clear Selection
+                                </button>
+                            </div>
+                        )}
+
+                    {/* -----------------------------------------
+         * GENERATE MESSAGE
+         * ----------------------------------------- */}
+
+                    <Button
+                        type="button"
+                        disabled={
+                            selectedPaymentAccountIds.length ===
+                            0
+                        }
+                        onClick={() => {
+                            if (
+                                selectedPaymentAccountIds.length ===
+                                0
+                            ) {
+                                showAlert({
+                                    type: "error",
+                                    message:
+                                        "Please select at least one payment account.",
+                                });
+
+                                return;
+                            }
+
+                            const message =
+                                generatePaymentMessage();
+
+                            if (!message) {
+                                showAlert({
+                                    type: "error",
+                                    message:
+                                        "Unable to generate payment message.",
+                                });
+
+                                return;
+                            }
+
+                            setGeneratedPaymentMessage(
+                                message
+                            );
+                        }}
+                        className="w-full sm:w-auto"
+                    >
+                        Generate Payment Message
+                    </Button>
+
+                    {/* -----------------------------------------
+         * MESSAGE PREVIEW
+         * ----------------------------------------- */}
+
+                    {generatedPaymentMessage && (
+                        <div className="space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <p className="text-sm font-medium text-gray-700">
+                                    Message Preview
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onClick={
+                                        handleCopyPaymentMessage
+                                    }
+                                    disabled={
+                                        copyingPaymentMessage
+                                    }
+                                    className="
+                                        inline-flex
+                                        items-center
+                                        justify-center
+                                        gap-2
+                                        rounded-lg
+                                        border
+                                        border-gray-300
+                                        bg-white
+                                        px-3
+                                        py-2
+                                        text-sm
+                                        font-medium
+                                        text-gray-700
+                                        transition
+                                        hover:bg-gray-100
+                                        active:bg-gray-200
+                                        disabled:cursor-not-allowed
+                                        disabled:opacity-50
+                                    "
+                                >
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M16 8h2a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2"
+                                        />
+                                    </svg>
+
+                                    {copyingPaymentMessage
+                                        ? "Copying..."
+                                        : "Copy Message"}
+                                </button>
+                            </div>
+
+                            <div
+                                className="
+                                    rounded-xl
+                                    border
+                                    bg-gray-50
+                                    p-4
+                                    max-h-[420px]
+                                    overflow-y-auto
+                                "
+                            >
+                                <pre
+                                    className="
+                                        whitespace-pre-wrap
+                                        break-words
+                                        text-sm
+                                        leading-6
+                                        text-gray-700
+                                        font-sans
+                                    "
+                                >
+                                    {
+                                        generatedPaymentMessage
+                                    }
+                                </pre>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ADMIN ACTIONS */}
 

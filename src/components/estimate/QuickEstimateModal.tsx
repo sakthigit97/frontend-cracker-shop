@@ -810,236 +810,469 @@ export default function QuickEstimateModal({
         <div
             className="
             fixed
-            top-0
-            left-0
-            w-screen
-            h-screen
+            inset-0
             z-[9999]
             bg-slate-900/65
             backdrop-blur-sm
             flex
             justify-end
-            "
+            overflow-hidden
+        "
             onClick={onClose}
         >
+            {/* =========================================================
+         * QUICK ESTIMATE MODAL
+         *
+         * IMPORTANT:
+         * The ENTIRE modal is the only scroll container.
+         *
+         * Header
+         * Important Information
+         * Delivery Region
+         * Products
+         * Pricing Summary
+         * Add All To Cart
+         * Download PDF
+         * Clear
+         *
+         * All scroll together.
+         * ========================================================= */}
+
             <div
                 className="
                 relative
-                bg-white
-                w-full
-                md:w-[460px]
-                h-screen
-                max-h-screen
-                overflow-y-auto
                 flex
                 flex-col
+                w-full
+                sm:max-w-[460px]
+                h-[100dvh]
+                max-h-[100dvh]
+                bg-white
+                overflow-y-auto
+                overflow-x-hidden
+                overscroll-contain
                 shadow-2xl
-                "
-                onClick={(e) => e.stopPropagation()}
+                touch-pan-y
+            "
+                onClick={(e) =>
+                    e.stopPropagation()
+                }
             >
+                {/* =====================================================
+             * HEADER
+             * ===================================================== */}
 
                 <div
                     className="
-                        p-4
-                        border-b
-                        flex
-                        justify-between
-                    "
+                    w-full
+                    p-4
+                    border-b
+                    flex
+                    items-center
+                    justify-between
+                    gap-3
+                    shrink-0
+                "
                 >
                     <h2
                         className="
-                            font-semibold
-                            text-lg
-                        "
+                        min-w-0
+                        font-semibold
+                        text-lg
+                        leading-6
+                        truncate
+                    "
                     >
                         Quick Estimate
                     </h2>
 
                     <button
-                        onClick={
-                            onClose
-                        }
+                        type="button"
+                        onClick={onClose}
+                        className="
+                        shrink-0
+                        w-9
+                        h-9
+                        rounded-full
+                        flex
+                        items-center
+                        justify-center
+                        hover:bg-gray-100
+                        transition
+                    "
+                        aria-label="Close"
                     >
                         ✕
                     </button>
-
-
                 </div>
-                <div className="mx-4 mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                    <div className="font-semibold text-amber-900 mb-2">
+
+                {/* =====================================================
+             * IMPORTANT INFORMATION
+             * ===================================================== */}
+
+                <div
+                    className="
+                    mx-4
+                    mt-4
+                    rounded-xl
+                    border
+                    border-amber-200
+                    bg-amber-50
+                    p-4
+                    shrink-0
+                "
+                >
+                    <div
+                        className="
+                        font-semibold
+                        text-amber-900
+                        mb-2
+                    "
+                    >
                         ⚠ Important Information
                     </div>
 
-                    <ul className="space-y-2 text-sm text-amber-800 list-disc pl-5">
+                    <ul
+                        className="
+                        space-y-2
+                        text-sm
+                        leading-5
+                        text-amber-800
+                        list-disc
+                        pl-5
+                    "
+                    >
                         <li>
-                            Home delivery is not available. Orders will be dispatched via a
-                            registered transport service.
+                            Home delivery is not
+                            available. Orders will be
+                            dispatched via a registered
+                            transport service.
                         </li>
 
                         <li>
-                            Customers must collect their parcel from the designated transport office/service point by paying transporation.
+                            Customers must collect
+                            their parcel from the
+                            designated transport
+                            office/service point by
+                            paying transporation.
                         </li>
 
                         <li>
-                            <strong>Minimum Order Value:</strong>
-                            <ul className="list-disc pl-5 mt-1">
-                                <li>Tamil Nadu – ₹3,000</li>
-                                <li>Other States – ₹5,000</li>
+                            <strong>
+                                Minimum Order Value:
+                            </strong>
+
+                            <ul
+                                className="
+                                list-disc
+                                pl-5
+                                mt-1
+                                space-y-1
+                            "
+                            >
+                                <li>
+                                    Tamil Nadu – ₹3,000
+                                </li>
+
+                                <li>
+                                    Other States – ₹5,000
+                                </li>
                             </ul>
                         </li>
                     </ul>
                 </div>
 
-                <div className="mx-4 mt-4 rounded-xl border bg-white p-4">
-                    <p className="text-sm font-semibold mb-3">
+                {/* =====================================================
+             * DELIVERY REGION
+             * ===================================================== */}
+
+                <div
+                    className="
+                    mx-4
+                    mt-4
+                    rounded-xl
+                    border
+                    bg-white
+                    p-4
+                    shrink-0
+                "
+                >
+                    <p
+                        className="
+                        text-sm
+                        font-semibold
+                        mb-3
+                    "
+                    >
                         Delivery Region
                     </p>
 
-                    <div className="flex gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                    <div
+                        className="
+                        flex
+                        flex-col
+                        xs:flex-row
+                        sm:flex-row
+                        gap-3
+                        sm:gap-6
+                    "
+                    >
+                        <label
+                            className="
+                            flex
+                            items-center
+                            gap-2
+                            cursor-pointer
+                            min-w-0
+                        "
+                        >
                             <input
                                 type="radio"
                                 name="region"
-                                checked={deliveryRegion === "TN"}
-                                onChange={() => setDeliveryRegion("TN")}
+                                checked={
+                                    deliveryRegion ===
+                                    "TN"
+                                }
+                                onChange={() =>
+                                    setDeliveryRegion(
+                                        "TN"
+                                    )
+                                }
                             />
-                            <span>Tamil Nadu</span>
+
+                            <span className="text-sm">
+                                Tamil Nadu
+                            </span>
                         </label>
 
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label
+                            className="
+                            flex
+                            items-center
+                            gap-2
+                            cursor-pointer
+                            min-w-0
+                        "
+                        >
                             <input
                                 type="radio"
                                 name="region"
-                                checked={deliveryRegion === "OTHER"}
-                                onChange={() => setDeliveryRegion("OTHER")}
+                                checked={
+                                    deliveryRegion ===
+                                    "OTHER"
+                                }
+                                onChange={() =>
+                                    setDeliveryRegion(
+                                        "OTHER"
+                                    )
+                                }
                             />
-                            <span>Other States</span>
+
+                            <span className="text-sm">
+                                Other States
+                            </span>
                         </label>
                     </div>
                 </div>
+
+                {/* =====================================================
+             * PRODUCT LIST
+             *
+             * IMPORTANT:
+             * NO overflow-y-auto here.
+             * The parent modal handles ALL scrolling.
+             * ===================================================== */}
+
                 <div
                     className="
-                        flex-1
-                        divide-y
-                    "
+                    w-full
+                    divide-y
+                    shrink-0
+                "
                 >
-
                     {displayProducts.map(
-                        (
-                            product
-                        ) => (
-
+                        (product) => (
                             <div
-                                key={
-                                    product.id
-                                }
+                                key={product.id}
                                 className="
-                                    p-4
-                                    flex
-                                    gap-3
-                                "
+                                w-full
+                                p-4
+                                flex
+                                gap-3
+                                min-w-0
+                            "
                             >
+                                {/* Product Image */}
+
                                 <img
                                     src={
-                                        product.image || defaultImage
+                                        product.image ||
+                                        defaultImage
                                     }
                                     onError={(e) => {
-                                        e.currentTarget.src = defaultImage;
+                                        e.currentTarget.src =
+                                            defaultImage;
                                     }}
                                     className="
-                                        w-16
-                                        h-16
-                                        object-contain
-                                    "
+                                    w-14
+                                    h-14
+                                    sm:w-16
+                                    sm:h-16
+                                    shrink-0
+                                    object-contain
+                                "
+                                    alt={product.name}
                                 />
+
+                                {/* Product Content */}
 
                                 <div
                                     className="
-                                        flex-1
-                                    "
+                                    flex-1
+                                    min-w-0
+                                "
                                 >
                                     <p
                                         className="
-                                            font-medium
-                                        "
+                                        font-medium
+                                        leading-5
+                                        break-words
+                                    "
                                     >
                                         {product.name}
                                     </p>
 
                                     {/* Discount / Net Rate */}
-                                    {(product.discountText || !product.isComboPackage) && (
-                                        <span
-                                            className="
-                                                    mt-1
-                                                    w-fit
-                                                    inline-flex
-                                                    items-center
-                                                    rounded-full
-                                                    bg-green-50
-                                                    border
-                                                    border-green-200
-                                                    px-2
-                                                    py-0.5
-                                                    text-[11px]
-                                                    font-semibold
-                                                    text-green-700
-                                                    leading-4
-                                                "
-                                        >
-                                            {product.discountText || "NET RATE"}
-                                        </span>
-                                    )}
-                                    {Number(product.packQuantity) > 0 &&
+
+                                    {(product.discountText ||
+                                        !product.isComboPackage) && (
+                                            <span
+                                                className="
+                                            mt-1
+                                            w-fit
+                                            max-w-full
+                                            inline-flex
+                                            items-center
+                                            rounded-full
+                                            bg-green-50
+                                            border
+                                            border-green-200
+                                            px-2
+                                            py-0.5
+                                            text-[11px]
+                                            font-semibold
+                                            text-green-700
+                                            leading-4
+                                            break-words
+                                        "
+                                            >
+                                                {product.discountText ||
+                                                    "NET RATE"}
+                                            </span>
+                                        )}
+
+                                    {/* Pack Quantity / Unit */}
+
+                                    {Number(
+                                        product.packQuantity
+                                    ) > 0 &&
                                         product.packUnit?.trim() && (
                                             <div className="mt-1">
                                                 <span
                                                     className="
-                        inline-flex
-                        items-center
-                        rounded-full
-                        bg-gray-100
-                        px-2
-                        py-0.5
-                        text-[11px]
-                        font-medium
-                        text-gray-700
-                    "
+                                                    inline-flex
+                                                    max-w-full
+                                                    items-center
+                                                    rounded-full
+                                                    bg-gray-100
+                                                    px-2
+                                                    py-0.5
+                                                    text-[11px]
+                                                    font-medium
+                                                    text-gray-700
+                                                    break-words
+                                                "
                                                 >
-                                                    📦 {product.packQuantity}/{product.packUnit}
+                                                    📦{" "}
+                                                    {
+                                                        product.packQuantity
+                                                    }
+                                                    /
+                                                    {
+                                                        product.packUnit
+                                                    }
                                                 </span>
                                             </div>
                                         )}
 
-                                    <div className="flex gap-2 items-center mt-1">
+                                    {/* Price */}
+
+                                    <div
+                                        className="
+                                        flex
+                                        flex-wrap
+                                        gap-2
+                                        items-center
+                                        mt-1
+                                    "
+                                    >
                                         {product.isComboPackage ? (
                                             <span className="text-sm text-gray-500">
-                                                ₹{product.price}
+                                                ₹
+                                                {
+                                                    product.price
+                                                }
                                             </span>
                                         ) : (
                                             <>
                                                 <span>
-                                                    ₹{product.price}
+                                                    ₹
+                                                    {
+                                                        product.price
+                                                    }
                                                 </span>
 
                                                 {product.originalPrice && (
-                                                    <span className="text-sm line-through text-gray-400">
-                                                        ₹{product.originalPrice}
+                                                    <span
+                                                        className="
+                                                        text-sm
+                                                        line-through
+                                                        text-gray-400
+                                                    "
+                                                    >
+                                                        ₹
+                                                        {
+                                                            product.originalPrice
+                                                        }
                                                     </span>
                                                 )}
                                             </>
                                         )}
                                     </div>
 
+                                    {/* Quantity */}
 
                                     <div
                                         className="
-                                            mt-2
-                                            flex
-                                            items-center
-                                            gap-2
-                                        "
+                                        mt-2
+                                        flex
+                                        items-center
+                                        gap-3
+                                    "
                                     >
                                         <button
+                                            type="button"
+                                            className="
+                                            w-8
+                                            h-8
+                                            rounded-md
+                                            border
+                                            flex
+                                            items-center
+                                            justify-center
+                                            shrink-0
+                                            hover:bg-gray-50
+                                        "
                                             onClick={() =>
                                                 product.quantity ===
                                                     1
@@ -1055,13 +1288,30 @@ export default function QuickEstimateModal({
                                             −
                                         </button>
 
-                                        <span>
+                                        <span
+                                            className="
+                                            min-w-[20px]
+                                            text-center
+                                        "
+                                        >
                                             {
                                                 product.quantity
                                             }
                                         </span>
 
                                         <button
+                                            type="button"
+                                            className="
+                                            w-8
+                                            h-8
+                                            rounded-md
+                                            border
+                                            flex
+                                            items-center
+                                            justify-center
+                                            shrink-0
+                                            hover:bg-gray-50
+                                        "
                                             onClick={() =>
                                                 addItem(
                                                     product.id,
@@ -1078,129 +1328,371 @@ export default function QuickEstimateModal({
                     )}
                 </div>
 
+                {/* =====================================================
+             * PRICING + ACTIONS
+             *
+             * IMPORTANT:
+             * NOT sticky.
+             * NOT fixed.
+             * NOT independently scrollable.
+             *
+             * It is part of the same modal scroll.
+             * ===================================================== */}
+
                 <div
                     className="
-                        border-t
-                        p-4
-                        space-y-2
-                    "
+                    w-full
+                    border-t
+                    bg-white
+                    p-4
+                    space-y-2
+                    shrink-0
+                "
                 >
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p>Products Total</p>
+                    {/* Products Total */}
+
+                    <div
+                        className="
+                        flex
+                        items-start
+                        justify-between
+                        gap-3
+                    "
+                    >
+                        <div className="min-w-0">
+                            <p>
+                                Products Total
+                            </p>
 
                             <p className="text-xs text-gray-500">
-                                {products.length} Products • {totalQty} Qty
+                                {products.length} Products
+                                {" • "}
+                                {totalQty} Qty
                             </p>
                         </div>
 
-                        <span>₹{productSubtotal.toLocaleString()}</span>
+                        <span
+                            className="
+                            shrink-0
+                            text-right
+                        "
+                        >
+                            ₹
+                            {productSubtotal.toLocaleString()}
+                        </span>
                     </div>
+
+                    {/* Combo Packages */}
+
                     {comboPackageTotal > 0 && (
                         <>
-                            <div className="flex justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span>Combo Packages</span>
+                            <div
+                                className="
+                                flex
+                                items-start
+                                justify-between
+                                gap-3
+                            "
+                            >
+                                <div
+                                    className="
+                                    min-w-0
+                                    flex
+                                    flex-wrap
+                                    items-center
+                                    gap-2
+                                "
+                                >
+                                    <span>
+                                        Combo Packages
+                                    </span>
 
-                                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
-                                        Inclusive Of Packaging Charges
+                                    <span
+                                        className="
+                                        rounded
+                                        bg-blue-50
+                                        px-2
+                                        py-0.5
+                                        text-[10px]
+                                        font-medium
+                                        text-blue-700
+                                    "
+                                    >
+                                        Inclusive Of
+                                        Packaging Charges
                                     </span>
                                 </div>
 
-                                <span>₹{comboPackageTotal.toLocaleString()}</span>
+                                <span
+                                    className="
+                                    shrink-0
+                                    text-right
+                                "
+                                >
+                                    ₹
+                                    {comboPackageTotal.toLocaleString()}
+                                </span>
                             </div>
                         </>
                     )}
 
+                    {/* Non Combo Products */}
+
                     {comboPackageTotal > 0 && (
-                        <div className="flex justify-between">
-                            <span>Non Combo Products</span>
-                            <span>₹{nonComboProductTotal.toLocaleString()}</span>
-                        </div>
-                    )}
-
-
-                    {packagingPercent > 0 && packagingCharge > 0 && (
-                        <div className="flex justify-between">
+                        <div
+                            className="
+                            flex
+                            items-start
+                            justify-between
+                            gap-3
+                        "
+                        >
                             <span>
-                                Packaging Charge ({packagingPercent}%)
+                                Non Combo Products
                             </span>
-                            <span>₹{(packagingCharge)}</span>
+
+                            <span
+                                className="
+                                shrink-0
+                                text-right
+                            "
+                            >
+                                ₹
+                                {nonComboProductTotal.toLocaleString()}
+                            </span>
                         </div>
                     )}
 
-                    {gstPercent > 0 && gstAmount > 0 && (
-                        <div className="flex justify-between">
-                            <span>
-                                GST ({gstPercent}%)
-                            </span>
-                            <span>₹{(gstAmount)}</span>
-                        </div>
-                    )}
+                    {packagingPercent > 0 &&
+                        packagingCharge > 0 && (
+                            <div
+                                className="
+                                flex
+                                items-start
+                                justify-between
+                                gap-3
+                            "
+                            >
+                                <span className="min-w-0">
+                                    Packaging Charge (
+                                    {packagingPercent}%)
+                                </span>
 
-                    <div className="border-t pt-3 flex justify-between items-center">
-                        <div>
-                            <p className="font-semibold text-[var(--color-primary)]">
+                                <span
+                                    className="
+                                    shrink-0
+                                    text-right
+                                "
+                                >
+                                    ₹
+                                    {packagingCharge}
+                                </span>
+                            </div>
+                        )}
+
+                    {/* GST */}
+
+                    {gstPercent > 0 &&
+                        gstAmount > 0 && (
+                            <div
+                                className="
+                                flex
+                                items-start
+                                justify-between
+                                gap-3
+                            "
+                            >
+                                <span className="min-w-0">
+                                    GST ({gstPercent}%)
+                                </span>
+
+                                <span
+                                    className="
+                                    shrink-0
+                                    text-right
+                                "
+                                >
+                                    ₹
+                                    {gstAmount}
+                                </span>
+                            </div>
+                        )}
+
+                    {/* Grand Total */}
+
+                    <div
+                        className="
+                        border-t
+                        pt-3
+                        flex
+                        items-center
+                        justify-between
+                        gap-3
+                    "
+                    >
+                        <div className="min-w-0">
+                            <p
+                                className="
+                                font-semibold
+                                text-[var(--color-primary)]
+                            "
+                            >
                                 Grand Total
                             </p>
 
-                            <p className="text-xs text-gray-500">
-                                {disableGstForTN && deliveryRegion != 'OTHER' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                            <p
+                                className="
+                                text-xs
+                                text-gray-500
+                                leading-4
+                            "
+                            >
+                                {disableGstForTN &&
+                                    deliveryRegion !=
+                                    "OTHER"
+                                    ? "Inclusive of Packaging Charges"
+                                    : "Inclusive of GST & Packaging Charges"}
                             </p>
                         </div>
 
-                        <span className="text-2xl font-bold text-[var(--color-primary)]">
-                            ₹{grandTotal.toLocaleString()}
+                        <span
+                            className="
+                            shrink-0
+                            text-xl
+                            sm:text-2xl
+                            font-bold
+                            text-[var(--color-primary)]
+                        "
+                        >
+                            ₹
+                            {grandTotal.toLocaleString()}
                         </span>
                     </div>
 
-                    <div className="mt-5 space-y-3">
+                    <div
+                        className="
+                        mt-5
+                        space-y-3
+                    "
+                    >
 
                         <Button
-                            onClick={addAllToCart}
-                            disabled={loading || isEstimateEmpty || downloading}
+                            onClick={
+                                addAllToCart
+                            }
+                            disabled={
+                                loading ||
+                                isEstimateEmpty ||
+                                downloading
+                            }
                             className="
-                                w-full
-                                h-12
-                                bg-[var(--color-accent)]
-                                text-[var(--color-primary)]
-                            "
+                            w-full
+                            min-h-12
+                            h-12
+                            bg-[var(--color-accent)]
+                            text-[var(--color-primary)]
+                        "
                         >
                             Add All To Cart
                         </Button>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Download + Clear */}
 
+                        <div
+                            className="
+                            grid
+                            grid-cols-1
+                            sm:grid-cols-2
+                            gap-3
+                        "
+                        >
                             <Button
                                 variant="outline"
-                                disabled={loading || isEstimateEmpty || downloading}
-                                onClick={() => setShowDownloadDialog(true)}
-                                className="h-11 whitespace-nowrap"
+                                disabled={
+                                    loading ||
+                                    isEstimateEmpty ||
+                                    downloading
+                                }
+                                onClick={() =>
+                                    setShowDownloadDialog(
+                                        true
+                                    )
+                                }
+                                className="
+                                w-full
+                                min-h-11
+                                h-11
+                                whitespace-nowrap
+                            "
                             >
-                                {downloading ? "Generating PDF..." : "Download PDF"}
+                                {downloading
+                                    ? "Generating PDF..."
+                                    : "Download PDF"}
                             </Button>
 
                             <Button
                                 variant="outline"
-                                onClick={clear}
-                                className="h-11"
+                                onClick={
+                                    clear
+                                }
+                                className="
+                                w-full
+                                min-h-11
+                                h-11
+                            "
                             >
                                 Clear
                             </Button>
-
                         </div>
-
                     </div>
                 </div>
             </div>
-            <div onClick={(e) => e.stopPropagation()}>
+
+            {/* =========================================================
+         * DOWNLOAD LOADING OVERLAY
+         * ========================================================= */}
+
+            <div
+                onClick={(e) =>
+                    e.stopPropagation()
+                }
+            >
                 {downloading && (
-                    <div className="fixed inset-0 z-[99999] bg-black/30 backdrop-blur-sm flex items-center justify-center">
-
-                        <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center">
-
+                    <div
+                        className="
+                        fixed
+                        inset-0
+                        z-[99999]
+                        bg-black/30
+                        backdrop-blur-sm
+                        flex
+                        items-center
+                        justify-center
+                        p-4
+                    "
+                    >
+                        <div
+                            className="
+                            w-full
+                            max-w-xs
+                            bg-white
+                            rounded-2xl
+                            shadow-2xl
+                            px-6
+                            py-6
+                            flex
+                            flex-col
+                            items-center
+                            text-center
+                        "
+                        >
                             <svg
-                                className="h-10 w-10 animate-spin text-[var(--color-accent)]"
+                                className="
+                                h-10
+                                w-10
+                                animate-spin
+                                text-[var(--color-accent)]
+                            "
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -1221,23 +1713,44 @@ export default function QuickEstimateModal({
                                 />
                             </svg>
 
-                            <p className="mt-4 text-lg font-semibold">
+                            <p
+                                className="
+                                mt-4
+                                text-lg
+                                font-semibold
+                            "
+                            >
                                 Generating Estimate...
                             </p>
 
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p
+                                className="
+                                mt-1
+                                text-sm
+                                text-gray-500
+                            "
+                            >
                                 Please wait...
                             </p>
-
                         </div>
-
                     </div>
                 )}
+
                 <EstimateDownloadDialog
-                    open={showDownloadDialog}
-                    loading={downloading}
-                    onClose={() => setShowDownloadDialog(false)}
-                    onDownload={handleDownload}
+                    open={
+                        showDownloadDialog
+                    }
+                    loading={
+                        downloading
+                    }
+                    onClose={() =>
+                        setShowDownloadDialog(
+                            false
+                        )
+                    }
+                    onDownload={
+                        handleDownload
+                    }
                 />
             </div>
         </div>

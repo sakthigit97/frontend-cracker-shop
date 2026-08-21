@@ -66,6 +66,20 @@ export default function AdminConfigPage() {
                             sortOrder: scheme.sortOrder ?? 0,
                         })
                     ),
+                    paymentAccounts: (res.paymentAccounts || []).map(
+                        (account: any) => ({
+                            id: account.id || crypto.randomUUID(),
+                            type: account.type || "BANK",
+                            accountNumber: account.accountNumber || "",
+                            bankName: account.bankName || "",
+                            bankUserName: account.bankUserName || "",
+                            ifsc: account.ifsc || "",
+                            branch: account.branch || "",
+                            accountType: account.accountType || "CURRENT",
+                            mobileNumber: account.mobileNumber || "",
+                            upiId: account.upiId || "",
+                        })
+                    ),
                     sliderImages: fixedSliderImages,
                     packageTags: (res.packageTags || []).map((p: any) => ({
                         ...p,
@@ -634,6 +648,229 @@ export default function AdminConfigPage() {
         return true;
     };
 
+    const addPaymentAccount = () => {
+        setForm((prev: any) => ({
+            ...prev,
+            paymentAccounts: [
+                ...(prev.paymentAccounts || []),
+                {
+                    id: crypto.randomUUID(),
+                    accountType: "CURRENT",
+                    type: "BANK",
+                    accountNumber: "",
+                    bankName: "",
+                    bankUserName: "",
+                    ifsc: "",
+                    branch: "",
+                    mobileNumber: "",
+                    upiId: "",
+                },
+            ],
+        }));
+    };
+
+    const updatePaymentAccount = (
+        index: number,
+        changes: Record<string, any>
+    ) => {
+        setForm((prev: any) => {
+            const updated = [
+                ...(prev.paymentAccounts || []),
+            ];
+
+            updated[index] = {
+                ...updated[index],
+                ...changes,
+            };
+
+            return {
+                ...prev,
+                paymentAccounts: updated,
+            };
+        });
+    };
+
+    const validatePaymentAccounts = (): boolean => {
+        const accounts =
+            form.paymentAccounts || [];
+
+        const allowedTypes = [
+            "BANK",
+            "GPAY",
+            "PHONEPE",
+            "PAYTM",
+        ];
+
+        for (
+            let index = 0;
+            index < accounts.length;
+            index++
+        ) {
+            const account = accounts[index];
+            const number = index + 1;
+            if (!allowedTypes.includes(account.type)) {
+                showAlert({
+                    type: "error",
+                    message: `Payment Account ${number}: Please select a valid payment type.`,
+                });
+
+                return false;
+            }
+
+            if (account.type === "BANK") {
+                if (!account.accountNumber?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Account Number is required.`,
+                    });
+
+                    return false;
+                }
+
+                if (!/^\d{9,18}$/.test(
+                    account.accountNumber.trim()
+                )) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Enter a valid Account Number.`,
+                    });
+
+                    return false;
+                }
+
+                if (!account.bankName?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Bank Name is required.`,
+                    });
+
+                    return false;
+                }
+
+                if (!account.bankUserName?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Bank User Name is required.`,
+                    });
+
+                    return false;
+                }
+
+                if (!account.ifsc?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: IFSC is required.`,
+                    });
+
+                    return false;
+                }
+
+                const ifsc =
+                    account.ifsc
+                        .trim()
+                        .toUpperCase();
+
+                if (
+                    !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)
+                ) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Enter a valid IFSC code.`,
+                    });
+
+                    return false;
+                }
+
+                if (!account.branch?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Branch is required.`,
+                    });
+
+                    return false;
+                }
+                if (
+                    !["CURRENT", "SAVINGS"].includes(
+                        account.accountType
+                    )
+                ) {
+                    showAlert({
+                        type: "error",
+                        message: `Payment Account ${number}: Account Type is required.`,
+                    });
+
+                    return false;
+                }
+            }
+
+            if (
+                account.type === "GPAY" ||
+                account.type === "PHONEPE" ||
+                account.type === "PAYTM"
+            ) {
+                const mobile =
+                    account.mobileNumber?.trim() || "";
+
+                const upi =
+                    account.upiId?.trim() || "";
+
+                // At least one is mandatory
+                if (!mobile && !upi) {
+                    showAlert({
+                        type: "error",
+                        message:
+                            `Payment Account ${number}: Enter either Mobile Number or UPI ID.`,
+                    });
+
+                    return false;
+                }
+
+                // Mobile validation only when entered
+                if (mobile) {
+                    if (!/^[6-9]\d{9}$/.test(mobile)) {
+                        showAlert({
+                            type: "error",
+                            message:
+                                `Payment Account ${number}: Enter a valid 10-digit Mobile Number.`,
+                        });
+
+                        return false;
+                    }
+                }
+
+                // UPI validation only when entered
+                if (upi) {
+                    if (
+                        !/^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9.-]{2,}$/.test(
+                            upi
+                        )
+                    ) {
+                        showAlert({
+                            type: "error",
+                            message:
+                                `Payment Account ${number}: Enter a valid UPI ID.`,
+                        });
+
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    };
+
+    const removePaymentAccount = (index: number) => {
+        setForm((prev: any) => ({
+            ...prev,
+            paymentAccounts: (
+                prev.paymentAccounts || []
+            ).filter(
+                (_: any, i: number) => i !== index
+            ),
+        }));
+    };
+
     const handleSave = async () => {
         try {
             const isValidMobile = /^[6-9]\d{9}$/.test(form.adminMobile);
@@ -828,6 +1065,10 @@ export default function AdminConfigPage() {
                 return;
             }
 
+            if (!validatePaymentAccounts()) {
+                return;
+            }
+
             setLoading(true);
             const uploadedSliderImages =
                 await uploadPendingImages(
@@ -849,6 +1090,37 @@ export default function AdminConfigPage() {
 
             const payload = {
                 ...form,
+
+                paymentAccounts: (
+                    form.paymentAccounts || []
+                ).map((account: any) => ({
+                    id: account.id,
+                    type: account.type,
+
+                    ...(account.type === "BANK"
+                        ? {
+                            accountNumber:
+                                account.accountNumber.trim(),
+                            bankName:
+                                account.bankName.trim(),
+                            bankUserName:
+                                account.bankUserName.trim(),
+                            accountType:
+                                account.accountType,
+                            ifsc:
+                                account.ifsc
+                                    .trim()
+                                    .toUpperCase(),
+                            branch:
+                                account.branch.trim(),
+                        }
+                        : {
+                            mobileNumber:
+                                account.mobileNumber?.trim() || "",
+                            upiId:
+                                account.upiId?.trim() || "",
+                        }),
+                })),
 
                 sliderImages: uploadedSliderImages.map(
                     (img: any) => ({
@@ -1548,6 +1820,403 @@ export default function AdminConfigPage() {
 
                             Disable GST for Tamil Nadu
                         </label>
+                    </div>
+
+                    {/* Payment Accounts */}
+
+                    <div className="space-y-5 border border-gray-200 rounded-xl p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-semibold">
+                                    Payment Accounts
+                                </p>
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Add bank accounts and UPI payment details.
+                                </p>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={addPaymentAccount}
+                                className="w-full sm:w-auto"
+                            >
+                                + Add Payment Account
+                            </Button>
+                        </div>
+
+                        {(form.paymentAccounts || []).length === 0 && (
+                            <div className="rounded-lg border border-dashed border-gray-300 p-5 text-center">
+                                <p className="text-sm text-gray-500">
+                                    No payment accounts added.
+                                </p>
+
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Click "Add Payment Account" to add one.
+                                </p>
+                            </div>
+                        )}
+
+                        {(form.paymentAccounts || []).map(
+                            (account: any, index: number) => (
+                                <div
+                                    key={account.id}
+                                    className="border rounded-xl p-4 space-y-4 bg-gray-50"
+                                >
+                                    {/* Header */}
+
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="font-medium">
+                                                Payment Account {index + 1}
+                                            </p>
+
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {account.type === "BANK"
+                                                    ? "Bank Account"
+                                                    : account.type === "GPAY"
+                                                        ? "Google Pay"
+                                                        : account.type === "PHONEPE"
+                                                            ? "PhonePe"
+                                                            : "Paytm"}
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() =>
+                                                removePaymentAccount(index)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    </div>
+
+                                    {/* Payment Type */}
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Payment Type *
+                                        </label>
+
+                                        <select
+                                            className="border border-gray-300 rounded-lg p-3 w-full bg-white"
+                                            value={
+                                                account.type || "BANK"
+                                            }
+                                            onChange={(e) => {
+                                                const type =
+                                                    e.target.value;
+
+                                                updatePaymentAccount(
+                                                    index,
+                                                    {
+                                                        type,
+                                                        accountNumber: "",
+                                                        bankName: "",
+                                                        bankUserName: "",
+                                                        ifsc: "",
+                                                        branch: "",
+                                                        mobileNumber: "",
+                                                        accountType: "CURRENT",
+                                                        upiId: "",
+                                                    }
+                                                );
+                                            }}
+                                        >
+                                            <option value="BANK">
+                                                Bank Account
+                                            </option>
+
+                                            <option value="GPAY">
+                                                GPay
+                                            </option>
+
+                                            <option value="PHONEPE">
+                                                PhonePe
+                                            </option>
+
+                                            <option value="PAYTM">
+                                                Paytm
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    {account.type === "BANK" && (
+                                        <div className="space-y-4">
+                                            <div className="grid md:grid-cols-2 gap-4">
+
+                                                {/* Account Type */}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Account Type *
+                                                    </label>
+
+                                                    <select
+                                                        className="border border-gray-300 rounded-lg p-3 w-full bg-white"
+                                                        value={
+                                                            account.accountType ||
+                                                            "CURRENT"
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    accountType:
+                                                                        e.target.value,
+                                                                }
+                                                            )
+                                                        }
+                                                    >
+                                                        <option value="CURRENT">
+                                                            Current Account
+                                                        </option>
+
+                                                        <option value="SAVINGS">
+                                                            Savings Account
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Account Number *
+                                                    </label>
+
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        maxLength={18}
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="Enter account number"
+                                                        value={
+                                                            account.accountNumber ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    accountNumber:
+                                                                        e.target.value.replace(
+                                                                            /\D/g,
+                                                                            ""
+                                                                        ),
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+
+                                                {/* Bank Name */}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Bank Name *
+                                                    </label>
+
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="e.g. HDFC Bank"
+                                                        value={
+                                                            account.bankName ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    bankName:
+                                                                        e.target.value,
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+
+                                                {/* Bank User Name */}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Bank User Name *
+                                                    </label>
+
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="Account holder name"
+                                                        value={
+                                                            account.bankUserName ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    bankUserName:
+                                                                        e.target.value,
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+
+                                                {/* IFSC */}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        IFSC *
+                                                    </label>
+
+                                                    <input
+                                                        type="text"
+                                                        maxLength={11}
+                                                        className="border border-gray-300 rounded-lg p-3 w-full uppercase"
+                                                        placeholder="e.g. HDFC0001234"
+                                                        value={
+                                                            account.ifsc ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    ifsc:
+                                                                        e.target.value
+                                                                            .toUpperCase()
+                                                                            .replace(
+                                                                                /\s/g,
+                                                                                ""
+                                                                            ),
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+
+                                                {/* Branch */}
+
+                                                <div className="md:col-span-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Branch *
+                                                    </label>
+
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="Branch name"
+                                                        value={
+                                                            account.branch ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    branch:
+                                                                        e.target.value,
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ==========================================
+                    GPAY / PHONEPE / PAYTM
+                   ========================================== */}
+
+                                    {account.type !== "BANK" && (
+                                        <div className="space-y-4">
+                                            <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
+                                                <p className="text-xs text-blue-700">
+                                                    Enter either a mobile number
+                                                    or UPI ID. At least one is
+                                                    required.
+                                                </p>
+                                            </div>
+
+                                            <div className="grid md:grid-cols-2 gap-4">
+
+                                                {/* Mobile */}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Mobile Number
+                                                    </label>
+
+                                                    <input
+                                                        type="tel"
+                                                        inputMode="numeric"
+                                                        maxLength={10}
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="10-digit mobile number"
+                                                        value={
+                                                            account.mobileNumber ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    mobileNumber:
+                                                                        e.target.value.replace(
+                                                                            /\D/g,
+                                                                            ""
+                                                                        ),
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Optional if UPI ID is
+                                                        provided.
+                                                    </p>
+                                                </div>
+
+                                                {/* UPI */}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        UPI ID
+                                                    </label>
+
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-lg p-3 w-full"
+                                                        placeholder="example@upi"
+                                                        value={
+                                                            account.upiId ||
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            updatePaymentAccount(
+                                                                index,
+                                                                {
+                                                                    upiId:
+                                                                        e.target.value.trim(),
+                                                                }
+                                                            )
+                                                        }
+                                                    />
+
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Optional if mobile number
+                                                        is provided.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        )}
                     </div>
 
                     {/* WhatsApp Support */}

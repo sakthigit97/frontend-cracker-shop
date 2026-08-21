@@ -39,9 +39,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>(
 
             try {
                 const res = await getAdminDashboard();
-
                 const safeBreakdown: Record<string, number> = {};
-
                 STATUS_ORDER.forEach((s) => {
                     safeBreakdown[s] =
                         res.statusBreakdown?.[s] ?? 0;
