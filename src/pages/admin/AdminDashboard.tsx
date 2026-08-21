@@ -38,8 +38,8 @@ export default function AdminDashboard() {
   }
 
   if (!data) return null;
-
   const { stats, statusBreakdown, recentOrders } = data;
+  console.log(recentOrders)
   const pieData = STATUS_ORDER.map((status) => ({
     name: STATUS_LABELS[status],
     value: statusBreakdown[status],
@@ -148,17 +148,17 @@ export default function AdminDashboard() {
               <div
                 key={o.orderId}
                 className="
-            flex
-            items-center
-            justify-between
-            gap-3
-            rounded-lg
-            border
-            px-3
-            py-2
-            hover:bg-gray-50
-            transition
-          "
+                  flex
+                  items-center
+                  justify-between
+                  gap-3
+                  rounded-lg
+                  border
+                  px-3
+                  py-2
+                  hover:bg-gray-50
+                  transition
+                "
               >
                 {/* LEFT */}
                 <div className="min-w-0">
@@ -176,11 +176,10 @@ export default function AdminDashboard() {
                     {o.orderId}
                   </button>
                   <p className="text-xs text-gray-500">
-                    ₹{o.grandTotal}
+                    ₹{o.finalPayable}
                   </p>
                 </div>
 
-                {/* RIGHT */}
                 <span
                   className={`
               text-xs

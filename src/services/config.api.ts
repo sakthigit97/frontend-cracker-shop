@@ -6,6 +6,7 @@ export type GlobalConfig = {
         id: string;
         title?: string;
     }[];
+    paymentAccounts: any;
     isPaymentEnabled: boolean;
     maintenanceMode: boolean;
     isReferralEnabled: boolean;

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Button from "../ui/Button";
-// import { useAuth } from "../../context/AuthContext";
 import { useProfileStore } from "../../store/profile.store";
 
 interface Props {
@@ -14,31 +13,53 @@ interface Props {
     }) => void;
 }
 
+type CustomerTitle = "Mr." | "Mrs." | "Ms.";
 export default function EstimateDownloadDialog({
     open,
     loading = false,
     onClose,
     onDownload,
 }: Props) {
+    const profile = useProfileStore(
+        (s: any) => s.profile
+    );
 
-    const profile = useProfileStore((s: any) => s.profile);
+    const [title, setTitle] =
+        useState<CustomerTitle>("Mr.");
 
-    const [customerName, setCustomerName] = useState("");
-    const [mobile, setMobile] = useState("");
-    const [email, setEmail] = useState("");
-    const [captchaA, setCaptchaA] = useState(0);
-    const [captchaB, setCaptchaB] = useState(0);
-    const [captchaOp, setCaptchaOp] = useState<"+" | "-">("+");
-    const [captchaAnswer, setCaptchaAnswer] = useState("");
+    const [customerName, setCustomerName] =
+        useState("");
 
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [mobile, setMobile] =
+        useState("");
+
+    const [email, setEmail] =
+        useState("");
+
+    const [captchaA, setCaptchaA] =
+        useState(0);
+
+    const [captchaB, setCaptchaB] =
+        useState(0);
+
+    const [captchaOp, setCaptchaOp] =
+        useState<"+" | "-">("+");
+
+    const [captchaAnswer, setCaptchaAnswer] =
+        useState("");
+
+    const [errors, setErrors] =
+        useState<Record<string, string>>({});
 
     useEffect(() => {
         if (open) {
             setErrors({});
 
-            const a = Math.floor(Math.random() * 20) + 5;
-            const b = Math.floor(Math.random() * 20) + 1;
+            const a =
+                Math.floor(Math.random() * 20) + 5;
+
+            const b =
+                Math.floor(Math.random() * 20) + 1;
 
             if (Math.random() > 0.5) {
                 setCaptchaA(a);
@@ -51,19 +72,41 @@ export default function EstimateDownloadDialog({
             }
 
             setCaptchaAnswer("");
-            if (profile && profile.name && profile.mobile) {
-                setCustomerName(profile.name || "");
-                setMobile(profile.mobile || "");
-                setEmail(profile.email || "");
+
+            if (
+                profile &&
+                profile.name &&
+                profile.mobile
+            ) {
+                if (
+                    profile.title === "Mr." ||
+                    profile.title === "Mrs." ||
+                    profile.title === "Ms."
+                ) {
+                    setTitle(profile.title);
+                } else {
+                    setTitle("Mr.");
+                }
+
+                setCustomerName(
+                    profile.name || ""
+                );
+
+                setMobile(
+                    profile.mobile || ""
+                );
+
+                setEmail(
+                    profile.email || ""
+                );
             } else {
+                setTitle("Mr.");
                 setCustomerName("");
                 setMobile("");
                 setEmail("");
             }
         }
-    }, [open]);
-
-
+    }, [open, profile]);
 
     if (!open) return null;
 
@@ -75,67 +118,101 @@ export default function EstimateDownloadDialog({
                 ? captchaA + captchaB
                 : captchaA - captchaB;
 
-        if (Number(captchaAnswer) !== expected) {
-            next.captcha = "Incorrect answer";
+        if (
+            Number(captchaAnswer) !==
+            expected
+        ) {
+            next.captcha =
+                "Incorrect answer";
         }
 
         if (!customerName.trim()) {
-            next.customerName = "Customer name is required";
-        } else if (customerName.trim().length < 3) {
-            next.customerName = "Minimum 3 characters";
+            next.customerName =
+                "Customer name is required";
+        } else if (
+            customerName.trim().length < 3
+        ) {
+            next.customerName =
+                "Minimum 3 characters";
         }
 
         if (!mobile.trim()) {
-            next.mobile = "Mobile number is required";
-        } else if (!/^[6-9]\d{9}$/.test(mobile.trim())) {
-            next.mobile = "Enter a valid 10 digit mobile number";
+            next.mobile =
+                "Mobile number is required";
+        } else if (
+            !/^[6-9]\d{9}$/.test(
+                mobile.trim()
+            )
+        ) {
+            next.mobile =
+                "Enter a valid 10 digit mobile number";
         }
 
         if (
             email.trim() &&
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                email.trim()
+            )
         ) {
-            next.email = "Enter a valid email";
+            next.email =
+                "Enter a valid email";
         }
 
         setErrors(next);
 
-        return Object.keys(next).length === 0;
+        return (
+            Object.keys(next).length === 0
+        );
     }
 
     function submit() {
-        if (!validate()) return;
+        if (!validate()) {
+            return;
+        }
+
+        /*
+         * Concatenate title + customer name
+         * before sending to backend.
+         *
+         * Example:
+         * Mr. Sakthibalan
+         * Mrs. Priya
+         * Ms. Divya
+         */
+        const fullCustomerName =
+            `${title} ${customerName.trim()}`;
 
         onDownload({
-            customerName: customerName.trim(),
-            mobile: mobile.trim(),
-            email: email.trim() || undefined,
+            customerName:
+                fullCustomerName,
+            mobile:
+                mobile.trim(),
+            email:
+                email.trim() ||
+                undefined,
         });
     }
 
     return (
         <div className="fixed inset-0 z-[80] bg-black/40 flex items-center justify-center p-4">
-
             <div
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) =>
+                    e.stopPropagation()
+                }
                 className="
-        bg-white
-        rounded-2xl
-        shadow-xl
-        w-full
-        max-w-md
-
-        h-[92vh]
-        max-h-[92vh]
-
-        flex
-        flex-col
-        overflow-hidden
-    "
+                    bg-white
+                    rounded-2xl
+                    shadow-xl
+                    w-full
+                    max-w-md
+                    h-[92vh]
+                    max-h-[92vh]
+                    flex
+                    flex-col
+                    overflow-hidden
+                "
             >
-
                 <div className="flex-1 overflow-y-auto p-6">
-
                     <h2 className="text-xl font-semibold mb-1">
                         Download Estimate
                     </h2>
@@ -146,25 +223,88 @@ export default function EstimateDownloadDialog({
 
                     <div className="space-y-4">
 
+                        {/* ============================
+                            TITLE
+                            ============================ */}
+
+                        <div>
+                            <label className="text-sm font-medium">
+                                Title *
+                            </label>
+
+                            <select
+                                value={title}
+                                onChange={(e) =>
+                                    setTitle(
+                                        e.target
+                                            .value as CustomerTitle
+                                    )
+                                }
+                                className="
+                                    w-full
+                                    mt-1
+                                    rounded-lg
+                                    border
+                                    px-3
+                                    py-2
+                                    bg-white
+                                "
+                            >
+                                <option value="Mr.">
+                                    Mr.
+                                </option>
+
+                                <option value="Mrs.">
+                                    Mrs.
+                                </option>
+
+                                <option value="Ms.">
+                                    Ms.
+                                </option>
+                            </select>
+                        </div>
+
+                        {/* ============================
+                            CUSTOMER NAME
+                            ============================ */}
+
                         <div>
                             <label className="text-sm font-medium">
                                 Customer Name *
                             </label>
 
                             <input
-                                value={customerName}
-                                onChange={(e) =>
-                                    setCustomerName(e.target.value)
+                                value={
+                                    customerName
                                 }
-                                className="w-full mt-1 rounded-lg border px-3 py-2"
+                                onChange={(e) =>
+                                    setCustomerName(
+                                        e.target
+                                            .value
+                                    )
+                                }
+                                className="
+                                    w-full
+                                    mt-1
+                                    rounded-lg
+                                    border
+                                    px-3
+                                    py-2
+                                "
                             />
 
                             {errors.customerName && (
                                 <p className="text-red-500 text-xs mt-1">
-                                    {errors.customerName}
+                                    {
+                                        errors.customerName
+                                    }
                                 </p>
                             )}
                         </div>
+
+                        {/* ============================
+                            MOBILE
+                            ============================ */}
 
                         <div>
                             <label className="text-sm font-medium">
@@ -176,18 +316,34 @@ export default function EstimateDownloadDialog({
                                 maxLength={10}
                                 onChange={(e) =>
                                     setMobile(
-                                        e.target.value.replace(/\D/g, "")
+                                        e.target.value.replace(
+                                            /\D/g,
+                                            ""
+                                        )
                                     )
                                 }
-                                className="w-full mt-1 rounded-lg border px-3 py-2"
+                                className="
+                                    w-full
+                                    mt-1
+                                    rounded-lg
+                                    border
+                                    px-3
+                                    py-2
+                                "
                             />
 
                             {errors.mobile && (
                                 <p className="text-red-500 text-xs mt-1">
-                                    {errors.mobile}
+                                    {
+                                        errors.mobile
+                                    }
                                 </p>
                             )}
                         </div>
+
+                        {/* ============================
+                            EMAIL
+                            ============================ */}
 
                         <div>
                             <label className="text-sm font-medium">
@@ -197,17 +353,33 @@ export default function EstimateDownloadDialog({
                             <input
                                 value={email}
                                 onChange={(e) =>
-                                    setEmail(e.target.value)
+                                    setEmail(
+                                        e.target.value
+                                    )
                                 }
-                                className="w-full mt-1 rounded-lg border px-3 py-2"
+                                className="
+                                    w-full
+                                    mt-1
+                                    rounded-lg
+                                    border
+                                    px-3
+                                    py-2
+                                "
                             />
 
                             {errors.email && (
                                 <p className="text-red-500 text-xs mt-1">
-                                    {errors.email}
+                                    {
+                                        errors.email
+                                    }
                                 </p>
                             )}
                         </div>
+
+                        {/* ============================
+                            CAPTCHA
+                            ============================ */}
+
                         <div>
                             <label className="text-sm font-medium">
                                 Security Check *
@@ -215,29 +387,50 @@ export default function EstimateDownloadDialog({
 
                             <div className="mt-2 flex items-center gap-2 w-full">
                                 <div className="shrink-0 rounded-lg bg-gray-100 border px-3 py-2 font-semibold whitespace-nowrap">
-                                    {captchaA} {captchaOp} {captchaB} = ?
+                                    {captchaA}{" "}
+                                    {captchaOp}{" "}
+                                    {captchaB} = ?
                                 </div>
 
                                 <input
-                                    value={captchaAnswer}
+                                    value={
+                                        captchaAnswer
+                                    }
                                     onChange={(e) =>
-                                        setCaptchaAnswer(e.target.value.replace(/\D/g, ""))
+                                        setCaptchaAnswer(
+                                            e.target.value.replace(
+                                                /\D/g,
+                                                ""
+                                            )
+                                        )
                                     }
                                     placeholder="Answer"
-                                    className="min-w-0 flex-1 rounded-lg border px-3 py-2"
+                                    className="
+                                        min-w-0
+                                        flex-1
+                                        rounded-lg
+                                        border
+                                        px-3
+                                        py-2
+                                    "
                                 />
                             </div>
 
                             {errors.captcha && (
                                 <p className="text-red-500 text-xs mt-1">
-                                    {errors.captcha}
+                                    {
+                                        errors.captcha
+                                    }
                                 </p>
                             )}
                         </div>
-
                     </div>
-                    <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 border-t pt-4">
 
+                    {/* ============================
+                        ACTIONS
+                        ============================ */}
+
+                    <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 border-t pt-4">
                         <Button
                             variant="secondary"
                             className="w-full sm:w-auto"
@@ -250,8 +443,15 @@ export default function EstimateDownloadDialog({
                         <Button
                             onClick={submit}
                             disabled={loading}
-                            className="w-full sm:w-auto sm:min-w-[170px] flex items-center justify-center gap-2"
-
+                            className="
+                                w-full
+                                sm:w-auto
+                                sm:min-w-[170px]
+                                flex
+                                items-center
+                                justify-center
+                                gap-2
+                            "
                         >
                             {loading && (
                                 <svg
@@ -277,14 +477,13 @@ export default function EstimateDownloadDialog({
                                 </svg>
                             )}
 
-                            {loading ? "Generating PDF..." : "Download PDF"}
+                            {loading
+                                ? "Generating PDF..."
+                                : "Download PDF"}
                         </Button>
-
                     </div>
-
                 </div>
             </div>
-
         </div>
     );
 }

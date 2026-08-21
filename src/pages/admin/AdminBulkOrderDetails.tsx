@@ -52,6 +52,143 @@ export default function AdminBulkOrderDetails() {
             adminComment?: string;
         } | null>(null);
 
+    const [selectedPaymentAccountIds, setSelectedPaymentAccountIds] =
+        useState<string[]>([]);
+
+    const [generatedPaymentMessage, setGeneratedPaymentMessage] =
+        useState("");
+
+    const [copyingPaymentMessage, setCopyingPaymentMessage] =
+        useState(false);
+
+    const paymentAccounts =
+        Array.isArray(config?.paymentAccounts)
+            ? config.paymentAccounts
+            : [];
+
+    const getPaymentAccountLabel = (
+        account: any
+    ) => {
+        if (account.type === "BANK") {
+            return account.bankName || "Bank Account";
+        }
+
+        if (account.type === "GPAY") {
+            return "GPay";
+        }
+
+        if (account.type === "PHONEPE") {
+            return "PhonePe";
+        }
+
+        if (account.type === "PAYTM") {
+            return "Paytm";
+        }
+
+        return "Payment Account";
+    };
+    const generatePaymentMessage = () => {
+        const lines: string[] = [];
+
+        lines.push(
+            `🎉 Your ${config?.companyName || "Sivakasi Pyro Park"} Order is Confirmed!`
+        );
+
+        lines.push(
+            `Order ID: ${order.orderId}`
+        );
+
+        lines.push(
+            `Total: ₹${Number(
+                order.pricing?.grandTotal ?? 0
+            ).toLocaleString("en-IN")}`
+        );
+
+        lines.push("");
+
+        lines.push("Pay via Bank Transfer:");
+        lines.push("Payment Details:");
+        lines.push("");
+
+        const selectedAccounts =
+            paymentAccounts.filter(
+                (account: any, index: number) => {
+                    const accountId =
+                        account.id || String(index);
+
+                    return selectedPaymentAccountIds.includes(
+                        accountId
+                    );
+                }
+            );
+
+        selectedAccounts.forEach(
+            (account: any, index: number) => {
+                if (index > 0) {
+                    lines.push("");
+                }
+
+                if (account.type === "BANK") {
+                    lines.push(
+                        account.bankName || "Bank"
+                    );
+
+                    lines.push(
+                        `Name: ${account.bankUserName || ""}`
+                    );
+
+                    lines.push(
+                        `A/C No: ${account.accountNumber || ""}`
+                    );
+
+                    lines.push(
+                        `IFSC: ${account.ifsc || ""} (${account.accountType === "SAVINGS"
+                            ? "Savings A/C"
+                            : "Current A/C"
+                        })`
+                    );
+
+                    return;
+                }
+
+                const paymentName =
+                    account.type === "GPAY"
+                        ? "GPay"
+                        : account.type === "PHONEPE"
+                            ? "PhonePe"
+                            : account.type === "PAYTM"
+                                ? "Paytm"
+                                : account.type;
+
+                lines.push(paymentName);
+
+                if (account.mobileNumber) {
+                    lines.push(
+                        `Mobile: ${account.mobileNumber}`
+                    );
+                }
+
+                if (account.upiId) {
+                    lines.push(
+                        `UPI ID: ${account.upiId}`
+                    );
+                }
+            }
+        );
+
+        lines.push("");
+
+        lines.push(
+            "👉 Please share your payment screenshot here to start dispatch."
+        );
+
+        lines.push(
+            "Track here: https://www.sivasicrackers.co.in"
+        );
+
+        return lines.join("\n");
+    };
+
     useEffect(() => {
 
         const shouldForce =
@@ -152,6 +289,46 @@ export default function AdminBulkOrderDetails() {
             setDownloadingPackingList(false);
         }
     }
+
+    const handleCopyPaymentMessage = async () => {
+        if (!generatedPaymentMessage) {
+            showAlert({
+                type: "error",
+                message:
+                    "Please generate the payment message first.",
+            });
+
+            return;
+        }
+
+        try {
+            setCopyingPaymentMessage(true);
+
+            await navigator.clipboard.writeText(
+                generatedPaymentMessage
+            );
+
+            showAlert({
+                type: "success",
+                message:
+                    "Payment message copied",
+                duration: 1500,
+            });
+        } catch (error) {
+            console.error(
+                "Copy payment message failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    "Unable to copy payment message.",
+            });
+        } finally {
+            setCopyingPaymentMessage(false);
+        }
+    };
 
     async function handleDownloadInvoice() {
 
@@ -970,6 +1147,154 @@ export default function AdminBulkOrderDetails() {
                         {order.remarks}
                     </p>
 
+                </div>
+            )}
+
+            {paymentAccounts.length > 0 && (
+                <div className="bg-white border rounded-xl p-5 space-y-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                            Payment Message
+                        </h3>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Select the payment account(s) to include
+                            in the customer payment message.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        {paymentAccounts.map(
+                            (account: any, index: number) => {
+                                const accountId =
+                                    account.id || String(index);
+
+                                const selected =
+                                    selectedPaymentAccountIds.includes(
+                                        accountId
+                                    );
+
+                                return (
+                                    <label
+                                        key={accountId}
+                                        className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${selected
+                                            ? "border-[var(--color-primary)] bg-gray-50"
+                                            : "border-gray-200"
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selected}
+                                            onChange={() => {
+                                                setSelectedPaymentAccountIds(
+                                                    (previous) =>
+                                                        previous.includes(
+                                                            accountId
+                                                        )
+                                                            ? previous.filter(
+                                                                (id) =>
+                                                                    id !==
+                                                                    accountId
+                                                            )
+                                                            : [
+                                                                ...previous,
+                                                                accountId,
+                                                            ]
+                                                );
+
+                                                setGeneratedPaymentMessage(
+                                                    ""
+                                                );
+                                            }}
+                                        />
+
+                                        <div>
+                                            <p className="text-sm font-medium">
+                                                {getPaymentAccountLabel(
+                                                    account
+                                                )}
+                                            </p>
+
+                                            {account.type === "BANK" ? (
+                                                <p className="text-xs text-gray-500">
+                                                    {account.bankUserName ||
+                                                        ""}{" "}
+                                                    {account.accountNumber
+                                                        ? `• ${account.accountNumber}`
+                                                        : ""}
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-gray-500">
+                                                    {account.upiId ||
+                                                        account.mobileNumber ||
+                                                        ""}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </label>
+                                );
+                            }
+                        )}
+                    </div>
+
+                    <Button
+                        type="button"
+                        disabled={
+                            selectedPaymentAccountIds.length ===
+                            0
+                        }
+                        onClick={() => {
+                            if (
+                                selectedPaymentAccountIds.length ===
+                                0
+                            ) {
+                                showAlert({
+                                    type: "error",
+                                    message:
+                                        "Please select at least one payment account.",
+                                });
+
+                                return;
+                            }
+
+                            setGeneratedPaymentMessage(
+                                generatePaymentMessage()
+                            );
+                        }}
+                    >
+                        Generate Payment Message
+                    </Button>
+
+                    {generatedPaymentMessage && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-sm font-medium">
+                                    Message Preview
+                                </p>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={
+                                        copyingPaymentMessage
+                                    }
+                                    onClick={
+                                        handleCopyPaymentMessage
+                                    }
+                                >
+                                    {copyingPaymentMessage
+                                        ? "Copying..."
+                                        : "Copy Message"}
+                                </Button>
+                            </div>
+
+                            <div className="rounded-xl border bg-gray-50 p-4 max-h-[420px] overflow-y-auto">
+                                <pre className="whitespace-pre-wrap break-words text-sm leading-6 font-sans text-gray-700">
+                                    {generatedPaymentMessage}
+                                </pre>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
