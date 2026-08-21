@@ -210,7 +210,7 @@ export default function AdjustBulkOrder() {
         }
     }, [
         orderId,
-        isAdmin,
+        isAdminOrStaff,
         adminOrderCache,
         adminFetchingOrder,
         fetchAdminOrder,
@@ -587,7 +587,7 @@ export default function AdjustBulkOrder() {
                 quantity:
                     item.quantity,
 
-                ...(isAdmin
+                ...(isAdminOrStaff
                     ? {
                         cartonQty:
                             item.cartonQty,
@@ -611,7 +611,7 @@ export default function AdjustBulkOrder() {
                 result.pricing
             );
 
-            if (isAdmin) {
+            if (isAdminOrStaff) {
                 applyAdminAdjustedOrder({
                     orderId: result.orderId,
                     items: result.items,
@@ -652,7 +652,7 @@ export default function AdjustBulkOrder() {
         }
     }
     const isFetchingOrder =
-        isAdmin
+        isAdminOrStaff
             ? adminFetchingOrder
             : userFetchingOrder;
 
@@ -814,12 +814,11 @@ export default function AdjustBulkOrder() {
                 </div>
 
 
-                {isAdmin && (
+                {isAdminOrStaff && (
                     <span className="ml-auto shrink-0 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                        Admin
+                        {isStaff ? "Staff" : "Admin"}
                     </span>
                 )}
-
             </div>
 
 
@@ -835,13 +834,15 @@ export default function AdjustBulkOrder() {
                     <div className="min-w-0">
 
                         <p className="text-sm font-semibold text-blue-900">
-                            {isAdmin
-                                ? "Admin adjustment"
+                            {isAdminOrStaff
+                                ? isStaff
+                                    ? "Staff adjustment"
+                                    : "Admin adjustment"
                                 : "You can adjust your bulk order"}
                         </p>
 
                         <p className="mt-0.5 text-xs leading-5 text-blue-700 sm:text-sm">
-                            {isAdmin
+                            {isAdminOrStaff
                                 ? "You can change quantities, remove or add products, and update carton quantities."
                                 : "You can change quantities, remove existing products, or add new products."}
                         </p>

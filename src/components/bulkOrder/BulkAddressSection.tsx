@@ -8,16 +8,21 @@ import {
 import type { BulkOrderAddress } from "../../types/bulkOrder";
 import { useAlert } from "../../store/alert.store";
 
+type AddressTitle = "Mr" | "Mrs" | "Ms";
+type CheckoutAddress = BulkOrderAddress & {
+    title?: AddressTitle;
+};
+
 interface Props {
     loading: boolean;
     addressMode: "PROFILE" | "NEW";
     profileAddress: BulkOrderAddress | null;
-    newAddress: BulkOrderAddress;
+    newAddress: CheckoutAddress;
     onModeChange: (
         mode: "PROFILE" | "NEW"
     ) => void;
     onAddressChange: (
-        address: BulkOrderAddress
+        address: CheckoutAddress
     ) => void;
 }
 
@@ -40,7 +45,6 @@ function BulkAddressSection({
     onAddressChange,
 }: Props) {
     const { showAlert } = useAlert();
-
     const [
         pincodeLoading,
         setPincodeLoading,
@@ -51,17 +55,15 @@ function BulkAddressSection({
         setPincodeError,
     ] = useState("");
 
-    const latestAddressRef =
-        useRef(newAddress);
-
+    const latestAddressRef = useRef(newAddress);
     useEffect(() => {
         latestAddressRef.current =
             newAddress;
     }, [newAddress]);
 
     const update = (
-        key: keyof BulkOrderAddress,
-        value: BulkOrderAddress[keyof BulkOrderAddress]
+        key: keyof CheckoutAddress,
+        value: CheckoutAddress[keyof CheckoutAddress]
     ) => {
         onAddressChange({
             ...latestAddressRef.current,
@@ -235,9 +237,6 @@ function BulkAddressSection({
                 <div className="mt-6 h-36 animate-pulse rounded-xl bg-gray-100" />
             ) : (
                 <>
-                    {/* =========================
-                        PROFILE ADDRESS
-                    ========================== */}
 
                     {profileAddress && (
                         <label className="mt-6 flex cursor-pointer gap-3 rounded-xl border p-4 transition hover:border-primary">
@@ -333,24 +332,49 @@ function BulkAddressSection({
                     {addressMode === "NEW" && (
                         <div className="mt-6 space-y-4">
 
-                            {/* Full Name */}
+                            {/* Title + Full Name */}
 
-                            <input
-                                type="text"
-                                placeholder="Full Name *"
-                                value={
-                                    newAddress.fullName
-                                }
-                                onChange={(e) =>
-                                    update(
-                                        "fullName",
-                                        e.target.value
-                                    )
-                                }
-                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
-                            />
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[110px_minmax(0,1fr)]">
+                                <select
+                                    value={newAddress.title ?? "Mr"}
+                                    onChange={(e) =>
+                                        update(
+                                            "title",
+                                            e.target.value as
+                                            | "Mr"
+                                            | "Mrs"
+                                            | "Ms"
+                                        )
+                                    }
+                                    className="
+                                        w-full rounded-xl border
+                                        bg-white p-3 outline-none
+                                        transition focus:border-primary
+                                    "
+                                    aria-label="Title"
+                                >
+                                    <option value="Mr">Mr</option>
+                                    <option value="Mrs">Mrs</option>
+                                    <option value="Ms">Ms</option>
+                                </select>
 
-                            {/* Mobile */}
+                                <input
+                                    type="text"
+                                    placeholder="Name *"
+                                    value={newAddress.fullName}
+                                    onChange={(e) =>
+                                        update(
+                                            "fullName",
+                                            e.target.value
+                                        )
+                                    }
+                                    className="
+                                        w-full rounded-xl border
+                                        p-3 outline-none transition
+                                        focus:border-primary
+                                    "
+                                />
+                            </div>
 
                             <input
                                 type="text"

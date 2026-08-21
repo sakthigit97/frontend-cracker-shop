@@ -39,7 +39,6 @@ export default function AdminDashboard() {
 
   if (!data) return null;
   const { stats, statusBreakdown, recentOrders } = data;
-  console.log(recentOrders)
   const pieData = STATUS_ORDER.map((status) => ({
     name: STATUS_LABELS[status],
     value: statusBreakdown[status],

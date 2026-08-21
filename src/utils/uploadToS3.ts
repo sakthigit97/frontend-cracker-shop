@@ -78,7 +78,6 @@ async function compressImage(
         let y: number;
 
         if (preserveDimensions) {
-            console.log('helo')
             canvasWidth = img.naturalWidth;
             canvasHeight = img.naturalHeight;
             drawWidth = img.naturalWidth;

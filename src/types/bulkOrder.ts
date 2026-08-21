@@ -61,8 +61,11 @@ export interface BulkOrderProduct {
     sequenceNumber?: number;
 }
 
+
+type AddressTitle = "Mr" | "Mrs" | "Ms";
 export interface BulkOrderAddress {
     id?: string;
+    title: AddressTitle;
     fullName: string;
     mobile: string;
     addressLine1: string;

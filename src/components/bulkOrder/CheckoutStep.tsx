@@ -16,9 +16,15 @@ import type { BulkOrderAddress } from "../../types/bulkOrder";
 import { useAlert } from "../../store/alert.store";
 import { validateSchemeAmount } from "../../utils/bulkPricing";
 
+type AddressTitle = "Mr" | "Mrs" | "Ms";
+type CheckoutAddress = BulkOrderAddress & {
+    title?: AddressTitle;
+};
+
 type ProfileResponse = {
     success: boolean;
     data: {
+        title?: "Mr" | "Mrs" | "Ms";
         name: string;
         mobile: string;
         address: string;
@@ -60,7 +66,8 @@ export default function CheckoutStep() {
     const [
         newAddress,
         setNewAddress,
-    ] = useState<BulkOrderAddress>({
+    ] = useState<CheckoutAddress>({
+        title: "Mr",
         fullName: "",
         mobile: "",
         addressLine1: "",
@@ -100,7 +107,7 @@ export default function CheckoutStep() {
                 const res: ProfileResponse =
                     await apiFetch(
                         "/user/profile"
-                    );
+                );
 
                 if (
                     !mounted ||
@@ -110,8 +117,13 @@ export default function CheckoutStep() {
                 }
 
                 setProfileAddress({
-                    fullName:
-                        res.data.name,
+                    title: res.data.title || "Mr",
+                    fullName: [
+                        res.data.title?.trim(),
+                        res.data.name?.trim(),
+                    ]
+                        .filter(Boolean)
+                        .join(" "),
                     mobile:
                         res.data.mobile,
                     addressLine1:
@@ -204,9 +216,6 @@ export default function CheckoutStep() {
                     return;
                 }
 
-                /*
-                 * Invalid pincode.
-                 */
                 if (
                     !data ||
                     data[0]?.Status !==
@@ -221,10 +230,6 @@ export default function CheckoutStep() {
                         "Invalid pincode. Please enter a valid delivery pincode."
                     );
 
-                    /*
-                     * Never modify the saved
-                     * profile address.
-                     */
                     if (
                         addressMode === "NEW"
                     ) {
@@ -353,9 +358,7 @@ export default function CheckoutStep() {
         state: validatedState,
     });
 
-    const activeAddress = addressMode === "PROFILE"
-        ? profileAddress
-        : newAddress;
+    const activeAddress = addressMode === "PROFILE" ? profileAddress : newAddress;
 
     const addressValid = useMemo(() => {
         if (
@@ -365,6 +368,7 @@ export default function CheckoutStep() {
         }
 
         return !!(
+            newAddress.title?.trim() &&
             newAddress.fullName.trim() &&
             newAddress.mobile.trim() &&
             newAddress.addressLine1.trim() &&
@@ -437,10 +441,6 @@ export default function CheckoutStep() {
                 setNewAddress(address);
 
                 if (pincodeChanged) {
-                    /*
-                     * Immediately remove the
-                     * previous validation.
-                     */
                     setValidatedLocation(
                         null
                     );
@@ -498,16 +498,20 @@ export default function CheckoutStep() {
                 return;
             }
 
-            /*
-             * Always save the validated
-             * state and pincode.
-             */
-            const finalAddress:
-                BulkOrderAddress = {
+            const finalAddress: BulkOrderAddress = {
                 ...activeAddress,
+                ...(addressMode === "NEW"
+                    ? {
+                        fullName: [
+                            activeAddress.title?.trim(),
+                            activeAddress.fullName?.trim(),
+                        ]
+                            .filter(Boolean)
+                            .join(" "),
+                    }
+                    : {}),
                 state: validatedState,
-                pincode:
-                    currentPincode,
+                pincode: currentPincode,
             };
 
             setAddress(finalAddress);

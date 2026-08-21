@@ -25,7 +25,6 @@ function BulkPricingCard({
 
     const hasGst = pricing.gstAmount > 0 &&
         pricing.gstPercent > 0;
-    console.log(pricing)
 
     const includedCharges: string[] = [];
     if (hasGst) {
