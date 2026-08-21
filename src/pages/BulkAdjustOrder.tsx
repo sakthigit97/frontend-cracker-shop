@@ -28,6 +28,7 @@ import { useHomeProducts } from "../store/homeProduct.store";
 import { useBulkOrderHistoryStore } from "../store/bulkOrderHistory.store";
 import defaultImage from "../assets/default-image.png";
 import { formatCurrency } from "../utils/pricing";
+
 import type {
     BulkOrderDetailsResponse,
     BulkOrderProduct,
@@ -40,6 +41,7 @@ import BulkAddProductModal from "../components/bulkOrder/BulkAddProductModal";
 import {
     useAdminBulkOrderDetailsStore,
 } from "../store/adminBulkOrderDetails.store";
+import { useAuth } from "../store/auth.store";
 
 interface LocationState {
     order?: BulkOrderDetailsResponse;
@@ -58,14 +60,13 @@ export default function AdjustBulkOrder() {
     const { orderId } = useParams();
     const location = useLocation();
     const { showAlert } = useAlert();
+    const { user } = useAuth();
 
     const locationState = location.state as LocationState | null;
     const passedOrder = locationState?.order;
-    const isAdmin =
-        locationState?.isAdmin === true ||
-        location.pathname.startsWith(
-            "/admin/bulk-orders/"
-        );
+    const isAdmin = user?.role === "ADMIN";
+    const isStaff = user?.role === "STAFF";
+
     const [
         showAddProductModal,
         setShowAddProductModal,
@@ -243,11 +244,17 @@ export default function AdjustBulkOrder() {
         initialisedOrderId,
     ]);
 
-    const canAdjust = currentOrder?.status === "ORDER_PLACED";
-    const orderDetailsPath =
-        isAdmin
-            ? `/admin/bulk-orders/${currentOrder?.orderId}`
+    const canAdjust =
+        !!currentOrder &&
+        currentOrder.status !== "PACKED" &&
+        currentOrder.status !== "CANCELLED";
+
+    const orderDetailsPath = isAdmin
+        ? `/admin/bulk-orders/${currentOrder?.orderId}`
+        : isStaff
+            ? `/staff/bulk-orders/${currentOrder?.orderId}`
             : `/bulk-orders/${currentOrder?.orderId}`;
+
     const calculatedItems =
         useMemo(() => {
             return items.map((item) => ({
@@ -1308,12 +1315,6 @@ function BulkOrderItemRow({
                         <h3 className="truncate text-sm font-semibold text-gray-900">
                             {item.name}
                         </h3>
-
-                        {item.brand && (
-                            <p className="mt-0.5 truncate text-xs text-gray-500">
-                                {item.brand}
-                            </p>
-                        )}
                     </div>
                 </div>
 
