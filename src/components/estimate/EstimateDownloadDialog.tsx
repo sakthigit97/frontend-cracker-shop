@@ -13,7 +13,7 @@ interface Props {
     }) => void;
 }
 
-type CustomerTitle = "Mr." | "Mrs." | "Ms.";
+type CustomerTitle = "Mr" | "Mrs" | "Ms";
 export default function EstimateDownloadDialog({
     open,
     loading = false,
@@ -25,7 +25,7 @@ export default function EstimateDownloadDialog({
     );
 
     const [title, setTitle] =
-        useState<CustomerTitle>("Mr.");
+        useState<CustomerTitle>("Mr");
 
     const [customerName, setCustomerName] =
         useState("");
@@ -73,19 +73,15 @@ export default function EstimateDownloadDialog({
 
             setCaptchaAnswer("");
 
-            if (
-                profile &&
-                profile.name &&
-                profile.mobile
-            ) {
+            if (profile) {
                 if (
-                    profile.title === "Mr." ||
-                    profile.title === "Mrs." ||
-                    profile.title === "Ms."
+                    profile.title === "Mr" ||
+                    profile.title === "Mrs" ||
+                    profile.title === "Ms"
                 ) {
                     setTitle(profile.title);
                 } else {
-                    setTitle("Mr.");
+                    setTitle("Mr");
                 }
 
                 setCustomerName(
@@ -100,7 +96,7 @@ export default function EstimateDownloadDialog({
                     profile.email || ""
                 );
             } else {
-                setTitle("Mr.");
+                setTitle("Mr");
                 setCustomerName("");
                 setMobile("");
                 setEmail("");
@@ -250,23 +246,19 @@ export default function EstimateDownloadDialog({
                                     bg-white
                                 "
                             >
-                                <option value="Mr.">
-                                    Mr.
+                                <option value="Mr">
+                                    Mr
                                 </option>
 
-                                <option value="Mrs.">
-                                    Mrs.
+                                <option value="Mrs">
+                                    Mrs
                                 </option>
 
-                                <option value="Ms.">
-                                    Ms.
+                                <option value="Ms">
+                                    Ms
                                 </option>
                             </select>
                         </div>
-
-                        {/* ============================
-                            CUSTOMER NAME
-                            ============================ */}
 
                         <div>
                             <label className="text-sm font-medium">
