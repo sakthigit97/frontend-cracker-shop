@@ -192,9 +192,7 @@ export default function BulkOrderDetails() {
         (status) => status !== "CANCELLED"
     );
     const currentIndex = STATUS_KEYS.indexOf(order.status);
-
     const isCancelled = order.status === TERMINAL_STATUS;
-
     const canCancel = CANCELLABLE_STATUSES.includes(order.status);
 
     const canDownloadInvoice = [
@@ -204,7 +202,6 @@ export default function BulkOrderDetails() {
     ].includes(order.status);
 
     const canAdjust = order.status === "ORDER_PLACED";
-
     const totalQuantity = order.items.reduce(
         (total: number, item: BulkOrderProduct) => total + item.quantity,
         0

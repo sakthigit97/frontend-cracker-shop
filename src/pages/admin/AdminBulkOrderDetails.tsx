@@ -17,6 +17,7 @@ import { useConfigStore } from "../../store/config.store";
 import { downloadBulkInvoice } from "../../utils/pdf/downloadBulkInvoice";
 import { FaDownload } from "react-icons/fa";
 import { downloadBulkStaffPackingList } from "../../utils/pdf/downloadBulkStaffPackingList";
+import { useAuth } from "../../store/auth.store";
 
 import {
     useAdminBulkOrderDetailsStore,
@@ -30,6 +31,7 @@ export default function AdminBulkOrderDetails() {
     const location = useLocation();
     const { showAlert } = useAlert();
     const config = useConfigStore(s => s.config);
+    const { user } = useAuth();
     const {
         cache,
         loading,
@@ -238,9 +240,13 @@ export default function AdminBulkOrderDetails() {
     const canDownloadInvoice =
         STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
-        order.status !== "CANCELLED";
+        order?.status !== "CANCELLED";
 
-    const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
+    const canAdjust =
+        order?.status === "ORDER_PLACED" ||
+        order?.status === "ORDER_CONFIRMED" ||
+        order?.status === "PAYMENT_CONFIRMED";
+
     const currentIndex = order
         ? STATUS_ORDER.indexOf(order.status)
         : -1;
@@ -554,11 +560,14 @@ export default function AdminBulkOrderDetails() {
                                 disabled={!canAdjust || submitting}
                                 onClick={() =>
                                     navigate(
-                                        `/admin/bulk-orders/${order.orderId}/adjust`,
+                                        user?.role === "STAFF"
+                                            ? `/staff/bulk-orders/${order.orderId}/adjust`
+                                            : `/admin/bulk-orders/${order.orderId}/adjust`,
                                         {
                                             state: {
                                                 order,
-                                                isAdmin: true,
+                                                isAdmin:
+                                                    user?.role !== "STAFF",
                                             },
                                         }
                                     )
