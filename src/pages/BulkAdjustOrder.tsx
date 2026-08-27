@@ -42,6 +42,7 @@ import {
     useAdminBulkOrderDetailsStore,
 } from "../store/adminBulkOrderDetails.store";
 import { useAuth } from "../store/auth.store";
+import { useConfigStore } from "../store/config.store";
 
 interface LocationState {
     order?: BulkOrderDetailsResponse;
@@ -61,6 +62,7 @@ export default function AdjustBulkOrder() {
     const location = useLocation();
     const { showAlert } = useAlert();
     const { user } = useAuth();
+    const { config } = useConfigStore();
 
     const locationState = location.state as LocationState | null;
     const passedOrder = locationState?.order;
@@ -288,25 +290,63 @@ export default function AdjustBulkOrder() {
     const gstPercent =
         pricingSource?.gstPercent ?? 0;
 
-    const previewPackagingCharge =
-        Math.round(
-            (productTotal * packagingPercent) / 100
+
+    const existingDiscountType =
+        pricingSource?.discountType;
+
+    const existingDiscountValue =
+        Number(
+            pricingSource?.discountValue ?? 0
         );
 
+    const calculatedDiscountAmount =
+        existingDiscountType === "PERCENTAGE"
+            ? (productTotal * existingDiscountValue) / 100
+            : existingDiscountType === "FLAT"
+                ? existingDiscountValue
+                : Number(
+                    pricingSource?.discountAmount ?? 0
+                );
+
+    const safeDiscountAmount =
+        Number.isFinite(calculatedDiscountAmount) &&
+            calculatedDiscountAmount > 0
+            ? Math.min(
+                calculatedDiscountAmount,
+                productTotal
+            )
+            : 0;
+
+    const discountedProductTotal =
+        Math.max(
+            0,
+            productTotal - safeDiscountAmount
+        );
+
+    const previewPackagingCharge =
+        Math.round(
+            (discountedProductTotal *
+                packagingPercent) /
+            100
+        );
+
+
+    const gstDenominator = Number(config?.gstDenominator ?? 2);
     const previewGstPercent =
-        gstPercent / 2;
+        gstPercent / gstDenominator;
 
     const previewGstAmount =
         Math.round(
             (
-                (productTotal +
-                    previewPackagingCharge) *
-                previewGstPercent
-            ) / 100
+                discountedProductTotal +
+                previewPackagingCharge
+            ) *
+            previewGstPercent /
+            100
         );
 
     const previewGrandTotal =
-        productTotal +
+        discountedProductTotal +
         previewPackagingCharge +
         previewGstAmount;
 
@@ -345,12 +385,18 @@ export default function AdjustBulkOrder() {
                 originalItem.quantity !==
                 item.quantity ||
                 originalItem.cartonQty !==
-                item.cartonQty
+                item.cartonQty ||
+                (
+                    isAdminOrStaff &&
+                    originalItem.unitPrice !==
+                    item.unitPrice
+                )
             );
         });
     }, [
         currentOrder,
         items,
+        isAdminOrStaff,
     ]);
 
 
@@ -424,6 +470,32 @@ export default function AdjustBulkOrder() {
         );
     }
 
+    function updateUnitPrice(
+        productId: string,
+        value: number
+    ) {
+        if (!isAdminOrStaff) {
+            return;
+        }
+
+        if (
+            !Number.isFinite(value) ||
+            value <= 0
+        ) {
+            return;
+        }
+
+        setItems((current) =>
+            current.map((item) =>
+                item.productId === productId
+                    ? {
+                        ...item,
+                        unitPrice: value,
+                    }
+                    : item
+            )
+        );
+    }
 
     function updateCartonQty(
         productId: string,
@@ -591,6 +663,8 @@ export default function AdjustBulkOrder() {
                     ? {
                         cartonQty:
                             item.cartonQty,
+                        unitPrice:
+                            item.unitPrice,
                     }
                     : {}),
             }));
@@ -843,7 +917,7 @@ export default function AdjustBulkOrder() {
 
                         <p className="mt-0.5 text-xs leading-5 text-blue-700 sm:text-sm">
                             {isAdminOrStaff
-                                ? "You can change quantities, remove or add products, and update carton quantities."
+                                ? "You can change quantities, carton quantities, prices, remove products, or add products."
                                 : "You can change quantities, remove existing products, or add new products."}
                         </p>
 
@@ -990,6 +1064,12 @@ export default function AdjustBulkOrder() {
                                                     value
                                                 )
                                             }
+                                            onUnitPriceChange={(value) =>
+                                                updateUnitPrice(
+                                                    item.productId,
+                                                    value
+                                                )
+                                            }
                                             onRemove={() =>
                                                 removeItem(
                                                     item.productId
@@ -1035,17 +1115,28 @@ export default function AdjustBulkOrder() {
 
                             <SummaryRow
                                 label="Products Total"
-                                value={
-                                    productTotal
-                                }
+                                value={productTotal}
                             />
+
+                            {safeDiscountAmount > 0 && (
+                                <>
+                                    <SummaryRow
+                                        label="Additional Discount"
+                                        value={-safeDiscountAmount}
+                                        muted
+                                    />
+
+                                    <SummaryRow
+                                        label="Discounted Product Total"
+                                        value={discountedProductTotal}
+                                    />
+                                </>
+                            )}
 
                             <SummaryRow
                                 isnotPrice={true}
                                 label="Cartonbox Total"
-                                value={
-                                    totalCartons
-                                }
+                                value={totalCartons}
                             />
 
                             {packagingPercent > 0 && (
@@ -1055,7 +1146,6 @@ export default function AdjustBulkOrder() {
                                     muted
                                 />
                             )}
-
 
                             {gstPercent > 0 && (
                                 <SummaryRow
@@ -1270,11 +1360,9 @@ interface BulkOrderItemRowProps {
     isAdminOrStaff: boolean;
     onIncrease: () => void;
     onDecrease: () => void;
-
     onQuantityChange: (value: number) => void;
-
+    onUnitPriceChange: (value: number) => void;
     onCartonQtyChange: (value: number) => void;
-
     onRemove: () => void;
 }
 
@@ -1284,6 +1372,7 @@ function BulkOrderItemRow({
     onIncrease,
     onDecrease,
     onQuantityChange,
+    onUnitPriceChange,
     onCartonQtyChange,
     onRemove,
 }: BulkOrderItemRowProps) {
@@ -1401,11 +1490,47 @@ function BulkOrderItemRow({
                     )}
                 </div>
 
+
                 {/* Price */}
                 <div className="text-center">
-                    <span className="text-sm font-semibold text-gray-800">
-                        ₹{formatCurrency(item.unitPrice)}
-                    </span>
+                    {isAdminOrStaff ? (
+                        <div className="mx-auto w-full max-w-[110px]">
+                            <div className="flex items-center rounded-md border border-gray-300 bg-white">
+                                <span className="px-2 text-sm text-gray-500">
+                                    ₹
+                                </span>
+
+                                <input
+                                    type="number"
+                                    min={0.01}
+                                    step="0.01"
+                                    value={item.unitPrice}
+                                    onChange={(event) =>
+                                        onUnitPriceChange(
+                                            Number(event.target.value)
+                                        )
+                                    }
+                                    className="
+                        w-full
+                        min-w-0
+                        border-0
+                        bg-transparent
+                        px-1
+                        py-1.5
+                        text-sm
+                        font-semibold
+                        text-gray-800
+                        outline-none
+                    "
+                                    aria-label={`Price for ${item.name}`}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-sm font-semibold text-gray-800">
+                            ₹{formatCurrency(item.unitPrice)}
+                        </p>
+                    )}
                 </div>
 
                 {/* Total */}
@@ -1640,13 +1765,6 @@ function mapOrderItem(
     };
 }
 
-
-/*
- * ------------------------------------------------------
- * Summary Row
- * ------------------------------------------------------
- */
-
 interface SummaryRowProps {
     isnotPrice?: boolean;
     label: string;
@@ -1661,9 +1779,11 @@ function SummaryRow({
     value,
     muted = false,
 }: SummaryRowProps) {
+    const isNegative = value < 0;
+    const displayValue = Math.abs(value);
+
     return (
         <div className="flex items-center justify-between gap-3">
-
             <span
                 className={
                     muted
@@ -1674,7 +1794,6 @@ function SummaryRow({
                 {label}
             </span>
 
-
             <span
                 className={
                     muted
@@ -1682,10 +1801,10 @@ function SummaryRow({
                         : "whitespace-nowrap text-sm font-semibold text-gray-900"
                 }
             >
+                {isNegative ? "- " : ""}
                 {!isnotPrice ? "₹" : ""}
-                {formatCurrency(value)}
+                {formatCurrency(displayValue)}
             </span>
-
         </div>
     );
 }

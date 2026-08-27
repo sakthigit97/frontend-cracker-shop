@@ -17,7 +17,8 @@ const RETRY_STATUS_CODES = [502, 503, 504];
 
 export const apiFetch = async (
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  baseUrl: string = API_BASE_URL
 ) => {
   const auth = localStorage.getItem("auth");
   const token = auth ? JSON.parse(auth).token : null;
@@ -25,7 +26,7 @@ export const apiFetch = async (
   let lastError: any;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await fetch(`${API_BASE_URL}${path}`, {
+      const response = await fetch(`${baseUrl}${path}`, {
         cache: "no-store",
         ...options,
         headers: {

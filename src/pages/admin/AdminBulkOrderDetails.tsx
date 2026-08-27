@@ -6,6 +6,7 @@ import {
     STATUS_LABELS,
     STATUS_ORDER,
 } from "../../utils/orderStatus";
+import { apiFetch } from "../../services/api";
 
 import Button from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -48,6 +49,16 @@ export default function AdminBulkOrderDetails() {
         useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [discountType, setDiscountType] =
+        useState<"FLAT" | "PERCENTAGE">("FLAT");
+    const [showDiscountConfirm, setShowDiscountConfirm] =
+        useState(false);
+
+    const [discountValue, setDiscountValue] =
+        useState("");
+
+    const [discountSubmitting, setDiscountSubmitting] =
+        useState(false);
     const [pendingPayload, setPendingPayload] =
         useState<{
             status?: string;
@@ -352,7 +363,6 @@ export default function AdminBulkOrderDetails() {
 
             setDownloading(true);
             await new Promise((resolve) => setTimeout(resolve, 0));
-
             await downloadBulkInvoice(
                 order,
                 config
@@ -377,6 +387,119 @@ export default function AdminBulkOrderDetails() {
         }
 
     }
+
+    const handleApplyDiscount = () => {
+        if (!order || discountSubmitting) {
+            return;
+        }
+
+        const value = Number(discountValue);
+
+        if (
+            discountValue.trim() === "" ||
+            !Number.isFinite(value)
+        ) {
+            showAlert({
+                type: "error",
+                message: "Please enter a valid discount value.",
+            });
+            return;
+        }
+
+        if (value < 0) {
+            showAlert({
+                type: "error",
+                message: "Discount cannot be negative.",
+            });
+            return;
+        }
+
+        const productTotal =
+            Number(order.pricing?.productTotal ?? 0);
+
+        if (discountType === "PERCENTAGE") {
+            if (value > 100) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "Percentage discount cannot exceed 100%.",
+                });
+                return;
+            }
+        }
+
+        if (discountType === "FLAT") {
+            if (value > productTotal) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "Flat discount cannot exceed the product total.",
+                });
+                return;
+            }
+        }
+
+        setShowDiscountConfirm(true);
+    };
+
+    const handleConfirmApplyDiscount = async () => {
+        if (!order || discountSubmitting) {
+            return;
+        }
+
+        const value = Number(discountValue);
+
+        try {
+            setShowDiscountConfirm(false);
+            setDiscountSubmitting(true);
+
+            await apiFetch(
+                `/bulk-order/${encodeURIComponent(
+                    order.orderId
+                )}/discount`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        discountType,
+                        discountValue: value,
+                    }),
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            await fetchOrder(
+                order.orderId,
+                {
+                    force: true,
+                }
+            );
+
+            setDiscountValue("");
+
+            showAlert({
+                type: "success",
+                message:
+                    "Discount applied successfully.",
+                duration: 1500,
+            });
+
+        } catch (err: any) {
+            console.error(
+                "Failed to apply discount",
+                err
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    err?.message ||
+                    "Failed to apply discount.",
+            });
+
+        } finally {
+            setDiscountSubmitting(false);
+        }
+    };
 
     if (loading && !loaded) {
 
@@ -472,11 +595,11 @@ export default function AdminBulkOrderDetails() {
                     </button>
 
                     <h1 className="
-            text-xl
-            md:text-2xl
-            font-semibold
-            text-[var(--color-primary)]
-        ">
+                        text-xl
+                        md:text-2xl
+                        font-semibold
+                        text-[var(--color-primary)]
+                    ">
                         Bulk Order Details
                     </h1>
 
@@ -896,6 +1019,156 @@ export default function AdminBulkOrderDetails() {
 
             </div>
 
+
+            {(user?.role === "ADMIN" ||
+                user?.role === "STAFF") &&
+                canAdjust && (
+                    <div className="bg-white border border-gray-300 rounded-xl p-5">
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold">
+                                Additional Discount
+                            </h3>
+
+                            <p className="text-sm text-gray-500 mt-1">
+                                Apply a discount to the product total.
+                                Packaging and GST will be recalculated
+                                automatically.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_auto] gap-3 items-end">
+
+                            {/* Discount Type */}
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">
+                                    Discount Type
+                                </label>
+
+                                <select
+                                    value={discountType}
+                                    onChange={(e) =>
+                                        setDiscountType(
+                                            e.target.value as
+                                            | "FLAT"
+                                            | "PERCENTAGE"
+                                        )
+                                    }
+                                    disabled={discountSubmitting}
+                                    className="
+                            w-full
+                            border
+                            rounded-lg
+                            px-3
+                            py-2
+                            text-sm
+                            bg-white
+                        "
+                                >
+                                    <option value="FLAT">
+                                        Flat (₹)
+                                    </option>
+
+                                    <option value="PERCENTAGE">
+                                        Percentage (%)
+                                    </option>
+                                </select>
+                            </div>
+
+                            {/* Discount Value */}
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">
+                                    Discount Value
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max={
+                                        discountType === "PERCENTAGE"
+                                            ? 100
+                                            : Number(
+                                                order.pricing
+                                                    ?.productTotal ?? 0
+                                            )
+                                    }
+                                    step="0.01"
+                                    value={discountValue}
+                                    onChange={(e) => {
+                                        const value =
+                                            e.target.value;
+
+                                        if (value === "") {
+                                            setDiscountValue("");
+                                            return;
+                                        }
+
+                                        const numericValue =
+                                            Number(value);
+
+                                        if (
+                                            !Number.isFinite(
+                                                numericValue
+                                            ) ||
+                                            numericValue < 0
+                                        ) {
+                                            return;
+                                        }
+
+                                        if (
+                                            discountType ===
+                                            "PERCENTAGE" &&
+                                            numericValue > 100
+                                        ) {
+                                            return;
+                                        }
+
+                                        if (
+                                            discountType === "FLAT" &&
+                                            numericValue >
+                                            Number(
+                                                order.pricing
+                                                    ?.productTotal ?? 0
+                                            )
+                                        ) {
+                                            return;
+                                        }
+
+                                        setDiscountValue(value);
+                                    }}
+                                    disabled={discountSubmitting}
+                                    placeholder={
+                                        discountType === "PERCENTAGE"
+                                            ? "0 - 100"
+                                            : "Enter amount"
+                                    }
+                                    className="
+                            w-full
+                            border
+                            rounded-lg
+                            px-3
+                            py-2
+                            text-sm
+                        "
+                                />
+                            </div>
+
+                            {/* Apply */}
+                            <Button
+                                type="button"
+                                disabled={
+                                    discountSubmitting ||
+                                    discountValue.trim() === ""
+                                }
+                                onClick={handleApplyDiscount}
+                            >
+                                {discountSubmitting
+                                    ? "Applying..."
+                                    : "Apply Discount"}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
             {/* ============================================================
              * ADDRESS / ORDER SUMMARY
              * ============================================================ */}
@@ -963,6 +1236,37 @@ export default function AdminBulkOrderDetails() {
                                 ).toLocaleString("en-IN")}
                             </span>
                         </div>
+
+                        {Number(order.pricing?.discountAmount ?? 0) > 0 && (
+                            <>
+                                <div className="flex justify-between gap-4">
+                                    <span>
+                                        Additional Discount
+                                    </span>
+
+                                    <span className="font-medium text-green-600">
+                                        - ₹
+                                        {Number(
+                                            order.pricing.discountAmount
+                                        ).toLocaleString("en-IN")}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between gap-4">
+                                    <span>
+                                        Discounted Product Total
+                                    </span>
+
+                                    <span>
+                                        ₹
+                                        {Number(
+                                            order.pricing.discountedProductTotal ??
+                                            order.pricing.productTotal
+                                        ).toLocaleString("en-IN")}
+                                    </span>
+                                </div>
+                            </>
+                        )}
 
                         <div className="flex justify-between gap-4">
                             <span>
@@ -1117,14 +1421,7 @@ export default function AdminBulkOrderDetails() {
                                             {updatedBy && (
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Changed By :{" "}
-                                                    {updatedBy.startsWith(
-                                                        "ADMIN"
-                                                    )
-                                                        ? "Admin"
-                                                        : updatedBy.replace(
-                                                            "USER#",
-                                                            ""
-                                                        )}
+                                                    {updatedBy}
                                                 </p>
                                             )}
 
@@ -1506,6 +1803,28 @@ export default function AdminBulkOrderDetails() {
 
                 }}
 
+            />
+
+            <ConfirmDialog
+                open={showDiscountConfirm}
+                title="Apply Discount?"
+                description={
+                    discountType === "PERCENTAGE"
+                        ? `Are you sure you want to apply a ${discountValue}% discount to this order?`
+                        : `Are you sure you want to apply a ₹${Number(
+                            discountValue || 0
+                        ).toLocaleString("en-IN")} discount to this order?`
+                }
+                confirmText="Yes, Apply Discount"
+                cancelText="Cancel"
+                onConfirm={handleConfirmApplyDiscount}
+                onCancel={() => {
+                    if (discountSubmitting) {
+                        return;
+                    }
+
+                    setShowDiscountConfirm(false);
+                }}
             />
 
         </div>

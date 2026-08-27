@@ -80,11 +80,11 @@ export function calculateBulkPricing({
     const disableGstForTN = config?.disableGstForTN === true;
 
     const isTN = isTamilNadu(state);
-
+    const gstDenominator = Number(config?.gstDenominator ?? 2);
     const effectiveGstPercent =
         isTN && disableGstForTN
             ? 0
-            : configuredGstPercent / 2;
+            : configuredGstPercent / gstDenominator;
 
     const gstAmount =
         effectiveGstPercent > 0

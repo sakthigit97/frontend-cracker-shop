@@ -207,11 +207,11 @@ export default function BulkOrderDetails() {
         0
     );
 
-    const isTamilNadu = order.address?.state
-        ?.toLowerCase()
-        .includes("tamil nadu");
+    // const isTamilNadu = order.address?.state
+    //     ?.toLowerCase()
+    //     .includes("tamil nadu");
 
-    const deliveryText = isTamilNadu ? "3–5 working days" : "7–10 working days";
+    // const deliveryText = isTamilNadu ? "3–5 working days" : "7–10 working days";
 
     return (
         <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
@@ -363,12 +363,6 @@ export default function BulkOrderDetails() {
                             );
                         })}
                     </div>
-                    <div className="mt-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3">
-                        <p className="text-sm text-yellow-800">
-                            Expected Delivery:
-                            <span className="ml-1 font-semibold">{deliveryText}</span>
-                        </p>
-                    </div>
                 </section>
             )}
 
@@ -466,9 +460,7 @@ export default function BulkOrderDetails() {
 
                                             <p className="mt-1 text-sm text-gray-500">
                                                 Changed By:{" "}
-                                                {updatedBy?.startsWith("ADMIN")
-                                                    ? "Admin"
-                                                    : updatedBy?.replace("USER#", "")}
+                                                {updatedBy}
                                             </p>
 
                                             {history.comment && (
@@ -638,22 +630,15 @@ export default function BulkOrderDetails() {
                                                         {item.name}
                                                     </p>
 
-                                                    {item.brand && (
-                                                        <p className="mt-0.5 text-xs text-gray-500">
-                                                            {item.brand}
-                                                        </p>
-                                                    )}
                                                 </div>
                                             </div>
                                         </td>
-
 
                                         <td className="px-4 py-3 text-center">
                                             <span className="text-sm font-medium text-gray-800">
                                                 {item.quantity}
                                             </span>
                                         </td>
-
 
                                         <td className="px-4 py-3 text-center">
                                             <span className="whitespace-nowrap text-sm text-gray-600">
@@ -829,6 +814,33 @@ export default function BulkOrderDetails() {
                             label="Products Total"
                             value={order.pricing.productTotal}
                         />
+
+                        {(order.pricing?.discountAmount ?? 0) > 0 && (
+                            <>
+                                <PriceRow
+                                    label={
+                                        order.pricing.discountType ===
+                                            "PERCENTAGE"
+                                            ? `Additional Discount (${order.pricing.discountValue}%)`
+                                            : "Additional Discount"
+                                    }
+                                    value={
+                                        -(order.pricing.discountAmount ?? 0)
+                                    }
+                                />
+
+                                <PriceRow
+                                    label="Discounted Product Total"
+                                    value={
+                                        order.pricing.discountedProductTotal ??
+                                        (
+                                            order.pricing.productTotal -
+                                            (order.pricing.discountAmount ?? 0)
+                                        )
+                                    }
+                                />
+                            </>
+                        )}
 
                         <PriceRow
                             isPrice={false}

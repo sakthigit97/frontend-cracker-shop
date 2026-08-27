@@ -393,6 +393,30 @@ export async function buildBulkInvoicePdf(
         "Product Total",
         order.pricing.productTotal
     );
+
+    if (
+        (order.pricing?.discountAmount ?? 0) > 0
+    ) {
+        const discountLabel =
+            order.pricing.discountType === "PERCENTAGE"
+                ? `Additional Discount (${order.pricing.discountValue}%)`
+                : "Additional Discount";
+
+        drawSummaryRow(
+            discountLabel,
+            `- ${money(order.pricing.discountAmount)}`
+        );
+
+        drawSummaryRow(
+            "Discounted Product Total",
+            order.pricing.discountedProductTotal ??
+            (
+                Number(order.pricing.productTotal || 0) -
+                Number(order.pricing.discountAmount || 0)
+            )
+        );
+    }
+
     drawCartonSummaryRow(
         "Total Cartons",
         totalCartons
