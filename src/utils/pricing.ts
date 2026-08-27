@@ -45,10 +45,11 @@ export function calculateOrderAmounts({
 
     const discountedGrossTotal = grossTotal - appliedCouponDiscount;
     const disableGstForTN = config?.disableGstForTN ?? false;
+    const gstDenominator = Number(config?.gstDenominator ?? 2);
     const isTN = isTamilNadu(state);
     let gstAmount = 0;
     if (!(isTN && disableGstForTN)) {
-        const effectiveGstPercent = gstPercent / 2;
+        const effectiveGstPercent = gstPercent / gstDenominator;
         gstAmount = Math.round(
             (discountedGrossTotal * effectiveGstPercent) / 100
         );

@@ -48,6 +48,10 @@ export default function AdminConfigPage() {
                     gmapLink: res.gmapLink || "",
                     displayMobile: res.displayMobile || "",
                     website: res.website || "",
+                    gstDenominator:
+                        Number(res.gstDenominator) > 0
+                            ? Number(res.gstDenominator)
+                            : 2,
                     disableGstForTN: res.disableGstForTN || false,
                     isEnableBulkOrder: res.isEnableBulkOrder ?? false,
                     bulkOrderSchemes: (res.bulkOrderSchemes || []).map(
@@ -1069,7 +1073,23 @@ export default function AdminConfigPage() {
                 return;
             }
 
+            const gstDenominator =
+                Number(form.gstDenominator);
+
+            if (
+                !Number.isFinite(gstDenominator) ||
+                gstDenominator <= 0
+            ) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "GST Denominator must be a positive value.",
+                });
+                return;
+            }
             setLoading(true);
+
+
             const uploadedSliderImages =
                 await uploadPendingImages(
                     form.sliderImages,
@@ -1430,6 +1450,31 @@ export default function AdminConfigPage() {
                                 />
                             </div>
                         ))}
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                GST Denominator
+                            </label>
+
+                            <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                inputMode="decimal"
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                placeholder="Enter GST denominator"
+                                value={form.gstDenominator ?? ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        gstDenominator:
+                                            e.target.value === ""
+                                                ? ""
+                                                : Number(e.target.value),
+                                    }))
+                                }
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-5 border border-gray-200 rounded-xl p-4">

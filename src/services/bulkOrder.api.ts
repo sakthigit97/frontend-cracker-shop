@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+const BULK_ADJUST_API_URL = import.meta.env.VITE_API_BASE_URL_V1;
 
 import type {
     BulkOrderAdjustRequestItem,
@@ -71,7 +72,8 @@ export async function adjustBulkOrder(
             body: JSON.stringify({
                 items,
             }),
-        }
+        },
+        BULK_ADJUST_API_URL
     );
 }
 

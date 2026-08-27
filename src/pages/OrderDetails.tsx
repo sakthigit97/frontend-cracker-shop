@@ -699,14 +699,7 @@ export default function OrderDetails() {
 
                         <p className="mt-1 text-sm text-gray-500">
                           Changed By:{" "}
-                          {updatedBy?.startsWith(
-                            "ADMIN"
-                          )
-                            ? "Admin"
-                            : updatedBy?.replace(
-                              "USER#",
-                              ""
-                            )}
+                          {updatedBy}
                         </p>
 
                         {history.comment && (

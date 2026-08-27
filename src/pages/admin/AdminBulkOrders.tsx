@@ -106,9 +106,8 @@ export default function AdminBulkOrders() {
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
-
     useEffect(() => {
-        fetchInitial();
+        fetchInitial(true);
     }, [key]);
 
     if (isLoading && orders.length === 0) {

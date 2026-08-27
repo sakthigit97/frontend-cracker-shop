@@ -1158,14 +1158,7 @@ export default function AdminOrderDetails() {
                                             {updatedBy && (
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Changed By :{" "}
-                                                    {updatedBy.startsWith(
-                                                        "ADMIN"
-                                                    )
-                                                        ? "Admin"
-                                                        : updatedBy.replace(
-                                                            "USER#",
-                                                            ""
-                                                        )}
+                                                    {updatedBy}
                                                 </p>
                                             )}
 

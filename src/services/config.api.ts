@@ -10,6 +10,7 @@ export type GlobalConfig = {
     isPaymentEnabled: boolean;
     maintenanceMode: boolean;
     isReferralEnabled: boolean;
+    gstDenominator?: number;
     adminMobile: string;
     adminEmail: string;
     packagingPercent: number;
