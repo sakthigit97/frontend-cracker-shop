@@ -191,7 +191,7 @@ export async function buildBulkInvoicePdf(
         body: bulkInvoiceItems.map((item: any) => [
             item.name,
             item.cartonQty != null
-                ? `${item.cartonQty}${item.packUnit ? `/${item.packUnit}` : ""}`
+                ? `${item.cartonQty}${item.packUnit ? ` ${item.packUnit}` : ""}`
                 : "",
             money(item.schemePrice),
             item.quantity,

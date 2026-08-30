@@ -46,6 +46,7 @@ export default function AdminConfigPage() {
                     adminEmail: res.adminEmail || "",
                     adminAddress: res.adminAddress || "",
                     gmapLink: res.gmapLink || "",
+                    mobileAppLink: res.mobileAppLink || "",
                     displayMobile: res.displayMobile || "",
                     website: res.website || "",
                     gstDenominator:
@@ -929,6 +930,17 @@ export default function AdminConfigPage() {
                 showAlert({
                     type: "error",
                     message: "Enter a valid Google Maps URL",
+                });
+                return;
+            }
+
+            if (
+                form.mobileAppLink &&
+                !/^https?:\/\/.+/i.test(form.mobileAppLink)
+            ) {
+                showAlert({
+                    type: "error",
+                    message: "Enter a valid Mobile App URL",
                 });
                 return;
             }
@@ -1846,6 +1858,25 @@ export default function AdminConfigPage() {
                                     setForm((p: any) => ({
                                         ...p,
                                         gmapLink: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Mobile App Link
+                            </label>
+
+                            <input
+                                type="url"
+                                className="border border-gray-300 rounded-lg p-3 w-full"
+                                placeholder="https://..."
+                                value={form.mobileAppLink || ""}
+                                onChange={(e) =>
+                                    setForm((p: any) => ({
+                                        ...p,
+                                        mobileAppLink: e.target.value,
                                     }))
                                 }
                             />

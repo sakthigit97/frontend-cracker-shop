@@ -407,7 +407,7 @@ export default function QuickEstimateTable({
                                                                 📦{" "}
                                                                 {
                                                                     product.packQuantity
-                                                                }{"/"}
+                                                                }
                                                                 {
                                                                     product.packUnit
                                                                 }

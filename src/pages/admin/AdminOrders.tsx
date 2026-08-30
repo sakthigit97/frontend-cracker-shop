@@ -21,6 +21,25 @@ const DATE_OPTIONS = [
 ] as const;
 type DateRange = "all" | "today" | "7" | "30";
 
+function getCityFromAddress(address?: string) {
+    if (!address) return "-";
+
+    const lines = address
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+    const locationLine =
+        lines[lines.length - 1] ?? "";
+
+    const city =
+        locationLine
+            .split(",")[0]
+            ?.trim() ?? "";
+
+    return city || "-";
+}
+
 export default function AdminOrders() {
     const [status, setStatus] = useState("ORDER_PLACED");
     const [stateFilter, setStateFilter] = useState<
@@ -248,7 +267,7 @@ export default function AdminOrders() {
 
                                 {/* State */}
                                 <p className="text-xs text-gray-500 mt-1">
-                                    📍 {o.deliveryState || "-"}
+                                    📍 {getCityFromAddress(o.address)},{" "} {o.deliveryState || "-"}
                                 </p>
 
                                 {/* Bottom Row */}
@@ -270,10 +289,6 @@ export default function AdminOrders() {
 
                                         <p className="font-semibold">
                                             ₹{o.finalPayable}
-                                        </p>
-
-                                        <p className="text-xs text-gray-500">
-                                            {o.paymentMode}
                                         </p>
 
                                     </div>

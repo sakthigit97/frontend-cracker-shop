@@ -12,6 +12,7 @@ import { useConfigStore } from "../store/config.store";
 import defaultImage from "../assets/default-image.png";
 import { calculateCouponDiscount } from "../utils/coupon";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
+import { useAuth } from "../store/auth.store";
 
 type AdjustOrderItem = {
     productId: string;
@@ -32,6 +33,7 @@ export default function AdjustOrder() {
     const location = useLocation();
     const { orderId } = useParams();
     const { showAlert } = useAlert();
+    const { user } = useAuth();
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const order = location.state?.order;
     const config = useConfigStore((s) => s.config);
@@ -47,9 +49,30 @@ export default function AdjustOrder() {
     );
 
     const originalItems = originalItemsRef.current;
-    const isAdmin = location.state?.isAdmin === true;
-    const canAdjust = isAdmin || order.status === "ORDER_PLACED";
 
+    // This component is shared by User, Staff and Admin.
+    // Keep the route context so Back/Save always returns to the correct details page.
+    const ordersBasePath = location.pathname.startsWith("/staff/orders")
+        ? "/staff/orders"
+        : location.pathname.startsWith("/admin/orders")
+            ? "/admin/orders"
+            : "/orders";
+
+    const returnPath =
+        location.state?.returnPath ||
+        (orderId ? `${ordersBasePath}/${orderId}` : ordersBasePath);
+
+    const canAdjustConfirmed =
+        location.state?.canAdjustConfirmed === true ||
+        user?.role === "ADMIN" ||
+        user?.role === "STAFF";
+
+    const canAdjust =
+        canAdjustConfirmed
+            ? order.status !== "PAYMENT_CONFIRMED" &&
+            order.status !== "DISPATCHED" &&
+            order.status !== "CANCELLED"
+            : order.status === "ORDER_PLACED";
 
     const [items, setItems] = useState<AdjustOrderItem[]>(() =>
         order.items.map((i: any) => ({
@@ -80,12 +103,10 @@ export default function AdjustOrder() {
 
                 <Button
                     onClick={() =>
-                        navigate(
-                            isAdmin ? "/admin/orders" : "/orders"
-                        )
+                        navigate(ordersBasePath)
                     }
                 >
-                    {isAdmin ? "Back to Orders" : "Back to My Orders"}
+                    {canAdjustConfirmed ? "Back to Orders" : "Back to My Orders"}
                 </Button>
             </div>
         );
@@ -125,62 +146,134 @@ export default function AdjustOrder() {
     const couponCode = order.couponCode ?? null;
     const couponType = order.couponType ?? null;
     const couponValue = Number(order.couponValue ?? 0);
+    const additionalDiscountType =
+        order.additionalDiscountType ?? null;
+
+    const additionalDiscountValue =
+        Number(order.additionalDiscountValue ?? 0);
 
     const derivedState = order?.state ||
         (order?.address?.includes("Tamil Nadu")
             ? "Tamil Nadu"
             : "Other");
 
+
+
     const pricing = useMemo(() => {
+
         if (!hasChanges) {
             return {
-                packagingCharge: order.packagingCharge,
-                amountBeforeDiscount: order.amountBeforeDiscount,
-                couponDiscount: order.couponDiscount,
-                amountAfterDiscount: order.amountAfterDiscount,
-                gstAmount: order.gstAmount,
-                grandTotal: order.grandTotal,
+                packagingCharge: Number(order.packagingCharge ?? 0),
+                amountBeforeDiscount: Number(
+                    order.amountBeforeDiscount ?? 0
+                ),
+                couponDiscount: Number(
+                    order.couponDiscount ?? 0
+                ),
+                amountAfterDiscount: Number(
+                    order.amountAfterDiscount ?? 0
+                ),
+                gstAmount: Number(
+                    order.gstAmount ?? 0
+                ),
+                grandTotal: Number(
+                    order.grandTotal ?? 0
+                ),
+                additionalDiscount: Number(
+                    order.additionalDiscount ?? 0
+                ),
             };
         }
 
+        const productTotal =
+            Number(pricingBreakdown.nonComboProductTotal ?? 0) +
+            Number(pricingBreakdown.comboPackageTotal ?? 0);
+
         const packagingCharge = Math.round(
-            (pricingBreakdown.nonComboProductTotal * packagingPercent) / 100
+            (
+                Number(pricingBreakdown.nonComboProductTotal ?? 0) *
+                packagingPercent
+            ) / 100
         );
-        const amountBeforeDiscount = pricingBreakdown.productSubtotal + packagingCharge;
+
+        const amountBeforeDiscount =
+            productTotal + packagingCharge;
+
         const couponDiscount = calculateCouponDiscount({
             amountBeforeDiscount,
             couponType,
             couponValue,
         });
+        let additionalDiscount = 0;
 
-        const {
-            gstAmount,
-            grandTotal,
-        } = calculateOrderAmounts({
-            nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
-            comboPackageTotal: pricingBreakdown.comboPackageTotal,
-            couponDiscount,
-            packagingPercent,
-            gstPercent,
-            state: derivedState,
-            config,
-        });
+        if (
+            additionalDiscountType === "PERCENTAGE" &&
+            additionalDiscountValue > 0
+        ) {
+            additionalDiscount = Math.round(
+                (productTotal * additionalDiscountValue) / 100
+            );
+        } else if (
+            additionalDiscountType === "FLAT" &&
+            additionalDiscountValue > 0
+        ) {
+            additionalDiscount = additionalDiscountValue;
+        }
+
+        additionalDiscount = Math.min(
+            Math.max(additionalDiscount, 0),
+            productTotal
+        );
+
+        const calculated =
+            calculateOrderAmounts({
+                nonComboProductTotal:
+                    pricingBreakdown.nonComboProductTotal,
+
+                comboPackageTotal:
+                    pricingBreakdown.comboPackageTotal,
+
+                couponDiscount,
+
+                additionalDiscount,
+
+                packagingPercent,
+                gstPercent,
+
+                state: derivedState,
+                config,
+
+            });
 
         return {
-            packagingCharge,
-            amountBeforeDiscount,
-            couponDiscount,
-            amountAfterDiscount: amountBeforeDiscount - couponDiscount,
-            gstAmount,
-            grandTotal,
-        };
+            packagingCharge:
+                calculated.packagingCharge,
 
+            amountBeforeDiscount,
+
+            couponDiscount:
+                calculated.appliedCouponDiscount,
+
+            amountAfterDiscount:
+                calculated.discountedGrossTotal,
+
+            gstAmount:
+                calculated.gstAmount,
+
+            grandTotal:
+                calculated.grandTotal,
+
+            additionalDiscount:
+                calculated.appliedAdditionalDiscount,
+        };
     }, [
         hasChanges,
         order,
         pricingBreakdown,
         couponType,
         couponValue,
+        additionalDiscountType,
+        additionalDiscountValue,
         packagingPercent,
         gstPercent,
         derivedState,
@@ -191,6 +284,7 @@ export default function AdjustOrder() {
         packagingCharge,
         amountBeforeDiscount,
         couponDiscount,
+        additionalDiscount,
         amountAfterDiscount,
         gstAmount,
         grandTotal,
@@ -201,6 +295,7 @@ export default function AdjustOrder() {
         grandTotal - walletUsed,
         0
     );
+
 
     const oldTotal = Number(order.grandTotal || 0);
     const diffAmount = grandTotal - oldTotal;
@@ -307,7 +402,7 @@ export default function AdjustOrder() {
         if (saving) return;
         try {
             setSaving(true);
-            const updatedOrder = await adjustOrderApi(mobile, orderId, {
+            await adjustOrderApi(mobile, orderId, {
                 items: items.map(i => ({
                     productId: i.productId,
                     quantity: i.quantity,
@@ -323,17 +418,12 @@ export default function AdjustOrder() {
 
             clearOrdersCache();
 
-            navigate(
-                isAdmin
-                    ? `/admin/orders/${orderId}`
-                    : `/orders/${orderId}`,
-                {
-                    replace: true,
-                    state: isAdmin
-                        ? { forceRefresh: true }
-                        : { order: updatedOrder },
-                }
-            );
+            navigate(returnPath, {
+                replace: true,
+                state: {
+                    forceRefresh: true,
+                },
+            });
 
         } catch (err: any) {
             showAlert({
@@ -352,7 +442,19 @@ export default function AdjustOrder() {
             <div className="flex items-center gap-3 mb-4">
                 <button
                     data-enter-submit="true"
-                    onClick={() => navigate(-1)}
+                    onClick={() => {
+                        if (showLeaveConfirm && hasChanges) {
+                            setShowLeaveConfirm(true);
+                            return;
+                        }
+
+                        if (hasChanges && canAdjust) {
+                            setShowLeaveConfirm(true);
+                            return;
+                        }
+
+                        navigate(returnPath);
+                    }}
                     className="
                     flex items-center justify-center
                     w-9 h-9
@@ -556,7 +658,7 @@ export default function AdjustOrder() {
                                                     font-medium
                                                     text-gray-700
                                                 ">
-                                                    {packQuantity}/{packUnit}
+                                                    {packQuantity} {packUnit}
                                                 </span>
                                             ) : (
                                                 <span className="text-gray-400">
@@ -790,6 +892,21 @@ export default function AdjustOrder() {
                                         </div>
                                     )}
 
+                                    {additionalDiscount > 0 && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span>
+                                                Additional Discount{" "}
+                                                {additionalDiscountType === "PERCENTAGE"
+                                                    ? `(${additionalDiscountValue}%)`
+                                                    : `(Flat ₹${additionalDiscountValue})`}
+                                            </span>
+
+                                            <span>
+                                                -₹{formatCurrency(additionalDiscount)}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {packagingCharge > 0 && (
                                         <div className="flex justify-between text-gray-600">
                                             <span>Packaging Charge ({packagingPercent}%)</span>
@@ -931,7 +1048,10 @@ export default function AdjustOrder() {
                 description="You have unsaved changes. Are you sure?"
                 confirmText="Discard"
                 cancelText="Stay"
-                onConfirm={() => navigate(-1)}
+                onConfirm={() => {
+                    setShowLeaveConfirm(false);
+                    navigate(returnPath);
+                }}
                 onCancel={() => setShowLeaveConfirm(false)}
             />
 

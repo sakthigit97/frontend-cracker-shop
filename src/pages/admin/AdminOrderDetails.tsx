@@ -6,6 +6,7 @@ import {
     STATUS_COLORS,
     STATUS_ORDER,
 } from "../../utils/orderStatus";
+import { apiFetch } from "../../services/api";
 import { useAdminOrderDetailsStore } from "../../store/adminOrderDetails.store";
 import Button from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -30,12 +31,12 @@ export default function AdminOrderDetails() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
     const location = useLocation();
+    const { user } = useAuth();
     const [downloading, setDownloading] = useState(false);
     const [downloadingPackingList, setDownloadingPackingList] = useState(false);
     const { cache, fetchOrder, loading, updateOrder } = useAdminOrderDetailsStore();
     const updateOrderListCache = useAdminOrdersStore((s) => s.updateOrderInCache);
     const [showConfirm, setShowConfirm] = useState(false);
-    const { user } = useAuth();
     const [pendingPayload, setPendingPayload] = useState<{
         status?: string;
         adminComment?: string;
@@ -47,22 +48,20 @@ export default function AdminOrderDetails() {
     const [comment, setComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [restoring, setRestoring] = useState(false);
+    const [discountType, setDiscountType] =
+        useState<"FLAT" | "PERCENTAGE">("FLAT");
+
+    const [discountValue, setDiscountValue] =
+        useState("");
+
+    const [showDiscountConfirm, setShowDiscountConfirm] =
+        useState(false);
+
+    const [discountSubmitting, setDiscountSubmitting] =
+        useState(false);
+
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
-    const [
-        selectedPaymentAccountIds,
-        setSelectedPaymentAccountIds,
-    ] = useState<string[]>([]);
-
-    const [
-        generatedPaymentMessage,
-        setGeneratedPaymentMessage,
-    ] = useState("");
-
-    const [
-        copyingPaymentMessage,
-        setCopyingPaymentMessage,
-    ] = useState(false);
 
     const order = cache[orderId];
     const packagingPercent = config?.packagingPercent ?? 0;
@@ -107,199 +106,16 @@ export default function AdminOrderDetails() {
 
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
+    const canApplyDiscount =
+        order?.status === "ORDER_PLACED" ||
+        order?.status === "ORDER_CONFIRMED";
+
     const canDownloadInvoice = STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
         order.status !== "CANCELLED";
 
-    
-
     const isCancelled = order?.status === "CANCELLED";
     const currentIndex = STATUS_ORDER.indexOf(order?.status);
-    const companyName = config?.companyName || 'Sivakaasi Pyro Park';
-    const paymentAccounts =
-        Array.isArray(config?.paymentAccounts)
-            ? config.paymentAccounts
-            : [];
-
-    const finalPayableAmount =
-        Number(order?.finalPayable ?? 0) > 0
-            ? Number(order.finalPayable)
-            : Number(order?.grandTotal ?? 0);
-
-    const generatePaymentMessage = () => {
-        const lines: string[] = [];
-
-        lines.push(
-            `🎉 Your ${companyName} Order is Confirmed!`
-        );
-
-        lines.push(
-            `Order ID: ${order.orderId}`
-        );
-
-        lines.push(
-            `Total: ₹${formatCurrency(
-                finalPayableAmount
-            )}`
-        );
-
-        lines.push("");
-
-        lines.push(
-            "Pay via Bank Transfer:"
-        );
-
-        lines.push(
-            "Payment Details:"
-        );
-
-        lines.push("");
-
-        /*
-         * Only include the payment accounts
-         * selected by the admin.
-         */
-        const selectedAccounts =
-            paymentAccounts.filter(
-                (
-                    account: any,
-                    index: number
-                ) => {
-                    const accountId =
-                        account.id ||
-                        String(index);
-
-                    return selectedPaymentAccountIds.includes(
-                        accountId
-                    );
-                }
-            );
-
-        selectedAccounts.forEach(
-            (
-                account: any,
-                index: number
-            ) => {
-                if (index > 0) {
-                    lines.push("");
-                }
-
-                if (
-                    account.type ===
-                    "BANK"
-                ) {
-                    lines.push(
-                        account.bankName ||
-                        "Bank"
-                    );
-
-                    lines.push(
-                        `Name: ${account.bankUserName ||
-                        ""
-                        }`
-                    );
-
-                    lines.push(
-                        `A/C No: ${account.accountNumber ||
-                        ""
-                        }`
-                    );
-
-                    lines.push(
-                        `IFSC: ${account.ifsc} (${account.accountType === "SAVINGS"
-                            ? "Savings A/C"
-                            : "Current A/C"
-                        })`
-                    );
-
-                    return;
-                }
-
-                const paymentName =
-                    account.type ===
-                        "GPAY"
-                        ? "GPay"
-                        : account.type ===
-                            "PHONEPE"
-                            ? "PhonePe"
-                            : account.type ===
-                                "PAYTM"
-                                ? "Paytm"
-                                : account.type;
-
-                lines.push(
-                    paymentName
-                );
-
-                if (
-                    account.mobileNumber
-                ) {
-                    lines.push(
-                        `Mobile: ${account.mobileNumber}`
-                    );
-                }
-
-                if (
-                    account.upiId
-                ) {
-                    lines.push(
-                        `UPI ID: ${account.upiId}`
-                    );
-                }
-            }
-        );
-
-        lines.push("");
-
-        lines.push(
-            "👉 Please share your payment screenshot here to start dispatch."
-        );
-
-        lines.push(
-            `Track here: ${config?.website}`
-        );
-
-        return lines.join("\n");
-    };
-
-    const handleCopyPaymentMessage = async () => {
-        if (!generatedPaymentMessage) {
-            showAlert({
-                type: "error",
-                message:
-                    "Please generate the payment message first.",
-            });
-
-            return;
-        }
-
-        try {
-            setCopyingPaymentMessage(true);
-
-            await navigator.clipboard.writeText(
-                generatedPaymentMessage
-            );
-
-            showAlert({
-                type: "success",
-                message: "Payment message copied",
-                duration: 1500,
-            });
-        } catch (error) {
-            console.error(
-                "Copy payment message failed:",
-                error
-            );
-
-            showAlert({
-                type: "error",
-                message:
-                    "Unable to copy payment message.",
-            });
-        } finally {
-            setCopyingPaymentMessage(false);
-        }
-    };
 
     const nextStatus =
         currentIndex >= 0 &&
@@ -373,30 +189,6 @@ export default function AdminOrderDetails() {
         }
     }
 
-    const getPaymentAccountLabel = (
-        account: any
-    ) => {
-        if (account.type === "BANK") {
-            return (
-                account.bankName ||
-                "Bank Account"
-            );
-        }
-
-        if (account.type === "GPAY") {
-            return "GPay";
-        }
-
-        if (account.type === "PHONEPE") {
-            return "PhonePe";
-        }
-
-        if (account.type === "PAYTM") {
-            return "Paytm";
-        }
-
-        return "Payment Account";
-    };
 
     async function handleDownloadInvoice() {
         if (downloading) return;
@@ -418,6 +210,120 @@ export default function AdminOrderDetails() {
             setDownloading(false);
         }
     }
+
+    const handleApplyDiscount = () => {
+        if (!order || discountSubmitting) {
+            return;
+        }
+
+        const value = Number(discountValue);
+
+        if (
+            discountValue.trim() === "" ||
+            !Number.isFinite(value)
+        ) {
+            showAlert({
+                type: "error",
+                message: "Please enter a valid discount value.",
+            });
+            return;
+        }
+
+        if (value < 0) {
+            showAlert({
+                type: "error",
+                message: "Discount cannot be negative.",
+            });
+            return;
+        }
+
+        const productTotal = Number(order.totalProductAmount ?? 0);
+
+        if (discountType === "PERCENTAGE") {
+            if (value > 100) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "Percentage discount cannot exceed 100%.",
+                });
+                return;
+            }
+        }
+
+        if (discountType === "FLAT") {
+            if (value > productTotal) {
+                showAlert({
+                    type: "error",
+                    message:
+                        "Flat discount cannot exceed the product total.",
+                });
+                return;
+            }
+        }
+
+        setShowDiscountConfirm(true);
+    };
+
+    const handleConfirmApplyDiscount = async () => {
+        if (!order || discountSubmitting) {
+            return;
+        }
+
+        const value = Number(discountValue);
+
+        try {
+            setShowDiscountConfirm(false);
+            setDiscountSubmitting(true);
+
+            await apiFetch(
+                `/admin/orders/${encodeURIComponent(
+                    order.orderId
+                )}/discount`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        discountType,
+                        discountValue: value,
+                    }),
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            updateOrderListCache(order.orderId, {
+                additionalDiscount:
+                    discountType === "PERCENTAGE"
+                        ? undefined
+                        : value,
+                additionalDiscountType: discountType,
+                additionalDiscountValue: value,
+            });
+
+            setDiscountValue("");
+            showAlert({
+                type: "success",
+                message: "Additional discount applied successfully.",
+                duration: 2000,
+            });
+        } catch (err: any) {
+            console.error(
+                "Failed to apply additional discount",
+                err
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    err?.message ||
+                    "Failed to apply additional discount.",
+            });
+        } finally {
+            setDiscountSubmitting(false);
+        }
+    };
 
     if (!order && loading) {
         return (
@@ -524,7 +430,6 @@ export default function AdminOrderDetails() {
                                 />
                             </svg>
                         </button>
-
                     </div>
 
                     <p className="text-xs text-gray-500">
@@ -537,19 +442,26 @@ export default function AdminOrderDetails() {
                                 variant="outline"
                                 className="px-3 py-1.5 text-xs"
                                 disabled={!canAdjust || submitting}
-                                onClick={() =>
-                                    navigate(
-                                        user?.role === "STAFF"
-                                            ? `/staff/orders/${order.orderId}/adjust`
-                                            : `/admin/orders/${order.orderId}/adjust`,
-                                        {
-                                            state: {
-                                                order,
-                                                isAdmin: user?.role !== "STAFF",
-                                            },
-                                        }
-                                    )
-                                }
+                                onClick={() => {
+                                    const isStaff = user?.role === "STAFF";
+                                    const detailsPath = isStaff
+                                        ? `/staff/orders/${order.orderId}`
+                                        : `/admin/orders/${order.orderId}`;
+
+                                    const adjustPath = isStaff
+                                        ? `/staff/orders/${order.orderId}/adjust`
+                                        : `/admin/orders/${order.orderId}/adjust`;
+
+                                    navigate(adjustPath, {
+                                        state: {
+                                            order,
+                                            canAdjustConfirmed:
+                                                user?.role === "ADMIN" ||
+                                                user?.role === "STAFF",
+                                            returnPath: detailsPath,
+                                        },
+                                    });
+                                }}
                             >
                                 Adjust Order
                             </Button>
@@ -650,6 +562,8 @@ export default function AdminOrderDetails() {
                     </div>
                 </div>
             </div>
+
+
             {/* ITEMS */}
 
             <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -657,17 +571,7 @@ export default function AdminOrderDetails() {
                 {/* Scroll only the product table */}
                 <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
 
-                    <table className="w-full min-w-[900px] table-fixed text-sm">
-
-                        <colgroup>
-                            <col className="w-[32%]" />
-                            <col className="w-[13%]" />
-                            <col className="w-[11%]" />
-                            <col className="w-[12%]" />
-                            <col className="w-[12%]" />
-                            <col className="w-[8%]" />
-                            <col className="w-[12%]" />
-                        </colgroup>
+                    <table className="w-full min-w-[820px] text-sm">
 
                         <thead className="sticky top-0 z-10 bg-gray-50">
 
@@ -681,24 +585,20 @@ export default function AdminOrderDetails() {
                                     Unit
                                 </th>
 
-                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
-                                    MRP
-                                </th>
-
-                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                                    Discount
-                                </th>
-
-                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
-                                    Offer Price
-                                </th>
-
                                 <th className="px-4 py-3 text-center font-semibold text-gray-700">
                                     Qty
                                 </th>
 
                                 <th className="px-4 py-3 text-right font-semibold text-gray-700">
-                                    Total
+                                    MRP
+                                </th>
+
+                                <th className="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Price
+                                </th>
+
+                                <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                                    Discount
                                 </th>
 
                             </tr>
@@ -715,8 +615,7 @@ export default function AdminOrderDetails() {
                                             item.packQuantity ?? 0
                                         );
 
-                                    const packUnit =
-                                        item.packUnit?.trim();
+                                    const packUnit = item.packUnit?.trim();
 
                                     const hasPack =
                                         packQuantity > 0 &&
@@ -728,10 +627,7 @@ export default function AdminOrderDetails() {
                                                 item.productId ||
                                                 idx
                                             }
-                                            className="
-                                    align-middle
-                                    hover:bg-gray-50
-                                "
+                                            className="align-middle hover:bg-gray-50"
                                         >
 
                                             {/* Product */}
@@ -767,7 +663,7 @@ export default function AdminOrderDetails() {
 
                                                         <div className="flex flex-wrap items-center gap-2">
 
-                                                            <p className="font-semibold text-gray-900 truncate">
+                                                            <p className="font-semibold text-gray-900">
                                                                 {item.name}
                                                             </p>
 
@@ -788,13 +684,15 @@ export default function AdminOrderDetails() {
 
                                                         </div>
 
+
+
                                                     </div>
 
                                                 </div>
 
                                             </td>
 
-                                            {/* Unit */}
+                                            {/* Pack */}
                                             <td className="px-4 py-3 text-center">
 
                                                 {hasPack ? (
@@ -809,13 +707,23 @@ export default function AdminOrderDetails() {
                                             font-medium
                                             text-gray-700
                                         ">
-                                                        {packQuantity}/{packUnit}
+                                                        {packQuantity}{"/"}
+                                                        {packUnit}
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400">
                                                         -
                                                     </span>
                                                 )}
+
+                                            </td>
+
+                                            {/* Qty */}
+                                            <td className="px-4 py-3 text-center">
+
+                                                <span className="font-medium text-gray-800">
+                                                    {item.quantity}
+                                                </span>
 
                                             </td>
 
@@ -829,31 +737,7 @@ export default function AdminOrderDetails() {
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400">
-                                                        ₹{formatCurrency(item.price)}
-                                                    </span>
-                                                )}
-
-                                            </td>
-
-                                            {/* Discount */}
-                                            <td className="px-4 py-3 text-center whitespace-nowrap">
-
-                                                {item.discountText ? (
-                                                    <span className="
-                                                        inline-flex
-                                                        rounded-full
-                                                        bg-green-100
-                                                        px-2
-                                                        py-0.5
-                                                        text-xs
-                                                        font-semibold
-                                                        text-green-700
-                                                    ">
-                                                        {item.discountText}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-400">
-                                                        NET RATE
+                                                        -
                                                     </span>
                                                 )}
 
@@ -868,21 +752,27 @@ export default function AdminOrderDetails() {
 
                                             </td>
 
-                                            {/* Qty */}
-                                            <td className="px-4 py-3 text-center">
+                                            {/* Discount */}
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
 
-                                                <span className="font-medium text-gray-800">
-                                                    {item.quantity}
-                                                </span>
-
-                                            </td>
-
-                                            {/* Total */}
-                                            <td className="px-4 py-3 text-right whitespace-nowrap">
-
-                                                <span className="font-semibold text-gray-900">
-                                                    ₹{formatCurrency(item.total)}
-                                                </span>
+                                                {item.discountText ? (
+                                                    <span className="
+                                                        inline-flex
+                                                        rounded-full
+                                                        bg-green-100
+                                                        px-2
+                                                        py-0.5
+                                                        font-semibold
+                                                        text-green-700
+                                                        text-xs
+                                                    ">
+                                                        {item.discountText}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        -
+                                                    </span>
+                                                )}
 
                                             </td>
 
@@ -899,6 +789,155 @@ export default function AdminOrderDetails() {
 
             </div>
 
+
+            {(user?.role === "ADMIN" ||
+                user?.role === "STAFF") &&
+                canApplyDiscount && (
+                    <div className="bg-white border border-gray-300 rounded-xl p-5">
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold">
+                                Additional Discount
+                            </h3>
+
+                            <p className="text-sm text-gray-500 mt-1">
+                                Apply a discount to the product total.
+                                Packaging and GST will be recalculated
+                                automatically.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_auto] gap-3 items-end">
+
+                            {/* Discount Type */}
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">
+                                    Discount Type
+                                </label>
+
+                                <select
+                                    value={discountType}
+                                    onChange={(e) =>
+                                        setDiscountType(
+                                            e.target.value as
+                                            | "FLAT"
+                                            | "PERCENTAGE"
+                                        )
+                                    }
+                                    disabled={discountSubmitting}
+                                    className="
+                            w-full
+                            border
+                            rounded-lg
+                            px-3
+                            py-2
+                            text-sm
+                            bg-white
+                        "
+                                >
+                                    <option value="FLAT">
+                                        Flat (₹)
+                                    </option>
+
+                                    <option value="PERCENTAGE">
+                                        Percentage (%)
+                                    </option>
+                                </select>
+                            </div>
+
+                            {/* Discount Value */}
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">
+                                    Discount Value
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max={
+                                        discountType === "PERCENTAGE"
+                                            ? 100
+                                            : Number(
+                                                order.totalProductAmount ??
+                                                0
+                                            )
+                                    }
+                                    step="0.01"
+                                    value={discountValue}
+                                    onChange={(e) => {
+                                        const value =
+                                            e.target.value;
+
+                                        if (value === "") {
+                                            setDiscountValue("");
+                                            return;
+                                        }
+
+                                        const numericValue =
+                                            Number(value);
+
+                                        if (
+                                            !Number.isFinite(
+                                                numericValue
+                                            ) ||
+                                            numericValue < 0
+                                        ) {
+                                            return;
+                                        }
+
+                                        if (
+                                            discountType ===
+                                            "PERCENTAGE" &&
+                                            numericValue > 100
+                                        ) {
+                                            return;
+                                        }
+
+                                        if (
+                                            discountType === "FLAT" &&
+                                            numericValue >
+                                            Number(
+                                                order.totalProductAmount ??
+                                                0
+                                            )
+                                        ) {
+                                            return;
+                                        }
+
+                                        setDiscountValue(value);
+                                    }}
+                                    disabled={discountSubmitting}
+                                    placeholder={
+                                        discountType === "PERCENTAGE"
+                                            ? "0 - 100"
+                                            : "Enter amount"
+                                    }
+                                    className="
+                            w-full
+                            border
+                            rounded-lg
+                            px-3
+                            py-2
+                            text-sm
+                        "
+                                />
+                            </div>
+
+                            {/* Apply */}
+                            <Button
+                                type="button"
+                                disabled={
+                                    discountSubmitting ||
+                                    discountValue.trim() === ""
+                                }
+                                onClick={handleApplyDiscount}
+                            >
+                                {discountSubmitting
+                                    ? "Applying..."
+                                    : "Apply Discount"}
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
             {/* ADDRESS + ORDER SUMMARY */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
@@ -965,6 +1004,22 @@ export default function AdminOrderDetails() {
                                 <span>Non Combo Products</span>
                                 <span>
                                     ₹{formatCurrency(order.nonComboProductTotal)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Additional Discount */}
+                        {(order.additionalDiscount ?? 0) > 0 && (
+                            <div className="flex justify-between text-green-600 font-medium">
+                                <span>
+                                    Additional Discount{" "}
+                                    {order.additionalDiscountType === "PERCENTAGE"
+                                        ? `(${order.additionalDiscountValue}%)`
+                                        : `(Flat ₹${order.additionalDiscountValue})`}
+                                </span>
+
+                                <span>
+                                    -₹{formatCurrency(order.additionalDiscount)}
                                 </span>
                             </div>
                         )}
@@ -1158,7 +1213,14 @@ export default function AdminOrderDetails() {
                                             {updatedBy && (
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Changed By :{" "}
-                                                    {updatedBy}
+                                                    {updatedBy.startsWith(
+                                                        "ADMIN"
+                                                    )
+                                                        ? "Admin"
+                                                        : updatedBy.replace(
+                                                            "USER#",
+                                                            ""
+                                                        )}
                                                 </p>
                                             )}
 
@@ -1175,321 +1237,6 @@ export default function AdminOrderDetails() {
                 </div>
             )}
 
-
-            {/* =================================================
-                * PAYMENT MESSAGE
-                * ================================================= */}
-
-            {paymentAccounts.length > 0 && (
-                <div className="border border-gray-200 rounded-xl p-4 space-y-4">
-                    <div>
-                        <p className="text-sm font-semibold text-gray-800">
-                            Payment Message
-                        </p>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                            Select the payment account(s) to include
-                            in the customer payment message.
-                        </p>
-                    </div>
-
-                    {/* -----------------------------------------
-         * PAYMENT ACCOUNT SELECTION
-         * ----------------------------------------- */}
-
-                    <div className="space-y-2">
-                        {paymentAccounts.map(
-                            (
-                                account: any,
-                                index: number
-                            ) => {
-                                const accountId =
-                                    account.id ||
-                                    String(index);
-
-                                const isSelected =
-                                    selectedPaymentAccountIds.includes(
-                                        accountId
-                                    );
-
-                                const accountName =
-                                    getPaymentAccountLabel(
-                                        account
-                                    );
-
-                                return (
-                                    <label
-                                        key={accountId}
-                                        className={`
-                                flex
-                                items-center
-                                gap-3
-                                rounded-lg
-                                border
-                                px-3
-                                py-3
-                                cursor-pointer
-                                transition
-                                ${isSelected
-                                                ? "border-[var(--color-primary)] bg-gray-50"
-                                                : "border-gray-200"
-                                            }
-                            `}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                isSelected
-                                            }
-                                            onChange={() => {
-                                                setSelectedPaymentAccountIds(
-                                                    (previous) => {
-                                                        if (
-                                                            previous.includes(
-                                                                accountId
-                                                            )
-                                                        ) {
-                                                            return previous.filter(
-                                                                (id) =>
-                                                                    id !==
-                                                                    accountId
-                                                            );
-                                                        }
-
-                                                        return [
-                                                            ...previous,
-                                                            accountId,
-                                                        ];
-                                                    }
-                                                );
-
-                                                /*
-                                                 * Selected accounts changed,
-                                                 * so previous generated message
-                                                 * is no longer valid.
-                                                 */
-                                                setGeneratedPaymentMessage(
-                                                    ""
-                                                );
-                                            }}
-                                            className="
-                                    h-4
-                                    w-4
-                                    shrink-0
-                                "
-                                        />
-
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-gray-800">
-                                                {accountName}
-                                            </p>
-
-                                            {account.type ===
-                                                "BANK" && (
-                                                    <p className="text-xs text-gray-500 mt-0.5">
-                                                        {account.bankUserName ||
-                                                            ""}
-                                                        {account.bankUserName &&
-                                                            account.accountNumber
-                                                            ? " • "
-                                                            : ""}
-                                                        {account.accountNumber ||
-                                                            ""}
-                                                    </p>
-                                                )}
-
-                                            {account.type !==
-                                                "BANK" && (
-                                                    <p className="text-xs text-gray-500 mt-0.5">
-                                                        {account.upiId ||
-                                                            account.mobileNumber ||
-                                                            ""}
-                                                    </p>
-                                                )}
-                                        </div>
-                                    </label>
-                                );
-                            }
-                        )}
-                    </div>
-
-                    {/* -----------------------------------------
-         * SELECTED COUNT
-         * ----------------------------------------- */}
-
-                    {selectedPaymentAccountIds.length >
-                        0 && (
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs text-gray-500">
-                                    {
-                                        selectedPaymentAccountIds.length
-                                    }{" "}
-                                    account
-                                    {selectedPaymentAccountIds.length >
-                                        1
-                                        ? "s"
-                                        : ""}{" "}
-                                    selected
-                                </p>
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedPaymentAccountIds(
-                                            []
-                                        );
-
-                                        setGeneratedPaymentMessage(
-                                            ""
-                                        );
-                                    }}
-                                    className="
-                        text-xs
-                        font-medium
-                        text-red-600
-                        hover:text-red-700
-                    "
-                                >
-                                    Clear Selection
-                                </button>
-                            </div>
-                        )}
-
-                    {/* -----------------------------------------
-         * GENERATE MESSAGE
-         * ----------------------------------------- */}
-
-                    <Button
-                        type="button"
-                        disabled={
-                            selectedPaymentAccountIds.length ===
-                            0
-                        }
-                        onClick={() => {
-                            if (
-                                selectedPaymentAccountIds.length ===
-                                0
-                            ) {
-                                showAlert({
-                                    type: "error",
-                                    message:
-                                        "Please select at least one payment account.",
-                                });
-
-                                return;
-                            }
-
-                            const message =
-                                generatePaymentMessage();
-
-                            if (!message) {
-                                showAlert({
-                                    type: "error",
-                                    message:
-                                        "Unable to generate payment message.",
-                                });
-
-                                return;
-                            }
-
-                            setGeneratedPaymentMessage(
-                                message
-                            );
-                        }}
-                        className="w-full sm:w-auto"
-                    >
-                        Generate Payment Message
-                    </Button>
-
-                    {/* -----------------------------------------
-         * MESSAGE PREVIEW
-         * ----------------------------------------- */}
-
-                    {generatedPaymentMessage && (
-                        <div className="space-y-3">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <p className="text-sm font-medium text-gray-700">
-                                    Message Preview
-                                </p>
-
-                                <button
-                                    type="button"
-                                    onClick={
-                                        handleCopyPaymentMessage
-                                    }
-                                    disabled={
-                                        copyingPaymentMessage
-                                    }
-                                    className="
-                                        inline-flex
-                                        items-center
-                                        justify-center
-                                        gap-2
-                                        rounded-lg
-                                        border
-                                        border-gray-300
-                                        bg-white
-                                        px-3
-                                        py-2
-                                        text-sm
-                                        font-medium
-                                        text-gray-700
-                                        transition
-                                        hover:bg-gray-100
-                                        active:bg-gray-200
-                                        disabled:cursor-not-allowed
-                                        disabled:opacity-50
-                                    "
-                                >
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2M16 8h2a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2"
-                                        />
-                                    </svg>
-
-                                    {copyingPaymentMessage
-                                        ? "Copying..."
-                                        : "Copy Message"}
-                                </button>
-                            </div>
-
-                            <div
-                                className="
-                                    rounded-xl
-                                    border
-                                    bg-gray-50
-                                    p-4
-                                    max-h-[420px]
-                                    overflow-y-auto
-                                "
-                            >
-                                <pre
-                                    className="
-                                        whitespace-pre-wrap
-                                        break-words
-                                        text-sm
-                                        leading-6
-                                        text-gray-700
-                                        font-sans
-                                    "
-                                >
-                                    {
-                                        generatedPaymentMessage
-                                    }
-                                </pre>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
 
             {/* ADMIN ACTIONS */}
 
@@ -1599,6 +1346,28 @@ export default function AdminOrderDetails() {
                 onCancel={() => {
                     setShowConfirm(false);
                     setPendingPayload(null);
+                }}
+            />
+
+            <ConfirmDialog
+                open={showDiscountConfirm}
+                title="Apply Discount?"
+                description={
+                    discountType === "PERCENTAGE"
+                        ? `Are you sure you want to apply a ${discountValue}% discount to this order?`
+                        : `Are you sure you want to apply a ₹${Number(
+                            discountValue || 0
+                        ).toLocaleString("en-IN")} discount to this order?`
+                }
+                confirmText="Yes, Apply Discount"
+                cancelText="Cancel"
+                onConfirm={handleConfirmApplyDiscount}
+                onCancel={() => {
+                    if (discountSubmitting) {
+                        return;
+                    }
+
+                    setShowDiscountConfirm(false);
                 }}
             />
         </div>

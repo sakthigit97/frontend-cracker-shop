@@ -7,7 +7,6 @@ import { cartStore } from "../store/cart.store";
 import { useConfigStore } from "../store/config.store";
 import { useProfileStore } from "../store/profile.store";
 import { useAlert } from "../store/alert.store";
-import { INDIA_STATES } from "../utils/states";
 import { calculateOrderAmounts } from "../utils/pricing";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import PrivacyPolicy from "./PrivacyPolicy";
@@ -81,6 +80,7 @@ export default function Checkout() {
   const [validatedLocation, setValidatedLocation] = useState<{
     pincode: string;
     state: string;
+    city: string;
   } | null>(null);
 
   const pricingBreakdown = useMemo(
@@ -169,26 +169,63 @@ export default function Checkout() {
         const data = await res.json();
         if (!active) return;
 
+
         if (
           !data ||
-          data[0]?.Status !== "Success"
+          data[0]?.Status !== "Success" ||
+          !data[0]?.PostOffice?.length
         ) {
           setValidatedLocation(null);
           setMinOrderValid(false);
+
           if (addressMode === "NEW") {
             setPincode("");
+            setCity("");
+            setStateValue("");
           }
+
           showAlert({
             type: "error",
-            message: "Invalid pincode. Please select a valid delivery pincode.",
+            message:
+              "Invalid pincode. Please select a valid delivery pincode.",
           });
+
+          return;
+        }
+        const state =
+          data[0]?.PostOffice?.[0]?.State?.trim() ?? "";
+
+        const city =
+          data[0]?.PostOffice?.[0]?.District?.trim() ?? "";
+
+        if (!state || !city) {
+          setValidatedLocation(null);
+          setMinOrderValid(false);
+
+          if (addressMode === "NEW") {
+            setCity("");
+            setStateValue("");
+          }
+
+          showAlert({
+            type: "error",
+            message:
+              "Unable to determine the delivery city and state for this pincode.",
+          });
+
           return;
         }
 
         setValidatedLocation({
           pincode: currentPincode,
-          state: data[0].PostOffice[0].State,
+          state,
+          city,
         });
+
+        if (addressMode === "NEW") {
+          setCity(city);
+          setStateValue(state);
+        }
 
       } catch {
         if (!active) return;
@@ -693,27 +730,6 @@ export default function Checkout() {
 
                   <input
                     type="text"
-                    placeholder="City *"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full rounded-lg border p-3 text-sm"
-                  />
-
-                  <select
-                    value={stateValue}
-                    onChange={(e) => setStateValue(e.target.value)}
-                    className="w-full rounded-lg border p-3 text-sm bg-white"
-                  >
-                    <option value="">Select State *</option>
-                    {INDIA_STATES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="text"
                     placeholder="Pincode *"
                     value={pincode}
                     maxLength={6}
@@ -722,6 +738,22 @@ export default function Checkout() {
                     }
                     className="w-full rounded-lg border p-3 text-sm"
                   />
+                  <input
+                    type="text"
+                    placeholder="City *"
+                    value={city}
+                    readOnly
+                    className="w-full rounded-lg border p-3 text-sm bg-gray-50"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="State *"
+                    value={stateValue}
+                    readOnly
+                    className="w-full rounded-lg border p-3 text-sm bg-gray-50"
+                  />
+
 
                 </div>
               )}
@@ -807,7 +839,7 @@ export default function Checkout() {
                   whitespace-nowrap
                 "
                         >
-                          📦 {p.packQuantity}/{p.packUnit}
+                          📦 {p.packQuantity} {p.packUnit}
                         </span>
                       )}
 

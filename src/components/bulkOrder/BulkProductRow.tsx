@@ -312,7 +312,7 @@ function BulkProductRow({
                     >
                         {formattedCartonQty}
                         {product.packUnit
-                            ? `/${product.packUnit}`
+                            ? ` ${product.packUnit}`
                             : ""}
                     </span>
                 </td>

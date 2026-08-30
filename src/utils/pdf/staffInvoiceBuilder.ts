@@ -248,7 +248,7 @@ export async function buildStaffPackingPdf(
 
                 const cartonText =
                     packQuantity > 0
-                        ? `${packQuantity}/${packUnit
+                        ? `${packQuantity} ${packUnit
                             ? ` ${packUnit}`
                             : ""
                         }`

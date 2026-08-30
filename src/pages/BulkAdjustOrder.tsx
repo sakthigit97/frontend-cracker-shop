@@ -1485,7 +1485,7 @@ function BulkOrderItemRow({
                         />
                     ) : (
                         <span className="text-sm font-medium text-gray-700">
-                            {item.cartonQty}/{packUnit}
+                            {item.cartonQty} {packUnit}
                         </span>
                     )}
                 </div>
@@ -1692,7 +1692,7 @@ function BulkOrderItemRow({
                             />
                         ) : (
                             <p className="mt-1 text-sm font-semibold text-gray-800">
-                                {item.cartonQty}/{packUnit}
+                                {item.cartonQty} {packUnit}
                             </p>
                         )}
                     </div>

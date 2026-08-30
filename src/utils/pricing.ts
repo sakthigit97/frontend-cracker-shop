@@ -6,6 +6,7 @@ export interface OrderAmountCalculationInput {
     nonComboProductTotal: number;
     comboPackageTotal: number;
     couponDiscount: number;
+    additionalDiscount?: number;
     packagingPercent: number;
     gstPercent: number;
     state?: string;
@@ -18,6 +19,7 @@ export interface OrderAmountCalculation {
     grossTotal: number;
     appliedCouponDiscount: number;
     discountedGrossTotal: number;
+    appliedAdditionalDiscount: number;
     gstAmount: number;
     grandTotal: number;
 }
@@ -28,39 +30,74 @@ export function calculateOrderAmounts({
     couponDiscount,
     packagingPercent,
     gstPercent,
+    additionalDiscount = 0,
     state,
     config,
 }: OrderAmountCalculationInput): OrderAmountCalculation {
+
+
+
+    const productTotal =
+        nonComboProductTotal +
+        comboPackageTotal;
 
     const packagingCharge = Math.round(
         (nonComboProductTotal * packagingPercent) / 100
     );
 
-    const nonComboSubtotal = nonComboProductTotal + packagingCharge;
-    const grossTotal = nonComboSubtotal + comboPackageTotal;
+    const nonComboSubtotal =
+        nonComboProductTotal +
+        packagingCharge;
+
+    const grossTotal =
+        nonComboSubtotal +
+        comboPackageTotal;
+
     const appliedCouponDiscount = Math.min(
         Math.max(couponDiscount, 0),
         grossTotal
     );
 
-    const discountedGrossTotal = grossTotal - appliedCouponDiscount;
-    const disableGstForTN = config?.disableGstForTN ?? false;
-    const gstDenominator = Number(config?.gstDenominator ?? 2);
-    const isTN = isTamilNadu(state);
+    const appliedAdditionalDiscount = Math.min(
+        Math.max(additionalDiscount, 0),
+        productTotal
+    );
+
+    const discountedGrossTotal =
+        grossTotal -
+        appliedCouponDiscount -
+        appliedAdditionalDiscount;
+
+    const disableGstForTN =
+        config?.disableGstForTN ?? false;
+
+    const gstDenominator =
+        Number(config?.gstDenominator ?? 2);
+
+    const isTN =
+        isTamilNadu(state);
+
     let gstAmount = 0;
+
     if (!(isTN && disableGstForTN)) {
-        const effectiveGstPercent = gstPercent / gstDenominator;
+        const effectiveGstPercent =
+            gstPercent / gstDenominator;
+
         gstAmount = Math.round(
             (discountedGrossTotal * effectiveGstPercent) / 100
         );
     }
 
-    const grandTotal = discountedGrossTotal + gstAmount;
+    const grandTotal =
+        discountedGrossTotal +
+        gstAmount;
+
     return {
         packagingCharge,
         nonComboSubtotal,
         grossTotal,
         appliedCouponDiscount,
+        appliedAdditionalDiscount,
         discountedGrossTotal,
         gstAmount,
         grandTotal,

@@ -7,6 +7,7 @@ import { getMobileNumbers } from "../../utils/contact";
 export default function Footer() {
   const config = useConfigStore((s) => s.config);
   const mobileNumbers = getMobileNumbers(config?.displayMobile);
+  const playstoreLink = config?.mobileAppLink;
 
   return (
     <footer className="bg-[var(--color-primary)] text-white mt-12">
@@ -119,20 +120,26 @@ export default function Footer() {
           <p className="text-sm text-white/80 mb-3">
             Order faster using our mobile app
           </p>
-          <button
-            className="
-              bg-[var(--color-accent)]
-              text-[var(--color-primary)]
-              px-4 py-2
-              rounded-md
-              text-sm
-              font-semibold
-              hover:opacity-90
-              transition
-            "
-          >
-            Download App
-          </button>
+          {playstoreLink && (
+            <a
+              href={playstoreLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+      inline-block
+      bg-[var(--color-accent)]
+      text-[var(--color-primary)]
+      px-4 py-2
+      rounded-md
+      text-sm
+      font-semibold
+      hover:opacity-90
+      transition
+    "
+            >
+              Download App
+            </a>
+          )}
         </div>
 
       </div>

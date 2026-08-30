@@ -258,6 +258,10 @@ export default function AdminBulkOrderDetails() {
         order?.status === "ORDER_CONFIRMED" ||
         order?.status === "PAYMENT_CONFIRMED";
 
+    const canApplyDiscount =
+        order?.status === "ORDER_PLACED" ||
+        order?.status === "ORDER_CONFIRMED";
+
     const currentIndex = order
         ? STATUS_ORDER.indexOf(order.status)
         : -1;
@@ -1022,7 +1026,7 @@ export default function AdminBulkOrderDetails() {
 
             {(user?.role === "ADMIN" ||
                 user?.role === "STAFF") &&
-                canAdjust && (
+                canApplyDiscount && (
                     <div className="bg-white border border-gray-300 rounded-xl p-5">
                         <div className="mb-4">
                             <h3 className="text-lg font-semibold">

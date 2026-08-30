@@ -1216,7 +1216,7 @@ export default function ProductDetails() {
                       {
                         product.packQuantity
                       }
-                      /
+                      
                       {
                         product.packUnit
                       }

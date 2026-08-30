@@ -151,7 +151,7 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
             try {
                 const res = await getAdminOrders({
                     ...buildApiParams(filters),
-                    cursor: cache.nextCursor,
+                    cursor: JSON.stringify(cache.nextCursor),
                 });
 
                 set((state) => {
