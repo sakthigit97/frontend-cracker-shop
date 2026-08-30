@@ -8,12 +8,16 @@ import {
 import BulkStepLayout from "./BulkStepLayout";
 import BulkSchemeCard from "./BulkSchemeCard";
 import AdminCodeSection from "./AdminCodeSection";
-
 import { bulkOrderStore } from "../../store/bulkOrder.store";
 import { useConfigStore } from "../../store/config.store";
 import { validateBulkAdminCode } from "../../services/bulkOrder.api";
-
 import type { BulkScheme } from "../../types/bulkOrder";
+import { getMyAdminCodes } from "../../services/adminCode.api";
+
+interface AdminCode {
+    code: string;
+    schemeId: string;
+}
 
 export default function SchemeStep() {
     const {
@@ -30,6 +34,35 @@ export default function SchemeStep() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [adminCodes, setAdminCodes] = useState<AdminCode[]>([]);
+    const [adminCodesLoading, setAdminCodesLoading] = useState(false);
+
+    useEffect(() => {
+        const loadAdminCodes = async () => {
+            try {
+                setAdminCodesLoading(true);
+
+                const response = await getMyAdminCodes();
+
+                setAdminCodes(
+                    Array.isArray(response)
+                        ? response
+                        : response?.data ?? []
+                );
+            } catch (error) {
+                console.error(
+                    "Failed to load admin codes:",
+                    error
+                );
+
+                setAdminCodes([]);
+            } finally {
+                setAdminCodesLoading(false);
+            }
+        };
+
+        loadAdminCodes();
+    }, []);
 
     /*
      * Get active bulk schemes from admin config.
@@ -324,22 +357,138 @@ export default function SchemeStep() {
                         )}
                     </div>
                 )}
+                {/* Wholesale Access Notice */}
+                <div className="rounded-2xl border border-orange-200 bg-orange-50/70 p-4 sm:p-5">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-lg">
+                            🔒
+                        </div>
+
+                        <div className="min-w-0">
+                            <h3 className="text-base font-bold text-gray-900 sm:text-lg">
+                                Restricted Wholesale Access
+                            </h3>
+
+                            <p className="mt-1 text-sm leading-5 text-gray-600">
+                                Wholesale pricing is available only to verified
+                                B2B buyers.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl bg-white/80 p-3">
+                            <p className="text-sm font-semibold text-gray-900">
+                                ✓ Verification Required
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-gray-600">
+                                Valid GST Certificate and PESO/Explosives
+                                License.
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-white/80 p-3">
+                            <p className="text-sm font-semibold text-gray-900">
+                                ✓ Access Activation
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-gray-600">
+                                Our Sales Team will verify your details and
+                                activate your access code.
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-white/80 p-3">
+                            <p className="text-sm font-semibold text-gray-900">
+                                ✓ Unlimited Bulk Orders
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-gray-600">
+                                Place multiple orders while your access code
+                                remains active.
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-white/80 p-3">
+                            <p className="text-sm font-semibold text-gray-900">
+                                ⏳ Code Expiry
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-gray-600">
+                                All orders must be submitted before your code
+                                expires.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 rounded-xl border border-orange-200 bg-white/70 px-3 py-2.5">
+                        <p className="text-sm font-medium text-orange-800">
+                            Need access?
+                            <span className="ml-1 font-normal text-gray-600">
+                                Contact our Sales Team for verification and
+                                activation.
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                {adminCodesLoading ? (
+                    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                        <p className="text-sm text-gray-500">
+                            Loading your access codes...
+                        </p>
+                    </div>
+                ) : adminCodes.length > 0 ? (
+                    <div className="mt-4 rounded-xl border border-green-200 bg-white p-4">
+                        <h4 className="text-sm font-bold text-gray-900">
+                            Your Active Access Codes
+                        </h4>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                            Use the code assigned to the scheme you want to select.
+                        </p>
+
+                        <div className="mt-3 space-y-2">
+                            {adminCodes.map((item) => (
+                                <div
+                                    key={`${item.code}-${item.schemeId}`}
+                                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
+                                >
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-900">
+                                            {item.code}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                            Scheme: {item.schemeId}
+                                        </p>
+                                    </div>
+
+                                    <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+                                        Active
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                        <p className="text-sm font-medium text-gray-700">
+                            No active access codes assigned to your account.
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                            Contact our Sales Team to request wholesale access.
+                        </p>
+                    </div>
+                )}
 
                 {/* Admin approval */}
                 {requiresAdminCode && (
                     <AdminCodeSection
                         code={adminCode}
-                        verified={
-                            adminCodeVerified
-                        }
+                        verified={adminCodeVerified}
                         loading={loading}
                         error={error}
-                        onChange={
-                            handleAdminCodeChange
-                        }
-                        onValidate={
-                            handleValidate
-                        }
+                        onChange={handleAdminCodeChange}
+                        onValidate={handleValidate}
                     />
                 )}
             </div>

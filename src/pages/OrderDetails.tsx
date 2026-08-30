@@ -849,7 +849,7 @@ export default function OrderDetails() {
                           {hasPack ? (
                             <span
                               className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                              {packQuantity}{"/"}
+                              {packQuantity}
                               {packUnit}
                             </span>
                           ) : (
@@ -936,6 +936,21 @@ export default function OrderDetails() {
               0) > 0 && (
                 <PriceRow label="Non Combo Products" value={order.nonComboProductTotal} />
               )}
+
+            {(order.additionalDiscount ?? 0) > 0 && (
+              <PriceRow
+                label={
+                  order.additionalDiscountType === "PERCENTAGE"
+                    ? `Additional Discount (${order.additionalDiscountValue}%)`
+                    : order.additionalDiscountType === "FLAT"
+                      ? `Additional Discount (Flat ₹${order.additionalDiscountValue})`
+                      : "Additional Discount"
+                }
+                value={-Number(order.additionalDiscount)}
+                valueClassName="text-green-600"
+              />
+            )}
+
 
             {(order.packagingCharge ?? 0) >
               0 && (

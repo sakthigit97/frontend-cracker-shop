@@ -244,7 +244,7 @@ export async function buildBulkStaffPackingPdf(
 
                     item.name ?? "-",
 
-                    `${item.cartonQty ?? 0}/${item.packUnit
+                    `${item.cartonQty ?? 0} ${item.packUnit
                         ? ` ${item.packUnit}`
                         : ""
                     }`,

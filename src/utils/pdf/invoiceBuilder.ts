@@ -397,7 +397,7 @@ export async function buildInvoicePdf(
                 const unitText =
                     packQuantity > 0 &&
                         packUnit
-                        ? `${packQuantity}/${packUnit}`
+                        ? `${packQuantity} ${packUnit}`
                         : "-";
 
                 const productName =
@@ -759,6 +759,30 @@ export async function buildInvoicePdf(
         "Product Total",
         order.totalProductAmount || 0
     );
+
+    if (
+        order.additionalDiscount > 0
+    ) {
+        let additionalDiscountLabel =
+            "Additional Discount";
+
+        if (
+            order.additionalDiscountType === "PERCENTAGE"
+        ) {
+            additionalDiscountLabel =
+                `Additional Discount (${order.additionalDiscountValue}%)`;
+        } else if (
+            order.additionalDiscountType === "FLAT"
+        ) {
+            additionalDiscountLabel =
+                `Additional Discount (Flat Rs. ${order.additionalDiscountValue})`;
+        }
+
+        drawSummaryRow(
+            additionalDiscountLabel,
+            -Number(order.additionalDiscount)
+        );
+    }
 
     if (
         order.packagingCharge > 0

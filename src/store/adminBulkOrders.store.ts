@@ -76,10 +76,10 @@ function buildApiParams(
         fromDate =
             now -
             Number(filters.dateRange) *
-                24 *
-                60 *
-                60 *
-                1000;
+            24 *
+            60 *
+            60 *
+            1000;
     }
 
     return {
@@ -234,7 +234,7 @@ export const useAdminBulkOrdersStore =
                                     if (
                                         cachedFilters.status &&
                                         order.status !==
-                                            cachedFilters.status
+                                        cachedFilters.status
                                     ) {
                                         return false;
                                     }
@@ -290,7 +290,7 @@ export const useAdminBulkOrdersStore =
                             ),
 
                             cursor:
-                                cache.nextCursor,
+                               JSON.stringify(cache.nextCursor),
                         });
 
                     set((state) => {

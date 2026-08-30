@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import { useAlert } from "../store/alert.store";
 import { apiFetch } from "../services/api";
 import { useConfigStore } from "../store/config.store";
-import { INDIA_STATES } from "../utils/states";
 import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Register() {
@@ -30,6 +29,88 @@ export default function Register() {
     state: "",
     pincode: "",
   });
+
+  useEffect(() => {
+    const currentPincode = form.pincode;
+
+    if (currentPincode.length !== 6) {
+      return;
+    }
+
+    let active = true;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://api.postalpincode.in/pincode/${currentPincode}`
+        );
+
+        const data = await res.json();
+
+        if (!active) return;
+
+        if (
+          !data ||
+          data[0]?.Status !== "Success" ||
+          !data[0]?.PostOffice?.length
+        ) {
+          setForm((prev) => ({
+            ...prev,
+            city: "",
+            state: "",
+          }));
+
+          showAlert({
+            type: "error",
+            message:
+              "Invalid pincode. Please enter a valid pincode.",
+          });
+
+          return;
+        }
+
+        const city =
+          data[0]?.PostOffice?.[0]?.District?.trim() ?? "";
+
+        const state =
+          data[0]?.PostOffice?.[0]?.State?.trim() ?? "";
+
+        if (!city || !state) {
+          setForm((prev) => ({
+            ...prev,
+            city: "",
+            state: "",
+          }));
+
+          showAlert({
+            type: "error",
+            message:
+              "Unable to determine the city and state for this pincode.",
+          });
+
+          return;
+        }
+
+        setForm((prev) => ({
+          ...prev,
+          city,
+          state,
+        }));
+      } catch {
+        if (!active) return;
+
+        setForm((prev) => ({
+          ...prev,
+          city: "",
+          state: "",
+        }));
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [form.pincode, showAlert]);
 
   const cleanMobile = mobile.trim();
   const isMobileValid = /^[6-9]\d{9}$/.test(cleanMobile);
@@ -99,18 +180,34 @@ export default function Register() {
 
   const verifyOtpAndRegister = async () => {
 
-    if (!otp) {
+    if (!otp.trim()) {
       showAlert({
         type: "error",
-        message: "Please enter OTP",
+        message: "Please enter the OTP.",
       });
       return;
     }
 
-    if (!form.password || !form.confirmPassword) {
+    if (!form.name.trim()) {
       showAlert({
         type: "error",
-        message: "Please enter password",
+        message: "Please enter your name.",
+      });
+      return;
+    }
+
+    if (!form.password) {
+      showAlert({
+        type: "error",
+        message: "Please enter a password.",
+      });
+      return;
+    }
+
+    if (!form.confirmPassword) {
+      showAlert({
+        type: "error",
+        message: "Please confirm your password.",
       });
       return;
     }
@@ -118,21 +215,49 @@ export default function Register() {
     if (form.password !== form.confirmPassword) {
       showAlert({
         type: "error",
-        message: "Passwords do not match",
+        message: "Password and confirm password do not match.",
       });
       return;
     }
 
-    if (
-      !form.name ||
-      !form.address ||
-      !form.city ||
-      !form.state ||
-      !form.pincode
-    ) {
+    if (!form.address.trim()) {
       showAlert({
         type: "error",
-        message: "Please complete all required fields correctly",
+        message: "Please enter your address.",
+      });
+      return;
+    }
+
+    if (!form.pincode.trim()) {
+      showAlert({
+        type: "error",
+        message: "Please enter your pincode.",
+      });
+      return;
+    }
+
+    if (!/^\d{6}$/.test(form.pincode.trim())) {
+      showAlert({
+        type: "error",
+        message: "Please enter a valid 6-digit pincode.",
+      });
+      return;
+    }
+
+    if (!form.city.trim()) {
+      showAlert({
+        type: "error",
+        message:
+          "City could not be determined from the pincode. Please enter a valid pincode.",
+      });
+      return;
+    }
+
+    if (!form.state.trim()) {
+      showAlert({
+        type: "error",
+        message:
+          "State could not be determined from the pincode. Please enter a valid pincode.",
       });
       return;
     }
@@ -288,29 +413,6 @@ export default function Register() {
             className="w-full border rounded-md p-2 mb-3"
           />
 
-          <input
-            placeholder="City"
-            value={form.city}
-            onChange={(e) =>
-              setForm({ ...form, city: e.target.value })
-            }
-            className="w-full border rounded-md p-2 mb-3"
-          />
-
-          <select
-            value={form.state}
-            onChange={(e) =>
-              setForm({ ...form, state: e.target.value })
-            }
-            className="w-full border rounded-md p-2 mb-3 bg-white"
-          >
-            <option value="">Select State</option>
-            {INDIA_STATES.map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </select>
 
           <input
             placeholder="Pincode"
@@ -323,6 +425,19 @@ export default function Register() {
               })
             }
             className="w-full border rounded-md p-2 mb-3"
+          />
+
+          <input
+            placeholder="City"
+            value={form.city}
+            readOnly
+            className="w-full border rounded-md p-2 mb-3 bg-gray-50"
+          />
+          <input
+            placeholder="State"
+            value={form.state}
+            readOnly
+            className="w-full border rounded-md p-2 mb-3 bg-gray-50"
           />
 
           {isReferralEnabled && (

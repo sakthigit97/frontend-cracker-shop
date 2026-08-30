@@ -28,6 +28,8 @@ export const adminCodeApi = {
 
     },
 
+
+
     async deleteCode(
         code: string
     ) {
@@ -59,3 +61,8 @@ export const adminCodeApi = {
 
     },
 };
+
+export async function getMyAdminCodes() {
+    const response = await apiFetch("/admin/user-codes");
+    return response.data;
+}

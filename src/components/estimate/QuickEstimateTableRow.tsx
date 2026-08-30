@@ -145,7 +145,7 @@ function QuickEstimateTableRow({
                         </span>
 
                         <span>
-                            {product.packQuantity}{"/"}
+                            {product.packQuantity}
                             {product.packUnit}
                         </span>
                     </span>

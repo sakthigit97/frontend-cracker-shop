@@ -642,7 +642,7 @@ export default function BulkOrderDetails() {
 
                                         <td className="px-4 py-3 text-center">
                                             <span className="whitespace-nowrap text-sm text-gray-600">
-                                                {item.cartonQty}/{item.packUnit}
+                                                {item.cartonQty} {item.packUnit}
                                             </span>
                                         </td>
 
@@ -768,7 +768,7 @@ export default function BulkOrderDetails() {
                                         </p>
 
                                         <p className="mt-1 whitespace-nowrap text-sm font-medium text-gray-700">
-                                            {item.cartonQty}/{item.packUnit}
+                                            {item.cartonQty} {item.packUnit}
                                         </p>
                                     </div>
 

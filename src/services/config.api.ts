@@ -13,6 +13,7 @@ export type GlobalConfig = {
     gstDenominator?: number;
     adminMobile: string;
     adminEmail: string;
+    mobileAppLink?: string;
     packagingPercent: number;
     gstPercent: number;
     tnMinOrderValue: number;
