@@ -26,9 +26,11 @@ export default function Register() {
     confirmPassword: "",
     address: "",
     city: "",
+    district: "",
     state: "",
     pincode: "",
   });
+
 
   useEffect(() => {
     const currentPincode = form.pincode;
@@ -68,24 +70,27 @@ export default function Register() {
 
           return;
         }
+        const district =
+          data[0]?.PostOffice?.[0]?.District?.trim() ?? "";
 
         const city =
-          data[0]?.PostOffice?.[0]?.District?.trim() ?? "";
+          data[0]?.PostOffice?.[0]?.Block?.trim() ||
+          district;
 
         const state =
           data[0]?.PostOffice?.[0]?.State?.trim() ?? "";
-
-        if (!city || !state) {
+        if (!city || !district || !state) {
           setForm((prev) => ({
             ...prev,
             city: "",
+            district: "",
             state: "",
           }));
 
           showAlert({
             type: "error",
             message:
-              "Unable to determine the city and state for this pincode.",
+              "Unable to determine the city, district and state for this pincode.",
           });
 
           return;
@@ -95,6 +100,7 @@ export default function Register() {
           ...prev,
           city,
           state,
+          district,
         }));
       } catch {
         if (!active) return;
@@ -102,6 +108,7 @@ export default function Register() {
         setForm((prev) => ({
           ...prev,
           city: "",
+          district: "",
           state: "",
         }));
       }
@@ -253,6 +260,15 @@ export default function Register() {
       return;
     }
 
+    if (!form.district.trim()) {
+      showAlert({
+        type: "error",
+        message:
+          "District could not be determined from the pincode. Please enter a valid pincode.",
+      });
+      return;
+    }
+
     if (!form.state.trim()) {
       showAlert({
         type: "error",
@@ -276,6 +292,7 @@ export default function Register() {
           address: form.address.trim(),
           city: form.city?.trim(),
           state: form.state?.trim(),
+          district: form.district?.trim(),
           pincode: form.pincode?.trim(),
           referralCodeUsed: referralCodeUsed.trim() || undefined,
         }),
@@ -433,6 +450,14 @@ export default function Register() {
             readOnly
             className="w-full border rounded-md p-2 mb-3 bg-gray-50"
           />
+
+          <input
+            placeholder="District"
+            value={form.district}
+            readOnly
+            className="w-full border rounded-md p-2 mb-3 bg-gray-50"
+          />
+
           <input
             placeholder="State"
             value={form.state}

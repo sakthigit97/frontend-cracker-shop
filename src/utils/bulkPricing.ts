@@ -105,11 +105,8 @@ export function calculateBulkPricing({
         cartonBoxCount,
         packagingPercent: configuredPackagingPercent,
         packagingCharge,
-        gstPercent:
-            effectiveGstPercent,
-
+        gstPercent: effectiveGstPercent,
         gstAmount,
-
         grandTotal,
     };
 }
@@ -245,13 +242,13 @@ export function createBulkOrderItem(
         name: product.name,
         image: product.image,
         brand: product.brandId,
-        categoryId:
-            product.categoryId,
+        categoryId: product.categoryId,
         bulkOrderBasePrice,
         cartonQty,
         quantity,
         unitPrice,
         schemePrice: unitPrice,
+        packUnit: product.packUnit,
         total:
             quantity *
             cartonQty *

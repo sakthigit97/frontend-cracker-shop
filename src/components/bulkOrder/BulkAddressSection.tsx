@@ -26,15 +26,16 @@ interface Props {
     ) => void;
 }
 
-interface PincodeResponse {
+type PincodeResponse = {
     Status?: string;
     Message?: string;
     PostOffice?: Array<{
         State?: string;
         District?: string;
+        Block?: string;
         Name?: string;
     }>;
-}
+};
 
 function BulkAddressSection({
     loading,
@@ -122,12 +123,13 @@ function BulkAddressSection({
                                 ?.PostOffice?.[0];
 
                         const state =
-                            postOffice?.State?.trim() ??
-                            "";
+                            postOffice?.State?.trim() ?? "";
+
+                        const district =
+                            postOffice?.District?.trim() ?? "";
 
                         const city =
-                            postOffice?.District?.trim() ??
-                            "";
+                            postOffice?.Block?.trim() || district;
 
                         if (
                             result?.Status !==
@@ -142,6 +144,7 @@ function BulkAddressSection({
                                 ...latestAddressRef.current,
                                 pincode: "",
                                 state: "",
+                                district: "",
                                 city: "",
                             });
 
@@ -174,6 +177,7 @@ function BulkAddressSection({
                         onAddressChange({
                             ...latestAddressRef.current,
                             state,
+                            district,
                             ...(city
                                 ? { city }
                                 : {}),
@@ -490,26 +494,28 @@ function BulkAddressSection({
                                 )}
                             </div>
 
-                            {/* City */}
                             <input
                                 type="text"
                                 placeholder="City *"
                                 value={newAddress.city}
-                                onChange={(e) =>
-                                    update("city", e.target.value)
-                                }
-                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
+                                readOnly
+                                className="w-full rounded-xl border p-3 bg-gray-50 outline-none"
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="District *"
+                                value={newAddress.district}
+                                readOnly
+                                className="w-full rounded-xl border p-3 bg-gray-50 outline-none"
                             />
                             {/* State */}
-
                             <input
                                 type="text"
                                 placeholder="State *"
                                 value={newAddress.state}
-                                onChange={(e) =>
-                                    update("state", e.target.value)
-                                }
-                                className="w-full rounded-xl border p-3 outline-none transition focus:border-primary"
+                                readOnly
+                                className="w-full rounded-xl border p-3 bg-gray-50 outline-none"
                             />
 
 

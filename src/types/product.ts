@@ -13,6 +13,7 @@ export interface Product {
   sequenceNumber?: number;
   isComboPackage?: boolean;
   productFamily?: string;
+  isGiftPack?: boolean;
   cartonQty?: number;
   bulkOrderBasePrice?: number;
   isBulkOrderOnly?: boolean;

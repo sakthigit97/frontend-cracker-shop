@@ -129,7 +129,7 @@ export async function buildBulkInvoicePdf(
         order.address.mobile,
         order.address.addressLine1,
         order.address.addressLine2,
-        `${order.address.city}, ${order.address.state}`,
+        `${order.address.city}, ${order.address.district}, ${order.address.state}`,
         order.address.pincode,
     ].filter(Boolean);
 

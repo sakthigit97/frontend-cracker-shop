@@ -48,9 +48,7 @@ export function useBulkOrderPricing({
         !loading &&
         !!config;
 
-    const selectedProducts =
-        items.length;
-
+    const selectedProducts = items.length;
     const totalBoxes = useMemo(
         () =>
             items.reduce(

@@ -20,7 +20,6 @@ interface HomeProductState {
 }
 
 const HomeProductContext = createContext<HomeProductState | null>(null);
-
 export function HomeProductProvider({
     children,
 }: {

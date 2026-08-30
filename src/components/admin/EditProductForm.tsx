@@ -239,14 +239,14 @@ export default function EditProductForm({
                                                 )
                                             }
                                             className={`w-11 h-6 rounded-full p-1 transition ${value.isRetailOnly
-                                                    ? "bg-green-500"
-                                                    : "bg-gray-300"
+                                                ? "bg-green-500"
+                                                : "bg-gray-300"
                                                 }`}
                                         >
                                             <div
                                                 className={`w-4 h-4 bg-white rounded-full transition ${value.isRetailOnly
-                                                        ? "translate-x-5"
-                                                        : ""
+                                                    ? "translate-x-5"
+                                                    : ""
                                                     }`}
                                             />
                                         </button>
@@ -281,14 +281,14 @@ export default function EditProductForm({
                                                 )
                                             }
                                             className={`w-11 h-6 rounded-full p-1 transition ${value.isComboPackage
-                                                    ? "bg-green-500"
-                                                    : "bg-gray-300"
+                                                ? "bg-green-500"
+                                                : "bg-gray-300"
                                                 }`}
                                         >
                                             <div
                                                 className={`w-4 h-4 bg-white rounded-full transition ${value.isComboPackage
-                                                        ? "translate-x-5"
-                                                        : ""
+                                                    ? "translate-x-5"
+                                                    : ""
                                                     }`}
                                             />
                                         </button>
@@ -323,14 +323,14 @@ export default function EditProductForm({
                                                 )
                                             }
                                             className={`w-11 h-6 rounded-full p-1 transition ${value.isGiftPack
-                                                    ? "bg-green-500"
-                                                    : "bg-gray-300"
+                                                ? "bg-green-500"
+                                                : "bg-gray-300"
                                                 }`}
                                         >
                                             <div
                                                 className={`w-4 h-4 bg-white rounded-full transition ${value.isGiftPack
-                                                        ? "translate-x-5"
-                                                        : ""
+                                                    ? "translate-x-5"
+                                                    : ""
                                                     }`}
                                             />
                                         </button>
@@ -397,9 +397,12 @@ export default function EditProductForm({
                                         <option value="BOX">Box</option>
                                         <option value="PIECE">Piece</option>
                                         <option value="PACK">Pack</option>
+                                        <option value="PACKET">Packet</option>
                                         <option value="BUNDLE">Bundle</option>
                                         <option value="SET">Set</option>
-                                        <option value="PAIR">Pair</option>
+                                        <option value="NOS">Nos</option>
+                                        <option value="GRAM">Gram</option>
+                                        <option value="KG">Kg</option>
                                     </select>
                                 </div>
 

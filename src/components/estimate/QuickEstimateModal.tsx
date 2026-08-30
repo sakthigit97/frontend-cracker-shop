@@ -303,7 +303,7 @@ export default function QuickEstimateModal({
 
                     unitText,
 
-                    product.isComboPackage
+                    product.isComboPackage || product.isGiftPack
                         ? formatMoney(product.price)
                         : product.originalPrice
                             ? formatMoney(product.originalPrice)
@@ -1197,7 +1197,7 @@ export default function QuickEstimateModal({
                                                     {
                                                         product.packQuantity
                                                     }
-                                                    
+                                                    {" "}
                                                     {
                                                         product.packUnit
                                                     }

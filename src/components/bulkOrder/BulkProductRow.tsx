@@ -22,10 +22,7 @@ function BulkProductRow({
     quantity,
     onQuantityChange,
 }: BulkProductRowProps) {
-    /* --------------------------------
-     * Pricing
-     * -------------------------------- */
-
+    
     const unitPrice = useMemo(
         () =>
             calculateBulkUnitPrice(
@@ -51,9 +48,6 @@ function BulkProductRow({
         ]
     );
 
-    /* --------------------------------
-     * Quantity handlers
-     * -------------------------------- */
 
     const increase = () => {
         onQuantityChange(
@@ -96,10 +90,6 @@ function BulkProductRow({
         );
     };
 
-    /* --------------------------------
-     * Formatting
-     * -------------------------------- */
-
     const formattedUnitPrice =
         unitPrice.toLocaleString("en-IN");
 
@@ -109,9 +99,6 @@ function BulkProductRow({
     const formattedTotal =
         total.toLocaleString("en-IN");
 
-    /* --------------------------------
-     * Image
-     * -------------------------------- */
 
     const productImage =
         product.images?.[0]?.trim() ||
@@ -119,10 +106,7 @@ function BulkProductRow({
 
     return (
         <>
-            {/* =========================================================
-                DESKTOP
-                ========================================================= */}
-
+        
             <tr
                 className="
                     hidden

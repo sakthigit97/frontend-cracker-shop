@@ -158,6 +158,7 @@ export default function AdjustBulkOrder() {
                     product.categoryId,
                 bulkOrderBasePrice,
                 cartonQty,
+                packUnit: product.packUnit,
                 unitPrice: Number.isFinite(unitPrice)
                     ? unitPrice
                     : bulkOrderBasePrice,
@@ -569,9 +570,9 @@ export default function AdjustBulkOrder() {
                 bulkOrderBasePrice: product.bulkOrderBasePrice,
                 cartonQty: product.cartonQty,
                 unitPrice: product.unitPrice,
-                schemePrice: product.schemePrice ??
-                    product.unitPrice,
+                schemePrice: product.schemePrice ?? product.unitPrice,
                 quantity: 1,
+                packUnit: product.packUnit,
                 total:
                     product.unitPrice *
                     product.cartonQty,
@@ -1253,6 +1254,13 @@ export default function AdjustBulkOrder() {
                                         .city
                                 }
                                 ,{" "}
+
+                                {
+                                    currentOrder
+                                        .address
+                                        .district
+                                }
+                                ,{" "}
                                 {
                                     currentOrder
                                         .address
@@ -1756,6 +1764,8 @@ function mapOrderItem(
         schemePrice:
             item.schemePrice ??
             item.unitPrice,
+
+        packUnit: item.packUnit,
 
         quantity:
             item.quantity,

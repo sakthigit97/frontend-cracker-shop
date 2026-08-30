@@ -28,6 +28,7 @@ type ProfileResponse = {
     address: string;
     city: string;
     state: string;
+    district: string;
     pincode: string;
     walletCredit?: number;
   };
@@ -60,6 +61,7 @@ export default function Checkout() {
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
   const [stateValue, setStateValue] = useState("");
   const [pincode, setPincode] = useState("");
   const [addressMode, setAddressMode] = useState<AddressMode>("PROFILE");
@@ -80,6 +82,7 @@ export default function Checkout() {
   const [validatedLocation, setValidatedLocation] = useState<{
     pincode: string;
     state: string;
+    district: string;
     city: string;
   } | null>(null);
 
@@ -181,6 +184,7 @@ export default function Checkout() {
           if (addressMode === "NEW") {
             setPincode("");
             setCity("");
+            setDistrict("");
             setStateValue("");
           }
 
@@ -195,10 +199,13 @@ export default function Checkout() {
         const state =
           data[0]?.PostOffice?.[0]?.State?.trim() ?? "";
 
-        const city =
+        const district =
           data[0]?.PostOffice?.[0]?.District?.trim() ?? "";
 
-        if (!state || !city) {
+        const city =
+          data[0]?.PostOffice?.[0]?.Block?.trim() ?? "";
+
+        if (!state || !district || !city) {
           setValidatedLocation(null);
           setMinOrderValid(false);
 
@@ -209,8 +216,7 @@ export default function Checkout() {
 
           showAlert({
             type: "error",
-            message:
-              "Unable to determine the delivery city and state for this pincode.",
+            message: "Unable to determine the delivery city, district and state for this pincode.",
           });
 
           return;
@@ -219,11 +225,13 @@ export default function Checkout() {
         setValidatedLocation({
           pincode: currentPincode,
           state,
+          district,
           city,
         });
 
         if (addressMode === "NEW") {
           setCity(city);
+          setDistrict(district);
           setStateValue(state);
         }
 
@@ -300,8 +308,7 @@ export default function Checkout() {
           customerName,
           res.data.mobile?.trim(),
           res.data.address?.trim(),
-          `${res.data.city?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,
-        ]
+          `${res.data.city?.trim()}, ${res.data.district?.trim()}, ${res.data.state?.trim()} - ${res.data.pincode?.trim()}`,]
           .filter(Boolean)
           .join("\n");
         setWalletCredit(res.data.walletCredit || 0);
@@ -383,6 +390,15 @@ export default function Checkout() {
         return;
       }
 
+
+      if (!/^\d{10}$/.test(mobile.trim())) {
+        showAlert({
+          type: "error",
+          message: "Please enter a valid 10-digit mobile number.",
+        });
+        return;
+      }
+
       if (!line1.trim()) {
         showAlert({
           type: "error",
@@ -424,9 +440,10 @@ export default function Checkout() {
 
       const addressParts = [
         customerName,
+        mobile.trim(),
         line1.trim(),
         line2.trim(),
-        `${city.trim()}, ${stateValue.trim()} - ${pincode.trim()}`,
+        `${city.trim()}, ${district.trim()}, ${stateValue.trim()} - ${pincode.trim()}`,
       ];
       finalAddress = addressParts
         .filter(Boolean)
@@ -713,6 +730,19 @@ export default function Checkout() {
                   </div>
 
                   <input
+                    type="tel"
+                    placeholder="Mobile Number *"
+                    value={mobile}
+                    maxLength={10}
+                    onChange={(e) =>
+                      setMobile(
+                        e.target.value.replace(/\D/g, "")
+                      )
+                    }
+                    className="w-full rounded-lg border p-3 text-sm"
+                  />
+
+                  <input
                     type="text"
                     placeholder="Address Line 1 *"
                     value={line1}
@@ -742,6 +772,15 @@ export default function Checkout() {
                     type="text"
                     placeholder="City *"
                     value={city}
+                    readOnly
+                    className="w-full rounded-lg border p-3 text-sm bg-gray-50"
+                  />
+
+
+                  <input
+                    type="text"
+                    placeholder="District *"
+                    value={district}
                     readOnly
                     className="w-full rounded-lg border p-3 text-sm bg-gray-50"
                   />

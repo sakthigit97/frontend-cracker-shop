@@ -36,9 +36,11 @@ export default function AdminBulkOrderDetails() {
     const {
         cache,
         loading,
-        fetchOrder,
         loaded,
+        fetchOrder,
         updateOrder,
+        restoreOrder,
+        restoring,
     } = useAdminBulkOrderDetailsStore();
 
     const order = cache[orderId];
@@ -248,6 +250,8 @@ export default function AdminBulkOrderDetails() {
     }, [order]);
 
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
+    const isCancelled =
+        order?.status === "CANCELLED";
     const canDownloadInvoice =
         STATUS_ORDER.indexOf(order?.status) >=
         STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
@@ -350,6 +354,32 @@ export default function AdminBulkOrderDetails() {
             setCopyingPaymentMessage(false);
         }
     };
+    async function handleRestore() {
+        if (
+            !order ||
+            !isCancelled ||
+            restoring
+        ) {
+            return;
+        }
+
+        try {
+            await restoreOrder(order.orderId);
+
+            showAlert({
+                type: "success",
+                message: "Bulk Order Reopened Successfully.",
+                duration: 1500,
+            });
+        } catch (err: any) {
+            showAlert({
+                type: "error",
+                message:
+                    err?.message ||
+                    "Failed to reopen bulk order.",
+            });
+        }
+    }
 
     async function handleDownloadInvoice() {
 
@@ -704,6 +734,8 @@ export default function AdminBulkOrderDetails() {
                             </Button>
                         )}
 
+
+
                         {canDownloadInvoice && (
                             <Button
                                 variant="secondary"
@@ -979,7 +1011,7 @@ export default function AdminBulkOrderDetails() {
                                                             text-gray-700
                                                         "
                                                     >
-                                                        {cartonQty}{"/"}
+                                                        {cartonQty}{" "}
                                                         {packUnit}
                                                     </span>
                                                 ) : (
@@ -1037,6 +1069,11 @@ export default function AdminBulkOrderDetails() {
                                 Apply a discount to the product total.
                                 Packaging and GST will be recalculated
                                 automatically.
+                            </p>
+
+                            <p className="text-sm text-gray-500 mt-1">
+                                To remove an existing discount, enter <strong>0</strong> and submit
+                                the update.
                             </p>
                         </div>
 
@@ -1207,6 +1244,7 @@ export default function AdminBulkOrderDetails() {
 
                         <p>
                             {order.address.city},{" "}
+                            {order.address.district},{" "}
                             {order.address.state} -{" "}
                             {order.address.pincode}
                         </p>
@@ -1701,19 +1739,26 @@ export default function AdminBulkOrderDetails() {
                 </div>
 
             )}
-
             {isTerminal && (
-
-                <div className="bg-white border rounded-xl p-4">
-
+                <div className="bg-white border rounded-xl p-4 space-y-3">
                     <p className="text-xs text-gray-500">
-
                         This bulk order has reached a terminal state and cannot be modified.
-
                     </p>
 
+                    {isCancelled && (
+                        <div className="flex justify-end">
+                            <Button
+                                disabled={restoring}
+                                onClick={handleRestore}
+                                className="bg-green-600 text-white hover:bg-green-700"
+                            >
+                                {restoring
+                                    ? "Reopening..."
+                                    : "Reopen Order"}
+                            </Button>
+                        </div>
+                    )}
                 </div>
-
             )}
 
             <ConfirmDialog

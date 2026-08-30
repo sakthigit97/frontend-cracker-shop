@@ -347,10 +347,6 @@ function BulkCategorySection({
                             </tr>
                         </thead>
 
-                        {/* =================================================
-                            PRODUCT ROWS
-                            ================================================= */}
-
                         <tbody>
                             {products.map(
                                 (product) => {

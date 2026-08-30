@@ -15,6 +15,7 @@ interface ProfileData {
   email?: string;
   address: string;
   city: string;
+  district?: string;
   state: string;
   pincode: string;
   walletCredit?: number;
@@ -51,6 +52,7 @@ export default function Profile() {
     const email = form.email?.trim() || "";
     const address = form.address?.trim() || "";
     const city = form.city?.trim() || "";
+    const district = form.district?.trim() || "";
     const state = form.state?.trim() || "";
     const pincode = form.pincode?.trim() || "";
 
@@ -94,6 +96,14 @@ export default function Profile() {
       return;
     }
 
+    if (!district) {
+      showAlert({
+        type: "error",
+        message: "District is required",
+      });
+      return;
+    }
+
     if (!state) {
       showAlert({
         type: "error",
@@ -122,6 +132,7 @@ export default function Profile() {
           address,
           city,
           state,
+          district,
           pincode,
         }),
       });
@@ -332,6 +343,23 @@ export default function Profile() {
               value={form.city}
               disabled={!isEditing}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
+              className="w-full border rounded-md p-2"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              District
+            </label>
+            <input
+              value={form.district}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  district: e.target.value,
+                })
+              }
               className="w-full border rounded-md p-2"
             />
           </div>

@@ -200,6 +200,7 @@ export default function ProductForm({
                             <option value="">Select Unit</option>
                             <option value="BOX">Box</option>
                             <option value="PIECE">Piece</option>
+                            <option value="PACK">Pack</option>
                             <option value="PACKET">Packet</option>
                             <option value="BUNDLE">Bundle</option>
                             <option value="SET">Set</option>

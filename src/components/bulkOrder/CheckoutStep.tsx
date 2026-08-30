@@ -29,6 +29,7 @@ type ProfileResponse = {
         mobile: string;
         address: string;
         city: string;
+        district: string;
         state: string;
         pincode: string;
     };
@@ -73,6 +74,7 @@ export default function CheckoutStep() {
         addressLine1: "",
         addressLine2: "",
         city: "",
+        district: "",
         state: "",
         pincode: "",
     });
@@ -107,7 +109,7 @@ export default function CheckoutStep() {
                 const res: ProfileResponse =
                     await apiFetch(
                         "/user/profile"
-                );
+                    );
 
                 if (
                     !mounted ||
@@ -131,6 +133,8 @@ export default function CheckoutStep() {
                     addressLine2: "",
                     city:
                         res.data.city,
+                    district:
+                        res.data.district,
                     state:
                         res.data.state,
                     pincode:

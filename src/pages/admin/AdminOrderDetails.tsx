@@ -804,6 +804,10 @@ export default function AdminOrderDetails() {
                                 Packaging and GST will be recalculated
                                 automatically.
                             </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                                To remove an existing discount, enter <strong>0</strong> and submit
+                                the update.
+                            </p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_auto] gap-3 items-end">
@@ -1156,9 +1160,7 @@ export default function AdminOrderDetails() {
                                     (a.changedAt ?? a.at)
                             )
                             .map((history: any, index: number) => {
-                                const status =
-                                    history.toStatus ?? history.status;
-
+                                const status = history.toStatus ?? history.status;
                                 const updatedBy =
                                     history.changedBy ?? history.by;
 
@@ -1213,14 +1215,7 @@ export default function AdminOrderDetails() {
                                             {updatedBy && (
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Changed By :{" "}
-                                                    {updatedBy.startsWith(
-                                                        "ADMIN"
-                                                    )
-                                                        ? "Admin"
-                                                        : updatedBy.replace(
-                                                            "USER#",
-                                                            ""
-                                                        )}
+                                                    {updatedBy}
                                                 </p>
                                             )}
 

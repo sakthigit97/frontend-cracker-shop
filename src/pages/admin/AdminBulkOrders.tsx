@@ -425,6 +425,7 @@ export default function AdminBulkOrders() {
                             <p className="text-xs text-gray-500 mt-1 truncate">
                                 📍{" "}
                                 {order.address?.city || "-"},{" "}
+                                {order.address?.district || "-"},{" "}
                                 {order.address?.state || "-"}
                             </p>
 
@@ -435,6 +436,10 @@ export default function AdminBulkOrders() {
                                 <div>
                                     <p className="text-xs text-gray-500">
                                         {formatDateTime(order.createdAt)}
+                                    </p>
+
+                                    <p className="text-xs text-gray-500">
+                                        {order.schemeId}
                                     </p>
 
                                     <p className="text-xs text-gray-500 mt-1">
