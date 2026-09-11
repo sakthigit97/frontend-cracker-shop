@@ -414,7 +414,7 @@ export default function BulkOrderDetails() {
                                     order.address?.addressLine1,
                                     order.address?.addressLine2,
                                     order.address?.city,
-                                    order.address?.district,
+                                    order.address?.district || '',
                                     order.address?.state,
                                     order.address?.pincode,
                                 ]

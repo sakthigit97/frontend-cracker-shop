@@ -66,7 +66,7 @@ function BulkReviewSummary({
 
                             <p className="text-sm leading-5 text-gray-600">
                                 {address.city},{" "}
-                                {address.district},{" "}
+                                {address.district || ''},{" "}
                                 {address.state} -{" "}
                                 {address.pincode}
                             </p>

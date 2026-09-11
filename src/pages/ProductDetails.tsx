@@ -12,10 +12,6 @@ import EmptyState from "../components/ui/EmptyState";
 import defaultImage from "../assets/default-image.png";
 import { useCatalog } from "../store/catalog.store";
 
-/* ============================================================
- * YouTube Types
- * ============================================================ */
-
 interface YouTubePlayerStateChangeEvent {
   data: number;
 }
@@ -59,10 +55,6 @@ declare global {
     onYouTubeIframeAPIReady?: () => void;
   }
 }
-
-/* ============================================================
- * YouTube API Loader
- * ============================================================ */
 
 let youtubeApiPromise: Promise<void> | null =
   null;
@@ -111,10 +103,6 @@ function loadYouTubeApi(): Promise<void> {
   return youtubeApiPromise;
 }
 
-/* ============================================================
- * YouTube URL -> Video ID
- * ============================================================ */
-
 function getYouTubeId(url: string) {
   try {
     const parsed = new URL(url);
@@ -122,9 +110,6 @@ function getYouTubeId(url: string) {
     const hostname =
       parsed.hostname.toLowerCase();
 
-    /* --------------------------------------------------------
-     * youtu.be/VIDEO_ID
-     * -------------------------------------------------------- */
     if (hostname === "youtu.be") {
       return (
         parsed.pathname
@@ -133,17 +118,11 @@ function getYouTubeId(url: string) {
       );
     }
 
-    /* --------------------------------------------------------
-     * youtube.com URLs
-     * -------------------------------------------------------- */
     if (
       hostname === "youtube.com" ||
       hostname === "www.youtube.com" ||
       hostname.endsWith(".youtube.com")
     ) {
-      /*
-       * youtube.com/watch?v=VIDEO_ID
-       */
       const watchId =
         parsed.searchParams.get("v");
 
@@ -151,11 +130,6 @@ function getYouTubeId(url: string) {
         return watchId;
       }
 
-      /*
-       * youtube.com/embed/VIDEO_ID
-       * youtube.com/shorts/VIDEO_ID
-       * youtube.com/live/VIDEO_ID
-       */
       const parts =
         parsed.pathname
           .split("/")
@@ -186,10 +160,6 @@ function getYouTubeId(url: string) {
   }
 }
 
-/* ============================================================
- * Media Types
- * ============================================================ */
-
 type MediaItem =
   | {
     type: "image";
@@ -199,10 +169,6 @@ type MediaItem =
     type: "video";
     src: string;
   };
-
-/* ============================================================
- * Product Image / Video Carousel
- * ============================================================ */
 
 const ProductImage = memo(
   function ProductImage({
@@ -235,16 +201,8 @@ const ProductImage = memo(
         null
       );
 
-    /*
-     * Used to prevent stale async YouTube
-     * initialization after slide changes.
-     */
     const playerGenerationRef =
       useRef(0);
-
-    /* --------------------------------------------------------
-     * Preload images
-     * -------------------------------------------------------- */
 
     useEffect(() => {
       media.forEach((item) => {
@@ -903,17 +861,10 @@ const ProductImage = memo(
   }
 );
 
-/* ============================================================
- * Product Details
- * ============================================================ */
-
-export default function ProductDetails() {
-  const {
-    productId = "",
-  } = useParams();
-
-  const fetchProduct =
-    useFetchProductDetails();
+export default function ProductDetails(propProductId?: any) {
+  const { productId: routeProductId = "" } = useParams();
+  const productId = propProductId.productId || routeProductId;
+  const fetchProduct = useFetchProductDetails();
 
   const {
     data: product,
@@ -946,10 +897,6 @@ export default function ProductDetails() {
           ] ?? 0
           : 0
     );
-
-  /* ==========================================================
-   * Fetch product/catalog data
-   * ========================================================== */
 
   useEffect(() => {
     fetchProduct(
@@ -990,10 +937,6 @@ export default function ProductDetails() {
         product?.brandId
     )?.name || "";
 
-  /* ==========================================================
-   * Loading
-   * ========================================================== */
-
   if (
     loading &&
     !product
@@ -1011,10 +954,6 @@ export default function ProductDetails() {
     );
   }
 
-  /* ==========================================================
-   * Product not found
-   * ========================================================== */
-
   if (!product) {
     return (
       <div className="py-20 text-center text-sm text-gray-500">
@@ -1025,10 +964,6 @@ export default function ProductDetails() {
       </div>
     );
   }
-
-  /* ==========================================================
-   * Product Media
-   * ========================================================== */
 
   const videoId =
     product.youtubeUrl
@@ -1073,15 +1008,8 @@ export default function ProductDetails() {
       : []),
   ];
 
-  /* ==========================================================
-   * UI
-   * ========================================================== */
-
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-10">
-      {/* ======================================================
-          HEADER
-          ====================================================== */}
 
       <div className="flex items-center gap-3 mb-4">
         <button
@@ -1111,12 +1039,7 @@ export default function ProductDetails() {
         </h1>
       </div>
 
-      {/* ======================================================
-          PRODUCT CARD
-          ====================================================== */}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
-        {/* IMAGE / VIDEO */}
 
         <ProductImage
           media={media}
@@ -1149,8 +1072,6 @@ export default function ProductDetails() {
               </span>
             )}
 
-            {/* Product Name */}
-
             <h1
               className="
                 mt-3
@@ -1181,8 +1102,6 @@ export default function ProductDetails() {
                 </span>
               </div>
             )}
-
-            {/* Pack information */}
 
             {Number(
               product.packQuantity
@@ -1216,7 +1135,7 @@ export default function ProductDetails() {
                       {
                         product.packQuantity
                       }
-                      
+
                       {
                         product.packUnit
                       }

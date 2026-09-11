@@ -1,6 +1,8 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDF_THEME } from "../../utils/pdf/invoiceTheme";
+import { getProductCounts } from "../../utils/productCounts";
+
 import {
     money,
     line,
@@ -32,10 +34,6 @@ export async function buildInvoicePdf(
     const COLORS = PDF_THEME.colors;
 
     let y = 10;
-
-    // ============================================================
-    // HEADER
-    // ============================================================
 
     doc.addImage(
         Icon,
@@ -76,10 +74,6 @@ export async function buildInvoicePdf(
         LEFT + 17,
         y + 9
     );
-
-    // ============================================================
-    // IMPORTANT NOTICE
-    // ============================================================
 
     const boxX = 138;
     const boxY = 8;
@@ -148,10 +142,6 @@ export async function buildInvoicePdf(
         boxY + 15
     );
 
-    // ============================================================
-    // COMPANY CONTACT
-    // ============================================================
-
     y = 26;
 
     doc.setFontSize(7.5);
@@ -212,10 +202,6 @@ export async function buildInvoicePdf(
 
     line(doc, y);
 
-    // ============================================================
-    // INVOICE DETAILS
-    // ============================================================
-
     y += 5;
 
     bold();
@@ -257,10 +243,6 @@ export async function buildInvoicePdf(
         doc,
         y
     );
-
-    // ============================================================
-    // CUSTOMER DETAILS
-    // ============================================================
 
     line(
         doc,
@@ -306,10 +288,6 @@ export async function buildInvoicePdf(
     );
 
     y += 4;
-
-    // ============================================================
-    // SORT PRODUCTS BY SEQUENCE
-    // ============================================================
 
     const invoiceItems =
         Array.isArray(order.items)
@@ -360,11 +338,16 @@ export async function buildInvoicePdf(
             )
             : [];
 
-    const tableStartY = y;
+    const {
+        totalCount,
+        sparklerCount,
+        otherCount,
+    } = getProductCounts(
+        invoiceItems,
+        config?.sparklerCategory
+    );
 
-    // ============================================================
-    // PRODUCT TABLE
-    // ============================================================
+    const tableStartY = y;
 
     autoTable(doc, {
         startY: tableStartY,
@@ -373,7 +356,6 @@ export async function buildInvoicePdf(
 
         tableLineWidth: 0,
 
-        // Product | Qty | Unit | MRP | Discount | Offer Price | Total
         head: [[
             "Product",
             "Qty",
@@ -406,16 +388,9 @@ export async function buildInvoicePdf(
                         : item.name;
 
                 return [
-                    // Product
                     productName,
-
-                    // Ordered quantity
                     String(item.quantity),
-
-                    // Pack / Unit
                     unitText,
-
-                    // MRP
                     item.isComboPackage
                         ? money(item.price)
                         : item.originalPrice
@@ -424,21 +399,12 @@ export async function buildInvoicePdf(
                             )
                             : "-",
 
-                    // Discount
                     item.discountText ?? "-",
-
-                    // Offer Price
                     money(item.price),
-
-                    // Total
                     money(item.total),
                 ];
             }
         ),
-
-        // ========================================================
-        // TABLE STYLES
-        // ========================================================
 
         styles: {
             font: "helvetica",
@@ -461,7 +427,7 @@ export async function buildInvoicePdf(
             lineWidth: 0.08,
 
             lineColor:
-                COLORS.border,
+                [80, 80, 80],
 
             valign: "middle",
 
@@ -502,63 +468,40 @@ export async function buildInvoicePdf(
             },
         },
 
-        // ========================================================
-        // COLUMN WIDTHS
-        // ========================================================
-
         columnStyles: {
-            // Product
             0: {
                 cellWidth: 55,
                 halign: "left",
             },
-
-            // Qty
             1: {
                 cellWidth: 12,
                 halign: "center",
             },
-
-            // Unit
             2: {
                 cellWidth: 20,
                 halign: "center",
             },
-
-            // MRP
             3: {
                 cellWidth: 22,
                 halign: "right",
             },
-
-            // Discount
             4: {
                 cellWidth: 22,
                 halign: "center",
             },
-
-            // Offer Price
             5: {
                 cellWidth: 24,
                 halign: "right",
             },
-
-            // Total
             6: {
                 cellWidth: 25,
                 halign: "right",
             },
         },
 
-        // ========================================================
-        // CELL STYLING
-        // ========================================================
-
         didParseCell: (
             data
         ) => {
-
-            // Header
             if (
                 data.section === "head"
             ) {
@@ -568,7 +511,6 @@ export async function buildInvoicePdf(
                 return;
             }
 
-            // Product
             if (
                 data.section === "body" &&
                 data.column.index === 0
@@ -592,7 +534,6 @@ export async function buildInvoicePdf(
                 }
             }
 
-            // MRP
             if (
                 data.section === "body" &&
                 data.column.index === 3
@@ -625,7 +566,6 @@ export async function buildInvoicePdf(
                 }
             }
 
-            // Discount
             if (
                 data.section === "body" &&
                 data.column.index === 4
@@ -643,7 +583,6 @@ export async function buildInvoicePdf(
                     "center";
             }
 
-            // Offer Price
             if (
                 data.section === "body" &&
                 data.column.index === 5
@@ -654,8 +593,6 @@ export async function buildInvoicePdf(
                 data.cell.styles.textColor =
                     COLORS.primary;
             }
-
-            // Total
             if (
                 data.section === "body" &&
                 data.column.index === 6
@@ -668,11 +605,6 @@ export async function buildInvoicePdf(
             }
         },
     });
-
-    // ============================================================
-    // INVOICE SUMMARY
-    // ============================================================
-
     let summaryStartY =
         (doc as any)
             .lastAutoTable
@@ -736,6 +668,34 @@ export async function buildInvoicePdf(
 
         summaryStartY += 5;
     };
+
+    /*
+     * ============================================================
+     * PRODUCT COUNTS
+     * ============================================================
+     */
+
+    if (sparklerCount > 0) {
+        drawSummaryRow(
+            "Total Products",
+            String(totalCount)
+        );
+
+        drawSummaryRow(
+            "Sparklers",
+            String(sparklerCount)
+        );
+
+        drawSummaryRow(
+            "Other Products",
+            String(otherCount)
+        );
+    } else {
+        drawSummaryRow(
+            "Total Products",
+            String(totalCount)
+        );
+    }
 
     if (
         order.comboPackageTotal > 0
@@ -868,10 +828,6 @@ export async function buildInvoicePdf(
             align: "right",
         }
     );
-
-    // ============================================================
-    // FOOTER
-    // ============================================================
 
     summaryStartY += 8;
 

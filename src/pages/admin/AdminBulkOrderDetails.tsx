@@ -32,6 +32,7 @@ export default function AdminBulkOrderDetails() {
     const location = useLocation();
     const { showAlert } = useAlert();
     const config = useConfigStore(s => s.config);
+    const website = config?.website || 'https://www.sivakasicrackers.co.in';
     const { user } = useAuth();
     const {
         cache,
@@ -194,11 +195,11 @@ export default function AdminBulkOrderDetails() {
         lines.push("");
 
         lines.push(
-            "👉 Please share your payment screenshot here to start dispatch."
+            "👉 Please share your payment screenshot with us to start dispatch."
         );
 
         lines.push(
-            "Track here: https://www.sivasicrackers.co.in"
+            `Track here: ${website}`
         );
 
         return lines.join("\n");
@@ -1244,7 +1245,7 @@ export default function AdminBulkOrderDetails() {
 
                         <p>
                             {order.address.city},{" "}
-                            {order.address.district},{" "}
+                            {order.address.district || ''},{" "}
                             {order.address.state} -{" "}
                             {order.address.pincode}
                         </p>

@@ -331,7 +331,7 @@ export default function QuickEstimateModal({
                 },
                 minCellHeight: 8,
                 lineWidth: 0.08,
-                lineColor: COLORS.border,
+                lineColor:  [80, 80, 80],
                 valign: "middle",
                 textColor: COLORS.dark,
             },
@@ -355,13 +355,13 @@ export default function QuickEstimateModal({
                 },
             },
             columnStyles: {
-                0: { cellWidth: 60, halign: "left" },     // Product
-                1: { cellWidth: 12, halign: "center" },   // Qty
-                2: { cellWidth: 20, halign: "center" },   // Unit
-                3: { cellWidth: 22, halign: "right" },    // MRP
-                4: { cellWidth: 24, halign: "center" },   // Discount
-                5: { cellWidth: 24, halign: "right" },    // Offer
-                6: { cellWidth: 24, halign: "right" },    // Total
+                0: { cellWidth: 60, halign: "left" },
+                1: { cellWidth: 12, halign: "center" },
+                2: { cellWidth: 20, halign: "center" },
+                3: { cellWidth: 22, halign: "right" },
+                4: { cellWidth: 24, halign: "center" },
+                5: { cellWidth: 24, halign: "right" },
+                6: { cellWidth: 24, halign: "right" },
             },
 
             didParseCell: (data) => {
@@ -556,8 +556,7 @@ export default function QuickEstimateModal({
 
                 minCellHeight: 6,
                 lineWidth: 0.08,
-
-                lineColor: COLORS.border,
+                lineColor:  [80, 80, 80],
             },
 
             columnStyles: {

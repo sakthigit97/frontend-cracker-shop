@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; import {
+  FaArrowUp,
+  FaWhatsapp,
+  FaBoxOpen,
+} from "react-icons/fa";
 
 import ProductCard from "../components/product/ProductCard";
 import HeroSlider from "../components/ui/HeroSlider";
@@ -415,6 +418,83 @@ export default function Home() {
           >
             Join Now →
           </a>
+        </div>
+      </div>
+
+
+      {/* Combo Packages */}
+      <div className="px-4">
+        <div
+          className="
+      mt-3
+      mb-1
+      flex
+      items-center
+      justify-between
+      gap-3
+      rounded-xl
+      border
+      border-orange-200
+      bg-gradient-to-r
+      from-orange-50
+      to-amber-50
+      px-4
+      py-3
+      shadow-sm
+    "
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="
+          flex
+          h-10
+          w-10
+          flex-shrink-0
+          items-center
+          justify-center
+          rounded-lg
+          bg-orange-100
+          text-orange-600
+        "
+            >
+              <FaBoxOpen className="text-lg" />
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-gray-900">
+                Explore Combo Packages
+              </h3>
+
+              <p className="hidden text-xs text-gray-600 sm:block">
+                Curated cracker collections for every celebration
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate("/combo-packages")}
+            className="
+        flex-shrink-0
+        whitespace-nowrap
+        rounded-lg
+        bg-[var(--color-primary)]
+        px-4
+        py-2
+        text-xs
+        font-semibold
+        text-white
+        shadow-sm
+        transition-all
+        hover:scale-105
+        hover:shadow-md
+        active:scale-95
+        sm:px-5
+        sm:py-2.5
+        sm:text-sm
+      "
+          >
+            View Packages →
+          </button>
         </div>
       </div>
 

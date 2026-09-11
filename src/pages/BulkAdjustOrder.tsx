@@ -1258,7 +1258,7 @@ export default function AdjustBulkOrder() {
                                 {
                                     currentOrder
                                         .address
-                                        .district
+                                        .district || ''
                                 }
                                 ,{" "}
                                 {

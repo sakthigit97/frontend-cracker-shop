@@ -212,7 +212,7 @@ export async function buildBulkInvoicePdf(
 
             minCellHeight: 6,
             lineWidth: 0.08,
-            lineColor: COLORS.border,
+            lineColor:  [80, 80, 80],
             valign: "middle",
             textColor: COLORS.dark,
         },

@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { formatCurrency } from "../utils/pricing";
+import { getProductCounts } from "../utils/productCounts";
 
 import {
   ORDER_STATUS_CONFIG,
@@ -42,19 +43,14 @@ const CANCELLABLE_STATUSES = [
 export default function OrderDetails() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const order = location.state?.order;
-
   const clearOrdersCache = useOrdersStore(
     (s) => s.clear
   );
-
   const config = useConfigStore(
     (s) => s.config
   );
-
   const { showAlert } = useAlert();
-
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] =
     useState(false);
@@ -152,11 +148,25 @@ export default function OrderDetails() {
       0
     ) ?? 0;
 
+  const {
+    sparklerCount,
+    otherCount,
+  } = useMemo(
+    () =>
+      getProductCounts(
+        order.items ?? [],
+        config?.sparklerCategory
+      ),
+    [
+      order.items,
+      config?.sparklerCategory,
+    ]
+  );
+
   const sortedItems = useMemo(
     () => sortProductsBySequence(order.items),
     [order.items]
   );
-
   async function handleRestore() {
     try {
       setRestoring(true);
@@ -734,6 +744,15 @@ export default function OrderDetails() {
                 ? "Product"
                 : "Products"}{" "}
               • {totalQuantity} Qty
+
+              {sparklerCount > 0 && (
+                <>
+                  {" • "}
+                  Sparklers: {sparklerCount}
+                  {" • "}
+                  Others: {otherCount}
+                </>
+              )}
             </p>
           </div>
 
@@ -843,13 +862,12 @@ export default function OrderDetails() {
 
                         </td>
 
-                        {/* Pack */}
                         <td className="px-4 py-3 text-center">
 
                           {hasPack ? (
                             <span
                               className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                              {packQuantity}
+                              {packQuantity} {""}
                               {packUnit}
                             </span>
                           ) : (

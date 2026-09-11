@@ -14,6 +14,7 @@ import { useConfigStore } from "../store/config.store";
 import { useProfileStore } from "../store/profile.store";
 import { useCatalog } from "../store/catalog.store";
 import { sortProductsByCategoryAndSequence } from "../utils/sequncerUtil";
+import { getProductCounts } from "../utils/productCounts";
 
 export default function Cart() {
   const addItem = cartStore((s) => s.addItem);
@@ -44,13 +45,18 @@ export default function Cart() {
   const disableGstForTN = config?.disableGstForTN || false;
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
-  const totalQuantity = useMemo(
+
+  const {
+    totalCount,
+    sparklerCount,
+    otherCount,
+  } = useMemo(
     () =>
-      products.reduce(
-        (total, item) => total + item.quantity,
-        0
+      getProductCounts(
+        products,
+        config?.sparklerCategory
       ),
-    [products]
+    [products, config?.sparklerCategory]
   );
 
   const pricingBreakdown = useMemo(
@@ -587,13 +593,33 @@ export default function Cart() {
                 <span>
                   Products Total (
                   {displayProducts.length} Products /{" "}
-                  {totalQuantity} Qty)
+                  {totalCount} Qty)
                 </span>
 
                 <span className="shrink-0">
                   ₹{pricingBreakdown.productSubtotal}
                 </span>
               </div>
+
+              {sparklerCount > 0 && (
+                <>
+                  <div className="flex justify-between text-sm text-gray-600 mt-2 gap-4">
+                    <span>Sparklers Count</span>
+
+                    <span className="shrink-0">
+                      {sparklerCount}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-gray-600 mt-2 gap-4">
+                    <span>Other Products Count</span>
+
+                    <span className="shrink-0">
+                      {otherCount}
+                    </span>
+                  </div>
+                </>
+              )}
 
               {pricingBreakdown.hasNonComboProducts && (
                 <div className="flex justify-between text-sm text-gray-600 mt-2 gap-4">

@@ -8,6 +8,7 @@ import { useConfigStore } from "../store/config.store";
 import { useProfileStore } from "../store/profile.store";
 import { useAlert } from "../store/alert.store";
 import { calculateOrderAmounts } from "../utils/pricing";
+import { getProductCounts } from "../utils/productCounts";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import PrivacyPolicy from "./PrivacyPolicy";
 import { FiGift } from "react-icons/fi";
@@ -97,6 +98,18 @@ export default function Checkout() {
         0
       ),
     [products]
+  );
+
+  const {
+    sparklerCount,
+    otherCount,
+  } = useMemo(
+    () =>
+      getProductCounts(
+        products,
+        config?.sparklerCategory
+      ),
+    [products, config?.sparklerCategory]
   );
 
   const packagingPercent = config?.packagingPercent ?? 0;
@@ -1048,8 +1061,24 @@ export default function Checkout() {
                 </p>
               </div>
 
-              <span>₹{pricingBreakdown.productSubtotal}</span>
+              <span>
+                ₹{pricingBreakdown.productSubtotal}
+              </span>
             </div>
+
+            {sparklerCount > 0 && (
+              <>
+                <div className="flex justify-between text-gray-600">
+                  <span>Sparklers Count</span>
+                  <span>{sparklerCount}</span>
+                </div>
+
+                <div className="flex justify-between text-gray-600">
+                  <span>Other Products Count</span>
+                  <span>{otherCount}</span>
+                </div>
+              </>
+            )}
 
             {pricingBreakdown.hasComboPackages && (
               <div className="flex justify-between items-center text-gray-600">

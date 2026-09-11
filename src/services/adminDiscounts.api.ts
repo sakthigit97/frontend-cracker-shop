@@ -39,3 +39,13 @@ export async function deleteDiscount(discountId: string) {
         method: "DELETE",
     });
 }
+
+export const restoreProductDiscounts = async () => {
+    return apiFetch(
+        "/admin/discounts/products/restore",
+        {
+            method: "POST",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+};

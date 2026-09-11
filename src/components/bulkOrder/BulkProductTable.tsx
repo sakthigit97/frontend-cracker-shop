@@ -80,9 +80,7 @@ function BulkProductTable({
             .filter(Boolean);
 
         return bulkOrderProducts.filter((product) => {
-            const productName =
-                product.name?.toLowerCase() ?? "";
-
+            const productName = product.name?.toLowerCase() ?? "";
             return searchWords.every((word) =>
                 productName.includes(word)
             );

@@ -2,29 +2,55 @@ import { useEffect, useMemo, useState } from "react";
 import Button from "../../components/ui/Button";
 import { useAlert } from "../../store/alert.store";
 import { useNavigate } from "react-router-dom";
-import { createDiscount } from "../../services/adminDiscounts.api";
 import { useAdminTargetsStore } from "../../store/adminTargets.store";
 import { useAdminDiscountsStore } from "../../store/adminDiscounts.store";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
-import { deleteDiscount } from "../../services/adminDiscounts.api";
+import {
+    deleteDiscount,
+    createDiscount,
+    restoreProductDiscounts,
+} from "../../services/adminDiscounts.api";
 
 export default function AdminDiscountsPage() {
     const { showAlert } = useAlert();
     const navigate = useNavigate();
 
-    const loadAllTargets = useAdminTargetsStore((s) => s.loadAllTargets);
-    const categories = useAdminTargetsStore((s) => s.categories);
-    const brands = useAdminTargetsStore((s) => s.brands);
-    const products = useAdminTargetsStore((s) => s.products);
-    const discounts = useAdminDiscountsStore((s) => s.discounts);
-    const fetchDiscounts = useAdminDiscountsStore((s) => s.fetchDiscounts);
-    const refreshDiscounts = useAdminDiscountsStore((s) => s.refreshDiscounts);
-    const discountLoading = useAdminDiscountsStore((s) => s.loading);
-    const [deleteDiscountId, setDeleteDiscountId] = useState<string | null>(null);
+    const loadAllTargets = useAdminTargetsStore(
+        (s) => s.loadAllTargets
+    );
+    const categories = useAdminTargetsStore(
+        (s) => s.categories
+    );
+    const brands = useAdminTargetsStore(
+        (s) => s.brands
+    );
+    const products = useAdminTargetsStore(
+        (s) => s.products
+    );
+
+    const discounts = useAdminDiscountsStore(
+        (s) => s.discounts
+    );
+    const fetchDiscounts = useAdminDiscountsStore(
+        (s) => s.fetchDiscounts
+    );
+    const refreshDiscounts = useAdminDiscountsStore(
+        (s) => s.refreshDiscounts
+    );
+    const discountLoading = useAdminDiscountsStore(
+        (s) => s.loading
+    );
+
+    const [deleteDiscountId, setDeleteDiscountId] =
+        useState<string | null>(null);
+
     const [deleting, setDeleting] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [restoring, setRestoring] = useState(false);
+    const [showRestoreConfirm, setShowRestoreConfirm] =
+        useState(false);
 
     const [form, setForm] = useState<any>({
         discountMode: "PERCENT",
@@ -32,6 +58,7 @@ export default function AdminDiscountsPage() {
         discountValue: "",
         priority: 1,
         targetId: "",
+        applyToAll: false,
         isActive: true,
     });
 
@@ -39,6 +66,10 @@ export default function AdminDiscountsPage() {
     const PAGE_SIZE = 10;
     const [page, setPage] = useState(1);
     const [discountSearch, setDiscountSearch] = useState("");
+    const [discountStatusFilter, setDiscountStatusFilter] =
+        useState<
+            "ALL" | "ACTIVE" | "INACTIVE"
+        >("ALL");
 
     useEffect(() => {
         const load = async () => {
@@ -59,15 +90,31 @@ export default function AdminDiscountsPage() {
     }, []);
 
     const targetOptions = useMemo(() => {
-        if (form.discountType === "CATEGORY") return categories;
-        if (form.discountType === "BRAND") return brands;
-        if (form.discountType === "PRODUCT") return products;
+        if (form.discountType === "CATEGORY") {
+            return categories;
+        }
+
+        if (form.discountType === "BRAND") {
+            return brands;
+        }
+
+        if (form.discountType === "PRODUCT") {
+            return products;
+        }
+
         return [];
-    }, [form.discountType, categories, brands, products]);
+    }, [
+        form.discountType,
+        categories,
+        brands,
+        products,
+    ]);
 
     const filteredTargets = useMemo(() => {
         return targetOptions.filter((t: any) =>
-            t.name?.toLowerCase().includes(search.toLowerCase())
+            t.name
+                ?.toLowerCase()
+                .includes(search.toLowerCase())
         );
     }, [targetOptions, search]);
 
@@ -89,14 +136,32 @@ export default function AdminDiscountsPage() {
         return found?.name || d.targetId;
     };
 
-
     const filteredDiscounts = useMemo(() => {
-        const query = discountSearch.trim().toLowerCase();
-
-        if (!query) return discounts;
+        const query = discountSearch
+            .trim()
+            .toLowerCase();
 
         return discounts.filter((d: any) => {
-            const targetName = resolveTargetName(d);
+            if (
+                discountStatusFilter === "ACTIVE" &&
+                d.isActive !== true
+            ) {
+                return false;
+            }
+
+            if (
+                discountStatusFilter === "INACTIVE" &&
+                d.isActive !== false
+            ) {
+                return false;
+            }
+
+            if (!query) {
+                return true;
+            }
+
+            const targetName =
+                resolveTargetName(d);
 
             return (
                 `${targetName} ${d.targetId}`
@@ -104,9 +169,49 @@ export default function AdminDiscountsPage() {
                     .includes(query)
             );
         });
-    }, [discounts, discountSearch, categories, brands, products]);
+    }, [
+        discounts,
+        discountSearch,
+        discountStatusFilter,
+        categories,
+        brands,
+        products,
+    ]);
+
+    const handleRestoreProductDiscounts =
+        async () => {
+            try {
+                setRestoring(true);
+
+                const result =
+                    await restoreProductDiscounts();
+
+                showAlert({
+                    type: "success",
+                    message:
+                        result?.message ||
+                        "Product discounts restored successfully",
+                });
+
+                await refreshDiscounts();
+
+                setShowRestoreConfirm(false);
+            } catch (err: any) {
+                showAlert({
+                    type: "error",
+                    message:
+                        err?.message ||
+                        "Failed to restore product discounts",
+                });
+            } finally {
+                setRestoring(false);
+            }
+        };
+
     const paginatedDiscounts = useMemo(() => {
-        const start = (page - 1) * PAGE_SIZE;
+        const start =
+            (page - 1) * PAGE_SIZE;
+
         return filteredDiscounts.slice(
             start,
             start + PAGE_SIZE
@@ -118,24 +223,32 @@ export default function AdminDiscountsPage() {
     );
 
     const handleDelete = async () => {
-        if (!deleteDiscountId) return;
+        if (!deleteDiscountId) {
+            return;
+        }
 
         try {
             setDeleting(true);
 
-            await deleteDiscount(deleteDiscountId);
+            await deleteDiscount(
+                deleteDiscountId
+            );
 
             showAlert({
                 type: "success",
-                message: "Discount deleted successfully",
+                message:
+                    "Discount deleted successfully",
             });
 
             setDeleteDiscountId(null);
+
             await refreshDiscounts();
         } catch (err: any) {
             showAlert({
                 type: "error",
-                message: err?.message || "Failed to delete discount",
+                message:
+                    err?.message ||
+                    "Failed to delete discount",
             });
         } finally {
             setDeleting(false);
@@ -144,48 +257,67 @@ export default function AdminDiscountsPage() {
 
     useEffect(() => {
         setPage(1);
-    }, [discountSearch]);
+    }, [
+        discountSearch,
+        discountStatusFilter,
+    ]);
 
     useEffect(() => {
-        if (page > totalPages && totalPages > 0) {
+        if (
+            page > totalPages &&
+            totalPages > 0
+        ) {
             setPage(totalPages);
         }
     }, [page, totalPages]);
 
     const handleCreate = async () => {
-        if (!form.targetId) {
-            showAlert({ type: "error", message: "Target is required" });
+        const isApplyToAll =
+            form.discountType === "PRODUCT" &&
+            form.applyToAll === true;
+
+        if (
+            !isApplyToAll &&
+            !form.targetId
+        ) {
+            showAlert({
+                type: "error",
+                message: "Target is required",
+            });
+
             return;
         }
 
-        if (!form.discountValue || Number(form.discountValue) <= 0) {
-            showAlert({
-                type: "error",
-                message: "Discount value must be greater than 0",
-            });
-            return;
-        }
         if (
             form.discountMode === "PERCENT" &&
             Number(form.discountValue) > 100
         ) {
             showAlert({
                 type: "error",
-                message: "Percentage discount cannot exceed 100%",
+                message:
+                    "Percentage discount cannot exceed 100%",
             });
+
             return;
         }
 
         try {
             setLoading(true);
+
             await createDiscount({
                 ...form,
-                discountValue: Number(form.discountValue),
+                targetId: isApplyToAll
+                    ? undefined
+                    : form.targetId,
+                applyToAll: isApplyToAll,
+                discountValue:
+                    Number(form.discountValue),
             });
 
             showAlert({
                 type: "success",
-                message: "Discount created successfully",
+                message:
+                    "Discount created successfully",
             });
 
             await refreshDiscounts();
@@ -196,6 +328,7 @@ export default function AdminDiscountsPage() {
                 discountValue: "",
                 priority: 1,
                 targetId: "",
+                applyToAll: false,
                 isActive: true,
             });
 
@@ -203,17 +336,24 @@ export default function AdminDiscountsPage() {
         } catch (e: any) {
             showAlert({
                 type: "error",
-                message: e?.message || "Failed to create discount",
+                message:
+                    e?.message ||
+                    "Failed to create discount",
             });
         } finally {
             setLoading(false);
         }
     };
 
-    if (fetching || discountLoading) {
+    if (
+        fetching ||
+        discountLoading
+    ) {
         return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({
+                    length: 6,
+                }).map((_, i) => (
                     <ProductSkeleton key={i} />
                 ))}
             </div>
@@ -221,128 +361,244 @@ export default function AdminDiscountsPage() {
     }
 
     return (
-        <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+        <div className="p-4 sm:p-6 space-y-6 bg-gray-50 min-h-screen">
+            {/* Page Header */}
             <div className="flex items-center gap-3 mb-4">
                 <button
                     onClick={() => navigate(-1)}
                     className="
-                                flex items-center justify-center
-                                w-9 h-9
-                                rounded-full
-                                bg-[var(--color-primary)]
-                                text-white
-                                shadow-sm
-
-                                hover:scale-105
-                                active:scale-95
-                                transition-all
-                                "
+                        flex items-center justify-center
+                        w-9 h-9
+                        flex-shrink-0
+                        rounded-full
+                        bg-[var(--color-primary)]
+                        text-white
+                        shadow-sm
+                        hover:scale-105
+                        active:scale-95
+                        transition-all
+                    "
                 >
                     ←
                 </button>
+
                 <h1 className="text-xl md:text-2xl font-semibold text-[var(--color-primary)]">
                     Discount Management
                 </h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Add Discount */}
                 <div className="lg:col-span-1 bg-white border rounded-2xl shadow-sm p-5 space-y-4">
-                    <h2 className="font-semibold text-lg">Add Discount</h2>
+                    <h2 className="font-semibold text-lg">
+                        Add Discount
+                    </h2>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <p className="text-xs font-medium mb-1">Mode</p>
+                            <p className="text-xs font-medium mb-1">
+                                Mode
+                            </p>
+
                             <select
                                 className="border rounded-lg px-3 py-2 w-full text-sm"
                                 value={form.discountMode}
                                 onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        discountMode: e.target.value,
-                                    }))
+                                    setForm(
+                                        (p: any) => ({
+                                            ...p,
+                                            discountMode:
+                                                e.target.value,
+                                        })
+                                    )
                                 }
                             >
-                                <option value="PERCENT">Percent (%)</option>
-                                <option value="FLAT">Flat (₹)</option>
+                                <option value="PERCENT">
+                                    Percent (%)
+                                </option>
+
+                                <option value="FLAT">
+                                    Flat (₹)
+                                </option>
                             </select>
                         </div>
 
                         <div>
-                            <p className="text-xs font-medium mb-1">Type</p>
+                            <p className="text-xs font-medium mb-1">
+                                Type
+                            </p>
+
                             <select
                                 className="border rounded-lg px-3 py-2 w-full text-sm"
                                 value={form.discountType}
                                 onChange={(e) => {
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        discountType: e.target.value,
-                                        targetId: "",
-                                    }));
+                                    const discountType =
+                                        e.target.value;
+
+                                    setForm(
+                                        (p: any) => ({
+                                            ...p,
+                                            discountType,
+                                            targetId: "",
+                                            applyToAll:
+                                                discountType ===
+                                                    "PRODUCT"
+                                                    ? p.applyToAll
+                                                    : false,
+                                        })
+                                    );
+
                                     setSearch("");
                                 }}
                             >
-                                <option value="CATEGORY">Category</option>
-                                <option value="BRAND">Brand</option>
-                                <option value="PRODUCT">Product</option>
+                                <option value="CATEGORY">
+                                    Category
+                                </option>
+
+                                <option value="BRAND">
+                                    Brand
+                                </option>
+
+                                <option value="PRODUCT">
+                                    Product
+                                </option>
                             </select>
                         </div>
                     </div>
 
-                    <div>
-                        <p className="text-xs font-medium mb-1">
-                            Target ({form.discountType})
-                        </p>
+                    {form.discountType ===
+                        "PRODUCT" && (
+                            <label className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        form.applyToAll
+                                    }
+                                    onChange={(e) =>
+                                        setForm(
+                                            (p: any) => ({
+                                                ...p,
+                                                applyToAll:
+                                                    e.target
+                                                        .checked,
+                                                targetId:
+                                                    e.target
+                                                        .checked
+                                                        ? ""
+                                                        : p.targetId,
+                                            })
+                                        )
+                                    }
+                                />
 
-                        <input
-                            className="border rounded-lg px-3 py-2 w-full text-sm mb-2"
-                            placeholder="Search target..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                                Apply to all products
+                            </label>
+                        )}
 
-                        <select
-                            className="border rounded-lg px-3 py-2 w-full text-sm"
-                            value={form.targetId}
-                            onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    targetId: e.target.value,
-                                }))
-                            }
-                        >
-                            <option value="">Select Target</option>
+                    {!(
+                        form.discountType ===
+                        "PRODUCT" &&
+                        form.applyToAll
+                    ) && (
+                            <div>
+                                <p className="text-xs font-medium mb-1">
+                                    Target (
+                                    {
+                                        form.discountType
+                                    }
+                                    )
+                                </p>
 
-                            {filteredTargets.map((t: any) => {
-                                let id = "";
-                                if (form.discountType === "CATEGORY") {
-                                    id = t.categoryId;
-                                } else if (form.discountType === "BRAND") {
-                                    id = t.brandId;
-                                } else if (form.discountType === "PRODUCT") {
-                                    id = t.productId;
-                                }
+                                <input
+                                    className="border rounded-lg px-3 py-2 w-full text-sm mb-2"
+                                    placeholder="Search target..."
+                                    value={search}
+                                    onChange={(e) =>
+                                        setSearch(
+                                            e.target.value
+                                        )
+                                    }
+                                />
 
-                                return (
-                                    <option key={id} value={id}>
-                                        {t.name}
+                                <select
+                                    className="border rounded-lg px-3 py-2 w-full text-sm"
+                                    value={
+                                        form.targetId
+                                    }
+                                    onChange={(e) =>
+                                        setForm(
+                                            (p: any) => ({
+                                                ...p,
+                                                targetId:
+                                                    e.target
+                                                        .value,
+                                            })
+                                        )
+                                    }
+                                >
+                                    <option value="">
+                                        Select Target
                                     </option>
-                                );
-                            })}
-                        </select>
-                    </div>
+
+                                    {filteredTargets.map(
+                                        (t: any) => {
+                                            let id = "";
+
+                                            if (
+                                                form.discountType ===
+                                                "CATEGORY"
+                                            ) {
+                                                id =
+                                                    t.categoryId;
+                                            } else if (
+                                                form.discountType ===
+                                                "BRAND"
+                                            ) {
+                                                id =
+                                                    t.brandId;
+                                            } else if (
+                                                form.discountType ===
+                                                "PRODUCT"
+                                            ) {
+                                                id =
+                                                    t.productId;
+                                            }
+
+                                            return (
+                                                <option
+                                                    key={id}
+                                                    value={id}
+                                                >
+                                                    {t.name}
+                                                </option>
+                                            );
+                                        }
+                                    )}
+                                </select>
+                            </div>
+                        )}
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <p className="text-xs font-medium mb-1">Value</p>
+                            <p className="text-xs font-medium mb-1">
+                                Value
+                            </p>
+
                             <input
                                 type="number"
                                 className="border rounded-lg px-3 py-2 w-full text-sm"
-                                value={form.discountValue}
+                                value={
+                                    form.discountValue
+                                }
                                 onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        discountValue: e.target.value,
-                                    }))
+                                    setForm(
+                                        (p: any) => ({
+                                            ...p,
+                                            discountValue:
+                                                e.target
+                                                    .value,
+                                        })
+                                    )
                                 }
                             />
                         </div>
@@ -351,19 +607,36 @@ export default function AdminDiscountsPage() {
                             <p className="text-xs font-medium mb-1">
                                 Priority
                             </p>
+
                             <select
                                 className="border rounded-lg px-3 py-2 w-full text-sm"
-                                value={form.priority}
+                                value={
+                                    form.priority
+                                }
                                 onChange={(e) =>
-                                    setForm((p: any) => ({
-                                        ...p,
-                                        priority: Number(e.target.value),
-                                    }))
+                                    setForm(
+                                        (p: any) => ({
+                                            ...p,
+                                            priority:
+                                                Number(
+                                                    e.target
+                                                        .value
+                                                ),
+                                        })
+                                    )
                                 }
                             >
-                                <option value={1}>1 (High)</option>
-                                <option value={2}>2</option>
-                                <option value={3}>3 (Low)</option>
+                                <option value={1}>
+                                    1 (High)
+                                </option>
+
+                                <option value={2}>
+                                    2
+                                </option>
+
+                                <option value={3}>
+                                    3 (Low)
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -373,149 +646,352 @@ export default function AdminDiscountsPage() {
                             type="checkbox"
                             checked={form.isActive}
                             onChange={(e) =>
-                                setForm((p: any) => ({
-                                    ...p,
-                                    isActive: e.target.checked,
-                                }))
+                                setForm(
+                                    (p: any) => ({
+                                        ...p,
+                                        isActive:
+                                            e.target
+                                                .checked,
+                                    })
+                                )
                             }
                         />
+
                         Active
                     </label>
 
-                    <Button onClick={handleCreate} disabled={loading}>
-                        {loading ? "Saving…" : "Create Discount"}
+                    <Button
+                        onClick={handleCreate}
+                        disabled={loading}
+                    >
+                        {loading
+                            ? "Saving…"
+                            : "Create Discount"}
                     </Button>
                 </div>
 
-                <div className="lg:col-span-2 bg-white border rounded-2xl shadow-sm p-5 flex flex-col">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-
+                {/* Existing Discounts */}
+                <div className="lg:col-span-2 bg-white border rounded-2xl shadow-sm p-4 sm:p-5 flex flex-col min-w-0">
+                    <div className="flex flex-col gap-4 mb-4">
+                        {/* Section title */}
                         <h2 className="font-semibold text-lg">
                             Existing Discounts
                         </h2>
 
-                        <input
-                            placeholder="Search Target Name / Target ID"
-                            className="border rounded-lg px-3 py-2 w-full md:w-72"
-                            value={discountSearch}
-                            onChange={(e) =>
-                                setDiscountSearch(e.target.value)
-                            }
-                        />
+                        {/* Responsive controls */}
+                        <div
+                            className="
+                                grid
+                                grid-cols-1
+                                sm:grid-cols-[auto_minmax(0,1fr)_auto]
+                                gap-2
+                                w-full
+                            "
+                        >
+                            {/* Restore */}
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    setShowRestoreConfirm(
+                                        true
+                                    )
+                                }
+                                disabled={restoring}
+                                className="
+                                    w-full
+                                    sm:w-auto
+                                    whitespace-nowrap
+                                "
+                            >
+                                {restoring
+                                    ? "Restoring..."
+                                    : "Restore Product Discounts"}
+                            </Button>
 
+                            {/* Search */}
+                            <input
+                                type="text"
+                                placeholder="Search Target Name / Target ID"
+                                className="
+                                    border
+                                    rounded-lg
+                                    px-3
+                                    py-2
+                                    w-full
+                                    min-w-0
+                                    text-sm
+                                    outline-none
+                                    focus:ring-2
+                                    focus:ring-gray-200
+                                "
+                                value={
+                                    discountSearch
+                                }
+                                onChange={(e) =>
+                                    setDiscountSearch(
+                                        e.target.value
+                                    )
+                                }
+                            />
+
+                            {/* Status */}
+                            <select
+                                className="
+                                    border
+                                    rounded-lg
+                                    px-3
+                                    py-2
+                                    w-full
+                                    sm:w-36
+                                    text-sm
+                                    outline-none
+                                    focus:ring-2
+                                    focus:ring-gray-200
+                                "
+                                value={
+                                    discountStatusFilter
+                                }
+                                onChange={(e) =>
+                                    setDiscountStatusFilter(
+                                        e.target
+                                            .value as
+                                        | "ALL"
+                                        | "ACTIVE"
+                                        | "INACTIVE"
+                                    )
+                                }
+                            >
+                                <option value="ALL">
+                                    All Status
+                                </option>
+
+                                <option value="ACTIVE">
+                                    Active
+                                </option>
+
+                                <option value="INACTIVE">
+                                    Inactive
+                                </option>
+                            </select>
+                        </div>
                     </div>
+
+                    {/* Discount Table */}
                     <div className="border rounded-xl overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[720px]">
                                 <thead className="bg-gray-100 text-gray-600 text-xs uppercase sticky top-0">
                                     <tr>
-                                        <th className="px-4 py-3 text-left">Type</th>
-                                        <th className="px-4 py-3 text-left">Target</th>
-                                        <th className="px-4 py-3 text-left">Mode</th>
-                                        <th className="px-4 py-3 text-left">Priority</th>
-                                        <th className="px-4 py-3 text-right">Action</th>
+                                        <th className="px-4 py-3 text-left">
+                                            Type
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left">
+                                            Target
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left">
+                                            Mode
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left">
+                                            Priority
+                                        </th>
+
+                                        <th className="px-4 py-3 text-left">
+                                            Status
+                                        </th>
+
+                                        <th className="px-4 py-3 text-right">
+                                            Action
+                                        </th>
                                     </tr>
                                 </thead>
 
                                 <tbody className="divide-y">
-                                    {filteredDiscounts.length === 0 && (
-                                        <tr>
-                                            <td
-                                                colSpan={5}
-                                                className="text-center py-6 text-gray-400"
+                                    {filteredDiscounts.length ===
+                                        0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan={
+                                                        6
+                                                    }
+                                                    className="text-center py-6 text-gray-400"
+                                                >
+                                                    No discounts
+                                                    created yet.
+                                                </td>
+                                            </tr>
+                                        )}
+
+                                    {paginatedDiscounts.map(
+                                        (d) => (
+                                            <tr
+                                                key={
+                                                    d.discountId
+                                                }
+                                                className="hover:bg-gray-50 transition"
                                             >
-                                                No discounts created yet.
-                                            </td>
-                                        </tr>
+                                                <td className="px-4 py-3 font-medium">
+                                                    {
+                                                        d.discountType
+                                                    }
+                                                </td>
+
+                                                <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">
+                                                    {resolveTargetName(
+                                                        d
+                                                    )}
+                                                </td>
+
+                                                <td className="px-4 py-3">
+                                                    {
+                                                        d.discountMode
+                                                    }{" "}
+                                                    <span className="font-semibold">
+                                                        {
+                                                            d.discountValue
+                                                        }
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-4 py-3">
+                                                    {
+                                                        d.priority
+                                                    }
+                                                </td>
+
+                                                <td className="px-4 py-3">
+                                                    {d.isActive ? (
+                                                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-green-100 text-green-700">
+                                                            Active
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-gray-100 text-gray-500">
+                                                            Inactive
+                                                        </span>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                navigate(
+                                                                    `/admin/discounts/${d.discountId}/edit`
+                                                                )
+                                                            }
+                                                        >
+                                                            Edit
+                                                        </Button>
+
+                                                        <Button
+                                                            variant="outline"
+                                                            className="border-red-500 text-red-600"
+                                                            onClick={() =>
+                                                                setDeleteDiscountId(
+                                                                    d.discountId
+                                                                )
+                                                            }
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
                                     )}
-
-                                    {paginatedDiscounts.map((d) => (
-                                        <tr
-                                            key={d.discountId}
-                                            className="hover:bg-gray-50 transition"
-                                        >
-                                            <td className="px-4 py-3 font-medium">
-                                                {d.discountType}
-                                            </td>
-
-                                            <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">
-                                                {resolveTargetName(d)}
-                                            </td>
-
-                                            <td className="px-4 py-3">
-                                                {d.discountMode}{" "}
-                                                <span className="font-semibold">
-                                                    {d.discountValue}
-                                                </span>
-                                            </td>
-
-                                            <td className="px-4 py-3">
-                                                {d.priority}
-                                            </td>
-
-                                            <td className="px-4 py-3 text-right">
-                                                <div className="flex justify-end gap-2">
-
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            navigate(`/admin/discounts/${d.discountId}/edit`)
-                                                        }
-                                                    >
-                                                        Edit
-                                                    </Button>
-
-                                                    <Button
-                                                        variant="outline"
-                                                        className="border-red-500 text-red-600"
-                                                        onClick={() =>
-                                                            setDeleteDiscountId(d.discountId)
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </Button>
-
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
                                 </tbody>
                             </table>
                         </div>
-                        <div className="flex justify-center items-center gap-3 p-4 border-t">
 
+                        {/* Pagination */}
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 p-4 border-t">
                             <Button
                                 variant="outline"
                                 disabled={page === 1}
-                                onClick={() => setPage((p) => p - 1)}
+                                onClick={() =>
+                                    setPage(
+                                        (p) =>
+                                            p - 1
+                                    )
+                                }
                             >
                                 ← Previous
                             </Button>
 
                             <span className="text-sm">
-                                Page {page} of {totalPages || 1}
+                                Page {page} of{" "}
+                                {totalPages || 1}
                             </span>
 
                             <Button
                                 variant="outline"
-                                disabled={page >= totalPages}
-                                onClick={() => setPage((p) => p + 1)}
+                                disabled={
+                                    page >=
+                                    totalPages
+                                }
+                                onClick={() =>
+                                    setPage(
+                                        (p) =>
+                                            p + 1
+                                    )
+                                }
                             >
                                 Next →
                             </Button>
-
                         </div>
                     </div>
                 </div>
-
             </div>
+
+            {/* Restore Confirmation */}
+            <ConfirmDialog
+                open={showRestoreConfirm}
+                title="Restore Previous Product Discounts?"
+                message={
+                    <>
+                        Are you sure you want to restore the
+                        previous product discounts?
+                        <br />
+                        <br />
+
+                        This will deactivate the current product
+                        discount group and restore the previously
+                        active discount group.
+                        <br />
+                        <br />
+
+                        <span className="text-red-500 font-medium">
+                            Please make sure you want to switch
+                            back to the previous discounts.
+                        </span>
+                    </>
+                }
+                confirmText="Yes, Restore"
+                cancelText="Cancel"
+                loading={restoring}
+                onCancel={() => {
+                    setShowRestoreConfirm(false);
+                }}
+                onConfirm={handleRestoreProductDiscounts}
+            />
+
+            {/* Delete Confirmation */}
             <ConfirmDialog
                 open={!!deleteDiscountId}
                 title="Delete Discount"
                 description="Are you sure you want to delete this discount? This action cannot be undone."
-                confirmText={deleting ? "Deleting..." : "Delete"}
+                confirmText={
+                    deleting
+                        ? "Deleting..."
+                        : "Delete"
+                }
                 loading={deleting}
-                onCancel={() => setDeleteDiscountId(null)}
+                onCancel={() =>
+                    setDeleteDiscountId(null)
+                }
                 onConfirm={handleDelete}
             />
         </div>

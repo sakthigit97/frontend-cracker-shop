@@ -125,8 +125,7 @@ function BulkAddressSection({
                         const state =
                             postOffice?.State?.trim() ?? "";
 
-                        const district =
-                            postOffice?.District?.trim() ?? "";
+                        const district = postOffice?.District?.trim() ?? "";
 
                         const city =
                             postOffice?.Block?.trim() || district;
