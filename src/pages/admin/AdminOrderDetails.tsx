@@ -19,7 +19,7 @@ import { downloadInvoice } from "../../utils/pdf/downloadInvoice";
 import { downloadStaffPackingList } from "../../utils/pdf/staffInvoice";
 import { useConfigStore } from "../../store/config.store";
 import { useAdminOrdersStore } from "../../store/adminOrders.store";
-import { restoreOrderApi } from "../../services/order.api";
+import { refreshOrderAmount, restoreOrderApi } from "../../services/order.api";
 import { useOrdersStore } from "../../store/orders.store";
 import { sortProductsBySequence } from "../../utils/sequncerUtil";
 import { formatCurrency } from "../../utils/pricing";
@@ -74,6 +74,12 @@ export default function AdminOrderDetails() {
 
     const [generatedPaymentMessage, setGeneratedPaymentMessage] =
         useState("");
+
+    const [refreshingAmount, setRefreshingAmount] =
+        useState(false);
+
+    const [showRefreshAmountConfirm, setShowRefreshAmountConfirm] =
+        useState(false);
 
     const [copyingPaymentMessage, setCopyingPaymentMessage] =
         useState(false);
@@ -206,6 +212,47 @@ export default function AdminOrderDetails() {
         );
 
         return lines.join("\n");
+    };
+
+    const handleRefreshOrderAmount = async () => {
+        if (!order || refreshingAmount) {
+            return;
+        }
+
+        try {
+            setRefreshingAmount(true);
+
+            await refreshOrderAmount(order.orderId);
+
+            clearOrdersCache();
+            clearAdminOrdersCache();
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            setShowRefreshAmountConfirm(false);
+
+            showAlert({
+                type: "success",
+                message: "Order amount refreshed successfully.",
+                duration: 2000,
+            });
+        } catch (error: any) {
+            console.error(
+                "Refresh order amount failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to refresh order amount.",
+            });
+        } finally {
+            setRefreshingAmount(false);
+        }
     };
 
     const handleCopyPaymentMessage = async () => {
@@ -811,6 +858,18 @@ export default function AdminOrderDetails() {
                                 Adjust Order
                             </Button>
                         )}
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="px-3 py-1.5 text-xs whitespace-nowrap"
+                            disabled={refreshingAmount}
+                            onClick={() => setShowRefreshAmountConfirm(true)}
+                        >
+                            {refreshingAmount
+                                ? "Refreshing..."
+                                : "Refresh Amount"}
+                        </Button>
 
                         {isCancelled && (
                             <Button
@@ -2084,6 +2143,23 @@ export default function AdminOrderDetails() {
                 onCancel={() => {
                     setShowConfirm(false);
                     setPendingPayload(null);
+                }}
+            />
+
+            <ConfirmDialog
+                open={showRefreshAmountConfirm}
+                title="Refresh Order Amount?"
+                description="Are you sure you want to refresh this order amount? The current product prices and discounts will be recalculated using the latest values."
+                confirmText="Yes, Refresh"
+                cancelText="Cancel"
+                loading={refreshingAmount}
+                onConfirm={handleRefreshOrderAmount}
+                onCancel={() => {
+                    if (refreshingAmount) {
+                        return;
+                    }
+
+                    setShowRefreshAmountConfirm(false);
                 }}
             />
 
