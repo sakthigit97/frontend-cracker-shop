@@ -32,6 +32,7 @@ import { downloadInvoice } from "../utils/pdf/downloadInvoice";
 import { formatDateTime } from "../utils/date";
 import defaultImage from "../assets/default-image.png";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
+import { apiFetch } from "../services/api";
 
 const TERMINAL_STATUS = "CANCELLED";
 
@@ -300,6 +301,53 @@ export default function OrderDetails() {
       address: "-",
     };
   })();
+
+  const handleDownloadBill = async () => {
+    if (!order) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch(
+        `/orders/${order.orderId}/invoice`,
+        {
+          method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+      );
+
+      const billUrl =
+        response?.data?.url ??
+        response?.url;
+
+      if (!billUrl) {
+        throw new Error(
+          "Bill URL was not returned."
+        );
+      }
+
+      const link = document.createElement("a");
+
+      link.href = billUrl;
+      link.download = `bill-${order.orderId}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error: any) {
+      console.error(
+        "Download bill failed:",
+        error
+      );
+
+      showAlert({
+        type: "error",
+        message:
+          error?.message ||
+          "Unable to download bill.",
+      });
+    }
+  };
 
   async function handleDownloadInvoice() {
     if (downloading) return;
@@ -1085,6 +1133,15 @@ export default function OrderDetails() {
             {downloading
               ? "Downloading..."
               : "Download Invoice"}
+          </Button>
+        )}
+
+        {canDownloadInvoice && (
+          <Button
+            data-enter-submit="true"
+            onClick={handleDownloadBill}
+          >
+            Download Bill
           </Button>
         )}
 

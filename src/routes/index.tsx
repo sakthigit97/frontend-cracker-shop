@@ -57,6 +57,7 @@ import AdjustBulkOrder from "../pages/BulkAdjustOrder";
 import StaffRoute from "./StaffRoute";
 import StaffLayout from "../layouts/StaffLayout";
 import RootPage from "./RootPage";
+import HowToUse from "../pages/HowToUse";
 
 export default function AppRoutes() {
   return (
@@ -78,6 +79,7 @@ export default function AppRoutes() {
           <Route path="/combo-packages/:packageId" element={<ComboPackageDetails />} />
           <Route path="/ai-assistant" element={<AiAssistant />} />
           <Route path="/quick-estimate" element={<QuickEstimate />} />
+          <Route path="/how-to-use" element={<HowToUse />} />
         </Route>
 
         {/* ================= AUTH ================= */}

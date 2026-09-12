@@ -41,6 +41,7 @@ export type GlobalConfig = {
     whatsAppSupport: any;
     isEnableBulkOrder: boolean;
     sparklerCategory?: string;
+    tutorialVideos?: any;
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

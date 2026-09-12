@@ -38,6 +38,11 @@ export default function Footer() {
                 Privacy Policy
               </Link>
             </li>
+            <li>
+              <Link to="/how-to-use" className="hover:underline">
+                How to Order
+              </Link>
+            </li>
           </ul>
         </div>
 

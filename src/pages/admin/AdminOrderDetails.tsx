@@ -26,6 +26,7 @@ import { formatCurrency } from "../../utils/pricing";
 import { formatDateTime } from "../../utils/date";
 import { useAuth } from "../../store/auth.store";
 import { getProductCounts } from "../../utils/productCounts";
+import { uploadFilesToS3 } from "../../utils/uploadToS3";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -43,6 +44,7 @@ export default function AdminOrderDetails() {
         adminComment?: string;
         mobile: string;
         amount: string;
+        paymentAccountId?: string;
     } | null>(null);
     const config = useConfigStore((s) => s.config);
     const [selectedStatus, setSelectedStatus] = useState("");
@@ -64,11 +66,19 @@ export default function AdminOrderDetails() {
     const [selectedPaymentAccountIds, setSelectedPaymentAccountIds] =
         useState<string[]>([]);
 
+    const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
+        useState("");
+
+    const [customPaymentAccountId, setCustomPaymentAccountId] =
+        useState("");
+
     const [generatedPaymentMessage, setGeneratedPaymentMessage] =
         useState("");
 
     const [copyingPaymentMessage, setCopyingPaymentMessage] =
         useState(false);
+    const [uploadingInvoice, setUploadingInvoice] = useState(false);
+    const [invoiceFileInputKey, setInvoiceFileInputKey] = useState(0);
 
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
@@ -274,11 +284,45 @@ export default function AdminOrderDetails() {
     ]);
 
     useEffect(() => {
-        if (order) {
-            setComment("");
-            setSelectedStatus(order.status);
+        if (!order) return;
+
+        setComment(order.adminComment || "");
+        setSelectedStatus(order.status);
+
+        const savedPaymentAccountId =
+            String(order.paymentAccountId ?? "").trim();
+
+        if (!savedPaymentAccountId) {
+            setSelectedPaymentAccountId("");
+            setCustomPaymentAccountId("");
+            return;
         }
-    }, [order]);
+
+        const matchingAccount = paymentAccounts.find(
+            (account: any) => {
+                const creditedTo =
+                    account.type === "BANK"
+                        ? account.accountNumber || ""
+                        : account.upiId ||
+                        account.mobileNumber ||
+                        "";
+
+                return creditedTo === savedPaymentAccountId;
+            }
+        );
+
+        if (matchingAccount) {
+            setSelectedPaymentAccountId(
+                savedPaymentAccountId
+            );
+            setCustomPaymentAccountId("");
+        } else {
+            setSelectedPaymentAccountId("CUSTOM");
+            setCustomPaymentAccountId(
+                savedPaymentAccountId
+            );
+        }
+    }, [order, config?.paymentAccounts]);
 
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
@@ -293,6 +337,11 @@ export default function AdminOrderDetails() {
     const isCancelled = order?.status === "CANCELLED";
     const currentIndex = STATUS_ORDER.indexOf(order?.status);
 
+    const canUploadInvoice =
+        STATUS_ORDER.indexOf(order?.status) >=
+        STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
+        order?.status !== "CANCELLED";
+
     const nextStatus =
         currentIndex >= 0 &&
             currentIndex < STATUS_ORDER.length - 1
@@ -304,6 +353,9 @@ export default function AdminOrderDetails() {
         ...(nextStatus ? [nextStatus] : []),
         ...(order?.status !== "CANCELLED" ? ["CANCELLED"] : []),
     ];
+
+    const isPaymentConfirmed =
+        selectedStatus === "PAYMENT_CONFIRMED";
 
     async function handleRestore() {
         try {
@@ -338,6 +390,112 @@ export default function AdminOrderDetails() {
             setRestoring(false);
         }
     }
+
+    const handleDownloadBill = async () => {
+        try {
+            const response = await apiFetch(
+                `/orders/${order.orderId}/invoice`,
+                {
+                    method: "GET",
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            const billUrl =
+                response?.data?.url ??
+                response?.url;
+
+            if (!billUrl) {
+                throw new Error(
+                    "Bill URL was not returned."
+                );
+            }
+
+            const link = document.createElement("a");
+            link.href = billUrl;
+            link.download = `bill-${order.orderId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error: any) {
+            console.error(
+                "Download bill failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to download bill.",
+            });
+        }
+    };
+
+    const handleUploadInvoice = async (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = event.target.files?.[0];
+
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+            alert("Please select a PDF file.");
+            setInvoiceFileInputKey((prev) => prev + 1);
+            return;
+        }
+
+        try {
+            setUploadingInvoice(true);
+
+            const presignResponse = await apiFetch(
+                `/admin/orders/${order.orderId}/invoice/presign`,
+                {
+                    method: "POST",
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            const uploadUrl =
+                presignResponse?.data?.uploadUrl ??
+                presignResponse?.uploadUrl;
+
+            if (!uploadUrl) {
+                console.error(
+                    "Invoice presign response:",
+                    presignResponse
+                );
+
+                throw new Error(
+                    "Invoice upload URL was not returned."
+                );
+            }
+
+            await uploadFilesToS3(
+                [
+                    {
+                        uploadUrl,
+                    },
+                ],
+                [file]
+            );
+
+            showAlert({
+                type: "success",
+                message: "Invoice uploaded successfully.",
+            });
+            setInvoiceFileInputKey((prev) => prev + 1);
+        } catch (error: any) {
+            console.error("Invoice upload failed:", error);
+            showAlert({
+                type: "error",
+                message: "Unable to upload invoice."
+            });
+            setInvoiceFileInputKey((prev) => prev + 1);
+        } finally {
+            setUploadingInvoice(false);
+        }
+    };
 
     async function handleDownloadPackingList() {
         if (downloadingPackingList || !order) return;
@@ -542,10 +700,21 @@ export default function AdminOrderDetails() {
             </div>
         );
     }
+    const paymentAccountId =
+        selectedPaymentAccountId === "CUSTOM"
+            ? customPaymentAccountId.trim()
+            : selectedPaymentAccountId;
 
     const canSubmit =
-        selectedStatus !== order.status ||
-        comment.trim().length > 0;
+        (
+            selectedStatus !== order.status ||
+            comment.trim().length > 0
+        ) &&
+        (
+            !isPaymentConfirmed ||
+            paymentAccountId.length > 0
+        );
+
     return (
         <div className="space-y-6">
             <div className="bg-white border rounded-xl p-4 space-y-3">
@@ -1572,6 +1741,155 @@ export default function AdminOrderDetails() {
                 </div>
             )}
 
+            {canUploadInvoice && (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+                        {/* Bill Info */}
+                        <div className="flex items-start gap-4 min-w-0">
+                            <div className="
+                    flex h-11 w-11 shrink-0 items-center justify-center
+                    rounded-xl
+                    bg-red-50
+                    text-red-600
+                    border border-red-100
+                ">
+                                <svg
+                                    className="h-5 w-5"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M15 3v5h5"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M9 13h6M9 17h4"
+                                    />
+                                </svg>
+                            </div>
+
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-base font-semibold text-gray-900">
+                                        Bill
+                                    </h3>
+
+                                    <span className="
+                            inline-flex items-center
+                            rounded-full
+                            bg-green-50
+                            px-2 py-0.5
+                            text-[10px]
+                            font-semibold
+                            text-green-700
+                            border border-green-100
+                        ">
+                                        PDF
+                                    </span>
+                                </div>
+
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Upload or download the bill for this order.
+                                </p>
+
+                                <p className="text-xs text-gray-400 mt-1.5">
+                                    Order ID:
+                                    <span className="ml-1 font-medium text-gray-600">
+                                        {order.orderId}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex w-full sm:w-auto items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleDownloadBill}
+                                className="
+                        flex-1 sm:flex-none
+                        px-4 py-2
+                        text-sm
+                        font-medium
+                    "
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <FaDownload size={13} />
+                                    Download Bill
+                                </span>
+                            </Button>
+
+                            <label
+                                htmlFor={`invoice-upload-${invoiceFileInputKey}`}
+                                className={`
+                        inline-flex flex-1 sm:flex-none
+                        items-center justify-center
+                        gap-2
+                        px-4 py-2
+                        rounded-lg
+                        text-sm
+                        font-medium
+                        transition
+                        ${uploadingInvoice
+                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                        : "bg-black text-white hover:bg-gray-800 cursor-pointer"
+                                    }
+                    `}
+                            >
+                                <svg
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 16V4"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M8 8l4-4 4 4"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M5 20h14"
+                                    />
+                                </svg>
+
+                                {uploadingInvoice
+                                    ? "Uploading..."
+                                    : "Upload Bill"}
+                            </label>
+
+                            <input
+                                key={invoiceFileInputKey}
+                                id={`invoice-upload-${invoiceFileInputKey}`}
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                className="hidden"
+                                disabled={uploadingInvoice}
+                                onChange={handleUploadInvoice}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ADMIN ACTIONS */}
 
@@ -1586,7 +1904,16 @@ export default function AdminOrderDetails() {
                     <div className="relative">
                         <select
                             value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            onChange={(e) => {
+                                const status = e.target.value;
+
+                                setSelectedStatus(status);
+
+                                if (status !== "PAYMENT_CONFIRMED") {
+                                    setSelectedPaymentAccountId("");
+                                    setCustomPaymentAccountId("");
+                                }
+                            }}
                             className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
                         >
                             {availableStatuses.map((status) => (
@@ -1597,6 +1924,78 @@ export default function AdminOrderDetails() {
                         </select>
                     </div>
                 </div>
+
+                {isPaymentConfirmed && (
+                    <div>
+                        <label className="text-xs text-gray-500 block mb-1">
+                            Payment Credited To
+                        </label>
+
+                        <select
+                            value={selectedPaymentAccountId}
+                            onChange={(e) => {
+                                setSelectedPaymentAccountId(e.target.value);
+
+                                if (e.target.value !== "CUSTOM") {
+                                    setCustomPaymentAccountId("");
+                                }
+                            }}
+                            disabled={submitting}
+                            className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+                        >
+                            <option value="">
+                                Select Payment Account
+                            </option>
+
+                            {paymentAccounts.map(
+                                (account: any, index: number) => {
+                                    const accountId =
+                                        account.id || String(index);
+
+                                    const label =
+                                        account.type === "BANK"
+                                            ? `${account.bankName || "Bank"} - ${account.accountNumber || accountId}`
+                                            : `${getPaymentAccountLabel(account)} - ${account.upiId ||
+                                            account.mobileNumber ||
+                                            accountId
+                                            }`;
+
+                                    return (
+                                        <option
+                                            key={accountId}
+                                            value={
+                                                account.type === "BANK"
+                                                    ? account.accountNumber || ""
+                                                    : account.upiId ||
+                                                    account.mobileNumber ||
+                                                    ""
+                                            }
+                                        >
+                                            {label}
+                                        </option>
+                                    );
+                                }
+                            )}
+
+                            <option value="CUSTOM">
+                                Custom Account ID
+                            </option>
+                        </select>
+
+                        {selectedPaymentAccountId === "CUSTOM" && (
+                            <input
+                                type="text"
+                                value={customPaymentAccountId}
+                                onChange={(e) =>
+                                    setCustomPaymentAccountId(e.target.value)
+                                }
+                                disabled={submitting}
+                                placeholder="Enter Account ID"
+                                className="w-full border rounded-lg px-3 py-2 text-sm mt-2"
+                            />
+                        )}
+                    </div>
+                )}
 
                 <div>
                     <label className="text-xs text-gray-500 block mb-1">
@@ -1620,7 +2019,11 @@ export default function AdminOrderDetails() {
                                 : undefined,
                             adminComment: comment.trim() || undefined,
                             mobile: order.userId || '',
-                            amount: order.totalAmount || 0
+                            amount: order.totalAmount || 0,
+                            paymentAccountId:
+                                isPaymentConfirmed
+                                    ? paymentAccountId
+                                    : undefined,
                         });
                         setShowConfirm(true);
                     }}
