@@ -145,7 +145,7 @@ function QuickEstimateTableRow({
                         </span>
 
                         <span>
-                            {product.packQuantity}
+                            {product.packQuantity} {" "}
                             {product.packUnit}
                         </span>
                     </span>
@@ -160,7 +160,7 @@ function QuickEstimateTableRow({
                 MRP
             ===================================================== */}
             <td className="text-center py-2 px-3 whitespace-nowrap">
-                {product.isComboPackage ? (
+                {product.isComboPackage || product.isGiftPack ? (
                     <span className="text-gray-500">
                         ₹{product.price}
                     </span>

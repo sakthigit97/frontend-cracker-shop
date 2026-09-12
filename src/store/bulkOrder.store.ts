@@ -88,10 +88,6 @@ export const bulkOrderStore =
 
                 loading: false,
 
-                /* --------------------------------
-                 * Step Navigation
-                 * -------------------------------- */
-
                 setStep: (step) =>
                     set({
                         step,
@@ -113,9 +109,6 @@ export const bulkOrderStore =
                         ) as BulkOrderStep,
                     })),
 
-                /* --------------------------------
-                 * Scheme
-                 * -------------------------------- */
 
                 setScheme: (scheme) =>
                     set({

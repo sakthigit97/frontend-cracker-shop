@@ -129,7 +129,7 @@ export async function buildBulkInvoicePdf(
         order.address.mobile,
         order.address.addressLine1,
         order.address.addressLine2,
-        `${order.address.city}, ${order.address.state}`,
+        `${order.address.city}, ${order.address.district}, ${order.address.state}`,
         order.address.pincode,
     ].filter(Boolean);
 
@@ -212,7 +212,7 @@ export async function buildBulkInvoicePdf(
 
             minCellHeight: 6,
             lineWidth: 0.08,
-            lineColor: COLORS.border,
+            lineColor:  [80, 80, 80],
             valign: "middle",
             textColor: COLORS.dark,
         },

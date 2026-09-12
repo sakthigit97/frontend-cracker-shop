@@ -71,6 +71,7 @@ export interface BulkOrderAddress {
     addressLine1: string;
     addressLine2?: string;
     city: string;
+    district: string;
     state: string;
     pincode: string;
 }
@@ -142,6 +143,7 @@ export interface BulkOrderAddProduct {
     brand?: string;
     categoryId?: string;
     bulkOrderBasePrice: number;
+    packUnit?: string;
     cartonQty: number;
     unitPrice: number;
     schemePrice?: number;

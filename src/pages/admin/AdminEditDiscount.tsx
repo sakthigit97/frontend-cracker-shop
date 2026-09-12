@@ -106,14 +106,6 @@ export default function AdminEditDiscount() {
             return;
         }
 
-        if (form.discountValue <= 0) {
-            showAlert({
-                type: "error",
-                message: "Discount value must be greater than 0",
-            });
-            return;
-        }
-
         if (
             form.discountMode === "PERCENT" &&
             form.discountValue > 100

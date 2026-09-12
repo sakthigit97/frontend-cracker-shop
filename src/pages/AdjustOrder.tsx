@@ -13,6 +13,7 @@ import defaultImage from "../assets/default-image.png";
 import { calculateCouponDiscount } from "../utils/coupon";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 import { useAuth } from "../store/auth.store";
+import { getProductCounts } from "../utils/productCounts";
 
 type AdjustOrderItem = {
     productId: string;
@@ -49,9 +50,6 @@ export default function AdjustOrder() {
     );
 
     const originalItems = originalItemsRef.current;
-
-    // This component is shared by User, Staff and Admin.
-    // Keep the route context so Back/Save always returns to the correct details page.
     const ordersBasePath = location.pathname.startsWith("/staff/orders")
         ? "/staff/orders"
         : location.pathname.startsWith("/admin/orders")
@@ -62,14 +60,13 @@ export default function AdjustOrder() {
         location.state?.returnPath ||
         (orderId ? `${ordersBasePath}/${orderId}` : ordersBasePath);
 
-    const canAdjustConfirmed =
-        location.state?.canAdjustConfirmed === true ||
+    const isAdminOrStaff =
         user?.role === "ADMIN" ||
         user?.role === "STAFF";
 
     const canAdjust =
-        canAdjustConfirmed
-            ? order.status !== "PAYMENT_CONFIRMED" &&
+        isAdminOrStaff
+            ? order.status !== "PACKED" &&
             order.status !== "DISPATCHED" &&
             order.status !== "CANCELLED"
             : order.status === "ORDER_PLACED";
@@ -87,11 +84,21 @@ export default function AdjustOrder() {
             packQuantity: i.packQuantity,
             packUnit: i.packUnit,
             sequenceNumber: i.sequenceNumber,
+            categoryId: i.categoryId
         }))
     );
     const sortedItems = useMemo(
         () => sortProductsBySequence(items),
         [items]
+    );
+
+    const {
+        totalCount,
+        sparklerCount,
+        otherCount,
+    } = getProductCounts(
+        sortedItems,
+        config?.sparklerCategory
     );
 
     if (!order) {
@@ -106,7 +113,7 @@ export default function AdjustOrder() {
                         navigate(ordersBasePath)
                     }
                 >
-                    {canAdjustConfirmed ? "Back to Orders" : "Back to My Orders"}
+                    {isAdminOrStaff ? "Back to Orders" : "Back to My Orders"}
                 </Button>
             </div>
         );
@@ -492,7 +499,7 @@ export default function AdjustOrder() {
             {!canAdjust && (
                 <div className="mb-4 rounded-lg bg-gray-100 border p-3">
                     <p className="text-sm text-gray-700">
-                        This order has been confirmed and cannot be adjusted.
+                        This order cannot be adjusted at its current status.
                     </p>
                 </div>
             )}
@@ -857,9 +864,32 @@ export default function AdjustOrder() {
 
                                 <div className="space-y-2 text-sm">
 
-                                    <div className="flex justify-between">
-                                        <span>Products Total</span>
-                                        <span>₹{formatCurrency(subtotal)}</span>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p>Products Total</p>
+
+                                            {sparklerCount > 0 ? (
+                                                <div className="text-xs text-gray-500 space-y-0.5 mt-0.5">
+                                                    <p>
+                                                        Total Products: {totalCount}
+                                                    </p>
+                                                    <p>
+                                                        Sparklers: {sparklerCount}
+                                                    </p>
+                                                    <p>
+                                                        Other Products: {otherCount}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    Total Products: {totalCount}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <span>
+                                            ₹{formatCurrency(subtotal)}
+                                        </span>
                                     </div>
 
                                     {pricingBreakdown.comboPackageTotal > 0 && (

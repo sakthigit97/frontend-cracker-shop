@@ -22,7 +22,6 @@ export default function ProductStep() {
     } = bulkOrderStore();
 
     const { products = [] } = useHomeProducts();
-
     const {
         profile,
         loadProfile,
@@ -68,10 +67,6 @@ export default function ProductStep() {
             ) {
                 return;
             }
-
-            /*
-             * Create new bulk item
-             */
             const item =
                 createBulkOrderItem(
                     product,
@@ -92,7 +87,6 @@ export default function ProductStep() {
 
     const canContinue =
         items.length > 0;
-
     if (!scheme) {
         return null;
     }

@@ -9,6 +9,17 @@ export async function createOrderApi(payload: {
     });
 }
 
+export const refreshOrderAmount = async (
+    orderId: string
+) =>
+    apiFetch(
+        `/admin/orders/${orderId}/refresh-amount`,
+        {
+            method: "POST",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+
 export async function getMyOrdersApi(
     limit = 10,
     cursor?: string

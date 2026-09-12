@@ -296,6 +296,10 @@ export default function AdminUsers() {
                                 </th>
 
                                 <th className="p-3 text-left">
+                                    Bulk User
+                                </th>
+
+                                <th className="p-3 text-left">
                                     Action
                                 </th>
                             </tr>
@@ -395,6 +399,12 @@ export default function AdminUsers() {
                                             <td className="p-3">
                                                 {user.role ||
                                                     "-"}
+                                            </td>
+
+                                            <td className="p-3">
+                                                {user.isBulkUser === true
+                                                    ? "Yes"
+                                                    : "No"}
                                             </td>
 
                                             <td className="p-3">

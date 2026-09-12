@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role !== "USER") return;
 
     const resetIdleTimer = () => {
       if (idleTimerRef.current) {
@@ -132,7 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const decoded: DecodedToken = jwtDecode(user.token);
-
       const expiresAt = decoded.exp * 1000;
       const timeout = expiresAt - Date.now();
 
@@ -141,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (timeout <= 0) {
+        console.log("JWT expired. Logging out...");
         logout();
         return;
       }

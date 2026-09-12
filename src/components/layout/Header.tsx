@@ -137,12 +137,7 @@ export default function Header() {
           label: "Bulk Order",
           to: "/bulk-order",
           icon: <FaBoxOpen />,
-        },
-        {
-          label: "View Bulk Order",
-          to: "/bulk-orders",
-          icon: <FaBoxOpen />,
-        },
+        }
       ]
       : []),
   ];
@@ -181,6 +176,11 @@ export default function Header() {
       icon: <FaClipboardList />,
     },
     {
+      label: "Bulk Order",
+      to: "/bulk-orders",
+      icon: <FaBoxOpen />,
+    },
+    {
       label: "My Profile",
       to: "/profile",
       icon: <FaUserCircle />,
@@ -211,12 +211,7 @@ export default function Header() {
           label: "Bulk Order",
           to: "/bulk-order",
           icon: <FaBoxOpen />,
-        },
-        {
-          label: "View Bulk Order",
-          to: "/bulk-orders",
-          icon: <FaBoxOpen />,
-        },
+        }
       ]
       : []),
   ];
@@ -254,6 +249,11 @@ export default function Header() {
       label: "Orders",
       to: "/orders",
       icon: <FaClipboardList />,
+    },
+    {
+      label: "Bulk Orders",
+      to: "/bulk-orders",
+      icon: <FaBoxOpen />,
     },
     {
       label: "Profile",

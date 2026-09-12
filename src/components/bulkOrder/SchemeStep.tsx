@@ -13,10 +13,12 @@ import { useConfigStore } from "../../store/config.store";
 import { validateBulkAdminCode } from "../../services/bulkOrder.api";
 import type { BulkScheme } from "../../types/bulkOrder";
 import { getMyAdminCodes } from "../../services/adminCode.api";
+import { formatDateTime } from "../../utils/date";
 
 interface AdminCode {
     code: string;
     schemeId: string;
+    expiryDate: string;
 }
 
 export default function SchemeStep() {
@@ -458,6 +460,10 @@ export default function SchemeStep() {
 
                                         <p className="text-xs text-gray-500">
                                             Scheme: {item.schemeId}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                            Expiry: {formatDateTime(item.expiryDate)}
                                         </p>
                                     </div>
 

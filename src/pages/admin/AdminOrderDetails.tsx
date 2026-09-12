@@ -19,12 +19,14 @@ import { downloadInvoice } from "../../utils/pdf/downloadInvoice";
 import { downloadStaffPackingList } from "../../utils/pdf/staffInvoice";
 import { useConfigStore } from "../../store/config.store";
 import { useAdminOrdersStore } from "../../store/adminOrders.store";
-import { restoreOrderApi } from "../../services/order.api";
+import { refreshOrderAmount, restoreOrderApi } from "../../services/order.api";
 import { useOrdersStore } from "../../store/orders.store";
 import { sortProductsBySequence } from "../../utils/sequncerUtil";
 import { formatCurrency } from "../../utils/pricing";
 import { formatDateTime } from "../../utils/date";
 import { useAuth } from "../../store/auth.store";
+import { getProductCounts } from "../../utils/productCounts";
+import { uploadFilesToS3 } from "../../utils/uploadToS3";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -42,6 +44,7 @@ export default function AdminOrderDetails() {
         adminComment?: string;
         mobile: string;
         amount: string;
+        paymentAccountId?: string;
     } | null>(null);
     const config = useConfigStore((s) => s.config);
     const [selectedStatus, setSelectedStatus] = useState("");
@@ -60,27 +63,257 @@ export default function AdminOrderDetails() {
     const [discountSubmitting, setDiscountSubmitting] =
         useState(false);
 
+    const [selectedPaymentAccountIds, setSelectedPaymentAccountIds] =
+        useState<string[]>([]);
+
+    const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
+        useState("");
+
+    const [customPaymentAccountId, setCustomPaymentAccountId] =
+        useState("");
+
+    const [generatedPaymentMessage, setGeneratedPaymentMessage] =
+        useState("");
+
+    const [refreshingAmount, setRefreshingAmount] =
+        useState(false);
+
+    const [showRefreshAmountConfirm, setShowRefreshAmountConfirm] =
+        useState(false);
+
+    const [copyingPaymentMessage, setCopyingPaymentMessage] =
+        useState(false);
+    const [uploadingInvoice, setUploadingInvoice] = useState(false);
+    const [invoiceFileInputKey, setInvoiceFileInputKey] = useState(0);
+
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
 
     const order = cache[orderId];
+    const paymentAccounts =
+        Array.isArray(config?.paymentAccounts)
+            ? config.paymentAccounts
+            : [];
+
+    const getPaymentAccountLabel = (account: any) => {
+        if (account.type === "BANK") {
+            return account.bankName || "Bank Account";
+        }
+
+        if (account.type === "GPAY") {
+            return "GPay";
+        }
+
+        if (account.type === "PHONEPE") {
+            return "PhonePe";
+        }
+
+        if (account.type === "PAYTM") {
+            return "Paytm";
+        }
+
+        return "Payment Account";
+    };
+
+    const generatePaymentMessage = () => {
+        const lines: string[] = [];
+
+        lines.push(
+            `🎉 Your ${config?.companyName || "Sivakasi Pyro Park"} Order is Confirmed!`
+        );
+
+        lines.push(`Order ID: ${order.orderId}`);
+
+        lines.push(
+            `Total: ₹${Number(
+                order.grandTotal ?? 0
+            ).toLocaleString("en-IN")}`
+        );
+
+        lines.push("");
+        lines.push("Pay via Bank Transfer:");
+        lines.push("Payment Details:");
+        lines.push("");
+
+        const selectedAccounts =
+            paymentAccounts.filter(
+                (account: any, index: number) => {
+                    const accountId =
+                        account.id || String(index);
+
+                    return selectedPaymentAccountIds.includes(
+                        accountId
+                    );
+                }
+            );
+
+        selectedAccounts.forEach(
+            (account: any, index: number) => {
+                if (index > 0) {
+                    lines.push("");
+                }
+
+                if (account.type === "BANK") {
+                    lines.push(
+                        account.bankName || "Bank"
+                    );
+
+                    lines.push(
+                        `Name: ${account.bankUserName || ""}`
+                    );
+
+                    lines.push(
+                        `A/C No: ${account.accountNumber || ""}`
+                    );
+
+                    lines.push(
+                        `IFSC: ${account.ifsc || ""} (${account.accountType === "SAVINGS"
+                            ? "Savings A/C"
+                            : "Current A/C"
+                        })`
+                    );
+
+                    return;
+                }
+
+                const paymentName =
+                    account.type === "GPAY"
+                        ? "GPay"
+                        : account.type === "PHONEPE"
+                            ? "PhonePe"
+                            : account.type === "PAYTM"
+                                ? "Paytm"
+                                : account.type;
+
+                lines.push(paymentName);
+
+                if (account.mobileNumber) {
+                    lines.push(
+                        `Mobile: ${account.mobileNumber}`
+                    );
+                }
+
+                if (account.upiId) {
+                    lines.push(
+                        `UPI ID: ${account.upiId}`
+                    );
+                }
+            }
+        );
+
+        lines.push("");
+
+        lines.push(
+            "👉 Please share your payment screenshot with us to start dispatch."
+        );
+
+        lines.push(
+            `Track here: ${website}`
+        );
+
+        return lines.join("\n");
+    };
+
+    const handleRefreshOrderAmount = async () => {
+        if (!order || refreshingAmount) {
+            return;
+        }
+
+        try {
+            setRefreshingAmount(true);
+
+            await refreshOrderAmount(order.orderId);
+
+            clearOrdersCache();
+            clearAdminOrdersCache();
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            setShowRefreshAmountConfirm(false);
+
+            showAlert({
+                type: "success",
+                message: "Order amount refreshed successfully.",
+                duration: 2000,
+            });
+        } catch (error: any) {
+            console.error(
+                "Refresh order amount failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to refresh order amount.",
+            });
+        } finally {
+            setRefreshingAmount(false);
+        }
+    };
+
+    const handleCopyPaymentMessage = async () => {
+        if (!generatedPaymentMessage) {
+            showAlert({
+                type: "error",
+                message:
+                    "Please generate the payment message first.",
+            });
+
+            return;
+        }
+
+        try {
+            setCopyingPaymentMessage(true);
+
+            await navigator.clipboard.writeText(
+                generatedPaymentMessage
+            );
+
+            showAlert({
+                type: "success",
+                message: "Payment message copied",
+                duration: 1500,
+            });
+        } catch (error) {
+            console.error(
+                "Copy payment message failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    "Unable to copy payment message.",
+            });
+        } finally {
+            setCopyingPaymentMessage(false);
+        }
+    };
     const packagingPercent = config?.packagingPercent ?? 0;
     const gstPercent = config?.gstPercent ?? 0;
     const disableGstForTN = config?.disableGstForTN || false;
+    const website = config?.website || 'https://www.sivakasicrackers.co.in';
 
     const isTamilNadu = order?.address
         ?.toLowerCase()
         .includes("tamil nadu");
 
-    const totalQuantity =
-        order?.items?.reduce(
-            (total: number, item: any) => total + item.quantity,
-            0
-        ) ?? 0;
-
     const sortedItems = useMemo(
         () => sortProductsBySequence(order?.items ?? []),
         [order?.items]
+    );
+
+    const {
+        totalCount,
+        sparklerCount,
+        otherCount,
+    } = getProductCounts(
+        sortedItems,
+        config?.sparklerCategory
     );
 
     useEffect(() => {
@@ -98,11 +331,45 @@ export default function AdminOrderDetails() {
     ]);
 
     useEffect(() => {
-        if (order) {
-            setComment("");
-            setSelectedStatus(order.status);
+        if (!order) return;
+
+        setComment(order.adminComment || "");
+        setSelectedStatus(order.status);
+
+        const savedPaymentAccountId =
+            String(order.paymentAccountId ?? "").trim();
+
+        if (!savedPaymentAccountId) {
+            setSelectedPaymentAccountId("");
+            setCustomPaymentAccountId("");
+            return;
         }
-    }, [order]);
+
+        const matchingAccount = paymentAccounts.find(
+            (account: any) => {
+                const creditedTo =
+                    account.type === "BANK"
+                        ? account.accountNumber || ""
+                        : account.upiId ||
+                        account.mobileNumber ||
+                        "";
+
+                return creditedTo === savedPaymentAccountId;
+            }
+        );
+
+        if (matchingAccount) {
+            setSelectedPaymentAccountId(
+                savedPaymentAccountId
+            );
+            setCustomPaymentAccountId("");
+        } else {
+            setSelectedPaymentAccountId("CUSTOM");
+            setCustomPaymentAccountId(
+                savedPaymentAccountId
+            );
+        }
+    }, [order, config?.paymentAccounts]);
 
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
@@ -117,6 +384,11 @@ export default function AdminOrderDetails() {
     const isCancelled = order?.status === "CANCELLED";
     const currentIndex = STATUS_ORDER.indexOf(order?.status);
 
+    const canUploadInvoice =
+        STATUS_ORDER.indexOf(order?.status) >=
+        STATUS_ORDER.indexOf("PAYMENT_CONFIRMED") &&
+        order?.status !== "CANCELLED";
+
     const nextStatus =
         currentIndex >= 0 &&
             currentIndex < STATUS_ORDER.length - 1
@@ -128,6 +400,9 @@ export default function AdminOrderDetails() {
         ...(nextStatus ? [nextStatus] : []),
         ...(order?.status !== "CANCELLED" ? ["CANCELLED"] : []),
     ];
+
+    const isPaymentConfirmed =
+        selectedStatus === "PAYMENT_CONFIRMED";
 
     async function handleRestore() {
         try {
@@ -162,6 +437,112 @@ export default function AdminOrderDetails() {
             setRestoring(false);
         }
     }
+
+    const handleDownloadBill = async () => {
+        try {
+            const response = await apiFetch(
+                `/orders/${order.orderId}/invoice`,
+                {
+                    method: "GET",
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            const billUrl =
+                response?.data?.url ??
+                response?.url;
+
+            if (!billUrl) {
+                throw new Error(
+                    "Bill URL was not returned."
+                );
+            }
+
+            const link = document.createElement("a");
+            link.href = billUrl;
+            link.download = `bill-${order.orderId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error: any) {
+            console.error(
+                "Download bill failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to download bill.",
+            });
+        }
+    };
+
+    const handleUploadInvoice = async (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = event.target.files?.[0];
+
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+            alert("Please select a PDF file.");
+            setInvoiceFileInputKey((prev) => prev + 1);
+            return;
+        }
+
+        try {
+            setUploadingInvoice(true);
+
+            const presignResponse = await apiFetch(
+                `/admin/orders/${order.orderId}/invoice/presign`,
+                {
+                    method: "POST",
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            const uploadUrl =
+                presignResponse?.data?.uploadUrl ??
+                presignResponse?.uploadUrl;
+
+            if (!uploadUrl) {
+                console.error(
+                    "Invoice presign response:",
+                    presignResponse
+                );
+
+                throw new Error(
+                    "Invoice upload URL was not returned."
+                );
+            }
+
+            await uploadFilesToS3(
+                [
+                    {
+                        uploadUrl,
+                    },
+                ],
+                [file]
+            );
+
+            showAlert({
+                type: "success",
+                message: "Invoice uploaded successfully.",
+            });
+            setInvoiceFileInputKey((prev) => prev + 1);
+        } catch (error: any) {
+            console.error("Invoice upload failed:", error);
+            showAlert({
+                type: "error",
+                message: "Unable to upload invoice."
+            });
+            setInvoiceFileInputKey((prev) => prev + 1);
+        } finally {
+            setUploadingInvoice(false);
+        }
+    };
 
     async function handleDownloadPackingList() {
         if (downloadingPackingList || !order) return;
@@ -366,10 +747,21 @@ export default function AdminOrderDetails() {
             </div>
         );
     }
+    const paymentAccountId =
+        selectedPaymentAccountId === "CUSTOM"
+            ? customPaymentAccountId.trim()
+            : selectedPaymentAccountId;
 
     const canSubmit =
-        selectedStatus !== order.status ||
-        comment.trim().length > 0;
+        (
+            selectedStatus !== order.status ||
+            comment.trim().length > 0
+        ) &&
+        (
+            !isPaymentConfirmed ||
+            paymentAccountId.length > 0
+        );
+
     return (
         <div className="space-y-6">
             <div className="bg-white border rounded-xl p-4 space-y-3">
@@ -466,6 +858,18 @@ export default function AdminOrderDetails() {
                                 Adjust Order
                             </Button>
                         )}
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="px-3 py-1.5 text-xs whitespace-nowrap"
+                            disabled={refreshingAmount}
+                            onClick={() => setShowRefreshAmountConfirm(true)}
+                        >
+                            {refreshingAmount
+                                ? "Refreshing..."
+                                : "Refresh Amount"}
+                        </Button>
 
                         {isCancelled && (
                             <Button
@@ -707,7 +1111,7 @@ export default function AdminOrderDetails() {
                                             font-medium
                                             text-gray-700
                                         ">
-                                                        {packQuantity}{"/"}
+                                                        {packQuantity}{" "}
                                                         {packUnit}
                                                     </span>
                                                 ) : (
@@ -803,6 +1207,10 @@ export default function AdminOrderDetails() {
                                 Apply a discount to the product total.
                                 Packaging and GST will be recalculated
                                 automatically.
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                                To remove an existing discount, enter <strong>0</strong> and submit
+                                the update.
                             </p>
                         </div>
 
@@ -958,13 +1366,27 @@ export default function AdminOrderDetails() {
                     </div>
 
                     <div className="space-y-2 text-sm">
-
                         <div className="flex justify-between items-start">
                             <div>
                                 <p>Products Total</p>
-                                <p className="text-xs text-gray-500">
-                                    {order.items.length} Products • {totalQuantity} Qty
-                                </p>
+
+                                {sparklerCount > 0 ? (
+                                    <div className="text-xs text-gray-500 space-y-0.5">
+                                        <p>
+                                            Total Products: {totalCount}
+                                        </p>
+                                        <p>
+                                            Sparklers: {sparklerCount}
+                                        </p>
+                                        <p>
+                                            Other Products: {otherCount}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-gray-500">
+                                        Total Products: {totalCount}
+                                    </p>
+                                )}
                             </div>
 
                             <span>
@@ -1156,9 +1578,7 @@ export default function AdminOrderDetails() {
                                     (a.changedAt ?? a.at)
                             )
                             .map((history: any, index: number) => {
-                                const status =
-                                    history.toStatus ?? history.status;
-
+                                const status = history.toStatus ?? history.status;
                                 const updatedBy =
                                     history.changedBy ?? history.by;
 
@@ -1213,14 +1633,7 @@ export default function AdminOrderDetails() {
                                             {updatedBy && (
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Changed By :{" "}
-                                                    {updatedBy.startsWith(
-                                                        "ADMIN"
-                                                    )
-                                                        ? "Admin"
-                                                        : updatedBy.replace(
-                                                            "USER#",
-                                                            ""
-                                                        )}
+                                                    {updatedBy}
                                                 </p>
                                             )}
 
@@ -1238,6 +1651,305 @@ export default function AdminOrderDetails() {
             )}
 
 
+
+            {paymentAccounts.length > 0 && (
+                <div className="bg-white border rounded-xl p-5 space-y-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                            Payment Message
+                        </h3>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Select the payment account(s) to include
+                            in the customer payment message.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        {paymentAccounts.map(
+                            (account: any, index: number) => {
+                                const accountId =
+                                    account.id || String(index);
+
+                                const selected =
+                                    selectedPaymentAccountIds.includes(
+                                        accountId
+                                    );
+
+                                return (
+                                    <label
+                                        key={accountId}
+                                        className={`flex items-center gap-3 border rounded-lg p-3 cursor-pointer ${selected
+                                            ? "border-[var(--color-primary)] bg-gray-50"
+                                            : "border-gray-200"
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selected}
+                                            onChange={() => {
+                                                setSelectedPaymentAccountIds(
+                                                    (previous) =>
+                                                        previous.includes(
+                                                            accountId
+                                                        )
+                                                            ? previous.filter(
+                                                                (id) =>
+                                                                    id !==
+                                                                    accountId
+                                                            )
+                                                            : [
+                                                                ...previous,
+                                                                accountId,
+                                                            ]
+                                                );
+
+                                                setGeneratedPaymentMessage(
+                                                    ""
+                                                );
+                                            }}
+                                        />
+
+                                        <div>
+                                            <p className="text-sm font-medium">
+                                                {getPaymentAccountLabel(
+                                                    account
+                                                )}
+                                            </p>
+
+                                            {account.type === "BANK" ? (
+                                                <p className="text-xs text-gray-500">
+                                                    {account.bankUserName ||
+                                                        ""}{" "}
+                                                    {account.accountNumber
+                                                        ? `• ${account.accountNumber}`
+                                                        : ""}
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-gray-500">
+                                                    {account.upiId ||
+                                                        account.mobileNumber ||
+                                                        ""}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </label>
+                                );
+                            }
+                        )}
+                    </div>
+
+                    <Button
+                        type="button"
+                        disabled={
+                            selectedPaymentAccountIds.length ===
+                            0
+                        }
+                        onClick={() => {
+                            if (
+                                selectedPaymentAccountIds.length ===
+                                0
+                            ) {
+                                showAlert({
+                                    type: "error",
+                                    message:
+                                        "Please select at least one payment account.",
+                                });
+
+                                return;
+                            }
+
+                            setGeneratedPaymentMessage(
+                                generatePaymentMessage()
+                            );
+                        }}
+                    >
+                        Generate Payment Message
+                    </Button>
+
+                    {generatedPaymentMessage && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-sm font-medium">
+                                    Message Preview
+                                </p>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={
+                                        copyingPaymentMessage
+                                    }
+                                    onClick={
+                                        handleCopyPaymentMessage
+                                    }
+                                >
+                                    {copyingPaymentMessage
+                                        ? "Copying..."
+                                        : "Copy Message"}
+                                </Button>
+                            </div>
+
+                            <div className="rounded-xl border bg-gray-50 p-4 max-h-[420px] overflow-y-auto">
+                                <pre className="whitespace-pre-wrap break-words text-sm leading-6 font-sans text-gray-700">
+                                    {generatedPaymentMessage}
+                                </pre>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {canUploadInvoice && (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+                        {/* Bill Info */}
+                        <div className="flex items-start gap-4 min-w-0">
+                            <div className="
+                    flex h-11 w-11 shrink-0 items-center justify-center
+                    rounded-xl
+                    bg-red-50
+                    text-red-600
+                    border border-red-100
+                ">
+                                <svg
+                                    className="h-5 w-5"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M15 3v5h5"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M9 13h6M9 17h4"
+                                    />
+                                </svg>
+                            </div>
+
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-base font-semibold text-gray-900">
+                                        Bill
+                                    </h3>
+
+                                    <span className="
+                            inline-flex items-center
+                            rounded-full
+                            bg-green-50
+                            px-2 py-0.5
+                            text-[10px]
+                            font-semibold
+                            text-green-700
+                            border border-green-100
+                        ">
+                                        PDF
+                                    </span>
+                                </div>
+
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Upload or download the bill for this order.
+                                </p>
+
+                                <p className="text-xs text-gray-400 mt-1.5">
+                                    Order ID:
+                                    <span className="ml-1 font-medium text-gray-600">
+                                        {order.orderId}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex w-full sm:w-auto items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleDownloadBill}
+                                className="
+                        flex-1 sm:flex-none
+                        px-4 py-2
+                        text-sm
+                        font-medium
+                    "
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <FaDownload size={13} />
+                                    Download Bill
+                                </span>
+                            </Button>
+
+                            <label
+                                htmlFor={`invoice-upload-${invoiceFileInputKey}`}
+                                className={`
+                        inline-flex flex-1 sm:flex-none
+                        items-center justify-center
+                        gap-2
+                        px-4 py-2
+                        rounded-lg
+                        text-sm
+                        font-medium
+                        transition
+                        ${uploadingInvoice
+                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                        : "bg-black text-white hover:bg-gray-800 cursor-pointer"
+                                    }
+                    `}
+                            >
+                                <svg
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 16V4"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M8 8l4-4 4 4"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M5 20h14"
+                                    />
+                                </svg>
+
+                                {uploadingInvoice
+                                    ? "Uploading..."
+                                    : "Upload Bill"}
+                            </label>
+
+                            <input
+                                key={invoiceFileInputKey}
+                                id={`invoice-upload-${invoiceFileInputKey}`}
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                className="hidden"
+                                disabled={uploadingInvoice}
+                                onChange={handleUploadInvoice}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ADMIN ACTIONS */}
 
             <div className="bg-white border rounded-xl p-4 space-y-4">
@@ -1251,7 +1963,16 @@ export default function AdminOrderDetails() {
                     <div className="relative">
                         <select
                             value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            onChange={(e) => {
+                                const status = e.target.value;
+
+                                setSelectedStatus(status);
+
+                                if (status !== "PAYMENT_CONFIRMED") {
+                                    setSelectedPaymentAccountId("");
+                                    setCustomPaymentAccountId("");
+                                }
+                            }}
                             className="w-full appearance-none border rounded-lg px-3 py-2 pr-10 text-sm bg-white"
                         >
                             {availableStatuses.map((status) => (
@@ -1262,6 +1983,78 @@ export default function AdminOrderDetails() {
                         </select>
                     </div>
                 </div>
+
+                {isPaymentConfirmed && (
+                    <div>
+                        <label className="text-xs text-gray-500 block mb-1">
+                            Payment Credited To
+                        </label>
+
+                        <select
+                            value={selectedPaymentAccountId}
+                            onChange={(e) => {
+                                setSelectedPaymentAccountId(e.target.value);
+
+                                if (e.target.value !== "CUSTOM") {
+                                    setCustomPaymentAccountId("");
+                                }
+                            }}
+                            disabled={submitting}
+                            className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+                        >
+                            <option value="">
+                                Select Payment Account
+                            </option>
+
+                            {paymentAccounts.map(
+                                (account: any, index: number) => {
+                                    const accountId =
+                                        account.id || String(index);
+
+                                    const label =
+                                        account.type === "BANK"
+                                            ? `${account.bankName || "Bank"} - ${account.accountNumber || accountId}`
+                                            : `${getPaymentAccountLabel(account)} - ${account.upiId ||
+                                            account.mobileNumber ||
+                                            accountId
+                                            }`;
+
+                                    return (
+                                        <option
+                                            key={accountId}
+                                            value={
+                                                account.type === "BANK"
+                                                    ? account.accountNumber || ""
+                                                    : account.upiId ||
+                                                    account.mobileNumber ||
+                                                    ""
+                                            }
+                                        >
+                                            {label}
+                                        </option>
+                                    );
+                                }
+                            )}
+
+                            <option value="CUSTOM">
+                                Custom Account ID
+                            </option>
+                        </select>
+
+                        {selectedPaymentAccountId === "CUSTOM" && (
+                            <input
+                                type="text"
+                                value={customPaymentAccountId}
+                                onChange={(e) =>
+                                    setCustomPaymentAccountId(e.target.value)
+                                }
+                                disabled={submitting}
+                                placeholder="Enter Account ID"
+                                className="w-full border rounded-lg px-3 py-2 text-sm mt-2"
+                            />
+                        )}
+                    </div>
+                )}
 
                 <div>
                     <label className="text-xs text-gray-500 block mb-1">
@@ -1285,7 +2078,11 @@ export default function AdminOrderDetails() {
                                 : undefined,
                             adminComment: comment.trim() || undefined,
                             mobile: order.userId || '',
-                            amount: order.totalAmount || 0
+                            amount: order.totalAmount || 0,
+                            paymentAccountId:
+                                isPaymentConfirmed
+                                    ? paymentAccountId
+                                    : undefined,
                         });
                         setShowConfirm(true);
                     }}
@@ -1346,6 +2143,23 @@ export default function AdminOrderDetails() {
                 onCancel={() => {
                     setShowConfirm(false);
                     setPendingPayload(null);
+                }}
+            />
+
+            <ConfirmDialog
+                open={showRefreshAmountConfirm}
+                title="Refresh Order Amount?"
+                description="Are you sure you want to refresh this order amount? The current product prices and discounts will be recalculated using the latest values."
+                confirmText="Yes, Refresh"
+                cancelText="Cancel"
+                loading={refreshingAmount}
+                onConfirm={handleRefreshOrderAmount}
+                onCancel={() => {
+                    if (refreshingAmount) {
+                        return;
+                    }
+
+                    setShowRefreshAmountConfirm(false);
                 }}
             />
 

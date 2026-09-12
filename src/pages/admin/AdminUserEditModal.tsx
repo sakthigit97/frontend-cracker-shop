@@ -13,6 +13,7 @@ interface AdminUser {
     city?: string;
     state?: string;
     pincode?: string;
+    walletCredit?: string;
 }
 
 interface Props {
@@ -29,6 +30,7 @@ interface FormState {
     city: string;
     state: string;
     pincode: string;
+    walletCredit: string;
 }
 
 const initialForm: FormState = {
@@ -38,6 +40,7 @@ const initialForm: FormState = {
     city: "",
     state: "",
     pincode: "",
+    walletCredit: "0",
 };
 
 export default function AdminUserEditModal({
@@ -54,10 +57,6 @@ export default function AdminUserEditModal({
     const [saving, setSaving] =
         useState(false);
 
-    /*
-     * Populate form whenever a different
-     * user is opened.
-     */
     useEffect(() => {
         if (!open || !user) {
             return;
@@ -70,13 +69,12 @@ export default function AdminUserEditModal({
             city: user.city ?? "",
             state: user.state ?? "",
             pincode: user.pincode ?? "",
+            walletCredit: user.walletCredit != null
+                ? String(user.walletCredit)
+                : "0",
         });
     }, [open, user]);
 
-    /*
-     * Lock background page scroll while modal
-     * is open and support Escape key.
-     */
     useEffect(() => {
         if (!open) {
             return;
@@ -148,9 +146,9 @@ export default function AdminUserEditModal({
         const pincode =
             form.pincode.trim();
 
-        /*
-         * Required validations
-         */
+        const walletCredit =
+            Number(form.walletCredit);
+
         if (!name) {
             showAlert({
                 type: "error",
@@ -221,6 +219,19 @@ export default function AdminUserEditModal({
             return;
         }
 
+        if (
+            !Number.isFinite(walletCredit) ||
+            walletCredit < 0
+        ) {
+            showAlert({
+                type: "error",
+                message:
+                    "Wallet credit balance must be a valid amount.",
+            });
+
+            return;
+        }
+
         try {
             setSaving(true);
 
@@ -233,6 +244,7 @@ export default function AdminUserEditModal({
                     city,
                     state,
                     pincode,
+                    walletCredit
                 }
             );
 
@@ -241,11 +253,6 @@ export default function AdminUserEditModal({
                 message:
                     "User updated successfully.",
             });
-
-            /*
-             * Parent clears cache and reloads
-             * the current page.
-             */
             await onUpdated();
 
             onClose();
@@ -586,6 +593,31 @@ export default function AdminUserEditModal({
                                 }
                                 placeholder="Enter 6-digit pincode"
                             />
+                        </div>
+
+                        {/* Wallet Credit Balance */}
+                        <div>
+                            <label className={labelClass}>
+                                Wallet Credit Balance
+                            </label>
+
+                            <input
+                                type="number"
+                                className={inputClass}
+                                value={form.walletCredit}
+                                disabled={saving}
+                                onChange={(event) =>
+                                    updateField(
+                                        "walletCredit",
+                                        event.target.value
+                                    )
+                                }
+                                placeholder="Enter wallet credit balance"
+                            />
+
+                            <p className="mt-1.5 text-xs text-gray-500">
+                                Amount available as wallet credit for this user.
+                            </p>
                         </div>
                     </div>
                 </div>

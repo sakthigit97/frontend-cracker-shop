@@ -21,7 +21,7 @@ const DATE_OPTIONS = [
 ] as const;
 type DateRange = "all" | "today" | "7" | "30";
 
-function getCityFromAddress(address?: string) {
+function getLocationFromAddress(address?: string) {
     if (!address) return "-";
 
     const lines = address
@@ -32,12 +32,20 @@ function getCityFromAddress(address?: string) {
     const locationLine =
         lines[lines.length - 1] ?? "";
 
-    const city =
-        locationLine
-            .split(",")[0]
-            ?.trim() ?? "";
+    const locationParts = locationLine
+        .split(",")
+        .map((part) => part.trim());
 
-    return city || "-";
+    const city = locationParts[0] ?? "";
+    const district = locationParts[1] ?? "";
+
+    if (!city) {
+        return "-";
+    }
+
+    return district
+        ? `${city}, ${district}`
+        : city;
 }
 
 export default function AdminOrders() {
@@ -267,7 +275,7 @@ export default function AdminOrders() {
 
                                 {/* State */}
                                 <p className="text-xs text-gray-500 mt-1">
-                                    📍 {getCityFromAddress(o.address)},{" "} {o.deliveryState || "-"}
+                                    📍 {getLocationFromAddress(o.address)},{" "} {o.deliveryState || "-"}
                                 </p>
 
                                 {/* Bottom Row */}

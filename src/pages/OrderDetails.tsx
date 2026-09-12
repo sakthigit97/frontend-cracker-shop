@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { formatCurrency } from "../utils/pricing";
+import { getProductCounts } from "../utils/productCounts";
 
 import {
   ORDER_STATUS_CONFIG,
@@ -31,6 +32,7 @@ import { downloadInvoice } from "../utils/pdf/downloadInvoice";
 import { formatDateTime } from "../utils/date";
 import defaultImage from "../assets/default-image.png";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
+import { apiFetch } from "../services/api";
 
 const TERMINAL_STATUS = "CANCELLED";
 
@@ -42,19 +44,14 @@ const CANCELLABLE_STATUSES = [
 export default function OrderDetails() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const order = location.state?.order;
-
   const clearOrdersCache = useOrdersStore(
     (s) => s.clear
   );
-
   const config = useConfigStore(
     (s) => s.config
   );
-
   const { showAlert } = useAlert();
-
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] =
     useState(false);
@@ -152,11 +149,25 @@ export default function OrderDetails() {
       0
     ) ?? 0;
 
+  const {
+    sparklerCount,
+    otherCount,
+  } = useMemo(
+    () =>
+      getProductCounts(
+        order.items ?? [],
+        config?.sparklerCategory
+      ),
+    [
+      order.items,
+      config?.sparklerCategory,
+    ]
+  );
+
   const sortedItems = useMemo(
     () => sortProductsBySequence(order.items),
     [order.items]
   );
-
   async function handleRestore() {
     try {
       setRestoring(true);
@@ -290,6 +301,53 @@ export default function OrderDetails() {
       address: "-",
     };
   })();
+
+  const handleDownloadBill = async () => {
+    if (!order) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch(
+        `/orders/${order.orderId}/invoice`,
+        {
+          method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+      );
+
+      const billUrl =
+        response?.data?.url ??
+        response?.url;
+
+      if (!billUrl) {
+        throw new Error(
+          "Bill URL was not returned."
+        );
+      }
+
+      const link = document.createElement("a");
+
+      link.href = billUrl;
+      link.download = `bill-${order.orderId}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error: any) {
+      console.error(
+        "Download bill failed:",
+        error
+      );
+
+      showAlert({
+        type: "error",
+        message:
+          error?.message ||
+          "Unable to download bill.",
+      });
+    }
+  };
 
   async function handleDownloadInvoice() {
     if (downloading) return;
@@ -734,6 +792,15 @@ export default function OrderDetails() {
                 ? "Product"
                 : "Products"}{" "}
               • {totalQuantity} Qty
+
+              {sparklerCount > 0 && (
+                <>
+                  {" • "}
+                  Sparklers: {sparklerCount}
+                  {" • "}
+                  Others: {otherCount}
+                </>
+              )}
             </p>
           </div>
 
@@ -843,13 +910,12 @@ export default function OrderDetails() {
 
                         </td>
 
-                        {/* Pack */}
                         <td className="px-4 py-3 text-center">
 
                           {hasPack ? (
                             <span
                               className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
-                              {packQuantity}
+                              {packQuantity} {""}
                               {packUnit}
                             </span>
                           ) : (
@@ -1067,6 +1133,15 @@ export default function OrderDetails() {
             {downloading
               ? "Downloading..."
               : "Download Invoice"}
+          </Button>
+        )}
+
+        {canDownloadInvoice && (
+          <Button
+            data-enter-submit="true"
+            onClick={handleDownloadBill}
+          >
+            Download Bill
           </Button>
         )}
 

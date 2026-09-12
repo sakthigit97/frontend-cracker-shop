@@ -13,6 +13,7 @@ export interface UpdateAdminUserRequest {
     city?: string;
     state?: string;
     pincode?: string;
+    walletCredit?: number;
 }
 
 export interface AdminUser {
@@ -77,6 +78,6 @@ export async function updateAdminUser(
         {
             method: "PATCH",
             body: JSON.stringify(payload),
-    }
+        }
     );
 }

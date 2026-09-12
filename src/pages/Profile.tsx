@@ -4,9 +4,9 @@ import { useAlert } from "../store/alert.store";
 import { apiFetch } from "../services/api";
 import { useProfileStore } from "../store/profile.store";
 import ProductSkeleton from "../components/product/ProductSkeleton";
-import { INDIA_STATES } from "../utils/states";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth.store";
+import { getPincodeLocation } from "../utils/pincode";
 
 interface ProfileData {
   title: "Mr" | "Mrs" | "Ms";
@@ -15,6 +15,7 @@ interface ProfileData {
   email?: string;
   address: string;
   city: string;
+  district?: string;
   state: string;
   pincode: string;
   walletCredit?: number;
@@ -32,6 +33,8 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const { updateUser } = useAuth();
+  const [loadingPincode, setLoadingPincode] =
+    useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -40,6 +43,83 @@ export default function Profile() {
   useEffect(() => {
     if (profile) setForm(profile);
   }, [profile]);
+
+  useEffect(() => {
+    if (!isEditing || !form) {
+      return;
+    }
+
+    const currentPincode =
+      form.pincode?.replace(/\D/g, "") || "";
+
+    if (currentPincode.length !== 6) {
+      return;
+    }
+
+    let active = true;
+
+    const lookupPincode = async () => {
+      try {
+        setLoadingPincode(true);
+
+        const location =
+          await getPincodeLocation(
+            currentPincode
+          );
+
+        if (!active) {
+          return;
+        }
+
+        if (!location) {
+          showAlert({
+            type: "error",
+            message:
+              "Invalid pincode. Please enter a valid 6-digit pincode.",
+          });
+
+          return;
+        }
+
+        setForm((previous) => {
+          if (!previous) {
+            return previous;
+          }
+
+          return {
+            ...previous,
+            city: location.city,
+            district: location.district,
+            state: location.state,
+          };
+        });
+      } catch {
+        if (!active) {
+          return;
+        }
+
+        showAlert({
+          type: "error",
+          message:
+            "Unable to fetch location for this pincode.",
+        });
+      } finally {
+        if (active) {
+          setLoadingPincode(false);
+        }
+      }
+    };
+
+    lookupPincode();
+
+    return () => {
+      active = false;
+    };
+  }, [
+    form?.pincode,
+    isEditing,
+    showAlert,
+  ]);
 
   const handleSave = async () => {
     if (!form) return;
@@ -51,6 +131,7 @@ export default function Profile() {
     const email = form.email?.trim() || "";
     const address = form.address?.trim() || "";
     const city = form.city?.trim() || "";
+    const district = form.district?.trim() || "";
     const state = form.state?.trim() || "";
     const pincode = form.pincode?.trim() || "";
 
@@ -94,6 +175,14 @@ export default function Profile() {
       return;
     }
 
+    if (!district) {
+      showAlert({
+        type: "error",
+        message: "District is required",
+      });
+      return;
+    }
+
     if (!state) {
       showAlert({
         type: "error",
@@ -122,6 +211,7 @@ export default function Profile() {
           address,
           city,
           state,
+          district,
           pincode,
         }),
       });
@@ -325,37 +415,6 @@ export default function Profile() {
               className="w-full border rounded-md p-2"
             />
           </div>
-
-          <div>
-            <label className="text-sm text-[var(--color-muted)]">City</label>
-            <input
-              value={form.city}
-              disabled={!isEditing}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
-              className="w-full border rounded-md p-2"
-            />
-          </div>
-
-
-          <div>
-            <label className="text-sm text-[var(--color-muted)]">State</label>
-
-
-            <select
-              value={form.state}
-              disabled={!isEditing}
-              onChange={(e) => setForm({ ...form, state: e.target.value })}
-              className="w-full border rounded-md p-2"
-            >
-              <option value="">Select State</option>
-              {INDIA_STATES.map((state) => (
-                <option key={state} value={state}>
-                  {state}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div>
             <label className="text-sm text-[var(--color-muted)]">Pincode</label>
             <input
@@ -371,6 +430,55 @@ export default function Profile() {
               className="w-full border rounded-md p-2"
             />
           </div>
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">City</label>
+            <input
+              value={form.city}
+              disabled={!isEditing}
+              readOnly
+              placeholder={
+                loadingPincode
+                  ? "Fetching city..."
+                  : "City"
+              }
+              className="w-full border rounded-md p-2 bg-gray-50"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              District
+            </label>
+            <input
+              value={form.district}
+              disabled={!isEditing}
+              readOnly
+              placeholder={
+                loadingPincode
+                  ? "Fetching district..."
+                  : "District"
+              }
+              className="w-full border rounded-md p-2 bg-gray-50"
+            />
+          </div>
+
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">State</label>
+            <input
+              value={form.state}
+              disabled={!isEditing}
+              readOnly
+              placeholder={
+                loadingPincode
+                  ? "Fetching state..."
+                  : "State"
+              }
+              className="w-full border rounded-md p-2 bg-gray-50"
+            />
+          </div>
+
         </div>
 
         {isEditing && (

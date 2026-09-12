@@ -144,16 +144,9 @@ export default function QuickEstimateTable({
                             </th>
                         </tr>
                     </thead>
-
-                    {/* =================================================
-                        PRODUCTS
-                        ================================================= */}
                     <tbody>
                         {groupedProducts.map((group) => (
                             <Fragment key={group.categoryId}>
-                                {/* =====================================
-                                    CATEGORY HEADER
-                                    ===================================== */}
                                 <tr>
                                     <td
                                         colSpan={7}
@@ -407,7 +400,7 @@ export default function QuickEstimateTable({
                                                                 📦{" "}
                                                                 {
                                                                     product.packQuantity
-                                                                }
+                                                                }{" "}
                                                                 {
                                                                     product.packUnit
                                                                 }

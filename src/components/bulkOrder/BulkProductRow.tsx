@@ -1,10 +1,11 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 
 import defaultImage from "../../assets/default-image.png";
 import type { Product } from "../../types/product";
 import type { BulkScheme } from "../../types/bulkOrder";
 import { calculateBulkUnitPrice } from "../../utils/bulkPricing";
+import ProductDetails from "../../pages/ProductDetails";
 
 interface BulkProductRowProps {
     product: Product;
@@ -22,9 +23,9 @@ function BulkProductRow({
     quantity,
     onQuantityChange,
 }: BulkProductRowProps) {
-    /* --------------------------------
-     * Pricing
-     * -------------------------------- */
+
+    const [selectedProductId, setSelectedProductId] =
+        useState<string | null>(null);
 
     const unitPrice = useMemo(
         () =>
@@ -51,9 +52,6 @@ function BulkProductRow({
         ]
     );
 
-    /* --------------------------------
-     * Quantity handlers
-     * -------------------------------- */
 
     const increase = () => {
         onQuantityChange(
@@ -96,10 +94,6 @@ function BulkProductRow({
         );
     };
 
-    /* --------------------------------
-     * Formatting
-     * -------------------------------- */
-
     const formattedUnitPrice =
         unitPrice.toLocaleString("en-IN");
 
@@ -109,19 +103,12 @@ function BulkProductRow({
     const formattedTotal =
         total.toLocaleString("en-IN");
 
-    /* --------------------------------
-     * Image
-     * -------------------------------- */
-
     const productImage =
-        product.images?.[0]?.trim() ||
+        product.image ||
         defaultImage;
 
     return (
         <>
-            {/* =========================================================
-                DESKTOP
-                ========================================================= */}
 
             <tr
                 className="
@@ -177,18 +164,28 @@ function BulkProductRow({
 
                         {/* Name */}
                         <div className="min-w-0">
-                            <p
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedProductId(product.id);
+                                }}
                                 className="
+                                    block
+                                    max-w-full
                                     truncate
+                                    text-left
                                     text-sm
                                     font-semibold
-                                    text-gray-900
-                                    xl:text-base
+                                    text-blue-600
+                                    hover:text-blue-700
+                                    hover:underline
+                                    cursor-pointer
+                                    sm:text-base
                                 "
-                                title={product.name}
+                                title={`View ${product.name}`}
                             >
                                 {product.name}
-                            </p>
+                            </button>
                         </div>
                     </div>
                 </td>
@@ -432,20 +429,28 @@ function BulkProductRow({
 
                             {/* Product name */}
                             <div className="min-w-0 flex-1">
-                                <p
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedProductId(product.id);
+                                    }}
                                     className="
-                                        truncate
-                                        text-sm
-                                        font-semibold
-                                        text-gray-900
-                                        sm:text-base
-                                    "
-                                    title={
-                                        product.name
-                                    }
+                                    block
+                                    max-w-full
+                                    truncate
+                                    text-left
+                                    text-sm
+                                    font-semibold
+                                    text-blue-600
+                                    hover:text-blue-700
+                                    hover:underline
+                                    cursor-pointer
+                                    sm:text-base
+                                "
+                                    title={`View ${product.name}`}
                                 >
                                     {product.name}
-                                </p>
+                                </button>
                             </div>
                         </div>
 
@@ -695,6 +700,71 @@ function BulkProductRow({
                     </div>
                 </td>
             </tr>
+            {selectedProductId && (
+                <div
+                    className="
+            fixed
+            inset-0
+            z-[9999]
+            flex
+            items-center
+            justify-center
+            bg-black/60
+            p-4
+        "
+                    onClick={() => {
+                        setSelectedProductId(null);
+                    }}
+                >
+                    <div
+                        className="
+                relative
+                w-full
+                max-w-6xl
+                max-h-[95vh]
+                overflow-y-auto
+                rounded-2xl
+                bg-white
+                shadow-2xl
+            "
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    >
+                        {/* Close */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSelectedProductId(null);
+                            }}
+                            className="
+                    absolute
+                    right-4
+                    top-4
+                    z-[10000]
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-white
+                    text-2xl
+                    text-gray-700
+                    shadow-md
+                    hover:bg-gray-100
+                "
+                            aria-label="Close product details"
+                        >
+                            ×
+                        </button>
+
+                        <ProductDetails
+                            productId={selectedProductId}
+                        />
+                    </div>
+                </div>
+            )}
         </>
     );
 }

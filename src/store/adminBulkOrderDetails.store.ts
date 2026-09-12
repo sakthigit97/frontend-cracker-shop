@@ -6,6 +6,7 @@ import {
 } from "../services/adminBulkOrder.api";
 
 import { useAdminDashboardStore } from "./admin.store";
+import { restoreBulkOrder } from "../services/bulkOrder.api";
 import { useAdminBulkOrdersStore } from "./adminBulkOrders.store";
 
 interface FetchOptions {
@@ -30,6 +31,8 @@ interface AdminBulkOrderDetailsState {
 
     loaded: boolean;
 
+    restoring: boolean;
+
     error: string | null;
 
     fetchOrder: (
@@ -42,17 +45,10 @@ interface AdminBulkOrderDetailsState {
         payload: UpdatePayload
     ) => Promise<any>;
 
-    /**
-     * Immediately synchronize an adjusted bulk order
-     * across:
-     *
-     * 1. Admin order-details cache
-     * 2. Admin bulk-order list cache
-     *
-     * No additional API request is required because
-     * the adjust-order API already returns the latest
-     * items and pricing.
-     */
+    restoreOrder: (
+        orderId: string
+    ) => Promise<void>;
+
     applyAdjustedOrder: (
         payload: ApplyAdjustedOrderPayload
     ) => void;
@@ -66,15 +62,11 @@ export const useAdminBulkOrderDetailsStore =
             cache: {},
 
             loading: false,
+            restoring: false,
 
             loaded: false,
 
             error: null,
-
-            /* --------------------------------
-             * Fetch Order
-             * -------------------------------- */
-
             fetchOrder: async (
                 orderId,
                 options = {}
@@ -83,10 +75,6 @@ export const useAdminBulkOrderDetailsStore =
                     return;
                 }
 
-                /*
-                 * Use cached order unless
-                 * force refresh is requested.
-                 */
                 if (
                     !options.force &&
                     get().cache[orderId]
@@ -142,10 +130,6 @@ export const useAdminBulkOrderDetailsStore =
                     });
                 }
             },
-
-            /* --------------------------------
-             * Update Order
-             * -------------------------------- */
 
             updateOrder: async (
                 orderId,
@@ -265,9 +249,48 @@ export const useAdminBulkOrderDetailsStore =
                 }
             },
 
-            /* --------------------------------
-             * Apply Adjusted Order
-             * -------------------------------- */
+            restoreOrder: async (orderId) => {
+                if (!orderId) {
+                    throw new Error("Order ID is required.");
+                }
+
+                set({
+                    restoring: true,
+                    error: null,
+                });
+
+                try {
+                    await restoreBulkOrder(orderId);
+                    await get().fetchOrder(orderId, {
+                        force: true,
+                    });
+
+                    await useAdminBulkOrdersStore
+                        .getState()
+                        .fetchInitial(true);
+
+                    await useAdminDashboardStore
+                        .getState()
+                        .fetch(true);
+                } catch (err: any) {
+                    console.error(
+                        "Failed to reopen bulk order:",
+                        err
+                    );
+
+                    set({
+                        error:
+                            err?.message ??
+                            "Failed to reopen bulk order.",
+                    });
+
+                    throw err;
+                } finally {
+                    set({
+                        restoring: false,
+                    });
+                }
+            },
 
             applyAdjustedOrder: ({
                 orderId,
@@ -277,19 +300,6 @@ export const useAdminBulkOrderDetailsStore =
                 if (!orderId) {
                     return;
                 }
-
-                /*
-                 * ------------------------------------------
-                 * 1. Update admin detail-page cache
-                 * ------------------------------------------
-                 *
-                 * The Admin Bulk Order Details page reads:
-                 *
-                 * cache[orderId]
-                 *
-                 * Therefore update the exact same object
-                 * that the page is rendering.
-                 */
                 set((state) => {
                     const existing =
                         state.cache[orderId];
@@ -318,20 +328,6 @@ export const useAdminBulkOrderDetailsStore =
                         error: null,
                     };
                 });
-
-                /*
-                 * ------------------------------------------
-                 * 2. Update admin bulk-order list cache
-                 * ------------------------------------------
-                 *
-                 * Do NOT fetch the API again.
-                 *
-                 * The adjustment API has already returned
-                 * the latest items and pricing.
-                 *
-                 * updateOrderInCache() also preserves the
-                 * existing status-filter behavior.
-                 */
                 useAdminBulkOrdersStore
                     .getState()
                     .updateOrderInCache(

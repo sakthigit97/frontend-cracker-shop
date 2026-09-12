@@ -16,8 +16,7 @@ export async function buildBulkStaffPackingPdf(
         compress: true,
     });
 
-    const normal = () =>
-        doc.setFont("helvetica", "normal");
+    const normal = () => doc.setFont("helvetica", "normal");
 
     const bold = () =>
         doc.setFont("helvetica", "bold");
@@ -274,7 +273,7 @@ export async function buildBulkStaffPackingPdf(
             lineWidth: 0.08,
 
             lineColor:
-                COLORS.border,
+                [80, 80, 80],
 
             valign: "middle",
 

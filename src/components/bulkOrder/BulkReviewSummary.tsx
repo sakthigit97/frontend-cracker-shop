@@ -66,6 +66,7 @@ function BulkReviewSummary({
 
                             <p className="text-sm leading-5 text-gray-600">
                                 {address.city},{" "}
+                                {address.district || ''},{" "}
                                 {address.state} -{" "}
                                 {address.pincode}
                             </p>
@@ -295,9 +296,7 @@ function BulkReviewSummary({
                                                 "
                                             >
                                                 <span className="text-sm text-gray-600">
-                                                    {cartonQty.toLocaleString(
-                                                        "en-IN"
-                                                    )}
+                                                    {cartonQty} {""}
                                                     {item.packUnit}
                                                 </span>
                                             </td>

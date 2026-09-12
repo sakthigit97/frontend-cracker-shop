@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import Button from "../components/ui/Button";
+import { apiFetch } from "../services/api";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import type { BulkOrderProduct } from "../types/bulkOrder";
 import { useAlert } from "../store/alert.store";
@@ -119,6 +120,53 @@ export default function BulkOrderDetails() {
                 message:
                     err?.message ||
                     "Unable to reopen bulk order.",
+            });
+        }
+    }
+
+    async function handleDownloadBill() {
+        if (!order) {
+            return;
+        }
+
+        try {
+            const response = await apiFetch(
+                `/orders/${order.orderId}/invoice`,
+                {
+                    method: "GET",
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            const billUrl =
+                response?.data?.url ??
+                response?.url;
+
+            if (!billUrl) {
+                throw new Error(
+                    "Bill URL was not returned."
+                );
+            }
+
+            const link = document.createElement("a");
+
+            link.href = billUrl;
+            link.download = `bill-${order.orderId}.pdf`;
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error: any) {
+            console.error(
+                "Download bill failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to download bill.",
             });
         }
     }
@@ -414,6 +462,7 @@ export default function BulkOrderDetails() {
                                     order.address?.addressLine1,
                                     order.address?.addressLine2,
                                     order.address?.city,
+                                    order.address?.district || '',
                                     order.address?.state,
                                     order.address?.pincode,
                                 ]
@@ -898,6 +947,15 @@ export default function BulkOrderDetails() {
                 {canDownloadInvoice && (
                     <Button variant="secondary" onClick={handleDownloadInvoice}>
                         {downloading ? "Downloading..." : "Download Invoice"}
+                    </Button>
+                )}
+
+                {canDownloadInvoice && (
+                    <Button
+                        variant="secondary"
+                        onClick={handleDownloadBill}
+                    >
+                        Download Bill
                     </Button>
                 )}
 

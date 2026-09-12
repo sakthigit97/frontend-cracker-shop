@@ -110,6 +110,12 @@ export default function AdminConfigPage() {
                             imageChanged: false
                         })),
                     },
+                    tutorialVideos: (res.tutorialVideos || []).map((video: any) => ({
+                        id: video.id || crypto.randomUUID(),
+                        title: video.title || "",
+                        description: video.description || "",
+                        videoUrl: video.videoUrl || "",
+                    })),
                 });
             } catch {
                 showAlert({ type: "error", message: "Failed to load config" });
@@ -148,6 +154,53 @@ export default function AdminConfigPage() {
 
         }
         return true;
+    };
+
+    const addTutorialVideo = () => {
+        setForm((prev: any) => ({
+            ...prev,
+            tutorialVideos: [
+                ...(prev.tutorialVideos || []),
+                {
+                    id: crypto.randomUUID(),
+                    title: "",
+                    description: "",
+                    videoUrl: "",
+                },
+            ],
+        }));
+    };
+
+    const updateTutorialVideo = (
+        index: number,
+        changes: Record<string, string>
+    ) => {
+        setForm((prev: any) => {
+            const updated = [
+                ...(prev.tutorialVideos || []),
+            ];
+
+            updated[index] = {
+                ...updated[index],
+                ...changes,
+            };
+
+            return {
+                ...prev,
+                tutorialVideos: updated,
+            };
+        });
+    };
+
+    const removeTutorialVideo = (index: number) => {
+        setForm((prev: any) => ({
+            ...prev,
+            tutorialVideos: (
+                prev.tutorialVideos || []
+            ).filter(
+                (_: any, i: number) => i !== index
+            ),
+        }));
     };
 
     const handleUploadSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1076,6 +1129,48 @@ export default function AdminConfigPage() {
                     return;
                 }
             }
+            const tutorialVideos = form.tutorialVideos || [];
+
+            for (let i = 0; i < tutorialVideos.length; i++) {
+                const video = tutorialVideos[i];
+                const number = i + 1;
+
+                if (!video.title?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Tutorial ${number}: Title is required.`,
+                    });
+                    return;
+                }
+
+                if (!video.description?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Tutorial ${number}: Description is required.`,
+                    });
+                    return;
+                }
+
+                if (!video.videoUrl?.trim()) {
+                    showAlert({
+                        type: "error",
+                        message: `Tutorial ${number}: YouTube video link is required.`,
+                    });
+                    return;
+                }
+
+                if (
+                    !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(
+                        video.videoUrl.trim()
+                    )
+                ) {
+                    showAlert({
+                        type: "error",
+                        message: `Tutorial ${number}: Enter a valid YouTube video link.`,
+                    });
+                    return;
+                }
+            }
 
             if (!validateBulkOrderSchemes()) {
                 return;
@@ -1153,7 +1248,14 @@ export default function AdminConfigPage() {
                                 account.upiId?.trim() || "",
                         }),
                 })),
-
+                tutorialVideos: (form.tutorialVideos || []).map(
+                    (video: any) => ({
+                        id: video.id,
+                        title: video.title.trim(),
+                        description: video.description.trim(),
+                        videoUrl: video.videoUrl.trim(),
+                    })
+                ),
                 sliderImages: uploadedSliderImages.map(
                     (img: any) => ({
                         id: img.id,
@@ -2290,6 +2392,130 @@ export default function AdminConfigPage() {
                                             </div>
                                         </div>
                                     )}
+                                </div>
+                            )
+                        )}
+                    </div>
+
+                    {/* Tutorial Videos */}
+                    <div className="space-y-5 border border-gray-200 rounded-xl p-4">
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-semibold">
+                                    How to Use - Tutorial Videos
+                                </p>
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Add YouTube videos to help customers learn how to use the application.
+                                </p>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={addTutorialVideo}
+                                className="whitespace-nowrap"
+                            >
+                                + Add Video
+                            </Button>
+                        </div>
+
+                        {(form.tutorialVideos || []).length === 0 && (
+                            <div className="rounded-lg border border-dashed border-gray-300 p-5 text-center">
+                                <p className="text-sm text-gray-500">
+                                    No tutorial videos added.
+                                </p>
+
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Click "Add Video" to add a tutorial.
+                                </p>
+                            </div>
+                        )}
+
+                        {(form.tutorialVideos || []).map(
+                            (video: any, index: number) => (
+                                <div
+                                    key={video.id}
+                                    className="border rounded-xl p-4 space-y-4 bg-gray-50"
+                                >
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="font-medium">
+                                                Tutorial {index + 1}
+                                            </p>
+
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Add the title, description and YouTube link.
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() =>
+                                                removeTutorialVideo(index)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    </div>
+
+                                    {/* Title */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Title *
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            placeholder="e.g. How to Place an Order"
+                                            value={video.title || ""}
+                                            onChange={(e) =>
+                                                updateTutorialVideo(index, {
+                                                    title: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+
+                                    {/* Description */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Description *
+                                        </label>
+
+                                        <textarea
+                                            rows={3}
+                                            className="border border-gray-300 rounded-lg p-3 w-full resize-none"
+                                            placeholder="Enter a short description for this tutorial"
+                                            value={video.description || ""}
+                                            onChange={(e) =>
+                                                updateTutorialVideo(index, {
+                                                    description: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+
+                                    {/* YouTube Video Link */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            YouTube Video Link *
+                                        </label>
+
+                                        <input
+                                            type="url"
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            value={video.videoUrl || ""}
+                                            onChange={(e) =>
+                                                updateTutorialVideo(index, {
+                                                    videoUrl: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
                                 </div>
                             )
                         )}

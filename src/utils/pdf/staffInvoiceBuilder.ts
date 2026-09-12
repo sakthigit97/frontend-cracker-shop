@@ -287,7 +287,7 @@ export async function buildStaffPackingPdf(
             lineWidth: 0.08,
 
             lineColor:
-                COLORS.border,
+                [80, 80, 80],
 
             valign: "middle",
 
