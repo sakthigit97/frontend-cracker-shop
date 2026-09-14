@@ -20,6 +20,13 @@ export default function RevenueReport() {
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
 
+
+    const formatCurrency = (value: number) =>
+        `₹${Number(value || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`;
+
     useEffect(() => {
         fetch(range);
     }, [range]);
@@ -160,9 +167,15 @@ export default function RevenueReport() {
             {data && data.trend.length > 0 ? (
                 <>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <StatCard label="Revenue" value={`₹${data.totalRevenue}`} />
+                        <StatCard
+                            label="Revenue"
+                            value={formatCurrency(data.totalRevenue)}
+                        />
                         <StatCard label="Orders" value={data.totalOrders} />
-                        <StatCard label="Avg Order" value={`₹${data.avgOrderValue}`} />
+                        <StatCard
+                            label="Avg Order"
+                            value={formatCurrency(data.avgOrderValue)}
+                        />
                         <StatCard label="Growth" value={`${data.growth.toFixed(1)}%`} />
                     </div>
 

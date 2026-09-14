@@ -7,6 +7,7 @@ const ALLOWED_STATUSES = [
     "DISPATCHED",
 ];
 
+const ITEMS_PER_PAGE = 10;
 type AccountSummary = {
     paymentAccountId: string;
     orderCount: number;
@@ -47,6 +48,7 @@ const formatDate = (timestamp: number) => {
     });
 };
 
+
 const AdminAccountCreditReportPage: React.FC = () => {
     const today = new Date();
 
@@ -56,6 +58,8 @@ const AdminAccountCreditReportPage: React.FC = () => {
         ).padStart(2, "0")}-${String(
             date.getDate()
         ).padStart(2, "0")}`;
+
+    const [currentPage, setCurrentPage] = useState(1);
 
     const [fromDate, setFromDate] = useState(
         formatInputDate(
@@ -76,6 +80,14 @@ const AdminAccountCreditReportPage: React.FC = () => {
 
     const [report, setReport] =
         useState<ReportResponse | null>(null);
+
+    /*
+     * Keep account options separately so that after selecting
+     * one account, the dropdown still contains the other accounts.
+     */
+    const [accountOptions, setAccountOptions] = useState<
+        AccountSummary[]
+    >([]);
 
     const [loading, setLoading] = useState(false);
 
@@ -98,14 +110,34 @@ const AdminAccountCreditReportPage: React.FC = () => {
             setLoading(true);
             setError("");
 
-            const result = await getAccountCreditReport({
-                fromDate,
-                toDate,
-                paymentAccountId:
-                    selectedAccount || undefined,
-            });
+            const result =
+                (await getAccountCreditReport({
+                    fromDate,
+                    toDate,
+                    paymentAccountId:
+                        selectedAccount || undefined,
+                })) as ReportResponse;
 
             setReport(result);
+
+            /*
+             * Only update the dropdown options when loading
+             * the complete report. This keeps all accounts
+             * available even when one account is selected.
+             */
+            if (!selectedAccount) {
+                const sortedAccounts = [
+                    ...(result?.accounts || []),
+                ].sort((a, b) =>
+                    a.paymentAccountId.localeCompare(
+                        b.paymentAccountId
+                    )
+                );
+
+                setAccountOptions(sortedAccounts);
+            }
+
+            setCurrentPage(1);
         } catch (err: any) {
             console.error(
                 "Account credit report error",
@@ -118,24 +150,56 @@ const AdminAccountCreditReportPage: React.FC = () => {
             );
 
             setReport(null);
+            setCurrentPage(1);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        loadReport();
+        const loadInitialReport = async () => {
+            try {
+                setLoading(true);
+                setError("");
+
+                const result =
+                    (await getAccountCreditReport({
+                        fromDate,
+                        toDate,
+                    })) as ReportResponse;
+
+                setReport(result);
+
+                const sortedAccounts = [
+                    ...(result?.accounts || []),
+                ].sort((a, b) =>
+                    a.paymentAccountId.localeCompare(
+                        b.paymentAccountId
+                    )
+                );
+
+                setAccountOptions(sortedAccounts);
+
+                setCurrentPage(1);
+            } catch (err: any) {
+                console.error(
+                    "Account credit report error",
+                    err
+                );
+
+                setError(
+                    err?.message ||
+                    "Failed to load account credit report."
+                );
+
+                setReport(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadInitialReport();
     }, []);
-
-    const accountOptions = useMemo(() => {
-        if (!report?.accounts) return [];
-
-        return [...report.accounts].sort((a, b) =>
-            a.paymentAccountId.localeCompare(
-                b.paymentAccountId
-            )
-        );
-    }, [report]);
 
     const filteredOrders = useMemo(() => {
         if (!report?.orders) return [];
@@ -144,6 +208,100 @@ const AdminAccountCreditReportPage: React.FC = () => {
             ALLOWED_STATUSES.includes(order.status)
         );
     }, [report]);
+
+    const totalPages = Math.ceil(
+        filteredOrders.length / ITEMS_PER_PAGE
+    );
+
+    const paginatedOrders = useMemo(() => {
+        const startIndex =
+            (currentPage - 1) * ITEMS_PER_PAGE;
+
+        return filteredOrders.slice(
+            startIndex,
+            startIndex + ITEMS_PER_PAGE
+        );
+    }, [filteredOrders, currentPage]);
+
+    /*
+     * Keep current page valid if the number of pages changes.
+     */
+    useEffect(() => {
+        if (totalPages === 0) {
+            setCurrentPage(1);
+            return;
+        }
+
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    /*
+     * Generate pagination buttons.
+     *
+     * Example for many pages:
+     *
+     * 1 ... 4 5 6 7 8 ... 20
+     */
+    const paginationPages = useMemo(() => {
+        if (totalPages <= 1) {
+            return [];
+        }
+
+        if (totalPages <= 7) {
+            return Array.from(
+                { length: totalPages },
+                (_, index) => index + 1
+            );
+        }
+
+        const pages: (number | "...")[] = [];
+
+        pages.push(1);
+
+        if (currentPage > 4) {
+            pages.push("...");
+        }
+
+        const startPage = Math.max(
+            2,
+            currentPage - 2
+        );
+
+        const endPage = Math.min(
+            totalPages - 1,
+            currentPage + 2
+        );
+
+        for (
+            let page = startPage;
+            page <= endPage;
+            page++
+        ) {
+            pages.push(page);
+        }
+
+        if (currentPage < totalPages - 3) {
+            pages.push("...");
+        }
+
+        pages.push(totalPages);
+
+        return pages;
+    }, [currentPage, totalPages]);
+
+    const startRecord =
+        filteredOrders.length === 0
+            ? 0
+            : (currentPage - 1) *
+            ITEMS_PER_PAGE +
+            1;
+
+    const endRecord = Math.min(
+        currentPage * ITEMS_PER_PAGE,
+        filteredOrders.length
+    );
 
     return (
         <div className="p-4 md:p-6 space-y-6">
@@ -162,6 +320,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
             {/* Filters */}
             <div className="bg-white rounded-xl shadow-sm border p-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    {/* From Date */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             From Date
@@ -179,6 +338,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                         />
                     </div>
 
+                    {/* To Date */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             To Date
@@ -196,6 +356,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                         />
                     </div>
 
+                    {/* Account */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Account
@@ -203,11 +364,12 @@ const AdminAccountCreditReportPage: React.FC = () => {
 
                         <select
                             value={selectedAccount}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setSelectedAccount(
                                     e.target.value
-                                )
-                            }
+                                );
+                                setCurrentPage(1);
+                            }}
                             className="w-full border rounded-lg px-3 py-2"
                         >
                             <option value="">
@@ -233,6 +395,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                         </select>
                     </div>
 
+                    {/* Apply Filter */}
                     <button
                         type="button"
                         onClick={loadReport}
@@ -254,6 +417,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Total Orders */}
                 <div className="bg-white border rounded-xl p-5 shadow-sm">
                     <p className="text-sm text-gray-500">
                         Total Orders
@@ -264,6 +428,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                     </p>
                 </div>
 
+                {/* Total Amount */}
                 <div className="bg-white border rounded-xl p-5 shadow-sm">
                     <p className="text-sm text-gray-500">
                         Total Amount
@@ -276,6 +441,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                     </p>
                 </div>
 
+                {/* Accounts */}
                 <div className="bg-white border rounded-xl p-5 shadow-sm">
                     <p className="text-sm text-gray-500">
                         Accounts
@@ -287,7 +453,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Account-wise Summary */}
+            {/* Account-wise Credit Summary */}
             <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
                 <div className="p-4 border-b">
                     <h2 className="text-lg font-semibold text-gray-800">
@@ -430,7 +596,7 @@ const AdminAccountCreditReportPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredOrders.map(
+                                paginatedOrders.map(
                                     (order) => (
                                         <tr
                                             key={`${order.orderId}-${order.createdAt}`}
@@ -474,6 +640,135 @@ const AdminAccountCreditReportPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="border-t px-4 py-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            {/* Record Count */}
+                            <div className="text-sm text-gray-500">
+                                Showing{" "}
+                                <span className="font-medium text-gray-700">
+                                    {startRecord}
+                                </span>{" "}
+                                to{" "}
+                                <span className="font-medium text-gray-700">
+                                    {endRecord}
+                                </span>{" "}
+                                of{" "}
+                                <span className="font-medium text-gray-700">
+                                    {filteredOrders.length}
+                                </span>{" "}
+                                records
+                            </div>
+
+                            {/* Pagination Buttons */}
+                            <div className="flex items-center gap-1 flex-wrap">
+                                {/* First */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setCurrentPage(1)
+                                    }
+                                    disabled={
+                                        currentPage === 1
+                                    }
+                                    className="px-3 py-2 text-sm border rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    First
+                                </button>
+
+                                {/* Previous */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setCurrentPage(
+                                            (page) =>
+                                                Math.max(
+                                                    1,
+                                                    page - 1
+                                                )
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage === 1
+                                    }
+                                    className="px-3 py-2 text-sm border rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    Previous
+                                </button>
+
+                                {/* Page Numbers */}
+                                {paginationPages.map(
+                                    (page, index) =>
+                                        page === "..." ? (
+                                            <span
+                                                key={`ellipsis-${index}`}
+                                                className="px-2 py-2 text-sm text-gray-500"
+                                            >
+                                                ...
+                                            </span>
+                                        ) : (
+                                            <button
+                                                key={page}
+                                                type="button"
+                                                onClick={() =>
+                                                    setCurrentPage(
+                                                        page
+                                                    )
+                                                }
+                                                className={`min-w-[40px] px-3 py-2 text-sm border rounded-lg font-medium ${currentPage ===
+                                                        page
+                                                        ? "bg-blue-600 text-white border-blue-600"
+                                                        : "bg-white text-gray-700 hover:bg-gray-50"
+                                                    }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        )
+                                )}
+
+                                {/* Next */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setCurrentPage(
+                                            (page) =>
+                                                Math.min(
+                                                    totalPages,
+                                                    page + 1
+                                                )
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage ===
+                                        totalPages
+                                    }
+                                    className="px-3 py-2 text-sm border rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+
+                                {/* Last */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setCurrentPage(
+                                            totalPages
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage ===
+                                        totalPages
+                                    }
+                                    className="px-3 py-2 text-sm border rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    Last
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

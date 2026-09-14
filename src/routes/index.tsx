@@ -139,15 +139,9 @@ export default function AppRoutes() {
             <Route path="/admin/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />
             <Route path="/admin/combo-packages/create" element={<AdminComboPackagePage />} />
             <Route path="/admin/combo-packages" element={<AdminComboPackagesPage />} />
-            <Route
-              path="/admin/combo-packages/edit/:comboId"
-              element={<AdminEditComboPackagePage />}
-            />
+            <Route path="/admin/combo-packages/edit/:comboId" element={<AdminEditComboPackagePage />} />
+            <Route path="/admin/reports/account-credits" element={<AdminAccountCreditReportPage />} />
           </Route>
-          <Route
-            path="/admin/reports/account-credits"
-            element={<AdminAccountCreditReportPage />}
-          />
         </Route>
 
         <Route element={<StaffRoute />}>
