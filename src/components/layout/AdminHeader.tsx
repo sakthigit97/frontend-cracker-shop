@@ -18,6 +18,7 @@ import {
   FaFolderOpen,
   FaServer,
   FaTicketAlt,
+  FaBoxes,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -68,7 +69,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-
+    {
+      label: "Combo Packages",
+      to: "/admin/combo-packages",
+      icon: <FaBoxes />,
+    },
     ...(isEnableBulkOrder
       ? [
         {
@@ -159,7 +164,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-
+    {
+      label: "Combo Packages",
+      to: "/admin/combo-packages",
+      icon: <FaBoxes />,
+    },
     ...(isEnableBulkOrder
       ? [
         {

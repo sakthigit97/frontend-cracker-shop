@@ -19,3 +19,76 @@ export const fetchProductsBatch = async (
         stock?: number;
     }>;
 };
+
+export const createComboPackage = async (payload: {
+    name: string;
+    price: number;
+    productIds: string[];
+}) =>
+    apiFetch(
+        "/admin/combo-packages",
+        {
+            method: "POST",
+            body: JSON.stringify(payload),
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+
+export const getComboPackages = async () =>
+    apiFetch(
+        "/admin/combo-packages",
+        {
+            method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+
+export const getComboPackage = async (comboId: string) =>
+    apiFetch(
+        `/admin/combo-packages/${comboId}`,
+        {
+            method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+
+export const updateComboPackage = async (
+    comboId: string,
+    payload: {
+        productIds: string[];
+    }
+) =>
+    apiFetch(
+        `/admin/combo-packages/${comboId}`,
+        {
+            method: "PUT",
+            body: JSON.stringify(payload),
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+
+export const getAccountCreditReport = async (params: {
+    fromDate: string;
+    toDate: string;
+    paymentAccountId?: string;
+}) => {
+    const query = new URLSearchParams({
+        fromDate: params.fromDate,
+        toDate: params.toDate,
+    });
+
+    if (params.paymentAccountId) {
+        query.append(
+            "paymentAccountId",
+            params.paymentAccountId
+        );
+    }
+
+    return apiFetch(
+        `/admin/reports/account-credits?${query.toString()}`,
+        {
+            method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+};

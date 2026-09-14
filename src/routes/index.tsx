@@ -58,6 +58,10 @@ import StaffRoute from "./StaffRoute";
 import StaffLayout from "../layouts/StaffLayout";
 import RootPage from "./RootPage";
 import HowToUse from "../pages/HowToUse";
+import AdminComboPackagePage from "../pages/admin/AdminComboPackagePage";
+import AdminComboPackagesPage from "../pages/admin/AdminComboPackagesPage";
+import AdminEditComboPackagePage from "../pages/admin/AdminEditComboPackagePage";
+import AdminAccountCreditReportPage from "../pages/admin/reports/AdminAccountCreditReportPage";
 
 export default function AppRoutes() {
   return (
@@ -133,7 +137,17 @@ export default function AppRoutes() {
             <Route path="/admin/bulk-orders" element={<AdminBulkOrders />} />
             <Route path="/admin/bulk-orders/:orderId" element={<AdminBulkOrderDetails />} />
             <Route path="/admin/bulk-orders/:orderId/adjust" element={<AdjustBulkOrder />} />
+            <Route path="/admin/combo-packages/create" element={<AdminComboPackagePage />} />
+            <Route path="/admin/combo-packages" element={<AdminComboPackagesPage />} />
+            <Route
+              path="/admin/combo-packages/edit/:comboId"
+              element={<AdminEditComboPackagePage />}
+            />
           </Route>
+          <Route
+            path="/admin/reports/account-credits"
+            element={<AdminAccountCreditReportPage />}
+          />
         </Route>
 
         <Route element={<StaffRoute />}>

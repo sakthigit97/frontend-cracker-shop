@@ -199,9 +199,13 @@ export default function ProductForm({
                         >
                             <option value="">Select Unit</option>
                             <option value="BOX">Box</option>
+                            <option value="BOXES">Boxes</option>
                             <option value="PIECE">Piece</option>
+                            <option value="PIECES">Piece</option>
                             <option value="PACK">Pack</option>
                             <option value="PACKET">Packet</option>
+                            <option value="PACKETS">Packets</option>
+                            <option value="RULES">Rolls</option>
                             <option value="BUNDLE">Bundle</option>
                             <option value="SET">Set</option>
                             <option value="NOS">Nos</option>
