@@ -27,6 +27,7 @@ import { formatDateTime } from "../../utils/date";
 import { useAuth } from "../../store/auth.store";
 import { getProductCounts } from "../../utils/productCounts";
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
+import { getPincodeLocation } from "../../utils/pincode";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -85,6 +86,20 @@ export default function AdminOrderDetails() {
         useState(false);
     const [uploadingInvoice, setUploadingInvoice] = useState(false);
     const [invoiceFileInputKey, setInvoiceFileInputKey] = useState(0);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [savingAddress, setSavingAddress] = useState(false);
+    const [loadingPincode, setLoadingPincode] = useState(false);
+
+    const [addressForm, setAddressForm] = useState({
+        fullName: "",
+        mobile: "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        district: "",
+        state: "",
+        pincode: "",
+    });
 
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
@@ -316,6 +331,68 @@ export default function AdminOrderDetails() {
         config?.sparklerCategory
     );
 
+    const parseOrderAddress = (addressString: string) => {
+        const lines = addressString
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean);
+
+        if (lines.length === 0) {
+            return {
+                fullName: "",
+                mobile: "",
+                addressLine1: "",
+                addressLine2: "",
+                city: "",
+                district: "",
+                state: "",
+                pincode: "",
+            };
+        }
+
+        const fullName = lines[0] || "";
+        const mobile = lines[1] || "";
+        const addressLine1 = lines[2] || "";
+
+        let addressLine2 = "";
+        let locationLine = "";
+
+        if (lines.length >= 5) {
+            addressLine2 = lines[3] || "";
+            locationLine = lines[4] || "";
+        } else {
+            locationLine = lines[3] || "";
+        }
+
+        const locationMatch = locationLine.match(
+            /^(.+?),\s*(.*?),\s*(.+?)\s*-\s*(\d{6})$/
+        );
+
+        if (!locationMatch) {
+            return {
+                fullName,
+                mobile,
+                addressLine1,
+                addressLine2,
+                city: "",
+                district: "",
+                state: "",
+                pincode: "",
+            };
+        }
+
+        return {
+            fullName,
+            mobile,
+            addressLine1,
+            addressLine2,
+            city: locationMatch[1].trim(),
+            district: locationMatch[2].trim(),
+            state: locationMatch[3].trim(),
+            pincode: locationMatch[4].trim(),
+        };
+    };
+
     useEffect(() => {
         const shouldForce = (location.state as any)?.forceRefresh === true;
         fetchOrder(orderId, { force: shouldForce });
@@ -371,6 +448,60 @@ export default function AdminOrderDetails() {
         }
     }, [order, config?.paymentAccounts]);
 
+
+    useEffect(() => {
+        if (!order) return;
+
+        const parsedAddress = parseOrderAddress(order.address || "");
+
+        setAddressForm(parsedAddress);
+    }, [order]);
+
+
+    useEffect(() => {
+        if (!isEditingAddress) return;
+
+        const pincode = addressForm.pincode.replace(/\D/g, "");
+
+        if (pincode.length !== 6) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadPincodeLocation = async () => {
+            try {
+                setLoadingPincode(true);
+
+                const location = await getPincodeLocation(pincode);
+
+                if (cancelled) return;
+
+                if (location) {
+                    setAddressForm((previous) => ({
+                        ...previous,
+                        pincode: location.pincode,
+                        city: location.city,
+                        district: location.district,
+                        state: location.state,
+                    }));
+                }
+            } catch (error) {
+                console.error("Pincode lookup failed:", error);
+            } finally {
+                if (!cancelled) {
+                    setLoadingPincode(false);
+                }
+            }
+        };
+
+        loadPincodeLocation();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [addressForm.pincode, isEditingAddress]);
+
     const isTerminal = order?.status === "DISPATCHED" || order?.status === "CANCELLED";
     const canAdjust = STATUS_ORDER.indexOf(order?.status) < STATUS_ORDER.indexOf("ORDER_PACKED");
     const canApplyDiscount =
@@ -403,6 +534,74 @@ export default function AdminOrderDetails() {
 
     const isPaymentConfirmed =
         selectedStatus === "PAYMENT_CONFIRMED";
+
+    const updateOrderAddress = async (
+        orderId: string,
+        address: {
+            fullName: string;
+            mobile: string;
+            addressLine1: string;
+            addressLine2?: string;
+            city: string;
+            district?: string;
+            state: string;
+            pincode: string;
+        }
+    ) => {
+        return apiFetch(
+            `/admin/orders/${orderId}/address`,
+            {
+                method: "PUT",
+                body: JSON.stringify({
+                    address,
+                }),
+            },
+            import.meta.env.VITE_API_BASE_URL_V1
+        );
+    };
+
+
+    const handleSaveAddress = async () => {
+        if (!order || savingAddress) return;
+
+        try {
+            setSavingAddress(true);
+
+            await updateOrderAddress(order.orderId, {
+                fullName: addressForm.fullName.trim(),
+                mobile: addressForm.mobile.trim(),
+                addressLine1: addressForm.addressLine1.trim(),
+                addressLine2: addressForm.addressLine2.trim(),
+                city: addressForm.city.trim(),
+                district: addressForm.district.trim(),
+                state: addressForm.state.trim(),
+                pincode: addressForm.pincode.replace(/\D/g, ""),
+            });
+
+            setIsEditingAddress(false);
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            showAlert({
+                type: "success",
+                message: "Address updated successfully.",
+                duration: 2000,
+            });
+        } catch (error: any) {
+            console.error("Update order address failed:", error);
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to update address.",
+            });
+        } finally {
+            setSavingAddress(false);
+        }
+    };
 
     async function handleRestore() {
         try {
@@ -1350,10 +1549,211 @@ export default function AdminOrderDetails() {
             {/* ADDRESS + ORDER SUMMARY */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
                 <div className="rounded-xl border bg-white p-5 h-full">
-                    <h3 className="font-semibold text-[var(--color-primary)] mb-4">
-                        Address
-                    </h3>
-                    <p className="text-sm whitespace-pre-line">{order.address}</p>
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                        <h3 className="font-semibold text-[var(--color-primary)]">
+                            Address
+                        </h3>
+
+                        {!isTerminal && !isEditingAddress && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="px-3 py-1.5 text-xs whitespace-nowrap"
+                                onClick={() => {
+                                    setAddressForm(
+                                        parseOrderAddress(order.address || "")
+                                    );
+                                    setIsEditingAddress(true);
+                                }}
+                            >
+                                Edit Address
+                            </Button>
+                        )}
+                    </div>
+
+                    {!isEditingAddress ? (
+                        <p className="text-sm whitespace-pre-line">
+                            {order.address}
+                        </p>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">
+                                        Full Name
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={addressForm.fullName}
+                                        onChange={(e) =>
+                                            setAddressForm((previous) => ({
+                                                ...previous,
+                                                fullName: e.target.value,
+                                            }))
+                                        }
+                                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">
+                                        Mobile
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={addressForm.mobile}
+                                        onChange={(e) =>
+                                            setAddressForm((previous) => ({
+                                                ...previous,
+                                                mobile: e.target.value.replace(/\D/g, ""),
+                                            }))
+                                        }
+                                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">
+                                    Address Line 1
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={addressForm.addressLine1}
+                                    onChange={(e) =>
+                                        setAddressForm((previous) => ({
+                                            ...previous,
+                                            addressLine1: e.target.value,
+                                        }))
+                                    }
+                                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">
+                                    Address Line 2
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={addressForm.addressLine2}
+                                    onChange={(e) =>
+                                        setAddressForm((previous) => ({
+                                            ...previous,
+                                            addressLine2: e.target.value,
+                                        }))
+                                    }
+                                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">
+                                        Pincode
+                                    </label>
+
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={6}
+                                            value={addressForm.pincode}
+                                            onChange={(e) => {
+                                                const pincode =
+                                                    e.target.value
+                                                        .replace(/\D/g, "")
+                                                        .slice(0, 6);
+
+                                                setAddressForm((previous) => ({
+                                                    ...previous,
+                                                    pincode,
+                                                    city: "",
+                                                    district: "",
+                                                    state: "",
+                                                }));
+                                            }}
+                                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                                        />
+
+                                        {loadingPincode && (
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                                                Loading...
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">
+                                        City
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={addressForm.city}
+                                        readOnly
+                                        className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">
+                                        District
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={addressForm.district}
+                                        readOnly
+                                        className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">
+                                        State
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={addressForm.state}
+                                        readOnly
+                                        className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={savingAddress}
+                                    onClick={() => {
+                                        setIsEditingAddress(false);
+                                        setAddressForm(
+                                            parseOrderAddress(order.address || "")
+                                        );
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    disabled={savingAddress || loadingPincode}
+                                    onClick={handleSaveAddress}
+                                >
+                                    {savingAddress ? "Saving..." : "Save Address"}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="rounded-xl border bg-white p-5 h-full">
