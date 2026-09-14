@@ -18,6 +18,7 @@ import {
   FaFolderOpen,
   FaServer,
   FaTicketAlt,
+  FaBoxes,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -68,7 +69,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-
+    {
+      label: "Combo Packages",
+      to: "/admin/combo-packages",
+      icon: <FaBoxes />,
+    },
     ...(isEnableBulkOrder
       ? [
         {
@@ -96,17 +101,6 @@ export default function AdminHeader() {
         },
       ]
       : []),
-
-    {
-      label: "Revenue Report",
-      to: "/admin/reports/revenue",
-      icon: <FaChartBar />,
-    },
-    {
-      label: "Product Report",
-      to: "/admin/reports/products",
-      icon: <FaChartBar />,
-    },
   ];
 
   const systemMenu: HeaderDropdownItem[] = [
@@ -130,6 +124,24 @@ export default function AdminHeader() {
       icon: <FaSignOutAlt />,
       onClick: handleLogout,
       danger: true,
+    },
+  ];
+
+  const reportsMenu: HeaderDropdownItem[] = [
+    {
+      label: "Credit Report",
+      to: "/admin/reports/account-credits",
+      icon: <FaChartBar />,
+    },
+    {
+      label: "Revenue Report",
+      to: "/admin/reports/revenue",
+      icon: <FaChartBar />,
+    },
+    {
+      label: "Product Report",
+      to: "/admin/reports/products",
+      icon: <FaChartBar />,
     },
   ];
 
@@ -159,7 +171,11 @@ export default function AdminHeader() {
       to: "/admin/coupons",
       icon: <FaTicketAlt />,
     },
-
+    {
+      label: "Combo Packages",
+      to: "/admin/combo-packages",
+      icon: <FaBoxes />,
+    },
     ...(isEnableBulkOrder
       ? [
         {
@@ -177,10 +193,22 @@ export default function AdminHeader() {
       to: "/admin/orders",
       icon: <FaShoppingBag />,
     },
+    ...(isEnableBulkOrder
+      ? [
+        {
+          label: "Bulk Orders",
+          to: "/admin/bulk-orders",
+          icon: <FaShoppingBag />,
+        },
+      ]
+      : []),
+  ];
+
+  const mobileReports: MobileAccordionItem[] = [
     {
-      label: "Bulk Orders",
-      to: "/admin/bulk-orders",
-      icon: <FaShoppingBag />,
+      label: "Credit Report",
+      to: "/admin/reports/account-credits",
+      icon: <FaChartBar />,
     },
     {
       label: "Revenue Report",
@@ -271,6 +299,12 @@ export default function AdminHeader() {
             title="Sales"
             icon={<FaShoppingBag size={14} />}
             items={salesMenu}
+          />
+
+          <HeaderDropdown
+            title="Reports"
+            icon={<FaChartBar size={14} />}
+            items={reportsMenu}
           />
 
           <HeaderDropdown
@@ -412,6 +446,13 @@ export default function AdminHeader() {
               title="Sales"
               icon={<FaShoppingBag />}
               items={mobileSales}
+              onNavigate={closeMobile}
+            />
+
+            <MobileAccordion
+              title="Reports"
+              icon={<FaChartBar />}
+              items={mobileReports}
               onNavigate={closeMobile}
             />
 
