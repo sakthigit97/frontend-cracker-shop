@@ -92,3 +92,47 @@ export const getAccountCreditReport = async (params: {
         import.meta.env.VITE_API_BASE_URL_V1
     );
 };
+
+export const getBulkAccountCreditReport = async (params: {
+    fromDate: string;
+    toDate: string;
+    paymentAccountId?: string;
+}) => {
+    const query = new URLSearchParams({
+        fromDate: params.fromDate,
+        toDate: params.toDate,
+    });
+
+    if (params.paymentAccountId) {
+        query.set(
+            "paymentAccountId",
+            params.paymentAccountId
+        );
+    }
+
+    return apiFetch(
+        `/admin/reports/bulk-account-credits?${query.toString()}`,
+        {
+            method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+};
+
+export const getBulkSalesReport = async (params: {
+    fromDate: string;
+    toDate: string;
+}) => {
+    const query = new URLSearchParams({
+        fromDate: params.fromDate,
+        toDate: params.toDate,
+    });
+
+    return apiFetch(
+        `/admin/reports/bulk-sales?${query.toString()}`,
+        {
+            method: "GET",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+};
