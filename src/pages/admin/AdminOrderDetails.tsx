@@ -141,7 +141,7 @@ export default function AdminOrderDetails() {
 
         lines.push(
             `Total: ₹${Number(
-                order.grandTotal ?? 0
+                order.finalPayable ?? order.grandTotal ?? 0
             ).toLocaleString("en-IN")}`
         );
 
