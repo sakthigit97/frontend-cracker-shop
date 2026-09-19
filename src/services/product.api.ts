@@ -136,3 +136,15 @@ export const getBulkSalesReport = async (params: {
         import.meta.env.VITE_API_BASE_URL_V1
     );
 };
+
+export const deleteComboPackage = async (
+    comboId: string
+) => {
+    return apiFetch(
+        `/admin/combo-packages/${comboId}`,
+        {
+            method: "DELETE",
+        },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+};
