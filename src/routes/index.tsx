@@ -62,8 +62,6 @@ import AdminComboPackagePage from "../pages/admin/AdminComboPackagePage";
 import AdminComboPackagesPage from "../pages/admin/AdminComboPackagesPage";
 import AdminEditComboPackagePage from "../pages/admin/AdminEditComboPackagePage";
 import AdminAccountCreditReportPage from "../pages/admin/reports/AdminAccountCreditReportPage";
-import AdminBulkAccountCreditReportPage from "../pages/admin/reports/AdminBulkAccountCreditReportPage";
-import AdminBulkSalesReportPage from "../pages/admin/reports/AdminBulkSalesReportPage";
 
 export default function AppRoutes() {
   return (
@@ -143,16 +141,6 @@ export default function AppRoutes() {
             <Route path="/admin/combo-packages" element={<AdminComboPackagesPage />} />
             <Route path="/admin/combo-packages/edit/:comboId" element={<AdminEditComboPackagePage />} />
             <Route path="/admin/reports/account-credits" element={<AdminAccountCreditReportPage />} />
-            <Route
-              path="/admin/reports/bulk-account-credits"
-              element={
-                <AdminBulkAccountCreditReportPage />
-              }
-            />
-            <Route
-              path="/admin/reports/bulk-sales"
-              element={<AdminBulkSalesReportPage />}
-            />
           </Route>
         </Route>
 

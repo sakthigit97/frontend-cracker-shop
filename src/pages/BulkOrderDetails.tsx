@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { getBulkProductCounts } from "../utils/bulkProductCounts";
 import {
     ArrowLeft,
     FileText,
@@ -254,12 +255,10 @@ export default function BulkOrderDetails() {
         (total: number, item: BulkOrderProduct) => total + item.quantity,
         0
     );
-
-    // const isTamilNadu = order.address?.state
-    //     ?.toLowerCase()
-    //     .includes("tamil nadu");
-
-    // const deliveryText = isTamilNadu ? "3–5 working days" : "7–10 working days";
+    const {
+        sparklerCount,
+        otherCount,
+    } = getBulkProductCounts(order.items);
 
     return (
         <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
@@ -897,6 +896,15 @@ export default function BulkOrderDetails() {
                             value={order.pricing.cartonBoxCount}
                         />
 
+                        {(sparklerCount > 0) && (
+                        <><PriceRow
+                                isPrice={false}
+                                label="Sparklers"
+                                value={sparklerCount} /><PriceRow
+                                    isPrice={false}
+                                    label="Other Products"
+                                    value={otherCount} /></>
+                        )}
                         {(order.pricing?.packagingCharge ?? 0) > 0 && (
                             <PriceRow
                                 label={`Packaging Charge (${packagePercent}%)`}

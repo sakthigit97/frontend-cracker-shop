@@ -4,6 +4,7 @@ import { PDF_THEME } from "../../utils/pdf/invoiceTheme";
 import { money, line, text, formatStatus } from "../../utils/pdf/invoiceHelpers";
 import Icon from "../../assets/icon-new.png";
 import { formatDateTime } from "../date";
+import { getProductCounts } from "../../utils/productCounts";
 
 export async function buildBulkInvoicePdf(
     order: any,
@@ -212,7 +213,7 @@ export async function buildBulkInvoicePdf(
 
             minCellHeight: 6,
             lineWidth: 0.08,
-            lineColor:  [80, 80, 80],
+            lineColor: [80, 80, 80],
             valign: "middle",
             textColor: COLORS.dark,
         },
@@ -309,6 +310,13 @@ export async function buildBulkInvoicePdf(
         (sum: number, item: any) =>
             sum + Number(item.quantity || 0),
         0
+    );
+    const {
+        sparklerCount,
+        otherCount,
+    } = getProductCounts(
+        bulkInvoiceItems,
+        config?.sparklerCategory
     );
     let summaryStartY = (doc as any).lastAutoTable.finalY + 2;
     const SUMMARY_WIDTH = 80;
@@ -421,6 +429,18 @@ export async function buildBulkInvoicePdf(
         "Total Cartons",
         totalCartons
     );
+
+    if (sparklerCount > 0) {
+        drawCartonSummaryRow(
+            "Sparklers",
+            sparklerCount
+        );
+
+        drawCartonSummaryRow(
+            "Other Products",
+            otherCount
+        );
+    }
 
     drawSummaryRow(
         `Packaging (${order.pricing.packagingPercent}%)`,

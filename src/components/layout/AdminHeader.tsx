@@ -139,25 +139,10 @@ export default function AdminHeader() {
       icon: <FaChartBar />,
     },
     {
-      label: "Product Report",
+      label: "Retail Product Report",
       to: "/admin/reports/products",
       icon: <FaChartBar />,
     },
-
-    ...(isEnableBulkOrder
-      ? [
-        {
-          label: "Bulk Order Credit Report",
-          to: "/admin/reports/bulk-account-credits",
-          icon: <FaChartBar />,
-        },
-        {
-          label: "Bulk Sales Report",
-          to: "/admin/reports/bulk-sales",
-          icon: <FaChartBar />,
-        },
-      ]
-      : []),
   ];
 
   const mobileCatalog: MobileAccordionItem[] = [
@@ -231,25 +216,10 @@ export default function AdminHeader() {
       icon: <FaChartBar />,
     },
     {
-      label: "Product Report",
+      label: "Retail Product Report",
       to: "/admin/reports/products",
       icon: <FaChartBar />,
     },
-
-    ...(isEnableBulkOrder
-      ? [
-        {
-          label: "Bulk Order Credit Report",
-          to: "/admin/reports/bulk-account-credits",
-          icon: <FaChartBar />,
-        },
-        {
-          label: "Bulk Sales Report",
-          to: "/admin/reports/bulk-sales",
-          icon: <FaChartBar />,
-        },
-      ]
-      : []),
   ];
 
   const mobileSystem: MobileAccordionItem[] = [
