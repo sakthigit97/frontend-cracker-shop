@@ -198,20 +198,21 @@ export default function AdminEditComboPackagePage() {
         selectedProductIds.length > 0 &&
         selectedTotalInCents >= targetPriceInCents;
 
-
     const toggleProduct = (productId: string) => {
-        setSelectedProductIds((current) =>
-            current.includes(productId)
-                ? current.filter(
-                    (id) => id !== productId
-                )
-                : [...current, productId]
-        );
-    };
+        setSelectedProductIds((current) => {
+            if (current.includes(productId)) {
+                if (current.length === 1) {
+                    return current;
+                }
 
-    // ------------------------------------------------------------
-    // Move to review
-    // ------------------------------------------------------------
+                return current.filter(
+                    (id) => id !== productId
+                );
+            }
+
+            return [...current, productId];
+        });
+    };
 
     const handleNext = () => {
         if (selectedProductIds.length === 0) {

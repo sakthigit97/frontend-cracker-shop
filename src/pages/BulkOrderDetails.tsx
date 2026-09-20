@@ -483,11 +483,8 @@ export default function BulkOrderDetails() {
                                 .sort((a, b) => (b.changedAt ?? b.at) - (a.changedAt ?? a.at))
                                 .map((history, index) => {
                                     const status = history.toStatus ?? history.status;
-
                                     const updatedBy = history.changedBy ?? history.by;
-
                                     const updatedAt = history.changedAt ?? history.at;
-
                                     return (
                                         <div
                                             key={index}
