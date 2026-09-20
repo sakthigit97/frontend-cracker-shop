@@ -234,7 +234,7 @@ export default function ReviewStep() {
         );
     }
 
-    const hasPackaging =  pricing.packagingCharge > 0;
+    const hasPackaging = pricing.packagingCharge > 0;
     const hasGst = pricing.gstAmount > 0;
     const includedCharges: string[] = [];
 
@@ -294,7 +294,7 @@ export default function ReviewStep() {
                             <li>
                                 • {chargesDescription}
                             </li>
-                            
+
                             <li>
                                 • Transportation charges are not included in the order total and must be paid by the customer.
                             </li>
@@ -310,7 +310,10 @@ export default function ReviewStep() {
 
                 {/* Right */}
                 <div className="min-w-0 xl:sticky xl:top-24 xl:h-fit">
-                    <BulkPricingCard pricing={pricing} />
+                    <BulkPricingCard
+                        pricing={pricing}
+                        items={orderItems}
+                    />
                 </div>
             </div>
         </BulkStepLayout>

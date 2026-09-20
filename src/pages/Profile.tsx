@@ -20,6 +20,10 @@ interface ProfileData {
   pincode: string;
   walletCredit?: number;
   referralCode?: string;
+  myReferredPeople?: {
+    name: string;
+    mobile: string;
+  }[];
 }
 
 export default function Profile() {
@@ -342,6 +346,50 @@ export default function Profile() {
             </p>
           </div>
         </div>
+
+        {form.myReferredPeople &&
+          form.myReferredPeople.length > 0 && (
+            <div className="bg-white border rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    My Referred People
+                  </p>
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    People who registered using your referral code
+                  </p>
+                </div>
+
+                <span className="text-sm font-semibold text-[var(--color-primary)]">
+                  {form.myReferredPeople.length}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {form.myReferredPeople.map((person, index) => (
+                  <div
+                    key={`${person.mobile}-${index}`}
+                    className="flex items-center justify-between border rounded-lg px-4 py-3 bg-gray-50"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        {person.name}
+                      </p>
+
+                      <p className="text-sm text-gray-500">
+                        {person.mobile}
+                      </p>
+                    </div>
+
+                    <span className="text-xs text-gray-400">
+                      Referred
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>

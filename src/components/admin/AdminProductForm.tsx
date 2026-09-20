@@ -5,6 +5,7 @@ import {
     FaArrowDown,
     FaTrash
 } from "react-icons/fa";
+import { useConfigStore } from "../../store/config.store";
 
 export interface ProductFormData {
     name: string;
@@ -26,7 +27,6 @@ export interface ProductFormData {
     packQuantity: string;
     packUnit: string;
     isGiftPack: boolean;
-
 }
 
 interface Props {
@@ -70,6 +70,7 @@ export default function ProductForm({
     onCancel,
 }: Props) {
     const { showAlert } = useAlert();
+    const { config } = useConfigStore();
 
     const update = (key: keyof ProductFormData, v: any) => onChange({ ...value, [key]: v });
     const togglePackageTag = (tagId: string) => {
@@ -198,19 +199,11 @@ export default function ProductForm({
                             }
                         >
                             <option value="">Select Unit</option>
-                            <option value="BOX">Box</option>
-                            <option value="BOXES">Boxes</option>
-                            <option value="PIECE">Piece</option>
-                            <option value="PIECES">Piece</option>
-                            <option value="PACK">Pack</option>
-                            <option value="PACKET">Packet</option>
-                            <option value="PACKETS">Packets</option>
-                            <option value="RULES">Rolls</option>
-                            <option value="BUNDLE">Bundle</option>
-                            <option value="SET">Set</option>
-                            <option value="NOS">Nos</option>
-                            <option value="GRAM">Gram</option>
-                            <option value="KG">Kg</option>
+                            {(config?.packUnits || []).map((unit: any) => (
+                                <option key={unit.id} value={unit.id}>
+                                    {unit.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

@@ -786,12 +786,17 @@ export async function buildInvoicePdf(
         order.grandTotal || 0
     );
 
-    if (
-        order.walletUsed > 0
-    ) {
+    if (order.walletUsed > 0) {
         drawSummaryRow(
             "Wallet Used",
-            -order.walletUsed
+            -Number(order.walletUsed)
+        );
+    }
+
+    if (order.chitAmount > 0) {
+        drawSummaryRow(
+            "Chit Balance Applied",
+            -Number(order.chitAmount)
         );
     }
 

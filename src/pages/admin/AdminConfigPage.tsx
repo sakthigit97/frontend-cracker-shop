@@ -71,6 +71,10 @@ export default function AdminConfigPage() {
                             sortOrder: scheme.sortOrder ?? 0,
                         })
                     ),
+                    packUnits: (res.packUnits || []).map((unit: any) => ({
+                        id: unit.id || crypto.randomUUID(),
+                        name: unit.name || "",
+                    })),
                     paymentAccounts: (res.paymentAccounts || []).map(
                         (account: any) => ({
                             id: account.id || crypto.randomUUID(),
@@ -200,6 +204,19 @@ export default function AdminConfigPage() {
             ).filter(
                 (_: any, i: number) => i !== index
             ),
+        }));
+    };
+
+    const addPackUnit = () => {
+        setForm((prev: any) => ({
+            ...prev,
+            packUnits: [
+                ...(prev.packUnits || []),
+                {
+                    id: crypto.randomUUID(),
+                    name: "",
+                },
+            ],
         }));
     };
 
@@ -624,9 +641,7 @@ export default function AdminConfigPage() {
                 return false;
             }
 
-            const schemeId =
-                scheme.schemeId.trim().toUpperCase();
-
+            const schemeId = scheme.schemeId.trim().toUpperCase();
             if (schemeIds.has(schemeId)) {
                 alert(
                     `Duplicate Scheme ID "${schemeId}". Scheme IDs must be unique.`
@@ -636,7 +651,6 @@ export default function AdminConfigPage() {
 
             schemeIds.add(schemeId);
 
-            // Scheme Name
             if (!scheme.schemeName?.trim()) {
                 alert(
                     `Scheme ${schemeNumber}: Scheme Name is required.`
@@ -872,7 +886,6 @@ export default function AdminConfigPage() {
                 const upi =
                     account.upiId?.trim() || "";
 
-                // At least one is mandatory
                 if (!mobile && !upi) {
                     showAlert({
                         type: "error",
@@ -883,7 +896,6 @@ export default function AdminConfigPage() {
                     return false;
                 }
 
-                // Mobile validation only when entered
                 if (mobile) {
                     if (!/^[6-9]\d{9}$/.test(mobile)) {
                         showAlert({
@@ -896,7 +908,6 @@ export default function AdminConfigPage() {
                     }
                 }
 
-                // UPI validation only when entered
                 if (upi) {
                     if (
                         !/^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9.-]{2,}$/.test(
@@ -924,6 +935,15 @@ export default function AdminConfigPage() {
             paymentAccounts: (
                 prev.paymentAccounts || []
             ).filter(
+                (_: any, i: number) => i !== index
+            ),
+        }));
+    };
+
+    const removePackUnit = (index: number) => {
+        setForm((prev: any) => ({
+            ...prev,
+            packUnits: (prev.packUnits || []).filter(
                 (_: any, i: number) => i !== index
             ),
         }));
@@ -1191,6 +1211,42 @@ export default function AdminConfigPage() {
                     type: "error",
                     message:
                         "GST Denominator must be a positive value.",
+                });
+                return;
+            }
+
+            const packUnits = form.packUnits || [];
+
+            if (packUnits.length === 0) {
+                showAlert({
+                    type: "error",
+                    message: "At least one Pack Unit is required",
+                });
+                return;
+            }
+
+            const invalidPackUnit = packUnits.some(
+                (unit: any) => !unit.name?.trim()
+            );
+
+            if (invalidPackUnit) {
+                showAlert({
+                    type: "error",
+                    message: "Pack Unit name is required",
+                });
+                return;
+            }
+
+            const packUnitNames = packUnits.map(
+                (unit: any) => unit.name.trim().toLowerCase()
+            );
+
+            if (
+                new Set(packUnitNames).size !== packUnitNames.length
+            ) {
+                showAlert({
+                    type: "error",
+                    message: "Duplicate Pack Units are not allowed",
                 });
                 return;
             }
@@ -1998,6 +2054,110 @@ export default function AdminConfigPage() {
 
                             Disable GST for Tamil Nadu
                         </label>
+                    </div>
+
+
+                    {/* Pack Units */}
+
+                    <div className="space-y-5 border border-gray-200 rounded-xl p-4">
+
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+                            <div>
+                                <p className="text-sm font-semibold">
+                                    Pack Units
+                                </p>
+
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Configure the units available when creating or editing products.
+                                </p>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={addPackUnit}
+                                className="w-full sm:w-auto"
+                            >
+                                + Add Pack Unit
+                            </Button>
+
+                        </div>
+
+                        {(form.packUnits || []).length === 0 && (
+                            <div className="rounded-lg border border-dashed border-gray-300 p-5 text-center">
+                                <p className="text-sm text-gray-500">
+                                    No pack units added.
+                                </p>
+
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Click "Add Pack Unit" to add one.
+                                </p>
+                            </div>
+                        )}
+
+                        {(form.packUnits || []).map(
+                            (unit: any, index: number) => (
+                                <div
+                                    key={unit.id}
+                                    className="border rounded-xl p-4 bg-gray-50"
+                                >
+
+                                    <div className="flex items-center justify-between gap-3 mb-3">
+
+                                        <div>
+                                            <p className="font-medium">
+                                                Pack Unit {index + 1}
+                                            </p>
+
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Enter the unit name shown in product forms.
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => removePackUnit(index)}
+                                        >
+                                            Remove
+                                        </Button>
+
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Unit Name *
+                                        </label>
+
+                                        <input
+                                            className="border border-gray-300 rounded-lg p-3 w-full"
+                                            value={unit.name || ""}
+                                            onChange={(e) =>
+                                                setForm((prev: any) => {
+                                                    const updated = [
+                                                        ...(prev.packUnits || []),
+                                                    ];
+
+                                                    updated[index] = {
+                                                        ...updated[index],
+                                                        name: e.target.value,
+                                                    };
+
+                                                    return {
+                                                        ...prev,
+                                                        packUnits: updated,
+                                                    };
+                                                })
+                                            }
+                                            placeholder="e.g. Box"
+                                        />
+                                    </div>
+
+                                </div>
+                            )
+                        )}
+
                     </div>
 
                     {/* Payment Accounts */}

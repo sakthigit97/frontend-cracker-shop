@@ -14,6 +14,7 @@ interface AdminUser {
     state?: string;
     pincode?: string;
     walletCredit?: string;
+    chitBalance?: string;
 }
 
 interface Props {
@@ -31,6 +32,7 @@ interface FormState {
     state: string;
     pincode: string;
     walletCredit: string;
+    chitBalance: string;
 }
 
 const initialForm: FormState = {
@@ -41,6 +43,7 @@ const initialForm: FormState = {
     state: "",
     pincode: "",
     walletCredit: "0",
+    chitBalance: "0",
 };
 
 export default function AdminUserEditModal({
@@ -71,6 +74,9 @@ export default function AdminUserEditModal({
             pincode: user.pincode ?? "",
             walletCredit: user.walletCredit != null
                 ? String(user.walletCredit)
+                : "0",
+            chitBalance: user.chitBalance != null
+                ? String(user.chitBalance)
                 : "0",
         });
     }, [open, user]);
@@ -148,6 +154,9 @@ export default function AdminUserEditModal({
 
         const walletCredit =
             Number(form.walletCredit);
+
+        const chitBalance =
+            Number(form.chitBalance);
 
         if (!name) {
             showAlert({
@@ -232,6 +241,19 @@ export default function AdminUserEditModal({
             return;
         }
 
+        if (
+            !Number.isFinite(chitBalance) ||
+            chitBalance < 0
+        ) {
+            showAlert({
+                type: "error",
+                message:
+                    "Chit balance must be a valid amount.",
+            });
+
+            return;
+        }
+
         try {
             setSaving(true);
 
@@ -244,7 +266,8 @@ export default function AdminUserEditModal({
                     city,
                     state,
                     pincode,
-                    walletCredit
+                    walletCredit,
+                    chitBalance
                 }
             );
 
@@ -617,6 +640,31 @@ export default function AdminUserEditModal({
 
                             <p className="mt-1.5 text-xs text-gray-500">
                                 Amount available as wallet credit for this user.
+                            </p>
+                        </div>
+
+                        {/* Chit Amount */}
+                        <div>
+                            <label className={labelClass}>
+                                Chit Amount
+                            </label>
+
+                            <input
+                                type="number"
+                                className={inputClass}
+                                value={form.chitBalance}
+                                disabled={saving}
+                                onChange={(event) =>
+                                    updateField(
+                                        "chitBalance",
+                                        event.target.value
+                                    )
+                                }
+                                placeholder="Enter chit amount"
+                            />
+
+                            <p className="mt-1.5 text-xs text-gray-500">
+                                Chit amount available for this user.
                             </p>
                         </div>
                     </div>

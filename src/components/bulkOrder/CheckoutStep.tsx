@@ -46,6 +46,7 @@ export default function CheckoutStep() {
         nextStep,
         setAddress,
         scheme,
+        items,
     } = bulkOrderStore();
 
     const { showAlert } = useAlert();
@@ -643,6 +644,7 @@ export default function CheckoutStep() {
                     ) : (
                         <BulkPricingCard
                             pricing={pricing}
+                            items={items}
                         />
                     )}
                 </div>

@@ -7,14 +7,22 @@ import {
 
 import type { BulkOrderPricing } from "../../types/bulkOrder";
 import { useConfigStore } from "../../store/config.store";
+import { getBulkProductCounts } from "../../utils/bulkProductCounts";
 
 interface BulkPricingCardProps {
     pricing: BulkOrderPricing;
+    items: any[];
 }
 
 function BulkPricingCard({
     pricing,
+    items,
 }: BulkPricingCardProps) {
+
+    const {
+        sparklerCount,
+        otherCount,
+    } = getBulkProductCounts(items);
 
     const config = useConfigStore((s) => s.config);
     const gstPercent = config?.gstPercent;
@@ -77,6 +85,19 @@ function BulkPricingCard({
                     label="Carton Box Total"
                     value={pricing.cartonBoxCount}
                 />
+
+
+                {(sparklerCount > 0) && (
+
+                <><PriceRow
+                        icon={<Package size={18} />}
+                        label="Sparklers"
+                        value={sparklerCount} /><PriceRow
+                            icon={<Package size={18} />}
+                            label="Other Products"
+                            value={otherCount} /></>
+
+                )}
 
                 {hasPackaging && (
                     <PriceRow

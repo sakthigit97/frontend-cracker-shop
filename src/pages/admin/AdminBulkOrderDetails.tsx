@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { getProductCounts } from "../../utils/productCounts";
 
 import {
     STATUS_COLORS,
@@ -245,7 +246,6 @@ export default function AdminBulkOrderDetails() {
         );
 
         lines.push("");
-
         lines.push("Pay via Bank Transfer:");
         lines.push("Payment Details:");
         lines.push("");
@@ -923,6 +923,14 @@ export default function AdminBulkOrderDetails() {
             0
         )
         : 0;
+
+    const {
+        sparklerCount,
+        otherCount,
+    } = getProductCounts(
+        order?.items ?? [],
+        config?.sparklerCategory
+    );
 
     if (!order) return;
     return (
@@ -1856,6 +1864,27 @@ export default function AdminBulkOrderDetails() {
                                 {totalCartons}
                             </span>
                         </div>
+
+                        {(sparklerCount > 0) && (
+                            <><div className="flex justify-between gap-4">
+                                <span>
+                                    Sparklers
+                                </span>
+
+                                <span>
+                                    {sparklerCount}
+                                </span>
+                            </div><div className="flex justify-between gap-4">
+                                    <span>
+                                        Other Products
+                                    </span>
+
+                                    <span>
+                                        {otherCount}
+                                    </span>
+                                </div></>
+
+                        )}
 
                         <div className="flex justify-between gap-4">
                             <span>

@@ -29,6 +29,9 @@ export default function AdminUsers() {
     const [deletingMobile, setDeletingMobile] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [selectedMobile, setSelectedMobile] = useState<string | null>(null);
+    const [bulkUserFilter, setBulkUserFilter] = useState<
+        "" | "true" | "false"
+    >("");
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -49,6 +52,10 @@ export default function AdminUsers() {
         try {
             const response = await fetchPage({
                 search: searchValue || undefined,
+                isBulkUser:
+                    bulkUserFilter === ""
+                        ? undefined
+                        : bulkUserFilter === "true",
                 cursor,
                 limit: PAGE_SIZE,
             });
@@ -86,13 +93,15 @@ export default function AdminUsers() {
 
         const load = async () => {
             try {
-                const response =
-                    await fetchPage({
-                        search:
-                            query || undefined,
-                        cursor: currentCursor,
-                        limit: PAGE_SIZE,
-                    });
+                const response = await fetchPage({
+                    search: query || undefined,
+                    isBulkUser:
+                        bulkUserFilter === ""
+                            ? undefined
+                            : bulkUserFilter === "true",
+                    cursor: currentCursor,
+                    limit: PAGE_SIZE,
+                });
 
                 if (cancelled) {
                     return;
@@ -101,25 +110,10 @@ export default function AdminUsers() {
                 setData(response);
 
                 if (response.nextCursor) {
-                    setCursorByPage(
-                        (previous) => {
-                            const nextPage =
-                                page + 1;
-
-                            if (
-                                previous[nextPage] ===
-                                response.nextCursor
-                            ) {
-                                return previous;
-                            }
-
-                            return {
-                                ...previous,
-                                [nextPage]:
-                                    response.nextCursor,
-                            };
-                        }
-                    );
+                    setCursorByPage((previous) => ({
+                        ...previous,
+                        [page + 1]: response.nextCursor,
+                    }));
                 }
             } catch (error: any) {
                 if (cancelled) {
@@ -136,15 +130,14 @@ export default function AdminUsers() {
         };
 
         load();
+
         return () => {
             cancelled = true;
         };
     }, [
         page,
         query,
-        cursorByPage[page],
-        fetchPage,
-        showAlert,
+        bulkUserFilter,
     ]);
 
     const handleDeleteClick = (
@@ -239,12 +232,36 @@ export default function AdminUsers() {
             </div>
 
             {/* Search */}
-            <div>
+            <div className="flex flex-col md:flex-row gap-3 mb-4">
                 <input
                     placeholder="Search by name or mobile..."
                     className="
-                        w-full mb-4
-                        px-5 py-3
+            flex-1
+            px-5 py-3
+            rounded-full
+            border border-gray-300
+            bg-white
+            shadow-sm
+            focus:ring-2
+            focus:ring-[var(--color-primary)]
+        "
+                    value={search}
+                    onChange={(event) =>
+                        setSearch(event.target.value)
+                    }
+                />
+
+                <select
+                    value={bulkUserFilter}
+                    onChange={(event) => {
+                        setBulkUserFilter(
+                            event.target.value as "" | "true" | "false"
+                        );
+                        setPage(1);
+                        setCursorByPage({});
+                    }}
+                    className="
+                        px-4 py-3
                         rounded-full
                         border border-gray-300
                         bg-white
@@ -252,14 +269,13 @@ export default function AdminUsers() {
                         focus:ring-2
                         focus:ring-[var(--color-primary)]
                     "
-                    value={search}
-                    onChange={(event) =>
-                        setSearch(
-                            event.target.value
-                        )
-                    }
-                />
+                >
+                    <option value="">All Users</option>
+                    <option value="true">Bulk User</option>
+                    <option value="false">Non-Bulk User</option>
+                </select>
             </div>
+
 
             {/* Table */}
             <div className="

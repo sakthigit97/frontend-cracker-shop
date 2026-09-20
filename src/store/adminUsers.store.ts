@@ -9,7 +9,6 @@ import {
 interface UserState {
     cache: Record<string, GetAdminUsersResponse>;
     loading: boolean;
-
     fetchPage: (
         params: GetAdminUsersParams
     ) => Promise<GetAdminUsersResponse>;
@@ -26,11 +25,14 @@ export const useAdminUsersStore =
             const search = params.search?.trim() || "";
             const cursor = params.cursor || null;
             const limit = params.limit || 20;
+            const isBulkUser =
+                params.isBulkUser ?? null;
 
             const key = JSON.stringify({
                 search,
                 cursor,
                 limit,
+                isBulkUser,
             });
 
             const cached = get().cache[key];
@@ -48,6 +50,10 @@ export const useAdminUsersStore =
                     search: search || undefined,
                     cursor: cursor || undefined,
                     limit,
+                    isBulkUser:
+                        isBulkUser === null
+                            ? undefined
+                            : isBulkUser,
                 });
 
                 set((state) => ({

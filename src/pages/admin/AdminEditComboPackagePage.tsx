@@ -10,6 +10,10 @@ import {
     updateComboPackage,
 } from "../../services/product.api";
 import { useAlert } from "../../store/alert.store";
+import { useConfigStore } from "../../store/config.store";
+import { sortProductsByCategoryAndSequence } from "../../utils/sequncerUtil";
+import { useCatalog } from "../../store/catalog.store";
+
 
 export default function AdminEditComboPackagePage() {
     const navigate = useNavigate();
@@ -21,35 +25,27 @@ export default function AdminEditComboPackagePage() {
         fetchAll,
     } = useHomeProducts();
 
-    const PRODUCTS_PER_PAGE = 20;
+    const {
+        categories,
+        fetchCategories,
+    } = useCatalog();
 
     const { showAlert } = useAlert();
-
+    const config = useConfigStore((s) => s.config);
     const [loadingCombo, setLoadingCombo] = useState(true);
     const [updatingCombo, setUpdatingCombo] = useState(false);
-
     const [productSearch, setProductSearch] = useState("");
     const [selectedProductIds, setSelectedProductIds] = useState<string[]>(
         []
     );
-    const [productPage, setProductPage] = useState(1);
-
     const [comboName, setComboName] = useState("");
     const [targetPrice, setTargetPrice] = useState("");
-
     const [step, setStep] = useState<1 | 3>(1);
-
-    // ------------------------------------------------------------
-    // Load products
-    // ------------------------------------------------------------
 
     useEffect(() => {
         fetchAll();
+        fetchCategories();
     }, []);
-
-    // ------------------------------------------------------------
-    // Load existing combo
-    // ------------------------------------------------------------
 
     useEffect(() => {
         if (!comboId) {
@@ -67,20 +63,7 @@ export default function AdminEditComboPackagePage() {
                 setLoadingCombo(true);
 
                 const response: any = await getComboPackage(comboId);
-
-                /*
-                 * Expected API response:
-                 *
-                 * {
-                 *   comboId: "...",
-                 *   name: "...",
-                 *   price: 500,
-                 *   productIds: ["...", "..."]
-                 * }
-                 */
-
                 const combo = response?.data ?? response;
-
                 setComboName(combo?.name ?? "");
                 setTargetPrice(
                     combo?.price !== undefined &&
@@ -116,11 +99,7 @@ export default function AdminEditComboPackagePage() {
         loadCombo();
     }, [comboId]);
 
-    // ------------------------------------------------------------
-    // Filter products
-    // ------------------------------------------------------------
-
-    const filteredProducts = useMemo(() => {
+    let filteredProducts = useMemo(() => {
         const query = productSearch.trim().toLowerCase();
 
         return products.filter((product: any) => {
@@ -141,9 +120,11 @@ export default function AdminEditComboPackagePage() {
         });
     }, [products, productSearch]);
 
-    // ------------------------------------------------------------
-    // Selected products
-    // ------------------------------------------------------------
+    filteredProducts = sortProductsByCategoryAndSequence(
+        filteredProducts,
+        categories,
+        true
+    );
 
     const selectedProducts = useMemo(() => {
         const selectedIds = new Set(selectedProductIds);
@@ -156,17 +137,12 @@ export default function AdminEditComboPackagePage() {
         );
     }, [products, selectedProductIds]);
 
-    // ------------------------------------------------------------
-    // Product total
-    // ------------------------------------------------------------
-
     const getProductPrice = (product: any) =>
         Number(
             product.discountedPrice ??
             product.price ??
             0
         );
-
     const selectedProductsTotal = useMemo(() => {
         return selectedProducts.reduce(
             (total, product: any) =>
@@ -175,25 +151,37 @@ export default function AdminEditComboPackagePage() {
         );
     }, [selectedProducts]);
 
-    // ------------------------------------------------------------
-    // Target calculations
-    // ------------------------------------------------------------
+    const packagingPercent = Number(
+        config?.packagingPercent || 0
+    );
+
+    const packagingAmount = useMemo(() => {
+        return Math.round(
+            selectedProductsTotal *
+            packagingPercent /
+            100
+        );
+    }, [selectedProductsTotal, packagingPercent]);
+
+    const packageTotal = useMemo(() => {
+        return selectedProductsTotal + packagingAmount;
+    }, [selectedProductsTotal, packagingAmount]);
 
     const numericTargetPrice = Number(targetPrice) || 0;
 
     const remainingAmount =
-        numericTargetPrice - selectedProductsTotal;
+        numericTargetPrice - packageTotal;
 
     const targetReached =
         numericTargetPrice > 0 &&
-        selectedProductsTotal >= numericTargetPrice;
+        packageTotal >= numericTargetPrice;
 
     const targetExceeded =
         numericTargetPrice > 0 &&
-        selectedProductsTotal > numericTargetPrice;
+        packageTotal > numericTargetPrice;
 
     const selectedTotalInCents = Math.round(
-        selectedProductsTotal * 100
+        packageTotal * 100
     );
 
     const targetPriceInCents = Math.round(
@@ -210,40 +198,6 @@ export default function AdminEditComboPackagePage() {
         selectedProductIds.length > 0 &&
         selectedTotalInCents >= targetPriceInCents;
 
-    // ------------------------------------------------------------
-    // Pagination
-    // ------------------------------------------------------------
-
-    const totalProductPages = Math.ceil(
-        filteredProducts.length / PRODUCTS_PER_PAGE
-    );
-
-    const paginatedProducts = useMemo(() => {
-        const startIndex =
-            (productPage - 1) * PRODUCTS_PER_PAGE;
-
-        return filteredProducts.slice(
-            startIndex,
-            startIndex + PRODUCTS_PER_PAGE
-        );
-    }, [filteredProducts, productPage]);
-
-    useEffect(() => {
-        setProductPage(1);
-    }, [productSearch]);
-
-    useEffect(() => {
-        if (
-            totalProductPages > 0 &&
-            productPage > totalProductPages
-        ) {
-            setProductPage(totalProductPages);
-        }
-    }, [productPage, totalProductPages]);
-
-    // ------------------------------------------------------------
-    // Product selection
-    // ------------------------------------------------------------
 
     const toggleProduct = (productId: string) => {
         setSelectedProductIds((current) =>
@@ -338,29 +292,6 @@ export default function AdminEditComboPackagePage() {
         product.imageUrl ||
         product.images?.[0] ||
         defaultImage;
-
-    // ------------------------------------------------------------
-    // Pagination helpers
-    // ------------------------------------------------------------
-
-    const goToPreviousPage = () => {
-        setProductPage((page) =>
-            Math.max(1, page - 1)
-        );
-    };
-
-    const goToNextPage = () => {
-        setProductPage((page) =>
-            Math.min(
-                totalProductPages,
-                page + 1
-            )
-        );
-    };
-
-    // ------------------------------------------------------------
-    // Loading combo
-    // ------------------------------------------------------------
 
     if (loadingCombo) {
         return (
@@ -528,10 +459,7 @@ export default function AdminEditComboPackagePage() {
 
                                     {selectedProductIds.length > 0 && (
                                         <div className="self-start sm:self-auto px-3 py-1.5 rounded-full bg-gray-100 text-xs sm:text-sm font-semibold text-gray-700">
-                                            {
-                                                selectedProductIds.length
-                                            }{" "}
-                                            selected
+                                            {selectedProductIds.length} selected
                                         </div>
                                     )}
                                 </div>
@@ -567,34 +495,13 @@ export default function AdminEditComboPackagePage() {
                                     )}
                                 </div>
 
-                                {/* Result Count */}
-
                                 <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-1 text-xs text-gray-500">
-                                    <span>
-                                        {filteredProducts.length ===
-                                            0
-                                            ? "No products"
-                                            : `Showing ${(productPage -
-                                                1) *
-                                            PRODUCTS_PER_PAGE +
-                                            1
-                                            }–${Math.min(
-                                                productPage *
-                                                PRODUCTS_PER_PAGE,
-                                                filteredProducts.length
-                                            )} of ${filteredProducts.length
-                                            } products`}
-                                    </span>
-
                                     {productSearch && (
                                         <span className="text-[var(--color-primary)] font-medium">
                                             Local search
                                         </span>
                                     )}
                                 </div>
-
-                                {/* Selected Amount Summary */}
-
                                 {selectedProductIds.length > 0 && (
                                     <div
                                         className={`
@@ -610,87 +517,107 @@ export default function AdminEditComboPackagePage() {
                                             }
                                         `}
                                     >
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500">
-                                                    Selected Products Value
+                                                <p className="text-xs text-gray-600">
+                                                    Products Selected
                                                 </p>
-
-                                                <p
-                                                    className={`
-                                                        text-xl sm:text-2xl
-                                                        font-bold
-                                                        mt-0.5
-                                                        ${targetExceeded
-                                                            ? "text-red-600"
-                                                            : targetReached
-                                                                ? "text-green-600"
-                                                                : "text-[var(--color-primary)]"
-                                                        }
-                                                    `}
-                                                >
-                                                    ₹
-                                                    {selectedProductsTotal.toFixed(
-                                                        2
-                                                    )}
+                                                <p className="text-xl font-bold text-gray-900 mt-1">
+                                                    {selectedProductIds.length}
                                                 </p>
                                             </div>
 
-                                            <div className="sm:text-right">
-                                                <p className="text-xs font-medium text-gray-500">
-                                                    Target Price
+                                            <div>
+                                                <p className="text-xs text-gray-600">
+                                                    Selected Products Value
                                                 </p>
+                                                <p
+                                                    className={`
+                                                        text-xl font-bold mt-1
+                                                        ${targetExceeded
+                                                            ? "text-red-600"
+                                                            : "text-gray-900"
+                                                        }
+                                                    `}
+                                                >
+                                                    ₹{selectedProductsTotal.toFixed(2)}
+                                                </p>
+                                            </div>
 
-                                                <p className="text-base sm:text-lg font-bold text-gray-900 mt-0.5">
-                                                    ₹
-                                                    {numericTargetPrice.toFixed(
-                                                        2
-                                                    )}
+                                            <div>
+                                                <p className="text-xs text-gray-600">
+                                                    Packaging Fee ({packagingPercent}%)
+                                                </p>
+                                                <p className="text-xl font-bold text-gray-900 mt-1">
+                                                    ₹{packagingAmount.toFixed(2)}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-xs text-gray-600">
+                                                    Package Total
+                                                </p>
+                                                <p className="text-xl font-bold text-[var(--color-primary)] mt-1">
+                                                    ₹{packageTotal.toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="mt-3 pt-3 border-t border-gray-200/70">
-                                            {targetExceeded ? (
-                                                <div className="flex items-start gap-2">
-                                                    <span className="text-base leading-none">
-                                                        ⚠
-                                                    </span>
-
-                                                    <p className="text-sm font-semibold text-red-600">
-                                                        Target price exceeded by ₹
-                                                        {Math.abs(
-                                                            remainingAmount
-                                                        ).toFixed(
-                                                            2
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            ) : targetReached ? (
-                                                <div className="flex items-start gap-2">
-                                                    <span className="text-base leading-none">
-                                                        ✓
-                                                    </span>
-
-                                                    <p className="text-sm font-semibold text-green-600">
-                                                        Target price reached
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <p className="text-sm font-medium text-gray-600">
-                                                    ₹
-                                                    {remainingAmount.toFixed(
-                                                        2
-                                                    )}{" "}
-                                                    remaining to reach target
+                                        <div className="mt-4 pt-3 border-t border-gray-200/70">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <p className="text-xs font-medium text-gray-500">
+                                                    Target Price
                                                 </p>
-                                            )}
+                                                <p className="text-lg font-bold text-gray-900">
+                                                    ₹{numericTargetPrice.toFixed(2)}
+                                                </p>
+                                            </div>
+
+                                            <div className="mt-3">
+                                                {targetExceeded ? (
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="text-base leading-none">
+                                                            ⚠
+                                                        </span>
+                                                        <p className="text-sm font-semibold text-red-600">
+                                                            Target price exceeded by ₹
+                                                            {Math.abs(remainingAmount).toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                ) : targetReached ? (
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="text-base leading-none">
+                                                            ✓
+                                                        </span>
+                                                        <p className="text-sm font-semibold text-green-600">
+                                                            Target price reached
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm font-medium text-gray-600">
+                                                        ₹{remainingAmount.toFixed(2)} remaining to reach target
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Loading */}
+
+
+
+                                <div className="flex justify-end">
+                                    <Button
+                                        type="button"
+                                        onClick={handleNext}
+                                        disabled={
+                                            !targetReachedOrExceeded
+                                        }
+                                        className="w-full sm:w-auto min-w-[150px]"
+                                    >
+                                        Review Changes
+                                    </Button>
+                                </div>
 
                                 {(productsLoading ||
                                     loadingCombo) &&
@@ -723,238 +650,135 @@ export default function AdminEditComboPackagePage() {
                                         </div>
                                     )}
 
-                                {/* Product Grid */}
 
-                                {paginatedProducts.length > 0 && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                        {paginatedProducts.map(
-                                            (product: any) => {
-                                                const selected =
-                                                    selectedProductIds.includes(
-                                                        product.id
-                                                    );
+                                {filteredProducts.length > 0 && (
+                                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full min-w-[650px] text-sm">
+                                                <thead>
+                                                    <tr className="bg-[var(--color-primary)] text-white">
+                                                        <th className="px-3 py-3 text-left font-semibold w-[80px]">
+                                                            Image
+                                                        </th>
 
-                                                const productPrice =
-                                                    getProductPrice(
-                                                        product
-                                                    );
+                                                        <th className="px-3 py-3 text-left font-semibold">
+                                                            Product
+                                                        </th>
 
-                                                const productImg =
-                                                    getProductImage(
-                                                        product
-                                                    );
+                                                        <th className="px-3 py-3 text-right font-semibold w-[140px]">
+                                                            Price
+                                                        </th>
 
-                                                return (
-                                                    <button
-                                                        key={
-                                                            product.id
-                                                        }
-                                                        type="button"
-                                                        onClick={() =>
-                                                            toggleProduct(
-                                                                product.id
-                                                            )
-                                                        }
-                                                        className={`
-                                                            group
-                                                            relative
-                                                            w-full
-                                                            text-left
-                                                            rounded-xl
-                                                            border
-                                                            p-3
-                                                            sm:p-3.5
-                                                            transition-all
-                                                            duration-200
-                                                            ${selected
-                                                                ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-2 ring-[var(--color-primary)]/20"
-                                                                : "border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-sm"
-                                                            }
-                                                        `}
-                                                    >
-                                                        {selected && (
-                                                            <div className="absolute z-10 top-2.5 right-2.5 w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-sm font-bold shadow-sm">
-                                                                ✓
-                                                            </div>
-                                                        )}
+                                                        <th className="px-3 py-3 text-center font-semibold w-[130px]">
+                                                            Select
+                                                        </th>
+                                                    </tr>
+                                                </thead>
 
-                                                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
-                                                            <img
-                                                                src={
-                                                                    productImg
+                                                <tbody>
+                                                    {filteredProducts.map((product: any) => {
+                                                        const selected =
+                                                            selectedProductIds.includes(product.id);
+
+                                                        const productPrice =
+                                                            getProductPrice(product);
+
+                                                        const productImg =
+                                                            getProductImage(product);
+
+                                                        return (
+                                                            <tr
+                                                                key={product.id}
+                                                                onClick={() =>
+                                                                    toggleProduct(product.id)
                                                                 }
-                                                                alt={
-                                                                    product.name ||
-                                                                    "Product"
-                                                                }
-                                                                onError={(
-                                                                    event
-                                                                ) => {
-                                                                    event.currentTarget.src =
-                                                                        defaultImage;
-                                                                }}
-                                                                className="w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-200"
-                                                            />
-                                                        </div>
+                                                                className={`
+                                    cursor-pointer
+                                    border-b border-gray-100
+                                    transition-colors
+                                    ${selected
+                                                                        ? "bg-[var(--color-primary)]/5"
+                                                                        : "bg-white hover:bg-gray-50"
+                                                                    }
+                                `}
+                                                            >
+                                                                <td className="px-3 py-2">
+                                                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
+                                                                        <img
+                                                                            src={productImg}
+                                                                            alt={
+                                                                                product.name ||
+                                                                                "Product"
+                                                                            }
+                                                                            onError={(event) => {
+                                                                                event.currentTarget.src =
+                                                                                    defaultImage;
+                                                                            }}
+                                                                            className="w-full h-full object-contain p-1"
+                                                                        />
+                                                                    </div>
+                                                                </td>
 
-                                                        <div className="mt-3 min-w-0">
-                                                            <p className="text-sm font-semibold text-gray-900 line-clamp-2 min-h-[40px]">
-                                                                {
-                                                                    product.name
-                                                                }
-                                                            </p>
+                                                                <td className="px-3 py-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {selected && (
+                                                                            <span className="w-5 h-5 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                                                ✓
+                                                                            </span>
+                                                                        )}
 
-                                                            <div className="flex items-center justify-between gap-2 mt-2">
-                                                                <p className="text-sm sm:text-base font-bold text-[var(--color-primary)]">
-                                                                    ₹
-                                                                    {productPrice.toFixed(
-                                                                        2
-                                                                    )}
-                                                                </p>
+                                                                        <span
+                                                                            className={`
+                                                font-semibold
+                                                ${selected
+                                                                                    ? "text-[var(--color-primary)]"
+                                                                                    : "text-gray-900"
+                                                                                }
+                                            `}
+                                                                        >
+                                                                            {product.name}
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
 
-                                                                <span
-                                                                    className={`
-                                                                        text-[11px]
-                                                                        font-medium
-                                                                        ${selected
-                                                                            ? "text-[var(--color-primary)]"
-                                                                            : "text-gray-400"
-                                                                        }
-                                                                    `}
-                                                                >
-                                                                    {selected
-                                                                        ? "Selected"
-                                                                        : "Select"}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            }
-                                        )}
-                                    </div>
-                                )}
+                                                                <td className="px-3 py-2 text-right">
+                                                                    <span className="font-bold text-gray-900">
+                                                                        ₹
+                                                                        {productPrice.toFixed(2)}
+                                                                    </span>
+                                                                </td>
 
-                                {/* Pagination */}
-
-                                {totalProductPages > 1 && (
-                                    <div className="pt-2">
-
-                                        {/* Mobile */}
-
-                                        <div className="flex sm:hidden flex-col gap-2.5">
-                                            <div className="text-center">
-                                                <p className="text-sm font-semibold text-gray-700">
-                                                    Page{" "}
-                                                    {
-                                                        productPage
-                                                    }{" "}
-                                                    of{" "}
-                                                    {
-                                                        totalProductPages
-                                                    }
-                                                </p>
-
-                                                <p className="text-[11px] text-gray-400 mt-0.5">
-                                                    {
-                                                        filteredProducts.length
-                                                    }{" "}
-                                                    products
-                                                </p>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={
-                                                        goToPreviousPage
-                                                    }
-                                                    disabled={
-                                                        productPage ===
-                                                        1
-                                                    }
-                                                    className="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-primary)] transition whitespace-nowrap"
-                                                >
-                                                    ← Previous
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={
-                                                        goToNextPage
-                                                    }
-                                                    disabled={
-                                                        productPage ===
-                                                        totalProductPages
-                                                    }
-                                                    className="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-primary)] transition whitespace-nowrap"
-                                                >
-                                                    Next →
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Desktop */}
-
-                                        <div className="hidden sm:flex items-center justify-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={
-                                                    goToPreviousPage
-                                                }
-                                                disabled={
-                                                    productPage ===
-                                                    1
-                                                }
-                                                className="min-w-[120px] px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-primary)] transition"
-                                            >
-                                                ← Previous
-                                            </button>
-
-                                            <div className="min-w-[80px] text-center">
-                                                <p className="text-sm font-semibold text-gray-700">
-                                                    Page{" "}
-                                                    {
-                                                        productPage
-                                                    }{" "}
-                                                    of{" "}
-                                                    {
-                                                        totalProductPages
-                                                    }
-                                                </p>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={
-                                                    goToNextPage
-                                                }
-                                                disabled={
-                                                    productPage ===
-                                                    totalProductPages
-                                                }
-                                                className="min-w-[120px] px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-primary)] transition"
-                                            >
-                                                Next →
-                                            </button>
+                                                                <td className="px-3 py-2 text-center">
+                                                                    <span
+                                                                        className={`
+                                            inline-flex
+                                            items-center
+                                            justify-center
+                                            min-w-[80px]
+                                            px-3
+                                            py-1.5
+                                            rounded-full
+                                            text-xs
+                                            font-semibold
+                                            ${selected
+                                                                                ? "bg-[var(--color-primary)] text-white"
+                                                                                : "bg-gray-100 text-gray-600"
+                                                                            }
+                                        `}
+                                                                    >
+                                                                        {selected
+                                                                            ? "Selected"
+                                                                            : "Select"}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* Review */}
-
-                            <div className="flex justify-end">
-                                <Button
-                                    type="button"
-                                    onClick={handleNext}
-                                    disabled={
-                                        !targetReachedOrExceeded
-                                    }
-                                    className="w-full sm:w-auto min-w-[150px]"
-                                >
-                                    Review Changes
-                                </Button>
                             </div>
                         </>
                     )}
@@ -1047,20 +871,21 @@ export default function AdminEditComboPackagePage() {
                                     }
                                 `}
                             >
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                                    {/* Products Selected */}
                                     <div>
                                         <p className="text-xs text-gray-600">
                                             Products Selected
                                         </p>
 
                                         <p className="text-xl font-bold text-gray-900 mt-1">
-                                            {
-                                                selectedProductIds.length
-                                            }
+                                            {selectedProductIds.length}
                                         </p>
                                     </div>
 
+                                    {/* Product Value */}
                                     <div>
                                         <p className="text-xs text-gray-600">
                                             Product Value
@@ -1068,32 +893,39 @@ export default function AdminEditComboPackagePage() {
 
                                         <p
                                             className={`
-                                                text-xl font-bold mt-1
-                                                ${targetExceeded
+                text-xl font-bold mt-1
+                ${targetExceeded
                                                     ? "text-red-600"
                                                     : "text-gray-900"
                                                 }
-                                            `}
+            `}
                                         >
-                                            ₹
-                                            {selectedProductsTotal.toFixed(
-                                                2
-                                            )}
+                                            ₹{selectedProductsTotal.toFixed(2)}
                                         </p>
                                     </div>
 
+                                    {/* Packaging Fee */}
                                     <div>
                                         <p className="text-xs text-gray-600">
-                                            Combo Price
+                                            Packaging Fee ({packagingPercent}%)
+                                        </p>
+
+                                        <p className="text-xl font-bold text-gray-900 mt-1">
+                                            ₹{packagingAmount.toFixed(2)}
+                                        </p>
+                                    </div>
+
+                                    {/* Final Package Total */}
+                                    <div>
+                                        <p className="text-xs text-gray-600">
+                                            Final Package Total
                                         </p>
 
                                         <p className="text-xl font-bold text-[var(--color-primary)] mt-1">
-                                            ₹
-                                            {numericTargetPrice.toFixed(
-                                                2
-                                            )}
+                                            ₹{packageTotal.toFixed(2)}
                                         </p>
                                     </div>
+
                                 </div>
 
                                 <div className="mt-4 pt-3 border-t border-gray-200/70">
@@ -1104,7 +936,7 @@ export default function AdminEditComboPackagePage() {
                                             </span>
 
                                             <p className="text-sm font-semibold text-red-600">
-                                                Product value exceeds the target by ₹
+                                                Package total exceeds the target by ₹
                                                 {Math.abs(
                                                     remainingAmount
                                                 ).toFixed(
@@ -1119,12 +951,12 @@ export default function AdminEditComboPackagePage() {
                                             </span>
 
                                             <p className="text-sm font-semibold text-green-700">
-                                                Product value exactly matches the target price
+                                                Package total exactly matches the target price
                                             </p>
                                         </div>
                                     ) : (
                                         <p className="text-sm font-medium text-gray-600">
-                                            Product value has reached the target.
+                                            Package total has reached the target.
                                         </p>
                                     )}
                                 </div>

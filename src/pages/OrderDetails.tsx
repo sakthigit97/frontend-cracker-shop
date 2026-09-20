@@ -1074,15 +1074,30 @@ export default function OrderDetails() {
 
             </div>
 
-            {(order.walletUsed ?? 0) >
-              0 && (
+            {Number(order.walletUsed ?? 0) > 0 && (
+              <PriceRow
+                label="Wallet Applied"
+                value={-Number(order.walletUsed)}
+                valueClassName="text-green-700"
+              />
+            )}
+
+            {Number(order.chitAmount ?? 0) > 0 && (
+              <PriceRow
+                label="Chit Balance Applied"
+                value={-Number(order.chitAmount)}
+                valueClassName="text-green-700"
+              />
+            )}
+
+            {(
+              Number(order.walletUsed ?? 0) > 0 ||
+              Number(order.chitAmount ?? 0) > 0
+            ) && (
                 <>
                   <div className="my-3 border-t border-dashed border-gray-300" />
 
-                  <PriceRow label="Wallet Applied" value={-order.walletUsed} valueClassName="text-green-700" />
-
                   <div className="flex items-end justify-between gap-4">
-
                     <div>
                       <p className="font-semibold text-gray-900">
                         Amount Payable
@@ -1096,7 +1111,6 @@ export default function OrderDetails() {
                     <span className="whitespace-nowrap text-xl font-bold text-[var(--color-primary)]">
                       ₹{formatCurrency(order.finalPayable)}
                     </span>
-
                   </div>
                 </>
               )}

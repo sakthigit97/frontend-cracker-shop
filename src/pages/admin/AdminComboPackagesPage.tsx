@@ -4,9 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import EmptyState from "../../components/ui/EmptyState";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 
 import {
     getComboPackages,
+    deleteComboPackage,
 } from "../../services/product.api";
 
 import { useAlert } from "../../store/alert.store";
@@ -17,17 +19,80 @@ export default function AdminComboPackagesPage() {
 
     const [combos, setCombos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deletingComboId, setDeletingComboId] =
+        useState<string | null>(null);
+
+    const [showDeleteConfirm, setShowDeleteConfirm] =
+        useState(false);
+
+    const [selectedCombo, setSelectedCombo] =
+        useState<{
+            comboId: string;
+            name: string;
+        } | null>(null);
+
+    const handleDeleteClick = (
+        comboId: string,
+        comboName: string
+    ) => {
+        setSelectedCombo({
+            comboId,
+            name: comboName,
+        });
+
+        setShowDeleteConfirm(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!selectedCombo) {
+            return;
+        }
+
+        const comboId = selectedCombo.comboId;
+
+        try {
+            setDeletingComboId(comboId);
+
+            await deleteComboPackage(comboId);
+
+            // Remove the deleted combo immediately from the UI
+            setCombos((currentCombos) =>
+                currentCombos.filter(
+                    (combo) =>
+                        combo.comboId !== comboId
+                )
+            );
+
+            showAlert({
+                type: "success",
+                message:
+                    "Combo package deleted successfully",
+                duration: 2000,
+            });
+        } catch (error: any) {
+            console.error(
+                "Delete combo package failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to delete combo package.",
+            });
+        } finally {
+            setShowDeleteConfirm(false);
+            setSelectedCombo(null);
+            setDeletingComboId(null);
+        }
+    };
 
     const fetchComboPackages = async () => {
         try {
             setLoading(true);
 
             const response = await getComboPackages();
-
-            /*
-             * apiFetch may return the response body directly
-             * or an object containing the data.
-             */
             const data =
                 Array.isArray(response)
                     ? response
@@ -228,10 +293,10 @@ export default function AdminComboPackagesPage() {
                                                     </div>
                                                 )}
 
-                                            {/* Actions */}
-                                            <div className="mt-5 pt-4 border-t border-gray-100 flex justify-end">
+                                            <div className="mt-5 pt-4 border-t border-gray-100 flex justify-end gap-2">
                                                 <Button
                                                     type="button"
+                                                    variant="outline"
                                                     onClick={() =>
                                                         navigate(
                                                             `/admin/combo-packages/edit/${combo.comboId}`
@@ -240,7 +305,26 @@ export default function AdminComboPackagesPage() {
                                                 >
                                                     Edit
                                                 </Button>
+
+                                                <Button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleDeleteClick(
+                                                            combo.comboId,
+                                                            combo.name
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        deletingComboId === combo.comboId
+                                                    }
+                                                    className="bg-red-600 hover:bg-red-700"
+                                                >
+                                                    {deletingComboId === combo.comboId
+                                                        ? "Deleting..."
+                                                        : "Delete"}
+                                                </Button>
                                             </div>
+
                                         </div>
                                     </div>
                                 )
@@ -249,6 +333,42 @@ export default function AdminComboPackagesPage() {
                     )}
                 </div>
             </div>
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                title="Delete Combo Package?"
+                message={
+                    <>
+                        Are you sure you want to delete{" "}
+                        <span className="font-semibold">
+                            "{selectedCombo?.name}"
+                        </span>
+                        ?
+                        <br />
+
+                        <span className="text-red-500 font-medium">
+                            This will also remove the combo mapping
+                            from all mapped products.
+                        </span>
+                        <br />
+
+                        <span className="text-red-500 font-medium">
+                            This action cannot be undone.
+                        </span>
+                    </>
+                }
+                confirmText="Yes, Delete"
+                cancelText="Cancel"
+                loading={
+                    selectedCombo !== null &&
+                    deletingComboId ===
+                    selectedCombo.comboId
+                }
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setSelectedCombo(null);
+                }}
+                onConfirm={handleDeleteConfirm}
+            />
         </div>
     );
 }

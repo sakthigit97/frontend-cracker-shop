@@ -19,25 +19,15 @@ const DATE_OPTIONS = [
     { label: "Last 7 Days", value: "7" },
     { label: "Last 30 Days", value: "30" },
 ] as const;
-
 type DateRange = "all" | "today" | "7" | "30";
 
 export default function AdminBulkOrders() {
     const navigate = useNavigate();
     const { user } = useAuth();
-
     const [status, setStatus] = useState("ORDER_PLACED");
-
-    const [stateFilter, setStateFilter] = useState<
-        "ALL" | "TN" | "OTHER"
-    >("ALL");
-
-    const [dateRange, setDateRange] =
-        useState<DateRange>("all");
-
-    const [orderIdInput, setOrderIdInput] =
-        useState("");
-
+    const [stateFilter, setStateFilter] = useState<"ALL" | "TN" | "OTHER">("ALL");
+    const [dateRange, setDateRange] = useState<DateRange>("all");
+    const [orderIdInput, setOrderIdInput] = useState("");
     const debouncedOrderId = useDebounce(
         orderIdInput.trim(),
         500
@@ -127,9 +117,6 @@ export default function AdminBulkOrders() {
 
     return (
         <div className="space-y-6 w-full min-w-0">
-
-            {/* HEADER */}
-
             <div className="w-full min-w-0">
                 <div className="flex items-center gap-3 mb-4">
                     <button
@@ -165,8 +152,6 @@ export default function AdminBulkOrders() {
                     </h1>
                 </div>
             </div>
-
-            {/* FILTERS */}
 
             <div
                 className="

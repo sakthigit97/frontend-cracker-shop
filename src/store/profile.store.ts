@@ -24,7 +24,6 @@ interface ProfileState {
 const CACHE_KEY = "profile";
 const CACHE_TIME_KEY = "profile_time";
 const CACHE_TTL = 5 * 60 * 1000;
-
 const safeParse = (value: string | null): ProfileData | null => {
     try {
         return value ? JSON.parse(value) : null;
@@ -39,7 +38,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     loadProfile: async () => {
         const cached = get().profile;
         const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-
         const isCacheValid =
             cached &&
             cachedTime &&
