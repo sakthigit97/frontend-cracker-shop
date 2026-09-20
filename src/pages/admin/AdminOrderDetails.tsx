@@ -317,9 +317,9 @@ export default function AdminOrderDetails() {
     const website = config?.website || 'https://www.sivakasicrackers.co.in';
 
     const isTamilNadu =
-        order.address?.toLowerCase().includes("tamil nadu") ||
-        order.address?.toLowerCase().includes("pondicherry") ||
-        order.address?.toLowerCase().includes("puducherry");
+        order?.address?.toLowerCase().includes("tamil nadu") ||
+        order?.address?.toLowerCase().includes("pondicherry") ||
+        order?.address?.toLowerCase().includes("puducherry");
 
     const sortedItems = useMemo(
         () => sortProductsBySequence(order?.items ?? []),
