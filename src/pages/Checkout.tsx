@@ -272,7 +272,10 @@ export default function Checkout() {
     }
 
     let minAmount = config?.otherStateMinOrderValue ?? 5000;
-    const isTamilNadu = validatedLocation.state.trim().toLowerCase() === "tamil nadu";
+    const isTamilNadu =
+      validatedLocation.state.trim().toLowerCase() === "tamil nadu" ||
+      validatedLocation.state.trim().toLowerCase() === "pondicherry" ||
+      validatedLocation.state.trim().toLowerCase() === "puducherry";
     if (isTamilNadu) {
       minAmount = config?.tnMinOrderValue ?? 3000;
     }
@@ -1159,7 +1162,7 @@ export default function Checkout() {
                 </p>
 
                 <p className="text-xs text-gray-500">
-                  {disableGstForTN && currentState === 'Tamil Nadu' ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
+                  {disableGstForTN && (currentState === 'Tamil Nadu' || currentState === 'Pondicherry') ? "Inclusive of Packaging Charges" : "Inclusive of GST & Packaging Charges"}
                 </p>
               </div>
 

@@ -331,7 +331,7 @@ export default function QuickEstimateModal({
                 },
                 minCellHeight: 8,
                 lineWidth: 0.08,
-                lineColor:  [80, 80, 80],
+                lineColor: [80, 80, 80],
                 valign: "middle",
                 textColor: COLORS.dark,
             },
@@ -556,7 +556,7 @@ export default function QuickEstimateModal({
 
                 minCellHeight: 6,
                 lineWidth: 0.08,
-                lineColor:  [80, 80, 80],
+                lineColor: [80, 80, 80],
             },
 
             columnStyles: {
@@ -819,23 +819,6 @@ export default function QuickEstimateModal({
         "
             onClick={onClose}
         >
-            {/* =========================================================
-         * QUICK ESTIMATE MODAL
-         *
-         * IMPORTANT:
-         * The ENTIRE modal is the only scroll container.
-         *
-         * Header
-         * Important Information
-         * Delivery Region
-         * Products
-         * Pricing Summary
-         * Add All To Cart
-         * Download PDF
-         * Clear
-         *
-         * All scroll together.
-         * ========================================================= */}
 
             <div
                 className="
@@ -857,9 +840,6 @@ export default function QuickEstimateModal({
                     e.stopPropagation()
                 }
             >
-                {/* =====================================================
-             * HEADER
-             * ===================================================== */}
 
                 <div
                     className="
@@ -904,10 +884,6 @@ export default function QuickEstimateModal({
                         ✕
                     </button>
                 </div>
-
-                {/* =====================================================
-             * IMPORTANT INFORMATION
-             * ===================================================== */}
 
                 <div
                     className="
@@ -981,10 +957,6 @@ export default function QuickEstimateModal({
                     </ul>
                 </div>
 
-                {/* =====================================================
-             * DELIVERY REGION
-             * ===================================================== */}
-
                 <div
                     className="
                     mx-4
@@ -1040,7 +1012,7 @@ export default function QuickEstimateModal({
                             />
 
                             <span className="text-sm">
-                                Tamil Nadu
+                                Tamil Nadu | Pondicherry
                             </span>
                         </label>
 
@@ -1073,14 +1045,6 @@ export default function QuickEstimateModal({
                         </label>
                     </div>
                 </div>
-
-                {/* =====================================================
-             * PRODUCT LIST
-             *
-             * IMPORTANT:
-             * NO overflow-y-auto here.
-             * The parent modal handles ALL scrolling.
-             * ===================================================== */}
 
                 <div
                     className="
@@ -1326,17 +1290,6 @@ export default function QuickEstimateModal({
                         )
                     )}
                 </div>
-
-                {/* =====================================================
-             * PRICING + ACTIONS
-             *
-             * IMPORTANT:
-             * NOT sticky.
-             * NOT fixed.
-             * NOT independently scrollable.
-             *
-             * It is part of the same modal scroll.
-             * ===================================================== */}
 
                 <div
                     className="
@@ -1646,11 +1599,6 @@ export default function QuickEstimateModal({
                     </div>
                 </div>
             </div>
-
-            {/* =========================================================
-         * DOWNLOAD LOADING OVERLAY
-         * ========================================================= */}
-
             <div
                 onClick={(e) =>
                     e.stopPropagation()

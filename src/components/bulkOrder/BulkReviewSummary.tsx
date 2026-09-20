@@ -91,9 +91,6 @@ function BulkReviewSummary({
                 </div>
             </section>
 
-            {/* =====================================================
-                PRODUCTS
-            ====================================================== */}
             <section className="border-t border-gray-200">
 
                 {/* Header */}
@@ -127,9 +124,6 @@ function BulkReviewSummary({
 
                 </div>
 
-                {/* =================================================
-                    PRODUCT TABLE
-                ================================================== */}
                 {sortedItems.length > 0 ? (
                     <div className="w-full overflow-x-auto">
 

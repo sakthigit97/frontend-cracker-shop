@@ -198,16 +198,8 @@ export default function MyOrders() {
     );
   }
 
-  /*
-   * ============================================================
-   * PAGE
-   * ============================================================
-   */
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* ========================================================
-          HEADER
-      ========================================================= */}
       <div className="mb-4 flex flex-col gap-4 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         {/* Page title */}
         <div className="flex min-w-0 items-center gap-3">
@@ -309,9 +301,6 @@ export default function MyOrders() {
         </div>
       </div>
 
-      {/* ========================================================
-          ADJUSTMENT NOTICE
-      ========================================================= */}
       <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 sm:mb-5">
         <p className="text-sm leading-5 text-yellow-800">
           Orders can be adjusted
@@ -320,9 +309,6 @@ export default function MyOrders() {
         </p>
       </div>
 
-      {/* ========================================================
-          ORDER LIST
-      ========================================================= */}
       <div className="space-y-3">
         {sortedOrders.map((order) => {
           const statusConfig =
@@ -366,9 +352,6 @@ export default function MyOrders() {
                   md:items-center
                 "
               >
-                {/* ==================================================
-                    ORDER INFO
-                ================================================== */}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Package
@@ -392,10 +375,6 @@ export default function MyOrders() {
                     )}
                   </p>
                 </div>
-
-                {/* ==================================================
-                    STATUS
-                ================================================== */}
                 <div className="flex items-center justify-between md:flex-col md:justify-center md:gap-2">
                   <span
                     className={`
@@ -421,10 +400,6 @@ export default function MyOrders() {
                     Status
                   </span>
                 </div>
-
-                {/* ==================================================
-                    ORDER TOTAL
-                ================================================== */}
                 <div className="border-t border-gray-100 pt-3 md:border-0 md:pt-0">
                   <p className="text-xs text-[var(--color-muted)] md:text-right">
                     Order Total
@@ -438,9 +413,6 @@ export default function MyOrders() {
                   </p>
                 </div>
 
-                {/* ==================================================
-                    VIEW DETAILS
-                ================================================== */}
                 <div className="flex justify-start md:justify-end">
                   <Button
                     variant="secondary"
@@ -471,9 +443,6 @@ export default function MyOrders() {
         })}
       </div>
 
-      {/* ========================================================
-          LOAD MORE
-      ========================================================= */}
       {nextCursor && (
         <div className="flex justify-center py-6">
           <button
@@ -505,10 +474,6 @@ export default function MyOrders() {
     </div>
   );
 }
-
-/* ============================================================
-   ORDER SKELETON
-============================================================ */
 
 function OrderSkeleton() {
   return (

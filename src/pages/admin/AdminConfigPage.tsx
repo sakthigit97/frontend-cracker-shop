@@ -2052,7 +2052,7 @@ export default function AdminConfigPage() {
                                 }
                             />
 
-                            Disable GST for Tamil Nadu
+                            Disable GST for Tamil Nadu || Pondicherry
                         </label>
                     </div>
 
@@ -2464,10 +2464,6 @@ export default function AdminConfigPage() {
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* ==========================================
-                    GPAY / PHONEPE / PAYTM
-                   ========================================== */}
 
                                     {account.type !== "BANK" && (
                                         <div className="space-y-4">

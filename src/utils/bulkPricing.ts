@@ -78,7 +78,6 @@ export function calculateBulkPricing({
         packagingCharge;
 
     const disableGstForTN = config?.disableGstForTN === true;
-
     const isTN = isTamilNadu(state);
     const gstDenominator = Number(config?.gstDenominator ?? 2);
     const effectiveGstPercent =

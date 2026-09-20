@@ -213,10 +213,6 @@ const ProductImage = memo(
       });
     }, [media]);
 
-    /* --------------------------------------------------------
-     * Reset active index when media changes
-     * -------------------------------------------------------- */
-
     useEffect(() => {
       setActiveIndex((current) =>
         current >= media.length
@@ -231,16 +227,11 @@ const ProductImage = memo(
       );
     }, [media.length]);
 
-    /* --------------------------------------------------------
-     * Destroy current YouTube player
-     * -------------------------------------------------------- */
-
     const destroyPlayer = () => {
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
         } catch {
-          // Ignore player cleanup errors.
         }
 
         playerRef.current = null;
@@ -252,19 +243,10 @@ const ProductImage = memo(
       }
     };
 
-    /* --------------------------------------------------------
-     * Initialize YouTube player only when the active
-     * slide is a video.
-     * -------------------------------------------------------- */
-
     useEffect(() => {
       const activeMedia =
         media[activeIndex];
 
-      /*
-       * Any non-video slide must not have
-       * an active YouTube player.
-       */
       if (
         !activeMedia ||
         activeMedia.type !== "video"
@@ -414,18 +396,6 @@ const ProductImage = memo(
       };
     }, [activeIndex, media]);
 
-    /* --------------------------------------------------------
-     * Image Auto Slide
-     *
-     * IMPORTANT:
-     *
-     * If current slide is a video, there is NO
-     * interval running.
-     *
-     * YouTube's ENDED event controls moving
-     * to the next slide.
-     * -------------------------------------------------------- */
-
     useEffect(() => {
       if (
         media.length <= 1
@@ -465,10 +435,6 @@ const ProductImage = memo(
       activeIndex,
     ]);
 
-    /* --------------------------------------------------------
-     * Main carousel navigation
-     * -------------------------------------------------------- */
-
     const prev = () => {
       setActiveIndex((current) =>
         current === 0
@@ -484,12 +450,6 @@ const ProductImage = memo(
           media.length
       );
     };
-
-    /* --------------------------------------------------------
-     * Viewer navigation
-     *
-     * Images and videos are both supported.
-     * -------------------------------------------------------- */
 
     const viewerPrev = () => {
       if (!media.length) {
@@ -536,10 +496,6 @@ const ProductImage = memo(
       >
         <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5" />
 
-        {/* ==================================================
-            PREVIOUS
-            ================================================== */}
-
         <button
           onClick={prev}
           className="
@@ -564,10 +520,6 @@ const ProductImage = memo(
           ❮
         </button>
 
-        {/* ==================================================
-            NEXT
-            ================================================== */}
-
         <button
           onClick={next}
           className="
@@ -591,10 +543,6 @@ const ProductImage = memo(
         >
           ❯
         </button>
-
-        {/* ==================================================
-            MEDIA
-            ================================================== */}
 
         {media.map(
           (item, index) => (
@@ -646,14 +594,6 @@ const ProductImage = memo(
                   "
                 />
               ) : (
-                /*
-                 * IMPORTANT:
-                 *
-                 * Do NOT render an iframe here.
-                 *
-                 * YouTube IFrame API creates the
-                 * iframe inside this div.
-                 */
                 <div className="absolute inset-0 flex items-center justify-center bg-black">
                   <div
                     ref={
@@ -676,10 +616,6 @@ const ProductImage = memo(
           )
         )}
 
-        {/* ==================================================
-            DOTS
-            ================================================== */}
-
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {media.map(
             (_, index) => (
@@ -699,10 +635,6 @@ const ProductImage = memo(
             )
           )}
         </div>
-
-        {/* ==================================================
-            FULL SCREEN VIEWER
-            ================================================== */}
 
         {showViewer && (
           <div

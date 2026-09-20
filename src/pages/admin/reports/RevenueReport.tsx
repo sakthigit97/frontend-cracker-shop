@@ -378,9 +378,6 @@ export default function RevenueReport() {
                 onChange={handleTabChange}
             />
 
-            {/* =====================================================
-                RETAIL REPORT
-            ====================================================== */}
             {reportType === "retail" && (
                 <div className="space-y-8">
                     {/* Retail Header / Quick Filters */}
@@ -587,9 +584,6 @@ export default function RevenueReport() {
                 </div>
             )}
 
-            {/* =====================================================
-                BULK REPORT
-            ====================================================== */}
             {reportType === "bulk" && (
                 <div className="space-y-6">
                     {/* Bulk Filters */}

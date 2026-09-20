@@ -56,7 +56,6 @@ export default function StaffHeader() {
                     </div>
                 </Link>
 
-                {/* ================= DESKTOP NAV ================= */}
                 <nav className="hidden lg:flex flex-1 items-center gap-2 ml-10">
                     <Link
                         to="/staff/orders"

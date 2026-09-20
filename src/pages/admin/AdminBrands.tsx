@@ -344,10 +344,6 @@ export default function AdminBrands() {
 
         <div className="space-y-4">
 
-            {/* =====================================================
-             * HEADER
-             * ===================================================== */}
-
             <div className="
                 flex
                 flex-col
@@ -410,10 +406,6 @@ export default function AdminBrands() {
 
             </div>
 
-            {/* =====================================================
-             * FILTERS
-             * ===================================================== */}
-
             <div className="
                 grid
                 grid-cols-1
@@ -473,10 +465,6 @@ export default function AdminBrands() {
 
             </div>
 
-            {/* =====================================================
-             * LOADING
-             * ===================================================== */}
-
             {loading && !brands.length && (
 
                 <div className="
@@ -499,10 +487,6 @@ export default function AdminBrands() {
                 </div>
 
             )}
-
-            {/* =====================================================
-             * BRAND TABLE
-             * ===================================================== */}
 
             <div className="
                 bg-white
@@ -703,10 +687,6 @@ export default function AdminBrands() {
 
                 </div>
 
-                {/* =================================================
-                 * LOCAL PAGINATION
-                 * ================================================= */}
-
                 <div className="
                     flex
                     justify-center
@@ -761,10 +741,6 @@ export default function AdminBrands() {
                 </div>
 
             </div>
-
-            {/* =====================================================
-             * DELETE CONFIRMATION
-             * ===================================================== */}
 
             <ConfirmDialog
                 open={

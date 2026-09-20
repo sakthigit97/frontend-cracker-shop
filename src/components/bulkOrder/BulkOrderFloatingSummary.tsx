@@ -133,9 +133,6 @@ function BulkOrderFloatingSummary({
 
     return (
         <>
-            {/* =====================================================
-                FLOATING SUMMARY BUTTON
-            ====================================================== */}
             <div
                 className="
                     fixed
@@ -248,9 +245,6 @@ function BulkOrderFloatingSummary({
                 </button>
             </div>
 
-            {/* =====================================================
-                BACKDROP
-            ====================================================== */}
             {open && (
                 <div
                     className="
@@ -267,9 +261,6 @@ function BulkOrderFloatingSummary({
                 />
             )}
 
-            {/* =====================================================
-                SUMMARY MODAL
-            ====================================================== */}
             {open && (
                 <div
                     role="dialog"
@@ -304,9 +295,6 @@ function BulkOrderFloatingSummary({
                         event.stopPropagation()
                     }
                 >
-                    {/* =================================================
-                        HEADER
-                    ================================================== */}
                     <div
                         className="
                             flex
@@ -374,9 +362,6 @@ function BulkOrderFloatingSummary({
                         </button>
                     </div>
 
-                    {/* =================================================
-                        SCROLLABLE CONTENT
-                    ================================================== */}
                     <div
                         className="
                             min-h-0
@@ -386,9 +371,6 @@ function BulkOrderFloatingSummary({
                             [-webkit-overflow-scrolling:touch]
                         "
                     >
-                        {/* =================================================
-                            QUICK STATS
-                        ================================================== */}
                         <div
                             className="
                                 grid
@@ -490,9 +472,6 @@ function BulkOrderFloatingSummary({
                             </div>
                         </div>
 
-                        {/* =================================================
-                            SELECTED PRODUCTS
-                        ================================================== */}
                         <div>
                             {selectedItems.map(
                                 (item) => {
@@ -580,10 +559,6 @@ function BulkOrderFloatingSummary({
                                 }
                             )}
                         </div>
-
-                        {/* =================================================
-                            PRICING SUMMARY
-                        ================================================== */}
                         <div
                             className="
                                 border-t
@@ -818,9 +793,6 @@ function BulkOrderFloatingSummary({
                         </div>
                     </div>
 
-                    {/* =================================================
-                        FOOTER
-                    ================================================== */}
                     {onReview && (
                         <div
                             className="

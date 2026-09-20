@@ -32,11 +32,6 @@ function BulkCategorySection({
 }: BulkCategorySectionProps) {
     const [expanded, setExpanded] =
         useState(true);
-
-    /* --------------------------------
-     * Items lookup
-     * -------------------------------- */
-
     const itemsByProductId = useMemo(() => {
         return new Map(
             items.map((item) => [
@@ -45,10 +40,6 @@ function BulkCategorySection({
             ])
         );
     }, [items]);
-
-    /* --------------------------------
-     * Selected product count
-     * -------------------------------- */
 
     const selectedItems = useMemo(() => {
         return products.reduce(
@@ -82,10 +73,6 @@ function BulkCategorySection({
                 bg-white
             "
         >
-            {/* =====================================================
-                CATEGORY HEADER
-                ===================================================== */}
-
             <button
                 type="button"
                 onClick={() =>
@@ -222,10 +209,6 @@ function BulkCategorySection({
                 )}
             </button>
 
-            {/* =====================================================
-                PRODUCTS
-                ===================================================== */}
-
             {expanded && (
                 <div className="w-full">
 
@@ -236,13 +219,6 @@ function BulkCategorySection({
                             border-collapse
                         "
                     >
-                        {/* =================================================
-                            COLUMN HEADER
-
-                            Hidden on mobile because BulkProductRow
-                            uses its own responsive mobile layout.
-                            ================================================= */}
-
                         <thead
                             className="
                                 hidden
