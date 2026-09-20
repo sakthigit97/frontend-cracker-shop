@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button";
 import EmptyState from "../../components/ui/EmptyState";
 import ProductSkeleton from "../../components/product/ProductSkeleton";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import defaultImage from "../../assets/default-image.png";
 
 import {
     getComboPackages,
@@ -184,21 +185,21 @@ export default function AdminComboPackagesPage() {
                                     >
                                         {/* Image */}
                                         <div className="h-44 bg-gray-100 flex items-center justify-center">
-                                            {combo.imageUrl ? (
-                                                <img
-                                                    src={
-                                                        combo.imageUrl
-                                                    }
-                                                    alt={
-                                                        combo.name
-                                                    }
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="text-gray-400 text-sm">
-                                                    No image
-                                                </div>
-                                            )}
+
+                                            <img
+                                                src={
+                                                    combo.imageUrl || defaultImage
+                                                }
+                                                alt={
+                                                    combo.name
+                                                }
+                                                onError={(event) => {
+                                                    event.currentTarget.src =
+                                                        defaultImage;
+                                                }}
+                                                className="w-full h-full object-cover"
+                                            />
+
                                         </div>
 
                                         {/* Content */}
@@ -255,19 +256,21 @@ export default function AdminComboPackagesPage() {
                                                                         className="flex items-center gap-3"
                                                                     >
                                                                         <div className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                                                                            {product.imageUrl ? (
-                                                                                <img
-                                                                                    src={
-                                                                                        product.imageUrl
-                                                                                    }
-                                                                                    alt={
-                                                                                        product.name
-                                                                                    }
-                                                                                    className="w-full h-full object-cover"
-                                                                                />
-                                                                            ) : (
-                                                                                <div className="w-full h-full" />
-                                                                            )}
+
+                                                                            <img
+                                                                                src={
+                                                                                    product.imageUrl || defaultImage
+                                                                                }
+                                                                                onError={(event) => {
+                                                                                    event.currentTarget.src =
+                                                                                        defaultImage;
+                                                                                }}
+                                                                                alt={
+                                                                                    product.name
+                                                                                }
+                                                                                className="w-full h-full object-cover"
+                                                                            />
+
                                                                         </div>
 
                                                                         <p className="text-sm text-gray-700 truncate">
