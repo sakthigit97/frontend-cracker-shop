@@ -89,6 +89,10 @@ export default function AdminOrderDetails() {
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     const [savingAddress, setSavingAddress] = useState(false);
     const [loadingPincode, setLoadingPincode] = useState(false);
+    const [userChitBalance, setUserChitBalance] = useState(0);
+    const [loadingChitBalance, setLoadingChitBalance] = useState(false);
+    const [showChitConfirm, setShowChitConfirm] = useState(false);
+    const [applyingChitBalance, setApplyingChitBalance] = useState(false);
 
     const [addressForm, setAddressForm] = useState({
         fullName: "",
@@ -103,7 +107,6 @@ export default function AdminOrderDetails() {
 
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
-
     const order = cache[orderId];
     const paymentAccounts =
         Array.isArray(config?.paymentAccounts)
@@ -447,6 +450,69 @@ export default function AdminOrderDetails() {
             );
         }
     }, [order, config?.paymentAccounts]);
+
+    useEffect(() => {
+        if (!order?.userId) {
+            setUserChitBalance(0);
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadUserChitBalance = async () => {
+            try {
+                setLoadingChitBalance(true);
+
+                const response = await apiFetch(
+                    `/admin/users/${encodeURIComponent(order.userId)}`,
+                    {
+                        method: "GET",
+                    },
+                    import.meta.env.VITE_API_BASE_URL_V1
+                );
+
+                if (cancelled) {
+                    return;
+                }
+
+                const userData =
+                    response?.data ??
+                    response?.item ??
+                    response;
+
+                const chitBalance = Number(
+                    userData?.chitBalance ?? 0
+                );
+
+                setUserChitBalance(
+                    Number.isFinite(chitBalance) && chitBalance > 0
+                        ? chitBalance
+                        : 0
+                );
+            } catch (error) {
+                if (cancelled) {
+                    return;
+                }
+
+                console.error(
+                    "Failed to fetch user chit balance:",
+                    error
+                );
+
+                setUserChitBalance(0);
+            } finally {
+                if (!cancelled) {
+                    setLoadingChitBalance(false);
+                }
+            }
+        };
+
+        loadUserChitBalance();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [order?.userId]);
 
 
     useEffect(() => {
@@ -902,6 +968,91 @@ export default function AdminOrderDetails() {
             });
         } finally {
             setDiscountSubmitting(false);
+        }
+    };
+
+    const handleApplyChitBalance = () => {
+        if (!order || userChitBalance <= 0) {
+            return;
+        }
+
+        const finalPayable = Number(
+            order.finalPayable ?? 0
+        );
+
+        if (finalPayable <= 0) {
+            showAlert({
+                type: "error",
+                message: "No payable amount available for this order.",
+            });
+            return;
+        }
+
+        const applicableChitAmount = Math.min(
+            userChitBalance,
+            finalPayable
+        );
+
+        if (applicableChitAmount <= 0) {
+            return;
+        }
+
+        setShowChitConfirm(true);
+    };
+
+    const handleConfirmApplyChitBalance = async () => {
+        if (!order || userChitBalance <= 0 || applyingChitBalance) {
+            return;
+        }
+
+        try {
+            setApplyingChitBalance(true);
+            setShowChitConfirm(false);
+            const appliedChitAmount = Math.min(
+                userChitBalance,
+                Number(order.finalPayable ?? 0)
+            );
+
+            await apiFetch(
+                `/admin/orders/${encodeURIComponent(
+                    order.orderId
+                )}/apply-chit-balance`,
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        chitAmount: appliedChitAmount,
+                    }),
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            setUserChitBalance((previous) =>
+                Math.max(0, previous - appliedChitAmount)
+            );
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            showAlert({
+                type: "success",
+                message: "Chit balance applied successfully.",
+                duration: 2000,
+            });
+        } catch (error: any) {
+            console.error(
+                "Apply chit balance failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to apply chit balance.",
+            });
+        } finally {
+            setApplyingChitBalance(false);
         }
     };
 
@@ -1926,37 +2077,95 @@ export default function AdminOrderDetails() {
                             </span>
                         </div>
 
-                        {/* Wallet */}
-                        {(order.walletUsed ?? 0) > 0 && (
+
+                        {/* Wallet Applied */}
+                        {Number(order.walletUsed ?? 0) > 0 && (
+                            <div className="flex justify-between text-green-700 font-medium">
+                                <span>Wallet Applied</span>
+
+                                <span>
+                                    - ₹{formatCurrency(order.walletUsed)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Chit Applied */}
+                        {Number(order.chitAmount ?? 0) > 0 && (
+                            <div className="flex justify-between text-green-700 font-medium">
+                                <span>Chit Balance Applied</span>
+
+                                <span>
+                                    - ₹{formatCurrency(order.chitAmount)}
+                                </span>
+                            </div>
+                        )}
+                        {(
+                            Number(order.walletUsed ?? 0) > 0 ||
+                            Number(order.chitAmount ?? 0) > 0
+                        ) && (
+                                <>
+                                    <div className="border-t my-4" />
+
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="font-semibold text-[var(--color-primary)]">
+                                                Amount Payable
+                                            </p>
+
+                                            <p className="text-xs text-gray-500">
+                                                Amount to be paid
+                                            </p>
+                                        </div>
+
+                                        <span className="text-xl font-bold text-[var(--color-primary)]">
+                                            ₹{formatCurrency(order.finalPayable)}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+
+
+
+                        {/* Chit Balance */}
+                        {userChitBalance > 0 && (
                             <>
                                 <div className="border-t my-4" />
 
-                                <div className="flex justify-between text-green-700 font-medium">
-                                    <span>Wallet Applied</span>
-
-                                    <span>
-                                        - ₹{formatCurrency(order.walletUsed)}
-                                    </span>
-                                </div>
-
-                                {/* Amount Payable */}
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <p className="font-semibold text-[var(--color-primary)]">
-                                            Amount Payable
+                                        <p className="font-semibold text-gray-700">
+                                            Chit Balance Available
                                         </p>
 
                                         <p className="text-xs text-gray-500">
-                                            Amount to be paid
+                                            Available for this user
                                         </p>
                                     </div>
 
-                                    <span className="text-xl font-bold text-[var(--color-primary)]">
-                                        ₹{formatCurrency(order.finalPayable)}
+                                    <span className="font-semibold text-green-700">
+                                        ₹{formatCurrency(userChitBalance)}
                                     </span>
+                                </div>
+
+                                <div className="mt-3 flex justify-end">
+                                    <Button
+                                        type="button"
+                                        className="px-3 py-1.5 text-xs"
+                                        disabled={
+                                            loadingChitBalance ||
+                                            applyingChitBalance ||
+                                            Number(order.finalPayable ?? 0) <= 0
+                                        }
+                                        onClick={handleApplyChitBalance}
+                                    >
+                                        {applyingChitBalance
+                                            ? "Applying..."
+                                            : "Apply Chit Balance"}
+                                    </Button>
                                 </div>
                             </>
                         )}
+
                     </div>
 
                 </div>
@@ -2049,8 +2258,6 @@ export default function AdminOrderDetails() {
                     </div>
                 </div>
             )}
-
-
 
             {paymentAccounts.length > 0 && (
                 <div className="bg-white border rounded-xl p-5 space-y-4">
@@ -2245,15 +2452,15 @@ export default function AdminOrderDetails() {
                                     </h3>
 
                                     <span className="
-                            inline-flex items-center
-                            rounded-full
-                            bg-green-50
-                            px-2 py-0.5
-                            text-[10px]
-                            font-semibold
-                            text-green-700
-                            border border-green-100
-                        ">
+                                        inline-flex items-center
+                                        rounded-full
+                                        bg-green-50
+                                        px-2 py-0.5
+                                        text-[10px]
+                                        font-semibold
+                                        text-green-700
+                                        border border-green-100
+                                    ">
                                         PDF
                                     </span>
                                 </div>
@@ -2582,6 +2789,27 @@ export default function AdminOrderDetails() {
                     }
 
                     setShowDiscountConfirm(false);
+                }}
+            />
+            <ConfirmDialog
+                open={showChitConfirm}
+                title="Apply Chit Balance?"
+                description={`Are you sure you want to apply ₹${formatCurrency(
+                    Math.min(
+                        userChitBalance,
+                        Number(order.finalPayable ?? 0)
+                    )
+                )} from the user's chit balance to this order? The final payable amount will be reduced by this amount.`}
+                confirmText="Yes, Apply"
+                cancelText="Cancel"
+                loading={applyingChitBalance}
+                onConfirm={handleConfirmApplyChitBalance}
+                onCancel={() => {
+                    if (applyingChitBalance) {
+                        return;
+                    }
+
+                    setShowChitConfirm(false);
                 }}
             />
         </div>

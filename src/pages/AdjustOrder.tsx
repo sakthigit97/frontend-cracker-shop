@@ -297,12 +297,37 @@ export default function AdjustOrder() {
         grandTotal,
     } = pricing;
 
-    const walletUsed = Number(order.walletUsed ?? 0);
-    const finalPayable = Math.max(
-        grandTotal - walletUsed,
+    const walletUsed = Math.max(
+        0,
+        Number(order.walletUsed ?? 0)
+    );
+
+    const chitAmount = Math.max(
+        0,
+        Number(order.chitAmount ?? 0)
+    );
+
+    const effectiveWalletUsed = Math.min(
+        walletUsed,
+        grandTotal
+    );
+
+    const remainingAfterWallet = Math.max(
+        grandTotal - effectiveWalletUsed,
         0
     );
 
+    const effectiveChitAmount = Math.min(
+        chitAmount,
+        remainingAfterWallet
+    );
+
+    const finalPayable = Math.max(
+        grandTotal -
+        effectiveWalletUsed -
+        effectiveChitAmount,
+        0
+    );
 
     const oldTotal = Number(order.grandTotal || 0);
     const diffAmount = grandTotal - oldTotal;
@@ -424,7 +449,6 @@ export default function AdjustOrder() {
             });
 
             clearOrdersCache();
-
             navigate(returnPath, {
                 replace: true,
                 state: {
@@ -997,36 +1021,47 @@ export default function AdjustOrder() {
                                             </span>
                                         </div>
 
-                                        {walletUsed > 0 && (
-                                            <>
-                                                <div className="border-t pt-3 flex justify-between text-green-600">
-                                                    <span className="font-medium">
-                                                        Wallet Applied
-                                                    </span>
+                                        {effectiveWalletUsed > 0 && (
+                                            <div className="border-t pt-3 flex justify-between text-green-600">
+                                                <span className="font-medium">
+                                                    Wallet Applied
+                                                </span>
 
-                                                    <span className="font-semibold">
-                                                        -₹{formatCurrency(walletUsed)}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex justify-between items-center border-t pt-3">
-                                                    <div>
-                                                        <p className="font-semibold text-[var(--color-primary)]">
-                                                            Amount Payable
-                                                        </p>
-
-                                                        <p className="text-xs text-gray-500">
-                                                            Amount to be paid
-                                                        </p>
-                                                    </div>
-
-                                                    <span className="text-2xl font-bold">
-                                                        ₹{formatCurrency(finalPayable)}
-                                                    </span>
-                                                </div>
-                                            </>
+                                                <span className="font-semibold">
+                                                    -₹{formatCurrency(effectiveWalletUsed)}
+                                                </span>
+                                            </div>
                                         )}
 
+                                        {effectiveChitAmount > 0 && (
+                                            <div className="flex justify-between text-green-600">
+                                                <span className="font-medium">
+                                                    Chit Balance Applied
+                                                </span>
+
+                                                <span className="font-semibold">
+                                                    -₹{formatCurrency(effectiveChitAmount)}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {(effectiveWalletUsed > 0 || effectiveChitAmount > 0) && (
+                                            <div className="flex justify-between items-center border-t pt-3">
+                                                <div>
+                                                    <p className="font-semibold text-[var(--color-primary)]">
+                                                        Amount Payable
+                                                    </p>
+
+                                                    <p className="text-xs text-gray-500">
+                                                        Amount to be paid
+                                                    </p>
+                                                </div>
+
+                                                <span className="text-2xl font-bold">
+                                                    ₹{formatCurrency(finalPayable)}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                 </div>
@@ -1183,6 +1218,27 @@ export default function AdjustOrder() {
                                 <span>Grand Total</span>
                                 <span>₹{grandTotal}</span>
                             </div>
+
+                            {effectiveWalletUsed > 0 && (
+                                <div className="flex justify-between text-green-600">
+                                    <span>Wallet Applied</span>
+                                    <span>-₹{effectiveWalletUsed}</span>
+                                </div>
+                            )}
+
+                            {effectiveChitAmount > 0 && (
+                                <div className="flex justify-between text-green-600">
+                                    <span>Chit Balance Applied</span>
+                                    <span>-₹{effectiveChitAmount}</span>
+                                </div>
+                            )}
+
+                            {(effectiveWalletUsed > 0 || effectiveChitAmount > 0) && (
+                                <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                                    <span>Amount Payable</span>
+                                    <span>₹{finalPayable}</span>
+                                </div>
+                            )}
 
                         </div>
                     </div>
