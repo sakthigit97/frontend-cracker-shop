@@ -1040,7 +1040,7 @@ export default function QuickEstimateModal({
                             />
 
                             <span className="text-sm">
-                                Tamil Nadu
+                                Tamil Nadu | Pondicherry
                             </span>
                         </label>
 

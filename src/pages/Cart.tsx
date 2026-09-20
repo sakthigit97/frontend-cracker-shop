@@ -687,7 +687,7 @@ export default function Cart() {
 
                   <p className="text-xs text-gray-500">
                     {disableGstForTN &&
-                      deliveryState == "Tamil Nadu"
+                      (deliveryState == "Tamil Nadu" || deliveryState == "Pondicherry")
                       ? "Inclusive of Packaging Charges"
                       : "Inclusive of GST & Packaging Charges"}
                   </p>

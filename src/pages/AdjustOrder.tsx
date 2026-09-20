@@ -164,10 +164,7 @@ export default function AdjustOrder() {
             ? "Tamil Nadu"
             : "Other");
 
-
-
     const pricing = useMemo(() => {
-
         if (!hasChanges) {
             return {
                 packagingCharge: Number(order.packagingCharge ?? 0),
@@ -234,22 +231,14 @@ export default function AdjustOrder() {
 
         const calculated =
             calculateOrderAmounts({
-                nonComboProductTotal:
-                    pricingBreakdown.nonComboProductTotal,
-
-                comboPackageTotal:
-                    pricingBreakdown.comboPackageTotal,
-
+                nonComboProductTotal: pricingBreakdown.nonComboProductTotal,
+                comboPackageTotal: pricingBreakdown.comboPackageTotal,
                 couponDiscount,
-
                 additionalDiscount,
-
                 packagingPercent,
                 gstPercent,
-
                 state: derivedState,
                 config,
-
             });
 
         return {
@@ -361,7 +350,7 @@ export default function AdjustOrder() {
 
             const state = data[0].PostOffice[0].State;
             let minAmount = config?.otherStateMinOrderValue || 5000;
-            if (state === "Tamil Nadu") {
+            if (state === "Tamil Nadu" || state === "Pondicherry" || state === "Puducherry") {
                 minAmount = config?.tnMinOrderValue || 3000;
             }
 
@@ -1010,7 +999,7 @@ export default function AdjustOrder() {
                                                 </p>
 
                                                 <p className="text-xs text-gray-500">
-                                                    {disableGstForTN && derivedState == 'Tamil Nadu'
+                                                    {disableGstForTN && (derivedState == 'Tamil Nadu' || derivedState == 'Pondicherry')
                                                         ? "Inclusive of Packaging Charges"
                                                         : "Inclusive of GST & Packaging Charges"}
                                                 </p>

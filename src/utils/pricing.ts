@@ -1,5 +1,11 @@
 export function isTamilNadu(state?: string) {
-    return state?.toLowerCase().includes("tamil nadu");
+    const normalizedState = state?.toLowerCase() ?? "";
+
+    return (
+        normalizedState.includes("tamil nadu") ||
+        normalizedState.includes("pondicherry") ||
+        normalizedState.includes("puducherry")
+    );
 }
 
 export interface OrderAmountCalculationInput {
@@ -74,15 +80,11 @@ export function calculateOrderAmounts({
     const gstDenominator =
         Number(config?.gstDenominator ?? 2);
 
-    const isTN =
-        isTamilNadu(state);
-
+    const isTN = isTamilNadu(state);
     let gstAmount = 0;
 
     if (!(isTN && disableGstForTN)) {
-        const effectiveGstPercent =
-            gstPercent / gstDenominator;
-
+        const effectiveGstPercent = gstPercent / gstDenominator;
         gstAmount = Math.round(
             (discountedGrossTotal * effectiveGstPercent) / 100
         );

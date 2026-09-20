@@ -2052,7 +2052,7 @@ export default function AdminConfigPage() {
                                 }
                             />
 
-                            Disable GST for Tamil Nadu
+                            Disable GST for Tamil Nadu || Pondicherry
                         </label>
                     </div>
 
