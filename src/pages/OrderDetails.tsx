@@ -134,9 +134,9 @@ export default function OrderDetails() {
   );
 
   const isTamilNadu =
-    order.address?.toLowerCase().includes("tamil nadu") ||
-    order.address?.toLowerCase().includes("pondicherry") ||
-    order.address?.toLowerCase().includes("puducherry");
+    order?.address?.toLowerCase().includes("tamil nadu") ||
+    order?.address?.toLowerCase().includes("pondicherry") ||
+    order?.address?.toLowerCase().includes("puducherry");
 
   const deliveryText = isTamilNadu
     ? "3–5 working days"
