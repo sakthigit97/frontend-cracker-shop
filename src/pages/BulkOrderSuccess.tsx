@@ -169,9 +169,6 @@ export default function BulkOrderSuccess() {
 
                 <div className="overflow-hidden rounded-3xl border border-green-200 bg-white shadow-sm">
 
-                    {/* =====================================================
-                        SUCCESS HEADER
-                    ====================================================== */}
                     <section className="px-4 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-10 lg:px-12 lg:pb-10 lg:pt-12">
 
                         <div className="flex justify-center">
@@ -195,10 +192,6 @@ export default function BulkOrderSuccess() {
                             and contact you shortly.
                         </p>
                     </section>
-
-                    {/* =====================================================
-                        ORDER SUMMARY
-                    ====================================================== */}
                     <section className="px-4 sm:px-8 lg:px-12">
 
                         <div className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-6 lg:p-7">
@@ -225,9 +218,6 @@ export default function BulkOrderSuccess() {
                         </div>
                     </section>
 
-                    {/* =====================================================
-                        ACTION BUTTONS
-                    ====================================================== */}
                     <section className="px-4 py-6 sm:px-8 sm:py-8 lg:px-12">
 
                         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
@@ -258,9 +248,6 @@ export default function BulkOrderSuccess() {
                         </div>
                     </section>
 
-                    {/* =====================================================
-                        WHAT HAPPENS NEXT
-                    ====================================================== */}
                     <section className="px-4 pb-6 sm:px-8 sm:pb-8 lg:px-12 lg:pb-12">
 
                         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6 lg:p-7">

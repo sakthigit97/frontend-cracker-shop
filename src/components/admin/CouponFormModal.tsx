@@ -306,8 +306,6 @@ focus:ring-orange-100
 
                     </div>
 
-                    {/* ================= BODY ================= */}
-
                     <div
                         className="
                         flex-1
@@ -318,8 +316,6 @@ focus:ring-orange-100
                         space-y-6
                     "
                     >
-
-                        {/* Coupon Code & Description */}
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -365,8 +361,6 @@ focus:ring-orange-100
 
                         </div>
 
-                        {/* Coupon Type */}
-
                         <div>
 
                             <label className={labelClass}>
@@ -396,7 +390,6 @@ focus:ring-orange-100
 
                         </div>
 
-                        {/* Discount */}
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -450,8 +443,6 @@ focus:ring-orange-100
                         </div>
 
                     </div>
-
-                    {/* ================= FOOTER ================= */}
 
                     <div
                         className="

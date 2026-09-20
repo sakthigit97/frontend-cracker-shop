@@ -69,7 +69,6 @@ export default function AppRoutes() {
       <ScrollToTop />
       <Routes>
 
-        {/* ================= PUBLIC USER APP ================= */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<RootPage />} />
           <Route path="/products" element={<Products />} />
@@ -86,7 +85,6 @@ export default function AppRoutes() {
           <Route path="/how-to-use" element={<HowToUse />} />
         </Route>
 
-        {/* ================= AUTH ================= */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

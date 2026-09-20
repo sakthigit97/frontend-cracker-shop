@@ -218,11 +218,6 @@ export default function EstimateDownloadDialog({
                     </p>
 
                     <div className="space-y-4">
-
-                        {/* ============================
-                            TITLE
-                            ============================ */}
-
                         <div>
                             <label className="text-sm font-medium">
                                 Title *
@@ -294,9 +289,6 @@ export default function EstimateDownloadDialog({
                             )}
                         </div>
 
-                        {/* ============================
-                            MOBILE
-                            ============================ */}
 
                         <div>
                             <label className="text-sm font-medium">
@@ -333,10 +325,6 @@ export default function EstimateDownloadDialog({
                             )}
                         </div>
 
-                        {/* ============================
-                            EMAIL
-                            ============================ */}
-
                         <div>
                             <label className="text-sm font-medium">
                                 Email (Optional)
@@ -367,11 +355,6 @@ export default function EstimateDownloadDialog({
                                 </p>
                             )}
                         </div>
-
-                        {/* ============================
-                            CAPTCHA
-                            ============================ */}
-
                         <div>
                             <label className="text-sm font-medium">
                                 Security Check *
@@ -418,9 +401,6 @@ export default function EstimateDownloadDialog({
                         </div>
                     </div>
 
-                    {/* ============================
-                        ACTIONS
-                        ============================ */}
 
                     <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 border-t pt-4">
                         <Button

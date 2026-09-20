@@ -2465,10 +2465,6 @@ export default function AdminConfigPage() {
                                         </div>
                                     )}
 
-                                    {/* ==========================================
-                    GPAY / PHONEPE / PAYTM
-                   ========================================== */}
-
                                     {account.type !== "BANK" && (
                                         <div className="space-y-4">
                                             <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">

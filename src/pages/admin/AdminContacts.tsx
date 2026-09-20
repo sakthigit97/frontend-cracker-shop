@@ -217,10 +217,6 @@ export default function AdminContacts() {
 
                     <>
 
-                        {/* ============================
-    DESKTOP TABLE
-============================= */}
-
                         <div className="hidden md:block overflow-x-auto">
 
                             <table className="w-full text-sm">
@@ -352,10 +348,6 @@ export default function AdminContacts() {
                             </table>
 
                         </div>
-
-                        {/* ============================
-    MOBILE VIEW
-============================= */}
 
                         <div className="md:hidden p-4 space-y-4">
 

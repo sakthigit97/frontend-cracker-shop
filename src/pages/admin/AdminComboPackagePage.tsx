@@ -261,10 +261,6 @@ export default function AdminComboPackagePage() {
             <div className="mx-auto w-full max-w-6xl">
                 <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 md:p-8 space-y-5 sm:space-y-6 shadow-sm overflow-hidden">
 
-                    {/* ================================================== */}
-                    {/* Header */}
-                    {/* ================================================== */}
-
                     <div>
                         <div className="flex items-start gap-3">
                             <button
@@ -329,10 +325,6 @@ export default function AdminComboPackagePage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* ================================================== */}
-                    {/* STEP 1 - BUILD */}
-                    {/* ================================================== */}
 
                     {step === 1 && (
                         <>

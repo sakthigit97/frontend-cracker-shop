@@ -390,10 +390,6 @@ export default function AdminEditComboPackagePage() {
                         </div>
                     </div>
 
-                    {/* ================================================== */}
-                    {/* STEP 1 - BUILD */}
-                    {/* ================================================== */}
-
                     {step === 1 && (
                         <>
                             {/* Combo Details */}
@@ -782,10 +778,6 @@ export default function AdminEditComboPackagePage() {
                             </div>
                         </>
                     )}
-
-                    {/* ================================================== */}
-                    {/* STEP 3 - REVIEW */}
-                    {/* ================================================== */}
 
                     {step === 3 && (
                         <div className="space-y-5">

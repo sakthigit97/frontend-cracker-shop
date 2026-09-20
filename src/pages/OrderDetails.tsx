@@ -133,7 +133,7 @@ export default function OrderDetails() {
     (status) => status !== "CANCELLED"
   );
 
- const isTamilNadu =
+  const isTamilNadu =
     order.address?.toLowerCase().includes("tamil nadu") ||
     order.address?.toLowerCase().includes("pondicherry") ||
     order.address?.toLowerCase().includes("puducherry");
@@ -410,10 +410,6 @@ export default function OrderDetails() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
 
-      {/* =====================================================
-          HEADER
-      ====================================================== */}
-
       <div className="mb-5">
         <div className="flex items-center gap-3">
 
@@ -461,10 +457,6 @@ export default function OrderDetails() {
         </div>
       </div>
 
-      {/* =====================================================
-          CANCELLED NOTICE
-      ====================================================== */}
-
       {isCancelled && (
         <section className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 sm:px-5">
           <div className="flex items-start gap-3">
@@ -487,10 +479,6 @@ export default function OrderDetails() {
           </div>
         </section>
       )}
-
-      {/* =====================================================
-          ORDER TRACKING
-      ====================================================== */}
 
       {!isCancelled && (
         <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
@@ -609,10 +597,6 @@ export default function OrderDetails() {
 
         </section>
       )}
-
-      {/* =====================================================
-          CUSTOMER / ORDER / ADDRESS
-      ====================================================== */}
 
       <section className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
 
@@ -1191,10 +1175,6 @@ export default function OrderDetails() {
 
       </div>
 
-      {/* =====================================================
-          CANCEL CONFIRMATION
-      ====================================================== */}
-
       <ConfirmDialog
         open={showCancelConfirm}
         title="Cancel Order?"
@@ -1221,10 +1201,6 @@ export default function OrderDetails() {
     </div>
   );
 }
-
-/* ============================================================
-   SHARED UI HELPERS
-============================================================ */
 
 interface SectionTitleProps {
   icon: React.ReactNode;

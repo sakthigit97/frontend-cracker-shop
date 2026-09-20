@@ -244,9 +244,6 @@ export default function Cart() {
             sm:gap-4
           "
               >
-                {/* ------------------------------------------------
-              Product Image
-          ------------------------------------------------- */}
                 <Link
                   to={`/product/${p.id}`}
                   className="
@@ -277,9 +274,6 @@ export default function Cart() {
                   />
                 </Link>
 
-                {/* ------------------------------------------------
-              Product Information
-          ------------------------------------------------- */}
                 <div className="flex-1 min-w-0">
                   {/* Product Name */}
                   <Link
@@ -305,9 +299,6 @@ export default function Cart() {
                     {p.name}
                   </Link>
 
-                  {/* ------------------------------------------------
-                Category + Brand
-            ------------------------------------------------- */}
                   {(categoryName || brandName) && (
                     <div
                       className="
@@ -358,9 +349,6 @@ export default function Cart() {
                     </div>
                   )}
 
-                  {/* ------------------------------------------------
-                Pack + Rate
-            ------------------------------------------------- */}
                   <div
                     className="
                 mt-1
@@ -413,10 +401,6 @@ export default function Cart() {
                       </span>
                     )}
                   </div>
-
-                  {/* ------------------------------------------------
-                Price
-            ------------------------------------------------- */}
                   <div
                     className="
                 mt-1
@@ -468,9 +452,6 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* ------------------------------------------------
-              Quantity + Remove
-          ------------------------------------------------- */}
                 <div
                   className="
               shrink-0
@@ -565,9 +546,6 @@ export default function Cart() {
           })}
         </div>
 
-        {/* --------------------------------------------------------
-      Order Summary
-  --------------------------------------------------------- */}
         <div
           className="
       border-t

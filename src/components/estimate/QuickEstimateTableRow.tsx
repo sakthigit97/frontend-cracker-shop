@@ -38,9 +38,6 @@ function QuickEstimateTableRow({
                 transition-colors
             "
         >
-            {/* =====================================================
-                PRODUCT IMAGE
-            ===================================================== */}
             <td className="py-2 px-3 w-24">
                 <img
                     src={imageSrc}
@@ -64,9 +61,6 @@ function QuickEstimateTableRow({
                 />
             </td>
 
-            {/* =====================================================
-                PRODUCT
-            ===================================================== */}
             <td className="py-2 px-3 min-w-[260px]">
                 <div className="flex flex-col justify-center min-w-0">
 
@@ -119,9 +113,6 @@ function QuickEstimateTableRow({
                 </div>
             </td>
 
-            {/* =====================================================
-                PACK
-            ===================================================== */}
             <td className="py-2 px-3 text-center min-w-[120px]">
                 {hasPack ? (
                     <span
@@ -156,9 +147,6 @@ function QuickEstimateTableRow({
                 )}
             </td>
 
-            {/* =====================================================
-                MRP
-            ===================================================== */}
             <td className="text-center py-2 px-3 whitespace-nowrap">
                 {product.isComboPackage || product.isGiftPack ? (
                     <span className="text-gray-500">
@@ -173,9 +161,6 @@ function QuickEstimateTableRow({
                 )}
             </td>
 
-            {/* =====================================================
-                CURRENT PRICE
-            ===================================================== */}
             <td className="text-center py-2 px-3 whitespace-nowrap">
                 <span
                     className="
@@ -188,9 +173,6 @@ function QuickEstimateTableRow({
                 </span>
             </td>
 
-            {/* =====================================================
-                QUANTITY
-            ===================================================== */}
             <td className="text-center py-2 px-3">
                 {availableQty === 0 ? (
                     <span className="text-red-500 text-sm whitespace-nowrap">
@@ -271,9 +253,6 @@ function QuickEstimateTableRow({
                 )}
             </td>
 
-            {/* =====================================================
-                TOTAL
-            ===================================================== */}
             <td className="text-right py-2 px-3 whitespace-nowrap">
                 <span className="font-bold text-gray-900">
                     ₹{total}

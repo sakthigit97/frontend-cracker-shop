@@ -1213,11 +1213,7 @@ export default function AdminBulkOrderDetails() {
 
             </div>
 
-            {/* ============================================================
-             * PRODUCTS
-             * Same table-style layout as the retail Admin Order Details.
-             * Only bulk-order columns/data are retained.
-             * ============================================================ */}
+
             <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
 
                 <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
@@ -1541,9 +1537,6 @@ export default function AdminBulkOrderDetails() {
                     </div>
                 )}
 
-            {/* ============================================================
-             * ADDRESS / ORDER SUMMARY
-             * ============================================================ */}
             <div className="grid md:grid-cols-2 gap-4">
 
                 {/* Address */}
@@ -1937,9 +1930,6 @@ export default function AdminBulkOrderDetails() {
 
             </div>
 
-            {/* ============================================================
-             * ORDER HISTORY
-             * ============================================================ */}
             {order.statusHistory?.length > 0 && (
                 <div className="bg-white border border-gray-300 rounded-xl p-5">
 

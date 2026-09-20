@@ -307,9 +307,6 @@ function BulkAddressSection({
                         </label>
                     )}
 
-                    {/* =========================
-                        NEW ADDRESS
-                    ========================== */}
 
                     <label className="mt-5 flex cursor-pointer gap-3">
 

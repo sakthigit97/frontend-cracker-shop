@@ -42,9 +42,6 @@ export default function QuickEstimateTable({
                 "
             >
                 <table className="w-full min-w-[1050px] border-collapse">
-                    {/* =================================================
-                        FIXED / STICKY HEADER
-                        ================================================= */}
                     <thead
                         className="
                             sticky
@@ -214,9 +211,6 @@ export default function QuickEstimateTable({
                                     </td>
                                 </tr>
 
-                                {/* =====================================
-                                    PRODUCTS
-                                    ===================================== */}
                                 {group.products.map((product) => {
                                     const qty = Number(
                                         items[product.id] ?? 0
@@ -263,9 +257,6 @@ export default function QuickEstimateTable({
                 </table>
             </div>
 
-            {/* =========================================================
-                MOBILE
-                ========================================================= */}
             <div className="lg:hidden space-y-5">
                 {groupedProducts.map((group) => (
                     <Fragment key={group.categoryId}>

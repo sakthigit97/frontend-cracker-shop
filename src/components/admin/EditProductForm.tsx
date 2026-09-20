@@ -213,8 +213,6 @@ export default function EditProductForm({
                         </select>
                     </div>
 
-                    {/* ================= PRODUCT OPTIONS ================= */}
-
                     <div className="sm:col-span-2">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
@@ -346,9 +344,6 @@ export default function EditProductForm({
 
                         </div>
                     </div>
-
-
-                    {/* ================= PACKAGING DETAILS ================= */}
                     <div className="sm:col-span-2">
                         <div className="border border-gray-300 rounded-xl p-5 space-y-4">
 
