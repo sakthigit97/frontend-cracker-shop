@@ -159,10 +159,15 @@ export default function AdjustOrder() {
     const additionalDiscountValue =
         Number(order.additionalDiscountValue ?? 0);
 
-    const derivedState = order?.state ||
-        (order?.address?.includes("Tamil Nadu")
+    const derivedState =
+        order?.state ||
+        (order?.address?.toLowerCase().includes("tamil nadu")
             ? "Tamil Nadu"
-            : "Other");
+            : order?.address?.toLowerCase().includes("pondicherry")
+                ? "Pondicherry"
+                : order?.address?.toLowerCase().includes("puducherry")
+                    ? "Puducherry"
+                    : "Other");
 
     const pricing = useMemo(() => {
         if (!hasChanges) {

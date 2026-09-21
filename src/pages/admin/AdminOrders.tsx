@@ -55,6 +55,7 @@ export default function AdminOrders() {
     >("ALL");
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
+    const [mobileFilter, setMobileFilter] = useState("");
     const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -116,12 +117,25 @@ export default function AdminOrders() {
             );
         }
 
+        if (mobileFilter.trim()) {
+            const searchMobile = mobileFilter
+                .trim()
+                .replace(/\D/g, "");
+
+            list = list.filter((o) =>
+                String(o.userId ?? "")
+                    .replace(/\D/g, "")
+                    .includes(searchMobile)
+            );
+        }
+
         return list.sort(
             (a, b) =>
                 Number(b.createdAt) -
                 Number(a.createdAt)
         );
-    }, [data, key, stateFilter]);
+    }, [data, key, stateFilter,
+        mobileFilter]);
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
@@ -176,6 +190,18 @@ export default function AdminOrders() {
                     placeholder="Search Order ID"
                     value={orderIdInput}
                     onChange={(e) => setOrderIdInput(e.target.value)}
+                    className="border px-3 py-2 rounded text-sm w-full sm:w-56"
+                />
+
+                <input
+                    placeholder="Search Mobile Number"
+                    value={mobileFilter}
+                    onChange={(e) =>
+                        setMobileFilter(
+                            e.target.value.replace(/\D/g, "")
+                        )
+                    }
+                    inputMode="numeric"
                     className="border px-3 py-2 rounded text-sm w-full sm:w-56"
                 />
 
@@ -298,6 +324,16 @@ export default function AdminOrders() {
                                         <p className="font-semibold">
                                             ₹{o.finalPayable}
                                         </p>
+
+                                        {Number(o.chitAmount ?? 0) > 0 && (
+                                            <div className="mt-1.5">
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                                    <span>✓</span>
+                                                    Chit Applied - ₹
+                                                    {Number(o.chitAmount).toLocaleString("en-IN")}
+                                                </span>
+                                            </div>
+                                        )}
 
                                     </div>
 

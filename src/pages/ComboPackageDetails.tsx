@@ -6,6 +6,7 @@ import EmptyState from "../components/ui/EmptyState";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { usePackageStore } from "../store/package.store";
 import { cartStore } from "../store/cart.store";
+import { useConfigStore } from "../store/config.store";
 
 export default function ComboPackageDetails() {
     const navigate = useNavigate();
@@ -18,8 +19,28 @@ export default function ComboPackageDetails() {
     const items = cartStore((s) => s.items);
     const addItem = cartStore((s) => s.addItem);
     const removeItem = cartStore((s) => s.removeItem);
+    const config = useConfigStore((s) => s.config);
 
     const comboProductId = selectedPackage?.productId;
+    const productMrpTotal = products.reduce(
+        (total, product) =>
+            total + Number(product.originalPrice ?? 0),
+        0
+    );
+
+    const packagingPercent = Number(
+        config?.packagingPercent ?? 0
+    );
+
+    const packagingFee = Math.round(
+        (productMrpTotal * packagingPercent) / 100
+    );
+
+    const packageMrp = productMrpTotal + packagingFee;
+
+    const packageOfferPrice = Number(
+        selectedPackage?.offerPrice ?? 0
+    );
 
     const handleAddEntirePackage = () => {
         if (!comboProductId) return;
@@ -91,9 +112,8 @@ export default function ComboPackageDetails() {
                             : `${products.length} Products Included`}
                     </p>
                 </div>
-            </div>
 
-            {/* TITLE */}
+            </div>
 
             <div className="mb-4">
                 <h2
@@ -197,11 +217,24 @@ export default function ComboPackageDetails() {
                 >
                     <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <p className="font-semibold">{products.length} Products</p>
+                            <p className="font-semibold">
+                                {products.length} Products
+                            </p>
 
-                            <p className="text-sm text-gray-200">Complete combo package</p>
+                            <p className="text-sm text-gray-200">
+                                Complete combo package
+                            </p>
+
+                            <div className="mt-1 flex items-center gap-2">
+                                <span className="text-xl font-bold text-green-400">
+                                    ₹{packageOfferPrice.toFixed(2)}
+                                </span>
+
+                                <span className="text-sm text-gray-300 line-through">
+                                    ₹{packageMrp.toFixed(2)}
+                                </span>
+                            </div>
                         </div>
-
                         {comboQty === 0 ? (
                             <button
                                 onClick={handleAddEntirePackage}

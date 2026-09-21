@@ -11,6 +11,7 @@ const HOME_PACKAGE_IDS = {
 };
 
 interface PackageItem {
+    offerPrice: number;
     id: string;
     name: string;
     imageUrl: string;

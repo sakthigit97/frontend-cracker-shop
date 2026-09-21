@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { X, UserRoundPen } from "lucide-react";
-
 import Button from "../../components/ui/Button";
 import { useAlert } from "../../store/alert.store";
 import { updateAdminUser } from "../../services/adminUsers.api";
+import { getPincodeLocation } from "../../utils/pincode";
 
 interface AdminUser {
     mobile: string;
@@ -12,9 +12,11 @@ interface AdminUser {
     address?: string;
     city?: string;
     state?: string;
+    district?: string;
     pincode?: string;
     walletCredit?: string;
     chitBalance?: string;
+    isBulkUser?: boolean;
 }
 
 interface Props {
@@ -30,9 +32,11 @@ interface FormState {
     address: string;
     city: string;
     state: string;
+    district: string;
     pincode: string;
     walletCredit: string;
     chitBalance: string;
+    isBulkUser: boolean;
 }
 
 const initialForm: FormState = {
@@ -41,10 +45,19 @@ const initialForm: FormState = {
     address: "",
     city: "",
     state: "",
+    district: "",
     pincode: "",
     walletCredit: "0",
     chitBalance: "0",
+    isBulkUser: false,
 };
+
+export interface PincodeLocation {
+    pincode: string;
+    state: string;
+    district: string;
+    city: string;
+}
 
 export default function AdminUserEditModal({
     open,
@@ -70,6 +83,7 @@ export default function AdminUserEditModal({
             role: user.role ?? "",
             address: user.address ?? "",
             city: user.city ?? "",
+            district: user.district ?? "",
             state: user.state ?? "",
             pincode: user.pincode ?? "",
             walletCredit: user.walletCredit != null
@@ -78,6 +92,7 @@ export default function AdminUserEditModal({
             chitBalance: user.chitBalance != null
                 ? String(user.chitBalance)
                 : "0",
+            isBulkUser: user.isBulkUser ?? false,
         });
     }, [open, user]);
 
@@ -118,6 +133,48 @@ export default function AdminUserEditModal({
             );
         };
     }, [open, onClose, saving]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        const pincode = form.pincode.trim();
+
+        if (pincode.length !== 6) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadPincodeLocation = async () => {
+            try {
+                const location = await getPincodeLocation(pincode);
+
+                if (!location || cancelled) {
+                    return;
+                }
+
+                setForm((previous) => ({
+                    ...previous,
+                    city: location.city,
+                    district: location.district,
+                    state: location.state,
+                }));
+            } catch (error) {
+                console.error(
+                    "Failed to fetch pincode location",
+                    error
+                );
+            }
+        };
+
+        loadPincodeLocation();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [open, form.pincode]);
 
     if (!open || !user) {
         return null;
@@ -267,7 +324,8 @@ export default function AdminUserEditModal({
                     state,
                     pincode,
                     walletCredit,
-                    chitBalance
+                    chitBalance,
+                    isBulkUser: form.isBulkUser,
                 }
             );
 
@@ -547,49 +605,6 @@ export default function AdminUserEditModal({
                             />
                         </div>
 
-                        {/* City */}
-                        <div>
-                            <label
-                                className={labelClass}
-                            >
-                                City
-                            </label>
-
-                            <input
-                                className={inputClass}
-                                value={form.city}
-                                disabled={saving}
-                                onChange={(event) =>
-                                    updateField(
-                                        "city",
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter city"
-                            />
-                        </div>
-
-                        {/* State */}
-                        <div>
-                            <label
-                                className={labelClass}
-                            >
-                                State
-                            </label>
-
-                            <input
-                                className={inputClass}
-                                value={form.state}
-                                disabled={saving}
-                                onChange={(event) =>
-                                    updateField(
-                                        "state",
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter state"
-                            />
-                        </div>
 
                         {/* Pincode */}
                         <div>
@@ -617,6 +632,57 @@ export default function AdminUserEditModal({
                                 placeholder="Enter 6-digit pincode"
                             />
                         </div>
+
+                        {/* City */}
+                        <div>
+                            <label
+                                className={labelClass}
+                            >
+                                City
+                            </label>
+
+                            <input
+                                className={inputClass}
+                                value={form.city}
+                                disabled={saving}
+                                readOnly
+                                placeholder="City"
+                            />
+                        </div>
+
+
+
+                        {/* District */}
+                        <div>
+                            <label className={labelClass}>
+                                District
+                            </label>
+
+                            <input
+                                className={inputClass}
+                                value={form.district}
+                                disabled={saving}
+                                readOnly
+                                placeholder="District"
+                            />
+                        </div>
+
+                        {/* State */}
+                        <div>
+                            <label
+                                className={labelClass}
+                            >
+                                State
+                            </label>
+                            <input
+                                className={inputClass}
+                                value={form.state}
+                                disabled={saving}
+                                readOnly
+                                placeholder="State"
+                            />
+                        </div>
+
 
                         {/* Wallet Credit Balance */}
                         <div>
@@ -665,6 +731,38 @@ export default function AdminUserEditModal({
 
                             <p className="mt-1.5 text-xs text-gray-500">
                                 Chit amount available for this user.
+                            </p>
+                        </div>
+
+                        {/* Bulk User */}
+                        <div>
+                            <label className={labelClass}>
+                                Bulk User
+                            </label>
+
+                            <select
+                                className={inputClass}
+                                value={form.isBulkUser ? "true" : "false"}
+                                disabled={saving}
+                                onChange={(event) =>
+                                    setForm((previous) => ({
+                                        ...previous,
+                                        isBulkUser:
+                                            event.target.value === "true",
+                                    }))
+                                }
+                            >
+                                <option value="false">
+                                    No
+                                </option>
+
+                                <option value="true">
+                                    Yes
+                                </option>
+                            </select>
+
+                            <p className="mt-1.5 text-xs text-gray-500">
+                                Indicates whether this user is a bulk customer.
                             </p>
                         </div>
                     </div>
@@ -717,6 +815,6 @@ export default function AdminUserEditModal({
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

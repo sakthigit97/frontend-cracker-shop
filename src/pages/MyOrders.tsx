@@ -411,6 +411,16 @@ export default function MyOrders() {
                       order.finalPayable
                     )}
                   </p>
+
+                  {Number(order.chitAmount ?? 0) > 0 && (
+                    <div className="mt-1.5 flex justify-end">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                        <span>✓</span>
+                        Chit Applied - ₹
+                        {formatCurrency(order.chitAmount)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-start md:justify-end">
