@@ -153,6 +153,11 @@ export default function Header() {
       to: "/privacy-policy",
       icon: <FaShieldAlt />,
     },
+    {
+      label: "How to Order",
+      to: "/how-to-use",
+      icon: <FaBoxOpen />,
+    },
   ];
 
   const lifestyleMenu: HeaderDropdownItem[] = [
@@ -175,11 +180,17 @@ export default function Header() {
       to: "/orders",
       icon: <FaClipboardList />,
     },
-    {
-      label: "Bulk Order",
-      to: "/bulk-orders",
-      icon: <FaBoxOpen />,
-    },
+
+    ...(profile?.isBulkUser
+      ? [
+        {
+          label: "Bulk Order",
+          to: "/bulk-orders",
+          icon: <FaBoxOpen />,
+        },
+      ]
+      : []),
+
     {
       label: "My Profile",
       to: "/profile",
@@ -226,6 +237,10 @@ export default function Header() {
       label: "Privacy Policy",
       to: "/privacy-policy",
       icon: <FaShieldAlt />,
+    }, {
+      label: "How to Order",
+      to: "/how-to-use",
+      icon: <FaBoxOpen />,
     },
   ];
 

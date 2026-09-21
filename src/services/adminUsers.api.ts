@@ -16,6 +16,7 @@ export interface UpdateAdminUserRequest {
     pincode?: string;
     walletCredit?: number;
     chitBalance?: number;
+    isBulkUser?: boolean;
 }
 
 export interface AdminUser {

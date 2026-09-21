@@ -11,6 +11,9 @@ type ProfileData = {
     pincode: string;
     walletCredit?: number;
     referralCode?: string;
+    isBulkUser?: boolean;
+    chitBalance?: number;
+    myReferredPeople?: { name: string; mobile: string }[];
 };
 
 interface ProfileState {

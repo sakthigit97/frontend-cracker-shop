@@ -13,10 +13,12 @@ import {
 } from "../../services/product.api";
 
 import { useAlert } from "../../store/alert.store";
+import { useConfigStore } from "../../store/config.store";
 
 export default function AdminComboPackagesPage() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
+    const config = useConfigStore((s) => s.config);
 
     const [combos, setCombos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -174,8 +176,28 @@ export default function AdminComboPackagesPage() {
                     {/* Combo list */}
                     {!loading && combos.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                            {combos.map(
-                                (combo: any) => (
+                            {combos.map((combo: any) => {
+                                const productMrpTotal =
+                                    combo.products?.reduce(
+                                        (total: number, product: any) =>
+                                            total + Number(product.mrp ?? 0),
+                                        0
+                                    ) ?? 0;
+
+                                const packagingPercent = Number(
+                                    config?.packagingPercent ?? 0
+                                );
+
+                                const packagingFee = Math.round(
+                                    productMrpTotal *
+                                    packagingPercent /
+                                    100
+                                );
+
+                                const totalMrp =
+                                    productMrpTotal + packagingFee;
+
+                                return (
                                     <div
                                         key={
                                             combo.comboId ||
@@ -185,21 +207,22 @@ export default function AdminComboPackagesPage() {
                                     >
                                         {/* Image */}
                                         <div className="h-44 bg-gray-100 flex items-center justify-center">
-
                                             <img
                                                 src={
-                                                    combo.imageUrl || defaultImage
+                                                    combo.imageUrl ||
+                                                    defaultImage
                                                 }
                                                 alt={
                                                     combo.name
                                                 }
-                                                onError={(event) => {
+                                                onError={(
+                                                    event
+                                                ) => {
                                                     event.currentTarget.src =
                                                         defaultImage;
                                                 }}
                                                 className="w-full h-full object-cover"
                                             />
-
                                         </div>
 
                                         {/* Content */}
@@ -224,15 +247,31 @@ export default function AdminComboPackagesPage() {
                                                     </p>
                                                 </div>
 
-                                                <span className="font-bold text-lg text-gray-900 whitespace-nowrap">
-                                                    ₹
-                                                    {Number(
-                                                        combo.price ||
-                                                        0
-                                                    ).toFixed(
-                                                        2
-                                                    )}
-                                                </span>
+                                                {/* Price */}
+                                                <div className="text-right whitespace-nowrap">
+                                                    {totalMrp >
+                                                        Number(
+                                                            combo.price ??
+                                                            0
+                                                        ) && (
+                                                            <p className="text-sm text-gray-400 line-through">
+                                                                ₹
+                                                                {totalMrp.toFixed(
+                                                                    2
+                                                                )}
+                                                            </p>
+                                                        )}
+
+                                                    <p className="font-bold text-lg text-gray-900">
+                                                        ₹
+                                                        {Number(
+                                                            combo.price ??
+                                                            0
+                                                        ).toFixed(
+                                                            2
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
 
                                             {/* Products */}
@@ -256,12 +295,14 @@ export default function AdminComboPackagesPage() {
                                                                         className="flex items-center gap-3"
                                                                     >
                                                                         <div className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-
                                                                             <img
                                                                                 src={
-                                                                                    product.imageUrl || defaultImage
+                                                                                    product.imageUrl ||
+                                                                                    defaultImage
                                                                                 }
-                                                                                onError={(event) => {
+                                                                                onError={(
+                                                                                    event
+                                                                                ) => {
                                                                                     event.currentTarget.src =
                                                                                         defaultImage;
                                                                                 }}
@@ -270,7 +311,6 @@ export default function AdminComboPackagesPage() {
                                                                                 }
                                                                                 className="w-full h-full object-cover"
                                                                             />
-
                                                                         </div>
 
                                                                         <p className="text-sm text-gray-700 truncate">
@@ -318,24 +358,26 @@ export default function AdminComboPackagesPage() {
                                                         )
                                                     }
                                                     disabled={
-                                                        deletingComboId === combo.comboId
+                                                        deletingComboId ===
+                                                        combo.comboId
                                                     }
                                                     className="bg-red-600 hover:bg-red-700"
                                                 >
-                                                    {deletingComboId === combo.comboId
+                                                    {deletingComboId ===
+                                                        combo.comboId
                                                         ? "Deleting..."
                                                         : "Delete"}
                                                 </Button>
                                             </div>
-
                                         </div>
                                     </div>
-                                )
-                            )}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
             </div>
+
             <ConfirmDialog
                 open={showDeleteConfirm}
                 title="Delete Combo Package?"

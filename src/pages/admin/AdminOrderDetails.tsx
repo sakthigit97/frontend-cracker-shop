@@ -93,6 +93,7 @@ export default function AdminOrderDetails() {
     const [loadingChitBalance, setLoadingChitBalance] = useState(false);
     const [showChitConfirm, setShowChitConfirm] = useState(false);
     const [applyingChitBalance, setApplyingChitBalance] = useState(false);
+    const [revertingChitBalance, setRevertingChitBalance] = useState(false);
 
     const [addressForm, setAddressForm] = useState({
         fullName: "",
@@ -969,6 +970,63 @@ export default function AdminOrderDetails() {
             });
         } finally {
             setDiscountSubmitting(false);
+        }
+    };
+
+    const handleRevertChitBalance = async () => {
+        if (
+            !order ||
+            Number(order.chitAmount ?? 0) <= 0 ||
+            revertingChitBalance
+        ) {
+            return;
+        }
+
+        const revertedChitAmount = Number(
+            order.chitAmount ?? 0
+        );
+
+        try {
+            setRevertingChitBalance(true);
+
+            await apiFetch(
+                `/admin/orders/${encodeURIComponent(
+                    order.orderId
+                )}/revert-chit-balance`,
+                {
+                    method: "POST",
+                },
+                import.meta.env.VITE_API_BASE_URL_V1
+            );
+
+            // Immediately add the reverted amount back to the UI balance
+            setUserChitBalance((previous) =>
+                previous + revertedChitAmount
+            );
+
+            await fetchOrder(order.orderId, {
+                force: true,
+            });
+
+            showAlert({
+                type: "success",
+                message: "Chit balance reverted successfully.",
+                duration: 2000,
+            });
+        } catch (error: any) {
+            console.error(
+                "Revert chit balance failed:",
+                error
+            );
+
+            showAlert({
+                type: "error",
+                message:
+                    error?.message ||
+                    "Unable to revert chit balance.",
+            });
+        } finally {
+            setRevertingChitBalance(false);
         }
     };
 
@@ -2092,8 +2150,21 @@ export default function AdminOrderDetails() {
 
                         {/* Chit Applied */}
                         {Number(order.chitAmount ?? 0) > 0 && (
-                            <div className="flex justify-between text-green-700 font-medium">
-                                <span>Chit Balance Applied</span>
+                            <div className="flex justify-between items-center text-green-700 font-medium">
+                                <div className="flex items-center gap-3">
+                                    <span>Chit Balance Applied</span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="px-2.5 py-1 text-xs"
+                                        disabled={revertingChitBalance}
+                                        onClick={handleRevertChitBalance}
+                                    >
+                                        {revertingChitBalance
+                                            ? "Reverting..."
+                                            : "Revert"}
+                                    </Button>
+                                </div>
 
                                 <span>
                                     - ₹{formatCurrency(order.chitAmount)}
@@ -2124,8 +2195,6 @@ export default function AdminOrderDetails() {
                                     </div>
                                 </>
                             )}
-
-
 
                         {/* Chit Balance */}
                         {userChitBalance > 0 && (
@@ -2172,8 +2241,6 @@ export default function AdminOrderDetails() {
                 </div>
             </div>
 
-            {/* ORDER HISTORY */}
-
             {order.statusHistory?.length > 0 && (
                 <div className="bg-white border rounded-xl p-5">
                     <h3 className="font-semibold text-[var(--color-primary)] mb-4">
@@ -2189,11 +2256,8 @@ export default function AdminOrderDetails() {
                             )
                             .map((history: any, index: number) => {
                                 const status = history.toStatus ?? history.status;
-                                const updatedBy =
-                                    history.changedBy ?? history.by;
-
-                                const updatedAt =
-                                    history.changedAt ?? history.at;
+                                const updatedBy = history.changedBy ?? history.by;
+                                const updatedAt = history.changedAt ?? history.at;
 
                                 return (
                                     <div

@@ -20,6 +20,7 @@ interface ProfileData {
   pincode: string;
   walletCredit?: number;
   referralCode?: string;
+  chitBalance?: number;
   myReferredPeople?: {
     name: string;
     mobile: string;
@@ -344,6 +345,21 @@ export default function Profile() {
             <p className="text-xs text-gray-400 mt-1">
               Invite friends and earn after their first paid order.
             </p>
+          </div>
+
+          <div className="bg-white border rounded-xl p-4">
+            <p className="text-sm text-gray-500">
+              Chit Balance
+            </p>
+
+            <p className="text-2xl font-bold text-green-700">
+              ₹{form.chitBalance || 0}
+            </p>
+
+            <p className="text-xs text-gray-400 mt-1">
+              Available Chit Balance
+            </p>
+
           </div>
         </div>
 
