@@ -5,6 +5,7 @@ export interface AdminBulkOrderFilters {
     status: string;
     dateRange: "all" | "today" | "7" | "30";
     orderId?: string;
+    mobile?: string;
 }
 
 interface OrdersCache {
@@ -47,6 +48,7 @@ function buildCacheKey(
         status: filters.status,
         dateRange: filters.dateRange,
         orderId: filters.orderId || null,
+        mobile: filters.mobile || null,
     });
 }
 
@@ -59,6 +61,7 @@ function buildApiParams(
         return {
             status: filters.status,
             orderId: filters.orderId,
+            mobile: filters.mobile,
             limit: 10,
         };
     }
@@ -87,6 +90,7 @@ function buildApiParams(
         fromDate,
         toDate: now,
         orderId: filters.orderId,
+        mobile: filters.mobile,
         limit: 10,
     };
 }
@@ -290,7 +294,7 @@ export const useAdminBulkOrdersStore =
                             ),
 
                             cursor:
-                               JSON.stringify(cache.nextCursor),
+                                JSON.stringify(cache.nextCursor),
                         });
 
                     set((state) => {

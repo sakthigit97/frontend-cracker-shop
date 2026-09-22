@@ -284,10 +284,18 @@ export default function AdminOrderDetails() {
                 const productId =
                     productNotFoundMatch[1].trim();
 
+                const orderItem = order.items?.find(
+                    (item: any) =>
+                        String(item.productId) === productId
+                );
+
+                const productName =
+                    orderItem?.name || productId;
+
                 showAlert({
                     type: "error",
                     message:
-                        `Product ${productId} is not found. Please adjust the order first, then refresh the amount.`,
+                        `Product ${productName} is not found. Please adjust the order first, then refresh the amount.`,
                     duration: 5000,
                 });
             } else {
@@ -625,8 +633,13 @@ export default function AdminOrderDetails() {
 
     const availableStatuses = [
         order?.status,
-        ...(nextStatus ? [nextStatus] : []),
-        ...(order?.status !== "CANCELLED" ? ["CANCELLED"] : []),
+        ...(nextStatus && nextStatus !== "CANCELLED"
+            ? [nextStatus]
+            : []),
+        ...(order?.status !== "CANCELLED" &&
+            order?.status !== "DISPATCHED"
+            ? ["CANCELLED"]
+            : []),
     ];
 
     const isPaymentConfirmed =
@@ -1936,8 +1949,13 @@ export default function AdminOrderDetails() {
                                     <input
                                         type="text"
                                         value={addressForm.city}
-                                        readOnly
-                                        className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+                                        onChange={(e) =>
+                                            setAddressForm((previous) => ({
+                                                ...previous,
+                                                city: e.target.value,
+                                            }))
+                                        }
+                                        className="w-full border rounded-lg px-3 py-2 text-sm"
                                     />
                                 </div>
 
@@ -1949,8 +1967,13 @@ export default function AdminOrderDetails() {
                                     <input
                                         type="text"
                                         value={addressForm.district}
-                                        readOnly
-                                        className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+                                        onChange={(e) =>
+                                            setAddressForm((previous) => ({
+                                                ...previous,
+                                                district: e.target.value,
+                                            }))
+                                        }
+                                        className="w-full border rounded-lg px-3 py-2 text-sm"
                                     />
                                 </div>
 
@@ -1962,8 +1985,13 @@ export default function AdminOrderDetails() {
                                     <input
                                         type="text"
                                         value={addressForm.state}
-                                        readOnly
-                                        className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50"
+                                        onChange={(e) =>
+                                            setAddressForm((previous) => ({
+                                                ...previous,
+                                                state: e.target.value,
+                                            }))
+                                        }
+                                        className="w-full border rounded-lg px-3 py-2 text-sm"
                                     />
                                 </div>
                             </div>
@@ -2807,7 +2835,41 @@ export default function AdminOrderDetails() {
             <ConfirmDialog
                 open={showConfirm}
                 title="Confirm update?"
-                description="Are you sure you want to update this order?"
+                description={
+                    pendingPayload?.status === "CANCELLED"
+                        ? (() => {
+                            const walletUsed = Number(
+                                order.walletUsed ?? 0
+                            );
+
+                            const chitAmount = Number(
+                                order.chitAmount ?? 0
+                            );
+
+                            if (walletUsed > 0 && chitAmount > 0) {
+                                return `Wallet balance of ₹${formatCurrency(
+                                    walletUsed
+                                )} and chit balance of ₹${formatCurrency(
+                                    chitAmount
+                                )} have been applied to this order. Please revert the wallet and chit balance before cancelling the order.`;
+                            }
+
+                            if (walletUsed > 0) {
+                                return `Wallet balance of ₹${formatCurrency(
+                                    walletUsed
+                                )} has been applied to this order. Please revert the wallet balance before cancelling the order.`;
+                            }
+
+                            if (chitAmount > 0) {
+                                return `Chit balance of ₹${formatCurrency(
+                                    chitAmount
+                                )} has been applied to this order. Please revert the chit balance before cancelling the order.`;
+                            }
+
+                            return "Are you sure you want to cancel this order?";
+                        })()
+                        : "Are you sure you want to update this order?"
+                }
                 confirmText="Yes, update"
                 cancelText="Cancel"
                 onConfirm={async () => {

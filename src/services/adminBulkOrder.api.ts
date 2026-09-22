@@ -7,6 +7,7 @@ export interface AdminBulkOrdersParams {
     limit?: number;
     cursor?: string | null;
     orderId?: string;
+    mobile?: string;
 }
 
 export async function getAdminBulkOrders(
@@ -51,6 +52,10 @@ export async function getAdminBulkOrders(
             "orderId",
             params.orderId.trim()
         );
+    }
+
+    if (params?.mobile) {
+        query.set("mobile", params?.mobile);
     }
 
     const response = await apiFetch(
