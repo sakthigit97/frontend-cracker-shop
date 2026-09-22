@@ -302,6 +302,14 @@ export default function AdminBulkOrderDetails() {
 
                 lines.push(paymentName);
 
+                if (
+                    (account.type === "GPAY" ||
+                        account.type === "PHONEPE") &&
+                    account.name
+                ) {
+                    lines.push(`Name: ${account.name}`);
+                }
+
                 if (account.mobileNumber) {
                     lines.push(
                         `Mobile: ${account.mobileNumber}`
@@ -2118,21 +2126,29 @@ export default function AdminBulkOrderDetails() {
                                                     account
                                                 )}
                                             </p>
-
                                             {account.type === "BANK" ? (
                                                 <p className="text-xs text-gray-500">
-                                                    {account.bankUserName ||
-                                                        ""}{" "}
+                                                    {account.bankUserName || ""}
                                                     {account.accountNumber
                                                         ? `• ${account.accountNumber}`
                                                         : ""}
                                                 </p>
                                             ) : (
-                                                <p className="text-xs text-gray-500">
-                                                    {account.upiId ||
-                                                        account.mobileNumber ||
-                                                        ""}
-                                                </p>
+                                                <div className="text-xs text-gray-500">
+                                                    {(account.type === "GPAY" ||
+                                                        account.type === "PHONEPE") &&
+                                                        account.name && (
+                                                            <p>Name: {account.name}</p>
+                                                        )}
+
+                                                    {account.upiId && (
+                                                        <p>UPI ID: {account.upiId}</p>
+                                                    )}
+
+                                                    {account.mobileNumber && (
+                                                        <p>Mobile: {account.mobileNumber}</p>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </label>

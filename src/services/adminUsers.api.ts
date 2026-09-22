@@ -3,6 +3,7 @@ import { apiFetch } from "./api";
 export interface GetAdminUsersParams {
     search?: string;
     isBulkUser?: boolean;
+    role?: string;
     cursor?: string;
     limit?: number;
 }
@@ -17,6 +18,7 @@ export interface UpdateAdminUserRequest {
     walletCredit?: number;
     chitBalance?: number;
     isBulkUser?: boolean;
+
 }
 
 export interface AdminUser {
@@ -55,6 +57,10 @@ export async function getAdminUsers(
 
     if (params.isBulkUser) {
         query.append("isBulkUser", String(params.isBulkUser));
+    }
+
+    if (params.role !== undefined) {
+        query.append("role", params.role);
     }
 
     const queryString = query.toString();
