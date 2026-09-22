@@ -206,6 +206,14 @@ export default function AdminOrderDetails() {
 
                 lines.push(paymentName);
 
+                if (
+                    (account.type === "GPAY" ||
+                        account.type === "PHONEPE") &&
+                    account.name
+                ) {
+                    lines.push(`Name: ${account.name}`);
+                }
+
                 if (account.mobileNumber) {
                     lines.push(
                         `Mobile: ${account.mobileNumber}`
@@ -263,12 +271,33 @@ export default function AdminOrderDetails() {
                 error
             );
 
-            showAlert({
-                type: "error",
-                message:
-                    error?.message ||
-                    "Unable to refresh order amount.",
-            });
+            const errorMessage = String(
+                error?.message || ""
+            );
+
+            const productNotFoundMatch =
+                errorMessage.match(
+                    /Product\s+(.+?)\s+not found/i
+                );
+
+            if (productNotFoundMatch) {
+                const productId =
+                    productNotFoundMatch[1].trim();
+
+                showAlert({
+                    type: "error",
+                    message:
+                        `Product ${productId} is not found. Please adjust the order first, then refresh the amount.`,
+                    duration: 5000,
+                });
+            } else {
+                showAlert({
+                    type: "error",
+                    message:
+                        error?.message ||
+                        "Unable to refresh order amount.",
+                });
+            }
         } finally {
             setRefreshingAmount(false);
         }
@@ -415,7 +444,7 @@ export default function AdminOrderDetails() {
     useEffect(() => {
         if (!order) return;
 
-        setComment(order.adminComment || "");
+        setComment("");
         setSelectedStatus(order.status);
 
         const savedPaymentAccountId =
@@ -2388,21 +2417,29 @@ export default function AdminOrderDetails() {
                                                     account
                                                 )}
                                             </p>
-
                                             {account.type === "BANK" ? (
                                                 <p className="text-xs text-gray-500">
-                                                    {account.bankUserName ||
-                                                        ""}{" "}
+                                                    {account.bankUserName || ""}
                                                     {account.accountNumber
                                                         ? `• ${account.accountNumber}`
                                                         : ""}
                                                 </p>
                                             ) : (
-                                                <p className="text-xs text-gray-500">
-                                                    {account.upiId ||
-                                                        account.mobileNumber ||
-                                                        ""}
-                                                </p>
+                                                <div className="text-xs text-gray-500">
+                                                    {(account.type === "GPAY" ||
+                                                        account.type === "PHONEPE") &&
+                                                        account.name && (
+                                                            <p>Name: {account.name}</p>
+                                                        )}
+
+                                                    {account.upiId && (
+                                                        <p>UPI ID: {account.upiId}</p>
+                                                    )}
+
+                                                    {account.mobileNumber && (
+                                                        <p>Mobile: {account.mobileNumber}</p>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </label>
@@ -2639,7 +2676,6 @@ export default function AdminOrderDetails() {
                                 const status = e.target.value;
 
                                 setSelectedStatus(status);
-
                                 if (status !== "PAYMENT_CONFIRMED") {
                                     setSelectedPaymentAccountId("");
                                     setCustomPaymentAccountId("");
@@ -2802,6 +2838,7 @@ export default function AdminOrderDetails() {
                                 order.adminComment,
                         });
                         await fetchOrder(orderId, { force: true });
+                        setComment("");
                     } catch (err: any) {
                         showAlert({
                             type: "error",

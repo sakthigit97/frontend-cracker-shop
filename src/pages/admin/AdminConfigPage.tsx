@@ -87,6 +87,7 @@ export default function AdminConfigPage() {
                             accountType: account.accountType || "CURRENT",
                             mobileNumber: account.mobileNumber || "",
                             upiId: account.upiId || "",
+                            name: account.name || "",
                         })
                     ),
                     sliderImages: fixedSliderImages,
@@ -735,6 +736,7 @@ export default function AdminConfigPage() {
                     ifsc: "",
                     branch: "",
                     mobileNumber: "",
+                    name: "",
                     upiId: "",
                 },
             ],
@@ -924,6 +926,8 @@ export default function AdminConfigPage() {
                     }
                 }
             }
+
+
         }
 
         return true;
@@ -1298,6 +1302,8 @@ export default function AdminConfigPage() {
                                 account.branch.trim(),
                         }
                         : {
+                            name:
+                                account.name?.trim() || "",
                             mobileNumber:
                                 account.mobileNumber?.trim() || "",
                             upiId:
@@ -2548,6 +2554,29 @@ export default function AdminConfigPage() {
                                             </div>
                                         </div>
                                     )}
+
+                                    {(
+                                        account.type === "GPAY" ||
+                                        account.type === "PHONEPE"
+                                    ) && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Name <span className="text-gray-400">(Optional)</span>
+                                                </label>
+
+                                                <input
+                                                    type="text"
+                                                    className="border border-gray-300 rounded-lg p-3 w-full"
+                                                    value={account.name || ""}
+                                                    onChange={(e) =>
+                                                        updatePaymentAccount(index, {
+                                                            name: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="Enter account holder name"
+                                                />
+                                            </div>
+                                        )}
                                 </div>
                             )
                         )}

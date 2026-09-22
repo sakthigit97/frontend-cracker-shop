@@ -32,6 +32,9 @@ export default function AdminUsers() {
     const [bulkUserFilter, setBulkUserFilter] = useState<
         "" | "true" | "false"
     >("");
+    const [roleFilter, setRoleFilter] = useState<
+        "" | "admin" | "user" | "staff"
+    >("");
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -56,6 +59,10 @@ export default function AdminUsers() {
                     bulkUserFilter === ""
                         ? undefined
                         : bulkUserFilter === "true",
+                role:
+                    roleFilter === ""
+                        ? undefined
+                        : roleFilter,
                 cursor,
                 limit: PAGE_SIZE,
             });
@@ -99,6 +106,10 @@ export default function AdminUsers() {
                         bulkUserFilter === ""
                             ? undefined
                             : bulkUserFilter === "true",
+                    role:
+                        roleFilter === ""
+                            ? undefined
+                            : roleFilter,
                     cursor: currentCursor,
                     limit: PAGE_SIZE,
                 });
@@ -138,6 +149,7 @@ export default function AdminUsers() {
         page,
         query,
         bulkUserFilter,
+        roleFilter,
     ]);
 
     const handleDeleteClick = (
@@ -273,6 +285,34 @@ export default function AdminUsers() {
                     <option value="">All Users</option>
                     <option value="true">Bulk User</option>
                     <option value="false">Non-Bulk User</option>
+                </select>
+                <select
+                    value={roleFilter}
+                    onChange={(event) => {
+                        setRoleFilter(
+                            event.target.value as
+                            | ""
+                            | "admin"
+                            | "user"
+                            | "staff"
+                        );
+                        setPage(1);
+                        setCursorByPage({});
+                    }}
+                    className="
+        px-4 py-3
+        rounded-full
+        border border-gray-300
+        bg-white
+        shadow-sm
+        focus:ring-2
+        focus:ring-[var(--color-primary)]
+    "
+                >
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                    <option value="staff">Staff</option>
                 </select>
             </div>
 

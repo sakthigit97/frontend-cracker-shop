@@ -25,14 +25,15 @@ export const useAdminUsersStore =
             const search = params.search?.trim() || "";
             const cursor = params.cursor || null;
             const limit = params.limit || 20;
-            const isBulkUser =
-                params.isBulkUser ?? null;
+            const isBulkUser = params.isBulkUser ?? null;
+            const role = params.role ?? null;
 
             const key = JSON.stringify({
                 search,
                 cursor,
                 limit,
                 isBulkUser,
+                role,
             });
 
             const cached = get().cache[key];
@@ -54,6 +55,10 @@ export const useAdminUsersStore =
                         isBulkUser === null
                             ? undefined
                             : isBulkUser,
+                    role:
+                        role === null
+                            ? undefined
+                            : role,
                 });
 
                 set((state) => ({
