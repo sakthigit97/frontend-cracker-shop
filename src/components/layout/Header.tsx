@@ -181,10 +181,10 @@ export default function Header() {
       icon: <FaClipboardList />,
     },
 
-    ...(profile?.isBulkUser
+    ...(isEnableBulkOrder && profile?.isBulkUser
       ? [
         {
-          label: "Bulk Order",
+          label: "Bulk Orders",
           to: "/bulk-orders",
           icon: <FaBoxOpen />,
         },
@@ -265,11 +265,15 @@ export default function Header() {
       to: "/orders",
       icon: <FaClipboardList />,
     },
-    {
-      label: "Bulk Orders",
-      to: "/bulk-orders",
-      icon: <FaBoxOpen />,
-    },
+    ...(isEnableBulkOrder && profile?.isBulkUser
+      ? [
+        {
+          label: "Bulk Orders",
+          to: "/bulk-orders",
+          icon: <FaBoxOpen />,
+        },
+      ]
+      : []),
     {
       label: "Profile",
       to: "/profile",

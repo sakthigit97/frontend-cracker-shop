@@ -30,12 +30,6 @@ export async function buildStaffPackingPdf(
 
     let y = 10;
 
-    /*
-     * ============================================================
-     * ORDER INFORMATION
-     * ============================================================
-     */
-
     const orderDate = order.updatedAt
         ? formatDateTime(
             Number(order.updatedAt)
@@ -68,12 +62,6 @@ export async function buildStaffPackingPdf(
     y += 3;
 
     line(doc, y);
-
-    /*
-     * ============================================================
-     * CUSTOMER DETAILS
-     * ============================================================
-     */
 
     y += 3;
 
@@ -136,11 +124,6 @@ export async function buildStaffPackingPdf(
 
     y += customerBoxHeight + 1;
 
-    /*
-     * ============================================================
-     * SORT ITEMS BY sequenceNumber
-     * ============================================================
-     */
 
     const items =
         Array.isArray(order.items)
@@ -195,12 +178,6 @@ export async function buildStaffPackingPdf(
             )
             : [];
 
-    /*
-     * ============================================================
-     * TOTAL QUANTITY
-     * ============================================================
-     */
-
     const totalQty =
         items.reduce(
             (
@@ -213,12 +190,6 @@ export async function buildStaffPackingPdf(
                 ),
             0
         );
-
-    /*
-     * ============================================================
-     * PRODUCTS
-     * ============================================================
-     */
 
     autoTable(doc, {
         startY: y,

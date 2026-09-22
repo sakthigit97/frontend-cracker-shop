@@ -28,8 +28,17 @@ export default function AdminBulkOrders() {
     const [stateFilter, setStateFilter] = useState<"ALL" | "TN" | "OTHER">("ALL");
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
+    const [mobileFilter, setMobileFilter] = useState("");
+    const [sortOrder, setSortOrder] = useState<
+        "desc" | "asc"
+    >("desc");
     const debouncedOrderId = useDebounce(
         orderIdInput.trim(),
+        500
+    );
+
+    const debouncedMobile = useDebounce(
+        mobileFilter.trim(),
         500
     );
 
@@ -48,11 +57,14 @@ export default function AdminBulkOrders() {
             dateRange,
             orderId:
                 debouncedOrderId || undefined,
+            mobile:
+                debouncedMobile || undefined,
         });
     }, [
         status,
         dateRange,
         debouncedOrderId,
+        debouncedMobile,
         setFilters,
     ]);
 
@@ -61,8 +73,8 @@ export default function AdminBulkOrders() {
             JSON.stringify({
                 status: filters.status,
                 dateRange: filters.dateRange,
-                orderId:
-                    filters.orderId || null,
+                orderId: filters.orderId || null,
+                mobile: filters.mobile || null,
             }),
         [filters]
     );
@@ -89,12 +101,15 @@ export default function AdminBulkOrders() {
             );
         }
 
-        return list.sort(
-            (a, b) =>
-                Number(b.createdAt) -
-                Number(a.createdAt)
-        );
-    }, [data, key, stateFilter]);
+        return list.sort((a, b) => {
+            const aTime = Number(a.createdAt);
+            const bTime = Number(b.createdAt);
+
+            return sortOrder === "desc"
+                ? bTime - aTime
+                : aTime - bTime;
+        });
+    }, [data, key, sortOrder, stateFilter]);
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
@@ -184,6 +199,27 @@ export default function AdminBulkOrders() {
                         bg-white
                     "
                 />
+                <input
+                    placeholder="Search Mobile Number"
+                    value={mobileFilter}
+                    onChange={(e) =>
+                        setMobileFilter(
+                            e.target.value.replace(/\D/g, "")
+                        )
+                    }
+                    inputMode="numeric"
+                    className="
+                        border
+                        px-3
+                        py-2
+                        rounded
+                        text-sm
+                        w-full
+                        sm:w-56
+                        min-w-0
+                        bg-white
+                    "
+                />
 
                 <select
                     value={dateRange}
@@ -244,6 +280,31 @@ export default function AdminBulkOrders() {
 
                     <option value="OTHER">
                         Other States
+                    </option>
+                </select>
+                <select
+                    value={sortOrder}
+                    onChange={(e) =>
+                        setSortOrder(
+                            e.target.value as "desc" | "asc"
+                        )
+                    }
+                    className="
+        border
+        px-3
+        py-2
+        rounded
+        text-sm
+        w-full
+        sm:w-auto
+        bg-white
+    "
+                >
+                    <option value="desc">
+                        Newest First
+                    </option>
+                    <option value="asc">
+                        Oldest First
                     </option>
                 </select>
             </div>

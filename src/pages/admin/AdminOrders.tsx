@@ -56,6 +56,7 @@ export default function AdminOrders() {
     const [dateRange, setDateRange] = useState<DateRange>("all");
     const [orderIdInput, setOrderIdInput] = useState("");
     const [mobileFilter, setMobileFilter] = useState("");
+    const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
     const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -129,13 +130,15 @@ export default function AdminOrders() {
             );
         }
 
-        return list.sort(
-            (a, b) =>
-                Number(b.createdAt) -
-                Number(a.createdAt)
-        );
-    }, [data, key, stateFilter,
-        mobileFilter]);
+        return list.sort((a, b) => {
+            const aTime = Number(a.createdAt);
+            const bTime = Number(b.createdAt);
+
+            return sortOrder === "desc"
+                ? bTime - aTime
+                : aTime - bTime;
+        });
+    }, [data, key, stateFilter, mobileFilter, sortOrder]);
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
@@ -184,7 +187,6 @@ export default function AdminOrders() {
                 </div>
             </div>
 
-            {/* FILTERS */}
             <div className="flex flex-wrap gap-3">
                 <input
                     placeholder="Search Order ID"
@@ -230,6 +232,23 @@ export default function AdminOrders() {
                     <option value="ALL">All States</option>
                     <option value="TN">Tamil Nadu</option>
                     <option value="OTHER">Other States</option>
+                </select>
+
+                <select
+                    value={sortOrder}
+                    onChange={(e) =>
+                        setSortOrder(
+                            e.target.value as "desc" | "asc"
+                        )
+                    }
+                    className="border px-3 py-2 rounded text-sm"
+                >
+                    <option value="desc">
+                        Newest First
+                    </option>
+                    <option value="asc">
+                        Oldest First
+                    </option>
                 </select>
 
             </div>
