@@ -309,6 +309,18 @@ export default function MyOrders() {
         </p>
       </div>
 
+      <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 sm:mb-5">
+        <p className="text-sm leading-5 text-yellow-800">
+          <span className="font-semibold">
+            Please complete your payment at the earliest.
+          </span>{" "}
+          Until payment is received, product prices,
+          discounts, and availability may change, and
+          the final order amount may be updated
+          accordingly.
+        </p>
+      </div>
+
       <div className="space-y-3">
         {sortedOrders.map((order) => {
           const statusConfig =
