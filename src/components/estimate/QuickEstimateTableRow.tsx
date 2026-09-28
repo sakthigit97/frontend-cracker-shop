@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { Product } from "../../types/product";
 import defaultImage from "../../assets/default-image.png";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface Props {
     product: Product;
@@ -137,7 +138,7 @@ function QuickEstimateTableRow({
 
                         <span>
                             {product.packQuantity} {" "}
-                            {product.packUnit}
+                            {getDisplayPackUnit(product.packUnit)}
                         </span>
                     </span>
                 ) : (

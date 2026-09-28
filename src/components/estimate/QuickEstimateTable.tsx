@@ -3,6 +3,7 @@ import type { Product } from "../../types/product";
 import QuickEstimateTableRow from "./QuickEstimateTableRow";
 import defaultImage from "../../assets/default-image.png";
 import { Fragment } from "react";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface ProductGroup {
     categoryId: string;
@@ -393,7 +394,7 @@ export default function QuickEstimateTable({
                                                                     product.packQuantity
                                                                 }{" "}
                                                                 {
-                                                                    product.packUnit
+                                                                    getDisplayPackUnit(product.packUnit)
                                                                 }
                                                             </span>
                                                         </div>

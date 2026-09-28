@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import { PDF_THEME } from "./invoiceTheme";
 import { line, text } from "./invoiceHelpers";
 import { formatDateTime } from "../date";
+import { getDisplayPackUnit } from "../displayPackUnit";
 
 export async function buildBulkStaffPackingPdf(
     order: any,
@@ -243,8 +244,8 @@ export async function buildBulkStaffPackingPdf(
 
                     item.name ?? "-",
 
-                    `${item.cartonQty ?? 0} ${item.packUnit
-                        ? ` ${item.packUnit}`
+                    `${item.cartonQty ?? 0} ${getDisplayPackUnit(item.packUnit)
+                        ? ` ${getDisplayPackUnit(item.packUnit)}`
                         : ""
                     }`,
 

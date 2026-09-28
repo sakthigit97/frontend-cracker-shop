@@ -27,6 +27,7 @@ import {
     useAdminBulkOrderDetailsStore,
 } from "../../store/adminBulkOrderDetails.store";
 import { formatDateTime } from "../../utils/date";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 export default function AdminBulkOrderDetails() {
 
@@ -1347,7 +1348,7 @@ export default function AdminBulkOrderDetails() {
                                                         "
                                                     >
                                                         {cartonQty}{" "}
-                                                        {packUnit}
+                                                        {getDisplayPackUnit(packUnit)}
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400">

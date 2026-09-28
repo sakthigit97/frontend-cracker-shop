@@ -6,6 +6,7 @@ import type { Product } from "../../types/product";
 import type { BulkScheme } from "../../types/bulkOrder";
 import { calculateBulkUnitPrice } from "../../utils/bulkPricing";
 import ProductDetails from "../../pages/ProductDetails";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface BulkProductRowProps {
     product: Product;
@@ -308,8 +309,8 @@ function BulkProductRow({
                         "
                     >
                         {formattedCartonQty}
-                        {product.packUnit
-                            ? ` ${product.packUnit}`
+                        {getDisplayPackUnit(product.packUnit)
+                            ? ` ${getDisplayPackUnit(product.packUnit)}`
                             : ""}
                     </span>
                 </td>

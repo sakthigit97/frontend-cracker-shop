@@ -15,6 +15,7 @@ import { useProfileStore } from "../store/profile.store";
 import { useCatalog } from "../store/catalog.store";
 import { sortProductsByCategoryAndSequence } from "../utils/sequncerUtil";
 import { getProductCounts } from "../utils/productCounts";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 export default function Cart() {
   const addItem = cartStore((s) => s.addItem);
@@ -381,7 +382,7 @@ export default function Cart() {
                         >
                           <span>📦</span>
                           <span>
-                            {p.packQuantity} {p.packUnit}
+                            {p.packQuantity} {getDisplayPackUnit(p.packUnit)}
                           </span>
                         </span>
                       )}

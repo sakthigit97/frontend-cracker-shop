@@ -5,6 +5,7 @@ import defaultImage from "../../assets/default-image.png";
 import type { Product } from "../../types/product";
 import Button from "../ui/Button";
 import { useCatalog } from "../../store/catalog.store";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface Props {
   product: Product;
@@ -241,7 +242,7 @@ function ProductCard({
                   truncate
                 "
               >
-                {product.packQuantity} {product.packUnit}
+                {product.packQuantity} {getDisplayPackUnit(product.packUnit)}
               </span>
             </div>
           )}

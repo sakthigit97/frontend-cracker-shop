@@ -11,6 +11,7 @@ import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
 import defaultImage from "../assets/default-image.png";
 import { useCatalog } from "../store/catalog.store";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 interface YouTubePlayerStateChangeEvent {
   data: number;
@@ -1069,7 +1070,7 @@ export default function ProductDetails(propProductId?: any) {
                       }
 
                       {
-                        product.packUnit
+                        getDisplayPackUnit(product.packUnit)
                       }
                     </span>
                   </span>

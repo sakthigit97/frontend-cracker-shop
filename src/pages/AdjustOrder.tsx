@@ -14,6 +14,7 @@ import { calculateCouponDiscount } from "../utils/coupon";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 import { useAuth } from "../store/auth.store";
 import { getProductCounts } from "../utils/productCounts";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 type AdjustOrderItem = {
     productId: string;
@@ -683,7 +684,7 @@ export default function AdjustOrder() {
                                                     font-medium
                                                     text-gray-700
                                                 ">
-                                                    {packQuantity} {packUnit}
+                                                    {packQuantity} {getDisplayPackUnit(packUnit)}
                                                 </span>
                                             ) : (
                                                 <span className="text-gray-400">

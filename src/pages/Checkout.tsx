@@ -18,6 +18,7 @@ import {
   FiChevronUp
 } from "react-icons/fi";
 import { validateCoupon } from "../services/coupon.api";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 
 type ProfileResponse = {
@@ -894,7 +895,7 @@ export default function Checkout() {
                   whitespace-nowrap
                 "
                         >
-                          📦 {p.packQuantity} {p.packUnit}
+                          📦 {p.packQuantity} {getDisplayPackUnit(p.packUnit)}
                         </span>
                       )}
 

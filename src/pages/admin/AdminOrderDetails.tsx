@@ -28,6 +28,7 @@ import { useAuth } from "../../store/auth.store";
 import { getProductCounts } from "../../utils/productCounts";
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
 import { getPincodeLocation } from "../../utils/pincode";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -1563,7 +1564,7 @@ export default function AdminOrderDetails() {
                                             text-gray-700
                                         ">
                                                         {packQuantity}{" "}
-                                                        {packUnit}
+                                                        {getDisplayPackUnit(packUnit)}
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400">

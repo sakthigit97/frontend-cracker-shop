@@ -5,6 +5,7 @@ import { money, line, text, formatStatus } from "../../utils/pdf/invoiceHelpers"
 import Icon from "../../assets/icon-new.png";
 import { formatDateTime } from "../date";
 import { getProductCounts } from "../../utils/productCounts";
+import { getDisplayPackUnit } from "../displayPackUnit";
 
 export async function buildBulkInvoicePdf(
     order: any,
@@ -192,7 +193,7 @@ export async function buildBulkInvoicePdf(
         body: bulkInvoiceItems.map((item: any) => [
             item.name,
             item.cartonQty != null
-                ? `${item.cartonQty}${item.packUnit ? ` ${item.packUnit}` : ""}`
+                ? `${item.cartonQty}${getDisplayPackUnit(item.packUnit) ? ` ${getDisplayPackUnit(item.packUnit)}` : ""}`
                 : "",
             money(item.schemePrice),
             item.quantity,

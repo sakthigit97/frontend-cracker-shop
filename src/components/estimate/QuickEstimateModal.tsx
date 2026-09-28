@@ -13,6 +13,7 @@ import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
 import EstimateDownloadDialog from "./EstimateDownloadDialog";
 import { apiFetch } from "../../services/api";
 import { sortProductsBySequence } from "../../utils/sequncerUtil";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface Props {
     open: boolean;
@@ -1162,7 +1163,7 @@ export default function QuickEstimateModal({
                                                     }
                                                     {" "}
                                                     {
-                                                        product.packUnit
+                                                        getDisplayPackUnit(product.packUnit)
                                                     }
                                                 </span>
                                             </div>
