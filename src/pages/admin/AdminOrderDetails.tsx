@@ -138,21 +138,52 @@ export default function AdminOrderDetails() {
     const generatePaymentMessage = () => {
         const lines: string[] = [];
 
+        const companyName =
+            config?.companyName || "Sivakasi Pyro Park";
+
+        const totalAmount = Number(
+            order.finalPayable ??
+            order.grandTotal ??
+            order.pricing?.grandTotal ??
+            0
+        ).toLocaleString("en-IN");
+
+        // ---------------------------------------------------------
+        // Order Confirmation
+        // ---------------------------------------------------------
+
         lines.push(
-            `🎉 Your ${config?.companyName || "Sivakasi Pyro Park"} Order is Confirmed!`
+            `Order Confirmed! (ID: ${order.orderId})`
         );
 
-        lines.push(`Order ID: ${order.orderId}`);
-
         lines.push(
-            `Total: ₹${Number(
-                order.finalPayable ?? order.grandTotal ?? 0
-            ).toLocaleString("en-IN")}`
+            `Thank you for your order with ${companyName}.`
         );
 
         lines.push("");
-        lines.push("Pay via Bank Transfer:");
+
+        // ---------------------------------------------------------
+        // Order Summary
+        // ---------------------------------------------------------
+
+        lines.push("Order Summary:");
+
+        lines.push(
+            `Total Amount: ₹${totalAmount}`
+        );
+
+        lines.push("");
+
+        // ---------------------------------------------------------
+        // Payment Details
+        // ---------------------------------------------------------
+
         lines.push("Payment Details:");
+
+        lines.push(
+            "Please transfer the amount using the bank details below for timely processing:"
+        );
+
         lines.push("");
 
         const selectedAccounts =
@@ -173,28 +204,43 @@ export default function AdminOrderDetails() {
                     lines.push("");
                 }
 
+                // -------------------------------------------------
+                // Bank Account
+                // -------------------------------------------------
+
                 if (account.type === "BANK") {
                     lines.push(
-                        account.bankName || "Bank"
+                        `Bank: ${account.bankName || "-"}`
                     );
 
                     lines.push(
-                        `Name: ${account.bankUserName || ""}`
+                        `Account Name: ${account.bankUserName || "-"
+                        }`
                     );
 
                     lines.push(
-                        `A/C No: ${account.accountNumber || ""}`
+                        `Account Number: ${account.accountNumber || "-"
+                        }`
                     );
 
                     lines.push(
-                        `IFSC: ${account.ifsc || ""} (${account.accountType === "SAVINGS"
-                            ? "Savings A/C"
-                            : "Current A/C"
-                        })`
+                        `IFSC Code: ${account.ifsc || "-"
+                        }`
+                    );
+
+                    lines.push(
+                        `Account Type: ${account.accountType === "SAVINGS"
+                            ? "Savings Account"
+                            : "Current Account"
+                        }`
                     );
 
                     return;
                 }
+
+                // -------------------------------------------------
+                // GPay / PhonePe / Paytm
+                // -------------------------------------------------
 
                 const paymentName =
                     account.type === "GPAY"
@@ -203,21 +249,22 @@ export default function AdminOrderDetails() {
                             ? "PhonePe"
                             : account.type === "PAYTM"
                                 ? "Paytm"
-                                : account.type;
+                                : account.type ||
+                                "Payment Account";
 
-                lines.push(paymentName);
+                lines.push(
+                    `Payment Method: ${paymentName}`
+                );
 
-                if (
-                    (account.type === "GPAY" ||
-                        account.type === "PHONEPE") &&
-                    account.name
-                ) {
-                    lines.push(`Name: ${account.name}`);
+                if (account.name) {
+                    lines.push(
+                        `Account Name: ${account.name}`
+                    );
                 }
 
                 if (account.mobileNumber) {
                     lines.push(
-                        `Mobile: ${account.mobileNumber}`
+                        `Mobile Number: ${account.mobileNumber}`
                     );
                 }
 
@@ -231,12 +278,18 @@ export default function AdminOrderDetails() {
 
         lines.push("");
 
+        lines.push("Important Notes:");
+
         lines.push(
-            "👉 Please share your payment screenshot with us to start dispatch."
+            "No Cash on Delivery (COD): Orders are processed only after payment confirmation."
         );
 
         lines.push(
-            `Track here: ${website}`
+            "Transport Charges: Transportation charges are extra and to be paid directly by the customer upon receiving the parcel."
+        );
+
+        lines.push(
+            "Once the transfer is complete, please share a screenshot of the payment receipt here. We will immediately pack and dispatch your order."
         );
 
         return lines.join("\n");
@@ -353,7 +406,6 @@ export default function AdminOrderDetails() {
     const packagingPercent = config?.packagingPercent ?? 0;
     const gstPercent = config?.gstPercent ?? 0;
     const disableGstForTN = config?.disableGstForTN || false;
-    const website = config?.website || 'https://www.sivakasicrackers.co.in';
 
     const isTamilNadu =
         order?.address?.toLowerCase().includes("tamil nadu") ||

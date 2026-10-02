@@ -95,6 +95,7 @@ export default function QuickEstimateModal({
     const downloadPdf = (customer: {
         customerName: string;
         mobile: string;
+        city?: string;
         email?: string;
     }) => {
         const doc = new jsPDF({
@@ -120,8 +121,7 @@ export default function QuickEstimateModal({
             dark: [45, 45, 45] as [number, number, number],
         };
 
-        const formatMoney = (amount: number) =>
-            `Rs. ${amount.toLocaleString("en-IN")}`;
+        const formatMoney = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}`;
 
         const text = (
             value: string,
@@ -232,6 +232,9 @@ export default function QuickEstimateModal({
         text(customer.mobile, LEFT, y);
         y += 4;
 
+        text('City: ' + (customer.city || ''), LEFT, y);
+        y += 4;
+
         if (customer.email?.trim()) {
             const email = doc.splitTextToSize(
                 customer.email.trim(),
@@ -289,10 +292,9 @@ export default function QuickEstimateModal({
             body: sortedProducts.map((product) => {
                 const packQuantity = Number(product.packQuantity);
                 const packUnit = product.packUnit?.trim();
-
                 const unitText =
                     packQuantity > 0 && packUnit
-                        ? `${packQuantity} ${packUnit}`
+                        ? `${packQuantity} ${getDisplayPackUnit(packUnit)}`
                         : "-";
 
                 return [

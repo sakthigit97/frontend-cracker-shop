@@ -13,6 +13,7 @@ import Button from "../../../components/ui/Button";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useNavigate } from "react-router-dom";
 import { getBulkSalesReport } from "../../../services/product.api";
+import { generateRevenueReportPdf } from "../../../utils/pdf/revenueReportPdf";
 
 const ROWS_PER_PAGE = 10;
 
@@ -104,6 +105,12 @@ export default function RevenueReport() {
 
     const [bulkCurrentPage, setBulkCurrentPage] =
         useState(1);
+
+    const [pdfDownloading, setPdfDownloading] =
+        useState(false);
+
+    const [pdfDownloaded, setPdfDownloaded] =
+        useState(false);
 
     /*
      * ---------------------------------------------------------
@@ -266,6 +273,80 @@ export default function RevenueReport() {
                 bulkTotalPages
             )
         );
+    };
+
+    /*
+     * ---------------------------------------------------------
+     * PDF Download
+     * ---------------------------------------------------------
+     */
+    const handleDownloadPdf = async () => {
+        if (pdfDownloading) {
+            return;
+        }
+
+        const hasRetailData =
+            reportType === "retail" &&
+            !!data;
+
+        const hasBulkData =
+            reportType === "bulk" &&
+            !!bulkReport;
+
+        if (!hasRetailData && !hasBulkData) {
+            return;
+        }
+
+        try {
+            setPdfDownloading(true);
+            setPdfDownloaded(false);
+
+            // Allow the button to render the loading state
+            // before the PDF generation starts.
+            await new Promise((resolve) =>
+                setTimeout(resolve, 50)
+            );
+
+            generateRevenueReportPdf({
+                reportType,
+                retailReport:
+                    reportType === "retail"
+                        ? data
+                        : null,
+                bulkReport:
+                    reportType === "bulk"
+                        ? {
+                              ...bulkReport,
+                              orders: bulkOrders,
+                          }
+                        : null,
+                fromDate:
+                    reportType === "retail"
+                        ? retailFromDate
+                        : bulkFromDate,
+                toDate:
+                    reportType === "retail"
+                        ? retailToDate
+                        : bulkToDate,
+                range:
+                    reportType === "retail"
+                        ? range
+                        : undefined,
+            });
+
+            setPdfDownloaded(true);
+
+            window.setTimeout(() => {
+                setPdfDownloaded(false);
+            }, 2500);
+        } catch (error) {
+            console.error(
+                "Revenue PDF generation failed:",
+                error
+            );
+        } finally {
+            setPdfDownloading(false);
+        }
     };
 
     /*
@@ -504,6 +585,51 @@ export default function RevenueReport() {
                                 >
                                     Reset
                                 </Button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadPdf}
+                                    disabled={
+                                        !data ||
+                                        pdfDownloading
+                                    }
+                                    className="w-full sm:w-auto rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {pdfDownloading ? (
+                                        <>
+                                            <svg
+                                                className="h-4 w-4 animate-spin"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                />
+                                            </svg>
+                                            Generating PDF...
+                                        </>
+                                    ) : pdfDownloaded ? (
+                                        <>
+                                            <span>✓</span>
+                                            PDF Downloaded
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>↓</span>
+                                            Download PDF
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -588,7 +714,7 @@ export default function RevenueReport() {
                 <div className="space-y-6">
                     {/* Bulk Filters */}
                     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                             {/* From Date */}
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -652,6 +778,56 @@ export default function RevenueReport() {
                                     {bulkLoading
                                         ? "Loading..."
                                         : "Apply Filter"}
+                                </button>
+                            </div>
+
+                            {/* Download PDF */}
+                            <div className="flex items-end">
+                                <button
+                                    type="button"
+                                    onClick={
+                                        handleDownloadPdf
+                                    }
+                                    disabled={
+                                        !bulkReport ||
+                                        pdfDownloading
+                                    }
+                                    className="w-full rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {pdfDownloading ? (
+                                        <>
+                                            <svg
+                                                className="h-4 w-4 animate-spin"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                />
+                                            </svg>
+                                            Generating PDF...
+                                        </>
+                                    ) : pdfDownloaded ? (
+                                        <>
+                                            <span>✓</span>
+                                            PDF Downloaded
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>↓</span>
+                                            Download PDF
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>

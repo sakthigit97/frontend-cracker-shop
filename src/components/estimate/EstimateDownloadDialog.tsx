@@ -9,6 +9,7 @@ interface Props {
     onDownload: (data: {
         customerName: string;
         mobile: string;
+        city: string;
         email?: string;
     }) => void;
 }
@@ -32,6 +33,7 @@ export default function EstimateDownloadDialog({
 
     const [mobile, setMobile] =
         useState("");
+    const [city, setCity] = useState("");
 
     const [email, setEmail] =
         useState("");
@@ -92,6 +94,13 @@ export default function EstimateDownloadDialog({
                     profile.mobile || ""
                 );
 
+                setCity(
+                    profile.city || ""
+                );
+                setCity(
+                    profile.city || ""
+                );
+
                 setEmail(
                     profile.email || ""
                 );
@@ -99,6 +108,7 @@ export default function EstimateDownloadDialog({
                 setTitle("Mr");
                 setCustomerName("");
                 setMobile("");
+                setCity("");
                 setEmail("");
             }
         }
@@ -144,6 +154,10 @@ export default function EstimateDownloadDialog({
                 "Enter a valid 10 digit mobile number";
         }
 
+        if (!city.trim()) {
+            next.city = "City is required";
+        }
+
         if (
             email.trim() &&
             !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
@@ -166,15 +180,6 @@ export default function EstimateDownloadDialog({
             return;
         }
 
-        /*
-         * Concatenate title + customer name
-         * before sending to backend.
-         *
-         * Example:
-         * Mr. Sakthibalan
-         * Mrs. Priya
-         * Ms. Divya
-         */
         const fullCustomerName =
             `${title} ${customerName.trim()}`;
 
@@ -183,6 +188,7 @@ export default function EstimateDownloadDialog({
                 fullCustomerName,
             mobile:
                 mobile.trim(),
+            city: city.trim(),
             email:
                 email.trim() ||
                 undefined,
@@ -321,6 +327,34 @@ export default function EstimateDownloadDialog({
                                     {
                                         errors.mobile
                                     }
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium">
+                                City *
+                            </label>
+
+                            <input
+                                value={city}
+                                onChange={(e) =>
+                                    setCity(e.target.value)
+                                }
+                                placeholder="Enter city"
+                                className="
+            w-full
+            mt-1
+            rounded-lg
+            border
+            px-3
+            py-2
+        "
+                            />
+
+                            {errors.city && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {errors.city}
                                 </p>
                             )}
                         </div>
