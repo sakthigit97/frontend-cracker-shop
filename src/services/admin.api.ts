@@ -43,3 +43,14 @@ export async function updateAdminOrder(
         body: JSON.stringify(payload),
     });
 }
+
+export async function getComboProductNames(
+    comboProductId: string
+) {
+    const response = await apiFetch(
+        `/admin/combo-packages/${comboProductId}/products`,
+        { method: "GET" },
+        import.meta.env.VITE_API_BASE_URL_V1
+    );
+    return response;
+}

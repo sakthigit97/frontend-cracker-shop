@@ -5,6 +5,7 @@ import { PDF_THEME } from "./invoiceTheme";
 import { line, text } from "./invoiceHelpers";
 import { formatDateTime } from "../date";
 import { getDisplayPackUnit } from "../displayPackUnit";
+import { getComboProductNames } from "../../services/admin.api";
 
 export async function buildStaffPackingPdf(
     order: any,
@@ -17,20 +18,14 @@ export async function buildStaffPackingPdf(
         compress: true,
     });
 
-    const normal = () =>
-        doc.setFont("helvetica", "normal");
-
-    const bold = () =>
-        doc.setFont("helvetica", "bold");
-
+    const normal = () => doc.setFont("helvetica", "normal");
+    const bold = () => doc.setFont("helvetica", "bold");
     const LEFT = PDF_THEME.LEFT;
     const RIGHT = PDF_THEME.RIGHT;
     const COLORS = PDF_THEME.colors;
 
     normal();
-
     let y = 10;
-
     const orderDate = order.updatedAt
         ? formatDateTime(
             Number(order.updatedAt)
@@ -179,6 +174,7 @@ export async function buildStaffPackingPdf(
             )
             : [];
 
+
     const totalQty =
         items.reduce(
             (
@@ -191,6 +187,53 @@ export async function buildStaffPackingPdf(
                 ),
             0
         );
+
+    const comboProductNames =
+        new Map<string, string[]>();
+
+    const comboProductIds = [
+        ...new Set(
+            items
+                .filter(
+                    (item: any) =>
+                        item.isComboPackage === true &&
+                        item.productId
+                )
+                .map(
+                    (item: any) =>
+                        item.productId
+                )
+        ),
+    ];
+
+    await Promise.all(
+        comboProductIds.map(
+            async (productId: string) => {
+                try {
+                    const result =
+                        await getComboProductNames(
+                            productId
+                        );
+
+                    comboProductNames.set(
+                        productId,
+                        result.productNames || []
+                    );
+                } catch (error) {
+                    console.error(
+                        "Failed to fetch combo product names",
+                        productId,
+                        error
+                    );
+
+                    comboProductNames.set(
+                        productId,
+                        []
+                    );
+                }
+            }
+        )
+    );
 
     autoTable(doc, {
         startY: y,
@@ -210,6 +253,16 @@ export async function buildStaffPackingPdf(
                 index: number
             ) => {
 
+                const comboNames =
+                    comboProductNames.get(
+                        String(item.productId)
+                    ) || [];
+
+                const productName =
+                    comboNames.length > 0
+                        ? `${item.name ?? "-"}\n(${comboNames.join(", ")})`
+                        : item.name ?? "-";
+
                 const packQuantity =
                     Number(
                         item.packQuantity ?? 0
@@ -228,14 +281,9 @@ export async function buildStaffPackingPdf(
 
                 return [
                     String(index + 1),
-
-                    item.name ?? "-",
-
+                    productName,
                     cartonText,
-
-                    String(
-                        item.quantity ?? 0
-                    ),
+                    String(item.quantity ?? 0),
                 ];
             }
         ),
