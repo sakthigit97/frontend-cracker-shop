@@ -49,7 +49,6 @@ function getLocationFromAddress(address?: string) {
 }
 
 export default function AdminOrders() {
-    const [status, setStatus] = useState("ORDER_PLACED");
     const [stateFilter, setStateFilter] = useState<
         "ALL" | "TN" | "OTHER"
     >("ALL");
@@ -67,18 +66,20 @@ export default function AdminOrders() {
         data,
         loading,
         setFilters,
+        selectedStatus,
+        setSelectedStatus,
         fetchInitial,
         fetchMore,
     } = useAdminOrdersStore();
 
     useEffect(() => {
         setFilters({
-            status,
+            status: selectedStatus,
             dateRange,
             orderId: debouncedOrderId || undefined,
         });
     }, [
-        status,
+        selectedStatus,
         dateRange,
         debouncedOrderId,
         setFilters,
@@ -153,7 +154,7 @@ export default function AdminOrders() {
     const isLoading = loading[key];
 
     useEffect(() => {
-        fetchInitial(true);
+        fetchInitial();
     }, [key, fetchInitial]);
 
     if (orders.length === 0 && isLoading) {
@@ -286,9 +287,9 @@ export default function AdminOrders() {
                 {STATUS_ORDER.map((s) => (
                     <button
                         key={s}
-                        onClick={() => setStatus(s)}
+                        onClick={() => setSelectedStatus(s)}
                         className={`px-4 py-2 rounded-full text-sm whitespace-nowrap
-                            ${status === s
+                            ${selectedStatus === s
                                 ? "bg-[var(--color-primary)] text-white"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}

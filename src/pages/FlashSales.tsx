@@ -503,15 +503,14 @@ export default function FlashSales() {
                                                     src={sale.imageUrl}
                                                     alt={product.name}
                                                     className="
-                            h-full
-                            w-full
-                            object-contain
-                            px-7
-                            py-5
-                            transition-transform
-                            duration-300
-                            group-hover:scale-[1.04]
-                          "
+    h-full
+    w-full
+    object-cover
+    object-center
+    transition-transform
+    duration-300
+    group-hover:scale-[1.03]
+  "
                                                 />
 
                                                 {discount > 0 && (

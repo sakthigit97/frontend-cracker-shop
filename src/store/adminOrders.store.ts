@@ -17,10 +17,16 @@ interface AdminOrdersState {
     filters: AdminOrderFilters;
     data: Record<string, OrdersCache>;
     loading: Record<string, boolean>;
+
+    selectedStatus: string;
+
+    setSelectedStatus: (status: string) => void;
     setFilters: (f: AdminOrderFilters) => void;
+
     fetchInitial: (force?: boolean) => Promise<void>;
     fetchMore: () => Promise<void>;
     clear: () => void;
+
     updateOrderInCache: (
         orderId: string,
         updates: Partial<any>
@@ -66,6 +72,10 @@ export const useAdminOrdersStore = create<AdminOrdersState>(
         filters: {
             status: "ORDER_PLACED",
             dateRange: "today",
+        },
+        selectedStatus: "ORDER_PLACED",
+        setSelectedStatus: (status) => {
+            set({ selectedStatus: status });
         },
         data: {},
         loading: {},

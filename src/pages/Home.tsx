@@ -343,6 +343,8 @@ export default function Home() {
       return [];
     }
 
+    const now = flashSaleNow;
+
     const productMap = new Map(
       products.map((product) => [
         product.id,
@@ -351,6 +353,27 @@ export default function Home() {
     );
 
     return flashSales
+      .filter((sale) => {
+        const startAt = new Date(
+          sale.startAt
+        ).getTime();
+
+        const endAt = new Date(
+          sale.endAt
+        ).getTime();
+
+        /*
+         * Show ONLY currently active sales.
+         *
+         * startAt <= now < endAt
+         */
+        return (
+          Number.isFinite(startAt) &&
+          Number.isFinite(endAt) &&
+          startAt <= now &&
+          now < endAt
+        );
+      })
       .map((sale) => {
         const product = productMap.get(
           sale.productId
@@ -368,7 +391,7 @@ export default function Home() {
         ): product is NonNullable<typeof product> =>
           product !== null
       );
-  }, [flashSales, products]);
+  }, [flashSales, products, flashSaleNow]);
 
   return (
     <div className="space-y-6">
@@ -409,11 +432,6 @@ export default function Home() {
         <HeroSlider />
       </div>
 
-
-      {/* =========================================================
-    FLASH DEALS
-    Compact responsive design
-   ========================================================= */}
 
       {flashSaleProducts.length > 0 && (
         <section className="px-3 sm:px-4 mt-5 sm:mt-6">
@@ -459,10 +477,6 @@ export default function Home() {
           blur-3xl
         "
             />
-
-            {/* =====================================================
-          HEADER
-         ===================================================== */}
 
             <div
               className="
@@ -584,10 +598,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* =====================================================
-          DEAL CARDS
-         ===================================================== */}
-
             <div
               className={`
           relative
@@ -697,9 +707,7 @@ export default function Home() {
                 hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
               "
                   >
-                    {/* =========================================
-                  IMAGE
-                 ========================================= */}
+
 
                     <div
                       className="
@@ -715,22 +723,20 @@ export default function Home() {
                   sm:h-[125px]
                 "
                     >
+
+
                       <img
-                        src={
-                          sale.imageUrl ||
-                          product.image
-                        }
+                        src={sale.imageUrl}
                         alt={product.name}
                         className="
-                    h-full
-                    w-full
-                    object-contain
-                    px-8
-                    py-4
-                    transition-transform
-                    duration-300
-                    group-hover:scale-[1.04]
-                  "
+    h-full
+    w-full
+    object-cover
+    object-center
+    transition-transform
+    duration-300
+    group-hover:scale-[1.03]
+  "
                       />
 
                       {/* Discount badge */}
