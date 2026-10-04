@@ -6,10 +6,12 @@ import { line, text } from "./invoiceHelpers";
 import { formatDateTime } from "../date";
 import { getDisplayPackUnit } from "../displayPackUnit";
 import { getComboProductNames } from "../../services/admin.api";
+import { sortProductsByCategoryAndSequence } from "../sequncerUtil";
 
 export async function buildStaffPackingPdf(
     order: any,
-    _config: any
+    _config: any,
+    categories: any
 ) {
     const doc = new jsPDF({
         orientation: "portrait",
@@ -120,60 +122,13 @@ export async function buildStaffPackingPdf(
 
     y += customerBoxHeight + 1;
 
-
     const items =
         Array.isArray(order.items)
-            ? [...order.items].sort(
-                (
-                    a: any,
-                    b: any
-                ) => {
-
-                    const aSequence =
-                        Number(
-                            a.sequenceNumber
-                        );
-
-                    const bSequence =
-                        Number(
-                            b.sequenceNumber
-                        );
-
-                    if (
-                        Number.isFinite(
-                            aSequence
-                        ) &&
-                        Number.isFinite(
-                            bSequence
-                        )
-                    ) {
-                        return (
-                            aSequence -
-                            bSequence
-                        );
-                    }
-
-                    if (
-                        Number.isFinite(
-                            aSequence
-                        )
-                    ) {
-                        return -1;
-                    }
-
-                    if (
-                        Number.isFinite(
-                            bSequence
-                        )
-                    ) {
-                        return 1;
-                    }
-
-                    return 0;
-                }
+            ? sortProductsByCategoryAndSequence(
+                order.items,
+                categories
             )
             : [];
-
 
     const totalQty =
         items.reduce(

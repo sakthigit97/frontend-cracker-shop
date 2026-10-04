@@ -4,11 +4,13 @@ import type { DownloadInvoiceOptions } from "./invoice.types";
 export async function downloadStaffPackingList({
     order,
     config,
+    categories,
     fileName,
 }: DownloadInvoiceOptions) {
     const pdf = await buildStaffPackingPdf(
         order,
-        config
+        config,
+        categories
     );
 
     pdf.save(

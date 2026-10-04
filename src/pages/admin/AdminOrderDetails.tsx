@@ -29,6 +29,7 @@ import { getProductCounts } from "../../utils/productCounts";
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
 import { getPincodeLocation } from "../../utils/pincode";
 import { getDisplayPackUnit } from "../../utils/displayPackUnit";
+import { useCategoryStore } from "../../store/category.store";
 
 export default function AdminOrderDetails() {
     const { orderId = "" } = useParams();
@@ -55,6 +56,11 @@ export default function AdminOrderDetails() {
     const [restoring, setRestoring] = useState(false);
     const [discountType, setDiscountType] =
         useState<"FLAT" | "PERCENTAGE">("FLAT");
+
+    const {
+        items: categories,
+        fetchAllCategory,
+    } = useCategoryStore();
 
     const [discountValue, setDiscountValue] =
         useState("");
@@ -106,6 +112,15 @@ export default function AdminOrderDetails() {
         state: "",
         pincode: "",
     });
+
+    useEffect(() => {
+        if (categories.length === 0) {
+            fetchAllCategory();
+        }
+    }, [
+        categories.length,
+        fetchAllCategory,
+    ]);
 
     const clearOrdersCache = useOrdersStore((s) => s.clear);
     const clearAdminOrdersCache = useAdminOrdersStore((s) => s.clear);
@@ -919,6 +934,7 @@ export default function AdminOrderDetails() {
             await downloadStaffPackingList({
                 order,
                 config,
+                categories,
             });
         } catch (err: any) {
             showAlert({
