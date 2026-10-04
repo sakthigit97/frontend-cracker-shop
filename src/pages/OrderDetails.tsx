@@ -33,6 +33,7 @@ import { formatDateTime } from "../utils/date";
 import defaultImage from "../assets/default-image.png";
 import { sortProductsBySequence } from "../utils/sequncerUtil";
 import { apiFetch } from "../services/api";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 const TERMINAL_STATUS = "CANCELLED";
 
@@ -900,7 +901,7 @@ export default function OrderDetails() {
                             <span
                               className="inline-flex whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
                               {packQuantity} {""}
-                              {packUnit}
+                              {getDisplayPackUnit(packUnit)}
                             </span>
                           ) : (
                             <span className="text-gray-400">

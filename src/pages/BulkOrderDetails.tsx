@@ -23,6 +23,7 @@ import { formatCurrency } from "../utils/pricing";
 import { downloadBulkInvoice } from "../utils/pdf/downloadBulkInvoice";
 import { ORDER_STATUS_CONFIG } from "../utils/orderStatus";
 import { formatDateTime } from "../utils/date";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 const TERMINAL_STATUS = "CANCELLED";
 
 const CANCELLABLE_STATUSES = [
@@ -687,7 +688,7 @@ export default function BulkOrderDetails() {
 
                                         <td className="px-4 py-3 text-center">
                                             <span className="whitespace-nowrap text-sm text-gray-600">
-                                                {item.cartonQty} {item.packUnit}
+                                                {item.cartonQty} {getDisplayPackUnit(item.packUnit)}
                                             </span>
                                         </td>
 
@@ -894,7 +895,7 @@ export default function BulkOrderDetails() {
                         />
 
                         {(sparklerCount > 0) && (
-                        <><PriceRow
+                            <><PriceRow
                                 isPrice={false}
                                 label="Sparklers"
                                 value={sparklerCount} /><PriceRow

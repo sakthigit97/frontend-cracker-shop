@@ -13,11 +13,19 @@ import { calculateOrderPricingBreakdown } from "../../utils/orderPricing";
 import EstimateDownloadDialog from "./EstimateDownloadDialog";
 import { apiFetch } from "../../services/api";
 import { sortProductsBySequence } from "../../utils/sequncerUtil";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface Props {
     open: boolean;
     onClose: () => void;
 }
+
+const getEffectivePrice = (product: any): number => {
+    return product.isFlashSale &&
+        typeof product.flashSalePrice === "number"
+        ? product.flashSalePrice
+        : product.price;
+};
 
 export default function QuickEstimateModal({
     open,
@@ -94,6 +102,7 @@ export default function QuickEstimateModal({
     const downloadPdf = (customer: {
         customerName: string;
         mobile: string;
+        city?: string;
         email?: string;
     }) => {
         const doc = new jsPDF({
@@ -119,8 +128,7 @@ export default function QuickEstimateModal({
             dark: [45, 45, 45] as [number, number, number],
         };
 
-        const formatMoney = (amount: number) =>
-            `Rs. ${amount.toLocaleString("en-IN")}`;
+        const formatMoney = (amount: number) => `Rs. ${amount.toLocaleString("en-IN")}`;
 
         const text = (
             value: string,
@@ -231,6 +239,9 @@ export default function QuickEstimateModal({
         text(customer.mobile, LEFT, y);
         y += 4;
 
+        text('City: ' + (customer.city || ''), LEFT, y);
+        y += 4;
+
         if (customer.email?.trim()) {
             const email = doc.splitTextToSize(
                 customer.email.trim(),
@@ -288,30 +299,32 @@ export default function QuickEstimateModal({
             body: sortedProducts.map((product) => {
                 const packQuantity = Number(product.packQuantity);
                 const packUnit = product.packUnit?.trim();
-
                 const unitText =
                     packQuantity > 0 && packUnit
-                        ? `${packQuantity} ${packUnit}`
+                        ? `${packQuantity} ${getDisplayPackUnit(packUnit)}`
                         : "-";
 
                 return [
                     product.isComboPackage
                         ? `${product.name} • Combo`
                         : product.name,
-
                     String(product.quantity),
-
                     unitText,
-
-                    product.isComboPackage || product.isGiftPack
-                        ? formatMoney(product.price)
-                        : product.originalPrice
+                    product.isFlashSale &&
+                        typeof product.flashSalePrice === "number"
+                        ? product.originalPrice
                             ? formatMoney(product.originalPrice)
-                            : "-",
-
+                            : formatMoney(product.price)
+                        : product.isComboPackage || product.isGiftPack
+                            ? formatMoney(product.price)
+                            : product.originalPrice
+                                ? formatMoney(product.originalPrice)
+                                : "-",
                     product.discountText ?? "-",
-                    formatMoney(product.price),
-                    formatMoney(product.price * product.quantity),
+                    formatMoney(getEffectivePrice(product)),
+                    formatMoney(
+                        getEffectivePrice(product) * product.quantity
+                    ),
                 ];
             }),
             theme: "grid",
@@ -1162,51 +1175,51 @@ export default function QuickEstimateModal({
                                                     }
                                                     {" "}
                                                     {
-                                                        product.packUnit
+                                                        getDisplayPackUnit(product.packUnit)
                                                     }
                                                 </span>
                                             </div>
                                         )}
-
                                     {/* Price */}
-
                                     <div
                                         className="
-                                        flex
-                                        flex-wrap
-                                        gap-2
-                                        items-center
-                                        mt-1
-                                    "
+        flex
+        flex-wrap
+        gap-2
+        items-center
+        mt-1
+    "
                                     >
                                         {product.isComboPackage ? (
                                             <span className="text-sm text-gray-500">
-                                                ₹
-                                                {
-                                                    product.price
-                                                }
+                                                ₹{getEffectivePrice(product)}
                                             </span>
+                                        ) : product.isFlashSale &&
+                                            typeof product.flashSalePrice === "number" ? (
+                                            <>
+                                                <span className="font-semibold text-[var(--color-primary)]">
+                                                    ₹{product.flashSalePrice}
+                                                </span>
+
+                                                <span className="text-sm line-through text-gray-400">
+                                                    ₹{product.originalPrice}
+                                                </span>
+                                            </>
                                         ) : (
                                             <>
                                                 <span>
-                                                    ₹
-                                                    {
-                                                        product.price
-                                                    }
+                                                    ₹{product.price}
                                                 </span>
 
                                                 {product.originalPrice && (
                                                     <span
                                                         className="
-                                                        text-sm
-                                                        line-through
-                                                        text-gray-400
-                                                    "
+                        text-sm
+                        line-through
+                        text-gray-400
+                    "
                                                     >
-                                                        ₹
-                                                        {
-                                                            product.originalPrice
-                                                        }
+                                                        ₹{product.originalPrice}
                                                     </span>
                                                 )}
                                             </>

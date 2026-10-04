@@ -20,6 +20,9 @@ export interface Product {
   isRetailOnly?: boolean;
   packQuantity?: number;
   packUnit?: string;
+  isFlashSale?: boolean;
+  flashSaleId?: string;
+  flashSalePrice?: number;
 }
 
 export type ProductDetails = {
@@ -38,4 +41,7 @@ export type ProductDetails = {
   packUnit?: string;
   brandId?: string;
   categoryId?: string;
+  isFlashSale?: boolean;
+  flashSaleId?: string;
+  flashSalePrice?: number;
 };

@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom"; import {
+import { useNavigate } from "react-router-dom";
+import {
   FaArrowUp,
   FaWhatsapp,
   FaBoxOpen,
+  FaFire,
+  FaClock,
+  FaChevronRight,
+  FaShoppingCart,
 } from "react-icons/fa";
 
 import ProductCard from "../components/product/ProductCard";
@@ -19,6 +24,7 @@ import { useCategoryProducts } from "../store/categoryProduct.store";
 import { useBrandProducts } from "../store/brandProduct.store";
 import { useCatalog } from "../store/catalog.store";
 import WhatsAppSupport from "../components/whatsapp/WhatsAppSupport";
+import { useFlashSaleStore } from "../store/flashSale.store";
 
 export default function Home() {
   const {
@@ -30,6 +36,11 @@ export default function Home() {
     fetchMore,
     nextCursor,
   } = useHomeProducts();
+  const [flashSaleNow, setFlashSaleNow] = useState(Date.now());
+  const {
+    flashSales,
+    fetchActive: fetchActiveFlashSales,
+  } = useFlashSaleStore();
 
   const {
     bestSellingPackage,
@@ -57,6 +68,17 @@ export default function Home() {
   const [prevAuth, setPrevAuth] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  useEffect(() => {
+    if (flashSales.length === 0) return;
+
+    const timer = window.setInterval(() => {
+      setFlashSaleNow(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [flashSales.length]);
 
   type HomeTab =
     | "products"
@@ -79,6 +101,7 @@ export default function Home() {
     fetchPackages();
     fetchCategories();
     fetchBrands();
+    fetchActiveFlashSales();
   }, []);
 
   useEffect(() => {
@@ -312,6 +335,41 @@ export default function Home() {
           ? brandProducts.fetchMore
           : undefined;
 
+  const flashSaleProducts = useMemo(() => {
+    if (
+      flashSales.length === 0 ||
+      products.length === 0
+    ) {
+      return [];
+    }
+
+    const productMap = new Map(
+      products.map((product) => [
+        product.id,
+        product,
+      ])
+    );
+
+    return flashSales
+      .map((sale) => {
+        const product = productMap.get(
+          sale.productId
+        );
+
+        if (!product) {
+          return null;
+        }
+
+        return product;
+      })
+      .filter(
+        (
+          product
+        ): product is NonNullable<typeof product> =>
+          product !== null
+      );
+  }, [flashSales, products]);
+
   return (
     <div className="space-y-6">
 
@@ -351,15 +409,648 @@ export default function Home() {
         <HeroSlider />
       </div>
 
-      <div className="px-4">
-        <input
-          type="text"
-          placeholder="Search crackers"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--color-primary)]"
-        />
-      </div>
+
+      {/* =========================================================
+    FLASH DEALS
+    Compact responsive design
+   ========================================================= */}
+
+      {flashSaleProducts.length > 0 && (
+        <section className="px-3 sm:px-4 mt-5 sm:mt-6">
+          <div
+            className="
+        relative
+        overflow-hidden
+        rounded-2xl
+        border
+        border-orange-100
+        bg-gradient-to-br
+        from-[#fffaf3]
+        via-white
+        to-[#fff7ed]
+        shadow-[0_4px_20px_rgba(0,0,0,0.05)]
+      "
+          >
+            {/* Soft decorative glow */}
+            <div
+              className="
+          pointer-events-none
+          absolute
+          -right-16
+          -top-16
+          h-40
+          w-40
+          rounded-full
+          bg-orange-100/50
+          blur-3xl
+        "
+            />
+
+            <div
+              className="
+          pointer-events-none
+          absolute
+          -bottom-20
+          -left-16
+          h-40
+          w-40
+          rounded-full
+          bg-amber-100/40
+          blur-3xl
+        "
+            />
+
+            {/* =====================================================
+          HEADER
+         ===================================================== */}
+
+            <div
+              className="
+          relative
+          flex
+          items-center
+          justify-between
+          gap-3
+          border-b
+          border-orange-100
+          px-4
+          py-3.5
+          sm:px-5
+          sm:py-4
+        "
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {/* Icon */}
+                <div
+                  className="
+              flex
+              h-9
+              w-9
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-orange-100
+              text-[var(--color-primary)]
+              shadow-sm
+              sm:h-10
+              sm:w-10
+            "
+                >
+                  <FaFire className="text-base sm:text-lg" />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2
+                      className="
+                  text-lg
+                  font-bold
+                  tracking-tight
+                  text-gray-900
+                  sm:text-xl
+                "
+                    >
+                      Flash Deals
+                    </h2>
+
+                    <span
+                      className="
+                  hidden
+                  rounded-full
+                  border
+                  border-orange-200
+                  bg-white
+                  px-2
+                  py-0.5
+                  text-[9px]
+                  font-bold
+                  uppercase
+                  tracking-wide
+                  text-orange-600
+                  sm:inline-flex
+                "
+                    >
+                      Limited Time
+                    </span>
+                  </div>
+
+                  <p
+                    className="
+                mt-0.5
+                text-xs
+                text-gray-500
+                sm:text-sm
+              "
+                  >
+                    Special prices for a limited time
+                  </p>
+                </div>
+              </div>
+
+              {/* View All */}
+              <button
+                type="button"
+                onClick={() => navigate("/flash-sales")}
+                className="
+            group
+            flex
+            shrink-0
+            items-center
+            gap-1.5
+            rounded-lg
+            px-2
+            py-2
+            text-xs
+            font-semibold
+            text-gray-700
+            transition
+            hover:bg-white
+            hover:text-[var(--color-primary)]
+            sm:px-3
+            sm:text-sm
+          "
+              >
+                <span>View All</span>
+
+                <FaChevronRight
+                  className="
+              text-[9px]
+              transition-transform
+              group-hover:translate-x-0.5
+              sm:text-[10px]
+            "
+                />
+              </button>
+            </div>
+
+            {/* =====================================================
+          DEAL CARDS
+         ===================================================== */}
+
+            <div
+              className={`
+          relative
+          grid
+          gap-3
+          p-3
+          sm:gap-4
+          sm:p-4
+          ${flashSaleProducts.length === 1
+                  ? "grid-cols-1"
+                  : flashSaleProducts.length === 2
+                    ? "grid-cols-1 sm:grid-cols-2"
+                    : flashSaleProducts.length === 3
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                }
+        `}
+            >
+              {flashSaleProducts.slice(0, 4).map((product) => {
+                const sale = flashSales.find(
+                  (item) => item.productId === product.id
+                );
+
+                if (!sale) return null;
+
+                const qty = items[product.id] || 0;
+
+                const originalPrice =
+                  Number(sale.originalPrice) ||
+                  Number(product.price);
+
+                const salePrice =
+                  Number(sale.salePrice) ||
+                  Number(product.price);
+
+                const savings = Math.max(
+                  0,
+                  originalPrice - salePrice
+                );
+
+                const discountPercent =
+                  originalPrice > 0
+                    ? Math.round(
+                      ((originalPrice - salePrice) /
+                        originalPrice) *
+                      100
+                    )
+                    : 0;
+
+                const remainingMs =
+                  new Date(sale.endAt).getTime() -
+                  flashSaleNow;
+
+                const expired = remainingMs <= 0;
+
+                const totalSeconds = Math.max(
+                  0,
+                  Math.floor(remainingMs / 1000)
+                );
+
+                const days = Math.floor(
+                  totalSeconds / 86400
+                );
+
+                const hours = Math.floor(
+                  (totalSeconds % 86400) / 3600
+                );
+
+                const minutes = Math.floor(
+                  (totalSeconds % 3600) / 60
+                );
+
+                const seconds = totalSeconds % 60;
+
+                const countdown =
+                  days > 0
+                    ? `${days}d ${String(hours).padStart(
+                      2,
+                      "0"
+                    )}h`
+                    : `${String(hours).padStart(
+                      2,
+                      "0"
+                    )}:${String(minutes).padStart(
+                      2,
+                      "0"
+                    )}:${String(seconds).padStart(
+                      2,
+                      "0"
+                    )}`;
+
+                return (
+                  <article
+                    key={sale.flashSaleId}
+                    className="
+                group
+                overflow-hidden
+                rounded-xl
+                border
+                border-orange-100
+                bg-white
+                shadow-[0_2px_10px_rgba(0,0,0,0.04)]
+                transition-all
+                duration-200
+                hover:-translate-y-0.5
+                hover:border-orange-200
+                hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
+              "
+                  >
+                    {/* =========================================
+                  IMAGE
+                 ========================================= */}
+
+                    <div
+                      className="
+                  relative
+                  flex
+                  h-[118px]
+                  items-center
+                  justify-center
+                  overflow-hidden
+                  bg-gradient-to-br
+                  from-[#fffaf4]
+                  to-[#fff3df]
+                  sm:h-[125px]
+                "
+                    >
+                      <img
+                        src={
+                          sale.imageUrl ||
+                          product.image
+                        }
+                        alt={product.name}
+                        className="
+                    h-full
+                    w-full
+                    object-contain
+                    px-8
+                    py-4
+                    transition-transform
+                    duration-300
+                    group-hover:scale-[1.04]
+                  "
+                      />
+
+                      {/* Discount badge */}
+                      {discountPercent > 0 && (
+                        <span
+                          className="
+                      absolute
+                      left-2.5
+                      top-2.5
+                      inline-flex
+                      items-center
+                      gap-1
+                      rounded-full
+                      bg-[var(--color-primary)]
+                      px-2
+                      py-1
+                      text-[9px]
+                      font-bold
+                      text-white
+                      shadow-sm
+                      sm:text-[10px]
+                    "
+                        >
+                          <FaFire className="text-[8px]" />
+                          {discountPercent}% OFF
+                        </span>
+                      )}
+                    </div>
+
+                    {/* =========================================
+                  DETAILS
+                 ========================================= */}
+
+                    <div className="p-3 sm:p-3.5">
+
+                      {/* Sale title */}
+                      <h3
+                        className="
+                    line-clamp-1
+                    text-sm
+                    font-bold
+                    leading-tight
+                    text-gray-900
+                    sm:text-[15px]
+                  "
+                      >
+                        {sale.header}
+                      </h3>
+
+                      {/* Product */}
+                      <p
+                        className="
+                    mt-1
+                    line-clamp-1
+                    text-[11px]
+                    font-medium
+                    text-gray-500
+                    sm:text-xs
+                  "
+                      >
+                        {product.name}
+                      </p>
+
+                      {/* Optional description */}
+                      {(sale as any).description && (
+                        <p
+                          className="
+                      mt-1
+                      line-clamp-1
+                      text-[10px]
+                      leading-relaxed
+                      text-gray-400
+                    "
+                        >
+                          {(sale as any).description}
+                        </p>
+                      )}
+
+                      {/* =====================================
+                    PRICE
+                   ===================================== */}
+
+                      <div className="mt-2.5">
+                        <div className="flex items-baseline gap-2">
+                          <span
+                            className="
+                        text-xl
+                        font-extrabold
+                        leading-none
+                        text-[var(--color-primary)]
+                      "
+                          >
+                            ₹{salePrice}
+                          </span>
+
+                          {originalPrice > salePrice && (
+                            <span
+                              className="
+                          text-[10px]
+                          text-gray-400
+                          line-through
+                        "
+                            >
+                              ₹{originalPrice}
+                            </span>
+                          )}
+                        </div>
+
+                        {savings > 0 && (
+                          <span
+                            className="
+                        mt-0.5
+                        inline-block
+                        text-[10px]
+                        font-semibold
+                        text-green-600
+                      "
+                          >
+                            Save ₹{savings}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* =====================================
+                    COUNTDOWN
+                   ===================================== */}
+
+                      <div
+                        className="
+                    mt-2.5
+                    flex
+                    items-center
+                    justify-between
+                    rounded-lg
+                    bg-orange-50
+                    px-2.5
+                    py-1.5
+                  "
+                      >
+                        <div
+                          className="
+                      flex
+                      items-center
+                      gap-1.5
+                      text-[9px]
+                      font-medium
+                      text-gray-500
+                    "
+                        >
+                          <FaClock
+                            className="
+                        text-[var(--color-primary)]
+                        text-[9px]
+                      "
+                          />
+
+                          <span>
+                            {expired
+                              ? "Sale ended"
+                              : "Ends in"}
+                          </span>
+                        </div>
+
+                        {!expired && (
+                          <span
+                            className="
+                        font-mono
+                        text-[10px]
+                        font-bold
+                        tracking-tight
+                        text-gray-800
+                      "
+                          >
+                            {countdown}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* =====================================
+                    CART
+                   ===================================== */}
+
+                      <div className="mt-2.5">
+                        {qty === 0 ? (
+                          <button
+                            type="button"
+                            disabled={expired}
+                            onClick={() =>
+                              addItem(
+                                product.id,
+                                1
+                              )
+                            }
+                            className="
+                        flex
+                        w-full
+                        items-center
+                        justify-center
+                        gap-1.5
+                        rounded-lg
+                        bg-[var(--color-primary)]
+                        px-3
+                        py-2
+                        text-[11px]
+                        font-semibold
+                        text-white
+                        shadow-sm
+                        transition
+                        hover:brightness-105
+                        active:scale-[0.99]
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                        sm:text-xs
+                      "
+                          >
+                            <FaShoppingCart className="text-[10px]" />
+
+                            {expired
+                              ? "Sale Ended"
+                              : "Add to Cart"}
+                          </button>
+                        ) : (
+                          <div
+                            className="
+                        flex
+                        h-8
+                        items-center
+                        justify-between
+                        rounded-lg
+                        border
+                        border-gray-200
+                        bg-gray-50
+                        px-1
+                      "
+                          >
+                            {/* Minus */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (qty === 1) {
+                                  removeItem(
+                                    product.id
+                                  );
+                                } else {
+                                  addItem(
+                                    product.id,
+                                    -1
+                                  );
+                                }
+                              }}
+                              className="
+                          flex
+                          h-6
+                          w-7
+                          items-center
+                          justify-center
+                          rounded-md
+                          bg-white
+                          text-sm
+                          font-semibold
+                          text-gray-600
+                          shadow-sm
+                          transition
+                          hover:bg-gray-100
+                        "
+                            >
+                              −
+                            </button>
+
+                            {/* Quantity */}
+                            <span
+                              className="
+                          text-[10px]
+                          font-semibold
+                          text-gray-700
+                        "
+                            >
+                              {qty} in cart
+                            </span>
+
+                            {/* Plus */}
+                            <button
+                              type="button"
+                              disabled={expired}
+                              onClick={() =>
+                                addItem(
+                                  product.id,
+                                  1
+                                )
+                              }
+                              className="
+                          flex
+                          h-6
+                          w-7
+                          items-center
+                          justify-center
+                          rounded-md
+                          bg-[var(--color-primary)]
+                          text-sm
+                          font-semibold
+                          text-white
+                          transition
+                          hover:brightness-105
+                          disabled:cursor-not-allowed
+                          disabled:opacity-50
+                        "
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="px-4">
         <div
@@ -420,7 +1111,6 @@ export default function Home() {
           </a>
         </div>
       </div>
-
 
       {/* Combo Packages */}
       <div className="px-4">
@@ -496,6 +1186,16 @@ export default function Home() {
             View Packages →
           </button>
         </div>
+      </div>
+
+      <div className="px-4">
+        <input
+          type="text"
+          placeholder="Search crackers"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--color-primary)]"
+        />
       </div>
 
       <div className="px-4">
@@ -646,6 +1346,7 @@ export default function Home() {
             </div>
           )}
       </div>
+
       <WhatsAppSupport />
 
       {showScrollTop && (

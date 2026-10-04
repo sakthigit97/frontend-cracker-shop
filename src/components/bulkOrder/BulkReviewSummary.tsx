@@ -7,6 +7,7 @@ import type {
 } from "../../types/bulkOrder";
 
 import { sortProductsBySequence } from "../../utils/sequncerUtil";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 interface BulkReviewSummaryProps {
     address: BulkOrderAddress;
     items: BulkOrderProduct[];
@@ -291,7 +292,7 @@ function BulkReviewSummary({
                                             >
                                                 <span className="text-sm text-gray-600">
                                                     {cartonQty} {""}
-                                                    {item.packUnit}
+                                                    {getDisplayPackUnit(item.packUnit)}
                                                 </span>
                                             </td>
 

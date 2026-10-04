@@ -9,6 +9,10 @@ import {
     getBulkAccountCreditReport,
 } from "../../../services/product.api";
 
+import {
+    generateAccountCreditPdf,
+} from "../../../utils/pdf/accountCreditReportPdf";
+
 const ALLOWED_STATUSES = [
     "PAYMENT_CONFIRMED",
     "ORDER_PACKED",
@@ -18,6 +22,7 @@ const ALLOWED_STATUSES = [
 const ITEMS_PER_PAGE = 10;
 
 type ReportType = "retail" | "bulk";
+
 
 type AccountSummary = {
     paymentAccountId: string;
@@ -79,21 +84,9 @@ const AdminAccountCreditReportPage: React.FC = () => {
             date.getDate()
         ).padStart(2, "0")}`;
 
-    /*
-     * ---------------------------------------------------------
-     * Report Type
-     * ---------------------------------------------------------
-     *
-     * Retail is always selected by default.
-     */
     const [reportType, setReportType] =
         useState<ReportType>("retail");
 
-    /*
-     * ---------------------------------------------------------
-     * Filters
-     * ---------------------------------------------------------
-     */
     const [currentPage, setCurrentPage] =
         useState(1);
 
@@ -114,18 +107,9 @@ const AdminAccountCreditReportPage: React.FC = () => {
     const [selectedAccount, setSelectedAccount] =
         useState("");
 
-    /*
-     * ---------------------------------------------------------
-     * Report Data
-     * ---------------------------------------------------------
-     */
     const [report, setReport] =
         useState<ReportResponse | null>(null);
 
-    /*
-     * Keep account options separately so that after selecting
-     * one account, the dropdown still contains the other accounts.
-     */
     const [
         accountOptions,
         setAccountOptions,
@@ -134,14 +118,16 @@ const AdminAccountCreditReportPage: React.FC = () => {
     const [loading, setLoading] =
         useState(false);
 
+
+    const [pdfDownloading, setPdfDownloading] =
+        useState(false);
+
+    const [pdfDownloaded, setPdfDownloaded] =
+        useState(false);
+
     const [error, setError] =
         useState("");
 
-    /*
-     * ---------------------------------------------------------
-     * Load Report
-     * ---------------------------------------------------------
-     */
     const loadReport = async (
         type: ReportType = reportType,
         accountOverride?: string
@@ -197,13 +183,6 @@ const AdminAccountCreditReportPage: React.FC = () => {
 
             setReport(result);
 
-            /*
-             * Only update account options when loading
-             * the complete report.
-             *
-             * This keeps all accounts available even
-             * when one account is selected.
-             */
             if (!account) {
                 const sortedAccounts = [
                     ...(result?.accounts || []),
@@ -240,22 +219,10 @@ const AdminAccountCreditReportPage: React.FC = () => {
         }
     };
 
-    /*
-     * ---------------------------------------------------------
-     * Initial Report
-     * ---------------------------------------------------------
-     *
-     * Retail report is always loaded by default.
-     */
     useEffect(() => {
         loadReport("retail");
     }, []);
 
-    /*
-     * ---------------------------------------------------------
-     * Tab Change
-     * ---------------------------------------------------------
-     */
     const handleTabChange = (
         type: ReportType
     ) => {
@@ -265,13 +232,6 @@ const AdminAccountCreditReportPage: React.FC = () => {
 
         setReportType(type);
 
-        /*
-         * Retail and Bulk can have different
-         * payment accounts.
-         *
-         * So reset the selected account when
-         * switching tabs.
-         */
         setSelectedAccount("");
 
         setAccountOptions([]);
@@ -280,18 +240,9 @@ const AdminAccountCreditReportPage: React.FC = () => {
 
         setCurrentPage(1);
 
-        /*
-         * Load the newly selected report
-         * using the current date range.
-         */
         loadReport(type, "");
     };
 
-    /*
-     * ---------------------------------------------------------
-     * Apply Filter
-     * ---------------------------------------------------------
-     */
     const handleApplyFilter = () => {
         loadReport(
             reportType,
@@ -299,11 +250,6 @@ const AdminAccountCreditReportPage: React.FC = () => {
         );
     };
 
-    /*
-     * ---------------------------------------------------------
-     * Filtered Orders
-     * ---------------------------------------------------------
-     */
     const filteredOrders = useMemo(() => {
         if (!report?.orders) {
             return [];
@@ -317,11 +263,6 @@ const AdminAccountCreditReportPage: React.FC = () => {
         );
     }, [report]);
 
-    /*
-     * ---------------------------------------------------------
-     * Pagination
-     * ---------------------------------------------------------
-     */
     const totalPages = Math.ceil(
         filteredOrders.length /
         ITEMS_PER_PAGE
@@ -342,10 +283,6 @@ const AdminAccountCreditReportPage: React.FC = () => {
         currentPage,
     ]);
 
-    /*
-     * Keep current page valid if the number
-     * of pages changes.
-     */
     useEffect(() => {
         if (totalPages === 0) {
             setCurrentPage(1);
@@ -365,11 +302,6 @@ const AdminAccountCreditReportPage: React.FC = () => {
         totalPages,
     ]);
 
-    /*
-     * ---------------------------------------------------------
-     * Pagination Buttons
-     * ---------------------------------------------------------
-     */
     const paginationPages =
         useMemo(() => {
             if (totalPages <= 1) {
@@ -445,11 +377,42 @@ const AdminAccountCreditReportPage: React.FC = () => {
         filteredOrders.length
     );
 
-    /*
-     * ---------------------------------------------------------
-     * Render
-     * ---------------------------------------------------------
-     */
+    const handleDownloadPdf = async () => {
+        if (!report || pdfDownloading) {
+            return;
+        }
+
+        try {
+            setPdfDownloading(true);
+            setPdfDownloaded(false);
+
+            await new Promise((resolve) =>
+                setTimeout(resolve, 50)
+            );
+
+            generateAccountCreditPdf({
+                report,
+                reportType,
+                fromDate,
+                toDate,
+                selectedAccount,
+            });
+
+            setPdfDownloaded(true);
+
+            setTimeout(() => {
+                setPdfDownloaded(false);
+            }, 2500);
+        } catch (error) {
+            console.error(
+                "Account credit PDF generation failed:",
+                error
+            );
+        } finally {
+            setPdfDownloading(false);
+        }
+    };
+
     return (
         <div className="p-4 md:p-6 space-y-6">
             {/* Header */}
@@ -656,6 +619,66 @@ const AdminAccountCreditReportPage: React.FC = () => {
                         {loading
                             ? "Loading..."
                             : "Apply Filter"}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleDownloadPdf}
+                        disabled={!report || pdfDownloading}
+                        className="
+        w-full
+        rounded-lg
+        px-4
+        py-2
+        font-medium
+        text-white
+        transition
+        flex
+        items-center
+        justify-center
+        gap-2
+        disabled:opacity-50
+        disabled:cursor-not-allowed
+        bg-[var(--color-primary)]
+        hover:opacity-90
+    "
+                    >
+                        {pdfDownloading ? (
+                            <>
+                                <svg
+                                    className="h-4 w-4 animate-spin"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    />
+
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                    />
+                                </svg>
+
+                                Generating PDF...
+                            </>
+                        ) : pdfDownloaded ? (
+                            <>
+                                <span className="text-base">✓</span>
+                                PDF Downloaded
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-base">↓</span>
+                                Download PDF
+                            </>
+                        )}
                     </button>
                 </div>
 

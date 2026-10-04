@@ -43,6 +43,7 @@ import {
 } from "../store/adminBulkOrderDetails.store";
 import { useAuth } from "../store/auth.store";
 import { useConfigStore } from "../store/config.store";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 interface LocationState {
     order?: BulkOrderDetailsResponse;
@@ -1493,7 +1494,7 @@ function BulkOrderItemRow({
                         />
                     ) : (
                         <span className="text-sm font-medium text-gray-700">
-                            {item.cartonQty} {packUnit}
+                            {item.cartonQty} {getDisplayPackUnit(packUnit)}
                         </span>
                     )}
                 </div>

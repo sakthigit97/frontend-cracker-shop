@@ -57,6 +57,7 @@ export default function AdminOrders() {
     const [orderIdInput, setOrderIdInput] = useState("");
     const [mobileFilter, setMobileFilter] = useState("");
     const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+    const [amountSort, setAmountSort] = useState<"none" | "high" | "low">("none");
     const debouncedOrderId = useDebounce(orderIdInput.trim(), 500);
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -131,6 +132,14 @@ export default function AdminOrders() {
         }
 
         return list.sort((a, b) => {
+            if (amountSort === "high") {
+                return Number(b.finalPayable ?? 0) - Number(a.finalPayable ?? 0);
+            }
+
+            if (amountSort === "low") {
+                return Number(a.finalPayable ?? 0) - Number(b.finalPayable ?? 0);
+            }
+
             const aTime = Number(a.createdAt);
             const bTime = Number(b.createdAt);
 
@@ -138,7 +147,7 @@ export default function AdminOrders() {
                 ? bTime - aTime
                 : aTime - bTime;
         });
-    }, [data, key, stateFilter, mobileFilter, sortOrder]);
+    }, [data, key, stateFilter, mobileFilter, sortOrder, amountSort]);
 
     const cursor = data[key]?.nextCursor;
     const isLoading = loading[key];
@@ -251,9 +260,28 @@ export default function AdminOrders() {
                     </option>
                 </select>
 
+                <select
+                    value={amountSort}
+                    onChange={(e) =>
+                        setAmountSort(
+                            e.target.value as "none" | "high" | "low"
+                        )
+                    }
+                    className="border px-3 py-2 rounded text-sm"
+                >
+                    <option value="none">
+                        Amount
+                    </option>
+                    <option value="high">
+                        Highest Amount
+                    </option>
+                    <option value="low">
+                        Lowest Amount
+                    </option>
+                </select>
+
             </div>
 
-            {/* STATUS FILTER */}
             <div className="flex gap-2 overflow-x-auto pb-1">
                 {STATUS_ORDER.map((s) => (
                     <button

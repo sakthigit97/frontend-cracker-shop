@@ -11,6 +11,7 @@ import ProductSkeleton from "../components/product/ProductSkeleton";
 import EmptyState from "../components/ui/EmptyState";
 import defaultImage from "../assets/default-image.png";
 import { useCatalog } from "../store/catalog.store";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 interface YouTubePlayerStateChangeEvent {
   data: number;
@@ -1069,7 +1070,7 @@ export default function ProductDetails(propProductId?: any) {
                       }
 
                       {
-                        product.packUnit
+                        getDisplayPackUnit(product.packUnit)
                       }
                     </span>
                   </span>
@@ -1078,30 +1079,38 @@ export default function ProductDetails(propProductId?: any) {
           </div>
 
           {/* Price */}
-
           <div className="flex items-center gap-4 flex-wrap">
-            <span className="text-3xl font-bold text-[var(--color-primary)]">
-              ₹{product.price}
-            </span>
+            {product.isFlashSale &&
+              typeof product.flashSalePrice === "number" ? (
+              <>
+                <span className="text-3xl font-bold text-[var(--color-primary)]">
+                  ₹{product.flashSalePrice}
+                </span>
 
-            {product.originalPrice && (
-              <span className="line-through text-lg text-[var(--color-muted)]">
-                ₹
-                {
-                  product.originalPrice
-                }
-              </span>
+                <span className="line-through text-lg text-[var(--color-muted)]">
+                  ₹{product.originalPrice}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-bold text-[var(--color-primary)]">
+                  ₹{product.price}
+                </span>
+
+                {product.originalPrice && (
+                  <span className="line-through text-lg text-[var(--color-muted)]">
+                    ₹{product.originalPrice}
+                  </span>
+                )}
+              </>
             )}
 
             {product?.discountText && (
               <span className="bg-[var(--color-secondary)] text-white text-sm font-semibold px-3 py-1 rounded-full">
-                {
-                  product.discountText
-                }
+                {product.discountText}
               </span>
             )}
           </div>
-
           {/* Cart */}
 
           <div className="pt-2">

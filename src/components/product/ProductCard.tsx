@@ -5,6 +5,7 @@ import defaultImage from "../../assets/default-image.png";
 import type { Product } from "../../types/product";
 import Button from "../ui/Button";
 import { useCatalog } from "../../store/catalog.store";
+import { getDisplayPackUnit } from "../../utils/displayPackUnit";
 
 interface Props {
   product: Product;
@@ -241,7 +242,7 @@ function ProductCard({
                   truncate
                 "
               >
-                {product.packQuantity} {product.packUnit}
+                {product.packQuantity} {getDisplayPackUnit(product.packUnit)}
               </span>
             </div>
           )}
@@ -249,33 +250,60 @@ function ProductCard({
           {/* Price */}
           <div
             className="
-              flex
-              items-baseline
-              gap-1.5
-              whitespace-nowrap
-              shrink-0
-            "
+    flex
+    items-baseline
+    gap-1.5
+    whitespace-nowrap
+    shrink-0
+  "
           >
-            <span
-              className="
-                text-base
-                font-bold
-                text-[var(--color-primary)]
-              "
-            >
-              ₹{product.price}
-            </span>
+            {product.isFlashSale &&
+              typeof product.flashSalePrice === "number" ? (
+              <>
+                <span
+                  className="
+                  text-base
+                  font-bold
+                  text-[var(--color-primary)]
+                "
+                >
+                  ₹{product.flashSalePrice}
+                </span>
 
-            {product.originalPrice && (
-              <span
-                className="
+                <span
+                  className="
                   text-xs
                   line-through
                   text-[var(--color-muted)]
                 "
-              >
-                ₹{product.originalPrice}
-              </span>
+                >
+                  ₹{product.originalPrice}
+                </span>
+              </>
+            ) : (
+              <>
+                <span
+                  className="
+                  text-base
+                  font-bold
+                  text-[var(--color-primary)]
+                "
+                >
+                  ₹{product.price}
+                </span>
+
+                {product.originalPrice && (
+                  <span
+                    className="
+                    text-xs
+                    line-through
+                    text-[var(--color-muted)]
+                  "
+                  >
+                    ₹{product.originalPrice}
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>

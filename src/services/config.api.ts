@@ -42,7 +42,7 @@ export type GlobalConfig = {
     isEnableBulkOrder: boolean;
     sparklerCategory?: string;
     tutorialVideos?: any;
-    packUnits?: string[];
+    packUnits?: any[];
 };
 
 export async function fetchGlobalConfig(): Promise<GlobalConfig> {

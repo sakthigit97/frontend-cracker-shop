@@ -18,6 +18,7 @@ import {
   FiChevronUp
 } from "react-icons/fi";
 import { validateCoupon } from "../services/coupon.api";
+import { getDisplayPackUnit } from "../utils/displayPackUnit";
 
 
 type ProfileResponse = {
@@ -42,6 +43,7 @@ type AppliedCoupon = {
   couponValue: number;
   couponDiscount: number;
 };
+
 
 type AddressMode = "PROFILE" | "NEW";
 export default function Checkout() {
@@ -86,6 +88,13 @@ export default function Checkout() {
     district: string;
     city: string;
   } | null>(null);
+
+  const getEffectivePrice = (product: any): number => {
+    return product.isFlashSale &&
+      typeof product.flashSalePrice === "number"
+      ? product.flashSalePrice
+      : product.price;
+  };
 
   const pricingBreakdown = useMemo(
     () => calculateOrderPricingBreakdown(products),
@@ -894,7 +903,7 @@ export default function Checkout() {
                   whitespace-nowrap
                 "
                         >
-                          📦 {p.packQuantity} {p.packUnit}
+                          📦 {p.packQuantity} {getDisplayPackUnit(p.packUnit)}
                         </span>
                       )}
 
@@ -905,7 +914,18 @@ export default function Checkout() {
 
                   {/* Price + Discount */}
                   <div className="flex items-center flex-wrap gap-1.5 mt-1">
-                    {p.originalPrice && p.originalPrice > p.price ? (
+                    {p.isFlashSale &&
+                      typeof p.flashSalePrice === "number" ? (
+                      <>
+                        <span className="line-through text-gray-400 text-xs">
+                          ₹{p.originalPrice}
+                        </span>
+
+                        <span className="text-[var(--color-primary)] font-semibold text-sm">
+                          ₹{p.flashSalePrice}
+                        </span>
+                      </>
+                    ) : p.originalPrice && p.originalPrice > p.price ? (
                       <>
                         <span className="line-through text-gray-400 text-xs">
                           ₹{p.originalPrice}
@@ -943,13 +963,13 @@ export default function Checkout() {
                 {/* Product Total */}
                 <div
                   className="
-          shrink-0
-          font-semibold
-          text-[var(--color-primary)]
-          text-sm
-        "
+                  shrink-0
+                  font-semibold
+                  text-[var(--color-primary)]
+                  text-sm
+                "
                 >
-                  ₹{p.price * p.quantity}
+                  ₹{getEffectivePrice(p) * p.quantity}
                 </div>
               </div>
             ))}

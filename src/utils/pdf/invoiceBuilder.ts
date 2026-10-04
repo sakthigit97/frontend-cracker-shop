@@ -11,6 +11,7 @@ import {
 } from "../../utils/pdf/invoiceHelpers";
 import Icon from "../../assets/icon-new.png";
 import { formatDateTime } from "../date";
+import { getDisplayPackUnit } from "../displayPackUnit";
 
 export async function buildInvoicePdf(
     order: any,
@@ -379,7 +380,7 @@ export async function buildInvoicePdf(
                 const unitText =
                     packQuantity > 0 &&
                         packUnit
-                        ? `${packQuantity} ${packUnit}`
+                        ? `${packQuantity} ${getDisplayPackUnit(packUnit)}`
                         : "-";
 
                 const productName =

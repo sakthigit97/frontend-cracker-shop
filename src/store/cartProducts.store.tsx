@@ -14,6 +14,8 @@ type CartProduct = {
     packQuantity?: number;
     packUnit?: string;
     sequenceNumber?: number;
+    isFlashSale?: boolean;
+    flashSalePrice?: number;
 };
 
 interface CartProductsState {
@@ -74,7 +76,9 @@ export const useCartProductsStore = create<CartProductsState>(
                             isComboPackage: !!p.isComboPackage,
                             packQuantity: p.packQuantity,
                             packUnit: p.packUnit,
-                            sequenceNumber: p.sequenceNumber
+                            sequenceNumber: p.sequenceNumber,
+                            isFlashSale: p.isFlashSale === true,
+                            flashSalePrice: p.flashSalePrice,
                         };
                     });
 
