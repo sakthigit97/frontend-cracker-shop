@@ -21,13 +21,15 @@ function QuickEstimateTableRow({
     onProductClick,
 }: Props) {
     const availableQty = product.qty || 0;
-    const total = product.price * quantity;
+    const effectivePrice =
+        product.isFlashSale &&
+            typeof product.flashSalePrice === "number"
+            ? product.flashSalePrice
+            : product.price;
 
-    const imageSrc =
-        product.image?.trim() || defaultImage;
-
-    const hasPack =
-        Number(product.packQuantity) > 0 &&
+    const total = effectivePrice * quantity;
+    const imageSrc = product.image?.trim() || defaultImage;
+    const hasPack = Number(product.packQuantity) > 0 &&
         Boolean(product.packUnit?.trim());
 
     return (
@@ -149,7 +151,11 @@ function QuickEstimateTableRow({
             </td>
 
             <td className="text-center py-2 px-3 whitespace-nowrap">
-                {product.isComboPackage || product.isGiftPack ? (
+                {product.isFlashSale ? (
+                    <span className="line-through text-gray-400">
+                        ₹{product.originalPrice}
+                    </span>
+                ) : product.isComboPackage || product.isGiftPack ? (
                     <span className="text-gray-500">
                         ₹{product.price}
                     </span>
@@ -170,7 +176,7 @@ function QuickEstimateTableRow({
                         text-[var(--color-primary)]
                     "
                 >
-                    ₹{product.price}
+                    ₹{effectivePrice}
                 </span>
             </td>
 

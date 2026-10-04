@@ -250,33 +250,60 @@ function ProductCard({
           {/* Price */}
           <div
             className="
-              flex
-              items-baseline
-              gap-1.5
-              whitespace-nowrap
-              shrink-0
-            "
+    flex
+    items-baseline
+    gap-1.5
+    whitespace-nowrap
+    shrink-0
+  "
           >
-            <span
-              className="
-                text-base
-                font-bold
-                text-[var(--color-primary)]
-              "
-            >
-              ₹{product.price}
-            </span>
+            {product.isFlashSale &&
+              typeof product.flashSalePrice === "number" ? (
+              <>
+                <span
+                  className="
+                  text-base
+                  font-bold
+                  text-[var(--color-primary)]
+                "
+                >
+                  ₹{product.flashSalePrice}
+                </span>
 
-            {product.originalPrice && (
-              <span
-                className="
+                <span
+                  className="
                   text-xs
                   line-through
                   text-[var(--color-muted)]
                 "
-              >
-                ₹{product.originalPrice}
-              </span>
+                >
+                  ₹{product.originalPrice}
+                </span>
+              </>
+            ) : (
+              <>
+                <span
+                  className="
+                  text-base
+                  font-bold
+                  text-[var(--color-primary)]
+                "
+                >
+                  ₹{product.price}
+                </span>
+
+                {product.originalPrice && (
+                  <span
+                    className="
+                    text-xs
+                    line-through
+                    text-[var(--color-muted)]
+                  "
+                  >
+                    ₹{product.originalPrice}
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>

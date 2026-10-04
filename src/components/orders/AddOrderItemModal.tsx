@@ -205,16 +205,32 @@ export default function AddOrderItemModal({
                                         </p>
 
                                         <div className="flex items-center gap-2 mt-0.5 text-sm">
-                                            {p.originalPrice &&
-                                                p.originalPrice > p.price && (
+                                            {p.isFlashSale &&
+                                                typeof p.flashSalePrice === "number" &&
+                                                p.flashSalePrice > 0 ? (
+                                                <>
                                                     <span className="text-gray-400 line-through">
                                                         ₹{p.originalPrice}
                                                     </span>
-                                                )}
 
-                                            <span className="font-semibold text-[var(--color-primary)]">
-                                                ₹{p.price}
-                                            </span>
+                                                    <span className="font-semibold text-[var(--color-primary)]">
+                                                        ₹{p.flashSalePrice}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {p.originalPrice &&
+                                                        p.originalPrice > p.price && (
+                                                            <span className="text-gray-400 line-through">
+                                                                ₹{p.originalPrice}
+                                                            </span>
+                                                        )}
+
+                                                    <span className="font-semibold text-[var(--color-primary)]">
+                                                        ₹{p.price}
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
 
@@ -264,7 +280,12 @@ export default function AddOrderItemModal({
                                 onAdd(selectedItems.map((i) => ({
                                     productId: i.id,
                                     name: i.name,
-                                    price: i.price,
+                                    price:
+                                        i.isFlashSale &&
+                                            typeof i.flashSalePrice === "number" &&
+                                            i.flashSalePrice > 0
+                                            ? i.flashSalePrice
+                                            : i.price,
                                     quantity: i.quantity,
                                     image: i.image,
                                     originalPrice: i.originalPrice,

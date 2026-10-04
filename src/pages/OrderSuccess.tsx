@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
+import { useOrdersStore } from "../store/orders.store";
 
 type OrderSuccessState = {
   orderId: string;
@@ -13,6 +14,7 @@ export default function OrderSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as OrderSuccessState | null;
+  const clearOrdersCache = useOrdersStore((s) => s.clear);
 
   if (!state) {
     navigate("/", { replace: true });
@@ -131,7 +133,10 @@ export default function OrderSuccess() {
             <Button
               variant="secondary"
               className="w-full h-12 text-base"
-              onClick={() => navigate("/orders")}
+              onClick={() => {
+                clearOrdersCache();
+                navigate("/orders");
+              }}
             >
               View My Orders
             </Button>

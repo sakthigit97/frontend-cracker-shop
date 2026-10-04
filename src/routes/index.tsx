@@ -62,6 +62,8 @@ import AdminComboPackagePage from "../pages/admin/AdminComboPackagePage";
 import AdminComboPackagesPage from "../pages/admin/AdminComboPackagesPage";
 import AdminEditComboPackagePage from "../pages/admin/AdminEditComboPackagePage";
 import AdminAccountCreditReportPage from "../pages/admin/reports/AdminAccountCreditReportPage";
+import AdminFlashSale from "../pages/admin/AdminFlashSale";
+import FlashSales from "../pages/FlashSales";
 
 export default function AppRoutes() {
   return (
@@ -82,7 +84,10 @@ export default function AppRoutes() {
           <Route path="/combo-packages/:packageId" element={<ComboPackageDetails />} />
           <Route path="/ai-assistant" element={<AiAssistant />} />
           <Route path="/quick-estimate" element={<QuickEstimate />} />
-          <Route path="/how-to-use" element={<HowToUse />} />
+          <Route path="/how-to-use" element={<HowToUse />} /><Route
+            path="/flash-sales"
+            element={<FlashSales />}
+          />
         </Route>
 
         <Route element={<AuthLayout />}>
@@ -139,6 +144,8 @@ export default function AppRoutes() {
             <Route path="/admin/combo-packages" element={<AdminComboPackagesPage />} />
             <Route path="/admin/combo-packages/edit/:comboId" element={<AdminEditComboPackagePage />} />
             <Route path="/admin/reports/account-credits" element={<AdminAccountCreditReportPage />} />
+            <Route path="/admin/flash-sales" element={<AdminFlashSale />} />
+
           </Route>
         </Route>
 

@@ -1079,30 +1079,38 @@ export default function ProductDetails(propProductId?: any) {
           </div>
 
           {/* Price */}
-
           <div className="flex items-center gap-4 flex-wrap">
-            <span className="text-3xl font-bold text-[var(--color-primary)]">
-              ₹{product.price}
-            </span>
+            {product.isFlashSale &&
+              typeof product.flashSalePrice === "number" ? (
+              <>
+                <span className="text-3xl font-bold text-[var(--color-primary)]">
+                  ₹{product.flashSalePrice}
+                </span>
 
-            {product.originalPrice && (
-              <span className="line-through text-lg text-[var(--color-muted)]">
-                ₹
-                {
-                  product.originalPrice
-                }
-              </span>
+                <span className="line-through text-lg text-[var(--color-muted)]">
+                  ₹{product.originalPrice}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-bold text-[var(--color-primary)]">
+                  ₹{product.price}
+                </span>
+
+                {product.originalPrice && (
+                  <span className="line-through text-lg text-[var(--color-muted)]">
+                    ₹{product.originalPrice}
+                  </span>
+                )}
+              </>
             )}
 
             {product?.discountText && (
               <span className="bg-[var(--color-secondary)] text-white text-sm font-semibold px-3 py-1 rounded-full">
-                {
-                  product.discountText
-                }
+                {product.discountText}
               </span>
             )}
           </div>
-
           {/* Cart */}
 
           <div className="pt-2">

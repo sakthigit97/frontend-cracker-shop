@@ -429,7 +429,7 @@ export default function AdjustOrder() {
         if (saving) return;
         try {
             setSaving(true);
-            await adjustOrderApi(mobile, orderId, {
+            const updatedOrder = await adjustOrderApi(mobile, orderId, {
                 items: items.map(i => ({
                     productId: i.productId,
                     quantity: i.quantity,
@@ -447,7 +447,7 @@ export default function AdjustOrder() {
             navigate(returnPath, {
                 replace: true,
                 state: {
-                    forceRefresh: true,
+                    order: updatedOrder,
                 },
             });
 

@@ -231,6 +231,14 @@ export default function Cart() {
               (category) => category.id === p.categoryId
             )?.name;
 
+            const effectivePrice =
+              p.isFlashSale &&
+                typeof p.flashSalePrice === "number"
+                ? p.flashSalePrice
+                : p.price;
+
+            const lineTotal = effectivePrice * p.quantity;
+
             return (
               <div
                 key={p.id}
@@ -402,25 +410,26 @@ export default function Cart() {
                       </span>
                     )}
                   </div>
+
                   <div
                     className="
-                mt-1
-                flex
-                flex-wrap
-                items-center
-                gap-1.5
-                leading-none
-              "
+    mt-1
+    flex
+    flex-wrap
+    items-center
+    gap-1.5
+    leading-none
+  "
                   >
                     {p.originalPrice &&
-                      p.originalPrice > p.price && (
+                      p.originalPrice > effectivePrice && (
                         <span
                           className="
-                      text-[11px]
-                      sm:text-sm
-                      line-through
-                      text-gray-400
-                    "
+          text-[11px]
+          sm:text-sm
+          line-through
+          text-gray-400
+        "
                         >
                           ₹{p.originalPrice}
                         </span>
@@ -428,13 +437,13 @@ export default function Cart() {
 
                     <span
                       className="
-                  text-sm
-                  sm:text-base
-                  font-semibold
-                  text-[var(--color-primary)]
-                "
+      text-sm
+      sm:text-base
+      font-semibold
+      text-[var(--color-primary)]
+    "
                     >
-                      ₹{p.price}
+                      ₹{effectivePrice}
                     </span>
 
                     <span className="text-[11px] sm:text-xs text-gray-500">
@@ -443,14 +452,16 @@ export default function Cart() {
 
                     <span
                       className="
-                  text-sm
-                  font-semibold
-                  text-[var(--color-primary)]
-                "
+      text-sm
+      sm:text-base
+      font-semibold
+      text-[var(--color-primary)]
+    "
                     >
-                      = ₹{p.price * p.quantity}
+                      = ₹{lineTotal}
                     </span>
                   </div>
+
                 </div>
 
                 <div
