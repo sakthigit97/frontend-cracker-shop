@@ -28,6 +28,8 @@ type AdjustOrderItem = {
     packQuantity?: number;
     packUnit?: string;
     sequenceNumber?: number;
+    isFlashSale?: boolean;
+    flashSalePrice?: number;
 };
 
 export default function AdjustOrder() {
@@ -79,6 +81,8 @@ export default function AdjustOrder() {
             quantity: i.quantity,
             price: i.total / i.quantity,
             image: i.image,
+            isFlashSale: i.isFlashSale,
+            flashSalePrice: i.flashSalePrice,
             discountText: i.discountText,
             originalPrice: i.originalPrice,
             isComboPackage: i.isComboPackage,
@@ -479,7 +483,11 @@ export default function AdjustOrder() {
                             return;
                         }
 
-                        navigate(returnPath);
+                        navigate(returnPath, {
+                            state: {
+                                order,
+                            },
+                        });
                     }}
                     className="
                     flex items-center justify-center
@@ -714,20 +722,40 @@ export default function AdjustOrder() {
 
                                         </td>
 
+
                                         {/* Discount */}
                                         <td className="px-4 py-3 text-center whitespace-nowrap">
-
-                                            {item.discountText ? (
-                                                <span className="
-                                                    inline-flex
-                                                    rounded-full
-                                                    bg-green-100
-                                                    px-2
-                                                    py-0.5
-                                                    text-xs
-                                                    font-semibold
-                                                    text-green-700
-                                                ">
+                                            {item.isFlashSale &&
+                                                typeof item.flashSalePrice === "number" ? (
+                                                <span
+                                                    className="
+                inline-flex
+                items-center
+                gap-1
+                rounded-full
+                bg-[var(--color-primary)]/10
+                px-2
+                py-0.5
+                text-xs
+                font-semibold
+                text-[var(--color-primary)]
+            "
+                                                >
+                                                    🔥 Flash Sale
+                                                </span>
+                                            ) : item.discountText ? (
+                                                <span
+                                                    className="
+                inline-flex
+                rounded-full
+                bg-green-100
+                px-2
+                py-0.5
+                text-xs
+                font-semibold
+                text-green-700
+            "
+                                                >
                                                     {item.discountText}
                                                 </span>
                                             ) : (
@@ -735,7 +763,6 @@ export default function AdjustOrder() {
                                                     NET RATE
                                                 </span>
                                             )}
-
                                         </td>
 
                                         {/* Offer Price */}
@@ -1110,7 +1137,12 @@ export default function AdjustOrder() {
                 cancelText="Stay"
                 onConfirm={() => {
                     setShowLeaveConfirm(false);
-                    navigate(returnPath);
+
+                    navigate(returnPath, {
+                        state: {
+                            order,
+                        },
+                    });
                 }}
                 onCancel={() => setShowLeaveConfirm(false)}
             />

@@ -358,8 +358,7 @@ export default function AdminOrderDetails() {
                         String(item.productId) === productId
                 );
 
-                const productName =
-                    orderItem?.name || productId;
+                const productName = orderItem?.name || productId;
 
                 showAlert({
                     type: "error",
@@ -1679,22 +1678,43 @@ export default function AdminOrderDetails() {
                                             {/* Discount */}
                                             <td className="px-4 py-3 text-center whitespace-nowrap">
 
-                                                {item.discountText ? (
-                                                    <span className="
+                                                {item.isFlashSale &&
+                                                    typeof item.flashSalePrice === "number" ? (
+                                                    <span
+                                                        className="
+            inline-flex
+            items-center
+            gap-1
+            rounded-full
+            bg-[var(--color-primary)]/10
+            px-2
+            py-0.5
+            text-xs
+            font-semibold
+            text-[var(--color-primary)]
+            whitespace-nowrap
+        "
+                                                    >
+                                                        🔥 Flash Sale
+                                                    </span>
+                                                ) : item.discountText ? (
+                                                    <span
+                                                        className="
                                                         inline-flex
                                                         rounded-full
                                                         bg-green-100
                                                         px-2
                                                         py-0.5
+                                                        text-xs
                                                         font-semibold
                                                         text-green-700
-                                                        text-xs
-                                                    ">
+                                                    "
+                                                    >
                                                         {item.discountText}
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400">
-                                                        -
+                                                        NET RATE
                                                     </span>
                                                 )}
 

@@ -12,6 +12,7 @@ import EmptyState from "../components/ui/EmptyState";
 import defaultImage from "../assets/default-image.png";
 import { useCatalog } from "../store/catalog.store";
 import { getDisplayPackUnit } from "../utils/displayPackUnit";
+import { FaFire } from "react-icons/fa";
 
 interface YouTubePlayerStateChangeEvent {
   data: number;
@@ -1104,14 +1105,20 @@ export default function ProductDetails(propProductId?: any) {
                 )}
               </>
             )}
-
-            {product?.discountText && (
-              <span className="bg-[var(--color-secondary)] text-white text-sm font-semibold px-3 py-1 rounded-full">
-                {product.discountText}
+            {product.isFlashSale &&
+              typeof product.flashSalePrice === "number" ? (
+              <span className="bg-[var(--color-primary)] text-white text-sm font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1">
+                <FaFire className="text-xs" />
+                Flash Sale
               </span>
+            ) : (
+              product?.discountText && (
+                <span className="bg-[var(--color-secondary)] text-white text-sm font-semibold px-3 py-1 rounded-full">
+                  {product.discountText}
+                </span>
+              )
             )}
           </div>
-          {/* Cart */}
 
           <div className="pt-2">
             <div

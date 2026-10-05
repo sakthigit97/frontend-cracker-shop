@@ -120,25 +120,50 @@ function ProductCard({
           "
         />
 
-        {product.discountText && (
+        {product.isFlashSale &&
+          typeof product.flashSalePrice === "number" ? (
           <span
             className="
-              absolute
-              top-2
-              left-2
-              bg-[var(--color-secondary)]
-              text-white
-              text-[11px]
-              font-bold
-              px-2
-              py-1
-              rounded-md
-              shadow-sm
-              whitespace-nowrap
-            "
+      absolute
+      top-2
+      left-2
+      inline-flex
+      items-center
+      gap-1
+      bg-[var(--color-primary)]
+      text-white
+      text-[11px]
+      font-bold
+      px-2
+      py-1
+      rounded-md
+      shadow-sm
+      whitespace-nowrap
+    "
           >
-            {product.discountText}
+            🔥 Flash Sale
           </span>
+        ) : (
+          product.discountText && (
+            <span
+              className="
+        absolute
+        top-2
+        left-2
+        bg-[var(--color-secondary)]
+        text-white
+        text-[11px]
+        font-bold
+        px-2
+        py-1
+        rounded-md
+        shadow-sm
+        whitespace-nowrap
+      "
+            >
+              {product.discountText}
+            </span>
+          )
         )}
       </div>
       <div

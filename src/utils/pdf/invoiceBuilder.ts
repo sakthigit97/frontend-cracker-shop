@@ -400,7 +400,10 @@ export async function buildInvoicePdf(
                             )
                             : "-",
 
-                    item.discountText ?? "-",
+                    item.isFlashSale &&
+                        typeof item.flashSalePrice === "number"
+                        ? "Flash Sale"
+                        : item.discountText ?? "-",
                     money(item.price),
                     money(item.total),
                 ];
@@ -571,17 +574,34 @@ export async function buildInvoicePdf(
                 data.section === "body" &&
                 data.column.index === 4
             ) {
-                data.cell.styles.textColor = [
-                    22,
-                    163,
-                    74,
-                ];
+                const item =
+                    invoiceItems[data.row.index];
 
-                data.cell.styles.fontStyle =
-                    "bold";
+                if (
+                    item?.isFlashSale &&
+                    typeof item.flashSalePrice === "number"
+                ) {
+                    data.cell.styles.textColor =
+                        COLORS.primary;
 
-                data.cell.styles.halign =
-                    "center";
+                    data.cell.styles.fontStyle =
+                        "bold";
+
+                    data.cell.styles.halign =
+                        "center";
+                } else {
+                    data.cell.styles.textColor = [
+                        22,
+                        163,
+                        74,
+                    ];
+
+                    data.cell.styles.fontStyle =
+                        "bold";
+
+                    data.cell.styles.halign =
+                        "center";
+                }
             }
 
             if (
