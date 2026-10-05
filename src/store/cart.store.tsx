@@ -19,6 +19,7 @@ export interface CartState {
   dirtyItems: CartItems;
   locked: boolean;
   addItem: (productId: string, qty?: number) => void;
+  removeItemsSilently: (productIds: string[]) => void;
   removeItem: (productId: string) => void;
   clear: () => void;
   hydrate: (items: CartItems) => void;
@@ -46,6 +47,20 @@ export const cartStore = create<CartState>()(
       dirtyItems: {},
       locked: false,
       deliveryState: undefined,
+      removeItemsSilently: (productIds) =>
+        set((state) => {
+          if (!productIds.length) return state;
+
+          const items = { ...state.items };
+
+          productIds.forEach((productId) => {
+            delete items[productId];
+          });
+
+          return {
+            items,
+          };
+        }),
       setDeliveryState: (deliveryState) =>
         set((state) => {
           if (state.deliveryState === deliveryState) {

@@ -194,14 +194,13 @@ const drawReportDetails = (
         fromDate && toDate
             ? `${formatReportDate(fromDate)} - ${formatReportDate(toDate)}`
             : range === "30d"
-              ? "Last 30 Days"
-              : "Last 7 Days";
+                ? "Last 30 Days"
+                : "Last 7 Days";
 
     doc.text(
-        `Report Type : ${
-            reportType === "bulk"
-                ? "Bulk Orders"
-                : "Retail Orders"
+        `Report Type : ${reportType === "bulk"
+            ? "Bulk Orders"
+            : "Retail Orders"
         }`,
         PAGE_MARGIN,
         y
@@ -249,8 +248,7 @@ const drawReportDetails = (
         );
     } else {
         doc.text(
-            `Orders : ${
-                report?.summary?.totalOrders ?? 0
+            `Orders : ${report?.summary?.totalOrders ?? 0
             }`,
             PAGE_MARGIN,
             y
@@ -401,6 +399,15 @@ export const generateRevenueReportPdf = ({
                     halign: "right",
                 },
             },
+            didParseCell: (data) => {
+                if (data.section === "foot") {
+                    if (data.column.index === 0) {
+                        data.cell.styles.halign = "left";
+                    } else {
+                        data.cell.styles.halign = "right";
+                    }
+                }
+            },
             showHead: "everyPage",
             pageBreak: "auto",
             rowPageBreak: "avoid",
@@ -467,6 +474,15 @@ export const generateRevenueReportPdf = ({
                     report?.summary?.totalSales
                 ),
             ]],
+            didParseCell: (data) => {
+                if (data.section === "foot") {
+                    if (data.column.index === 0) {
+                        data.cell.styles.halign = "left";
+                    } else {
+                        data.cell.styles.halign = "right";
+                    }
+                }
+            },
             theme: "striped",
             styles: {
                 font: "helvetica",
@@ -522,12 +538,6 @@ export const generateRevenueReportPdf = ({
                 );
             },
         });
-
-        /*
-         * -----------------------------------------------------
-         * Bulk: Order Details
-         * -----------------------------------------------------
-         */
 
         const dailyTableY =
             (doc as any).lastAutoTable?.finalY ??

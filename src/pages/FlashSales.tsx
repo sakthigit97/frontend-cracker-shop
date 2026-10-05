@@ -793,7 +793,7 @@ export default function FlashSales() {
                                                     type="button"
                                                     onClick={() =>
                                                         navigate(
-                                                            `/products/${product.id}`
+                                                            `/product/${product.id}`
                                                         )
                                                     }
                                                     className="

@@ -395,20 +395,38 @@ export default function Cart() {
                         </span>
                       )}
 
-                    {/* Discount / Net Rate */}
-                    {(p.discountText || !p.isComboPackage) && (
+                    {p.isFlashSale &&
+                      typeof p.flashSalePrice === "number" ? (
                       <span
                         className="
-                    text-[10px]
-                    sm:text-xs
-                    font-semibold
-                    text-green-600
-                    whitespace-nowrap
-                  "
+            text-[10px]
+            sm:text-xs
+            font-semibold
+            text-[var(--color-primary)]
+            whitespace-nowrap
+            inline-flex
+            items-center
+            gap-1
+        "
                       >
-                        {p.discountText || "NET RATE"}
+                        🔥 Flash Sale
                       </span>
+                    ) : (
+                      (p.discountText || !p.isComboPackage) && (
+                        <span
+                          className="
+                            text-[10px]
+                            sm:text-xs
+                            font-semibold
+                            text-green-600
+                            whitespace-nowrap
+                        "
+                        >
+                          {p.discountText || "NET RATE"}
+                        </span>
+                      )
                     )}
+
                   </div>
 
                   <div

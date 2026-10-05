@@ -109,7 +109,6 @@ const drawHeader = (
         15
     );
 
-    // Company subtitle
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(90);
@@ -120,7 +119,6 @@ const drawHeader = (
         21
     );
 
-    // Report title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.setTextColor(15, 23, 42);
@@ -131,7 +129,6 @@ const drawHeader = (
         31
     );
 
-    // Report type
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(90);
@@ -180,9 +177,8 @@ const drawFooter = (doc: jsPDF) => {
         pageHeight - 5
     );
 
-    const pageNumber = `Page ${
-        doc.getCurrentPageInfo().pageNumber
-    } of ${doc.getNumberOfPages()}`;
+    const pageNumber = `Page ${doc.getCurrentPageInfo().pageNumber
+        } of ${doc.getNumberOfPages()}`;
 
     doc.text(
         pageNumber,
@@ -393,7 +389,7 @@ export const generateAccountCreditPdf = ({
 
         columnStyles: {
             0: {
-                cellWidth: 88,
+                cellWidth: 90,
                 halign: "left",
             },
             1: {
@@ -401,13 +397,22 @@ export const generateAccountCreditPdf = ({
                 halign: "right",
             },
             2: {
-                cellWidth: 48,
+                cellWidth: 50,
                 halign: "right",
             },
             3: {
                 cellWidth: 24,
                 halign: "right",
             },
+        },
+        didParseCell: (data) => {
+            if (data.section === "foot") {
+                if (data.column.index === 0) {
+                    data.cell.styles.halign = "left";
+                } else {
+                    data.cell.styles.halign = "right";
+                }
+            }
         },
 
         showHead: "everyPage",
@@ -510,7 +515,7 @@ export const generateAccountCreditPdf = ({
 
         columnStyles: {
             0: {
-                cellWidth: 42,
+                cellWidth: 44,
                 halign: "left",
             },
             1: {
@@ -518,11 +523,11 @@ export const generateAccountCreditPdf = ({
                 halign: "left",
             },
             2: {
-                cellWidth: 55,
+                cellWidth: 56,
                 halign: "left",
             },
             3: {
-                cellWidth: 35,
+                cellWidth: 36,
                 halign: "left",
             },
             4: {

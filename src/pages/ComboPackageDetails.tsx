@@ -1,26 +1,25 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
 import ProductCard from "../components/product/ProductCard";
 import EmptyState from "../components/ui/EmptyState";
 import ProductSkeleton from "../components/product/ProductSkeleton";
 import { usePackageStore } from "../store/package.store";
 import { cartStore } from "../store/cart.store";
 import { useConfigStore } from "../store/config.store";
+import { sortProductsBySequence } from "../utils/sequncerUtil";
 
 export default function ComboPackageDetails() {
     const navigate = useNavigate();
     const { packageId = "" } = useParams();
     const { packageProducts, loading, fetchPackageProducts } = usePackageStore();
-
     const packageData = packageProducts[packageId];
     const products = packageData?.products || [];
+    const sortedProducts = sortProductsBySequence(products);
     const selectedPackage = packageData?.package;
     const items = cartStore((s) => s.items);
     const addItem = cartStore((s) => s.addItem);
     const removeItem = cartStore((s) => s.removeItem);
     const config = useConfigStore((s) => s.config);
-
     const comboProductId = selectedPackage?.productId;
     const productMrpTotal = products.reduce(
         (total, product) =>
@@ -31,13 +30,10 @@ export default function ComboPackageDetails() {
     const packagingPercent = Number(
         config?.packagingPercent ?? 0
     );
-
     const packagingFee = Math.round(
         (productMrpTotal * packagingPercent) / 100
     );
-
     const packageMrp = productMrpTotal + packagingFee;
-
     const packageOfferPrice = Number(
         selectedPackage?.offerPrice ?? 0
     );
@@ -127,8 +123,6 @@ export default function ComboPackageDetails() {
                 </h2>
             </div>
 
-            {/* LOADING */}
-
             {loading && products.length === 0 && (
                 <div
                     className="
@@ -146,16 +140,12 @@ export default function ComboPackageDetails() {
                 </div>
             )}
 
-            {/* EMPTY */}
-
             {!loading && products.length === 0 && (
                 <EmptyState
                     title="No products found"
                     description="This package currently has no products."
                 />
             )}
-
-            {/* PRODUCTS */}
 
             <div
                 className="
@@ -166,9 +156,8 @@ export default function ComboPackageDetails() {
                     gap-6
                 "
             >
-                {products.map((product) => {
+                {sortedProducts.map((product) => {
                     const qty = items[product.id] || 0;
-
                     return (
                         <ProductCard
                             key={product.id}

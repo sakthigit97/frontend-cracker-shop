@@ -19,9 +19,9 @@ import { useHomeProducts } from "../../store/homeProduct.store";
 import { useAlert } from "../../store/alert.store";
 import { apiFetch } from "../../services/api";
 import { uploadFilesToS3 } from "../../utils/uploadToS3";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 
 const PRODUCTS_PER_PAGE = 20;
-
 type FlashSaleStatus =
     | "SCHEDULED"
     | "ACTIVE"
@@ -51,44 +51,28 @@ export default function AdminFlashSale() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
 
-    /*
-     * IMPORTANT:
-     * Products come from the existing home product store.
-     * No /admin/products API call.
-     */
     const {
         products,
         loading: productsLoading,
         fetchAll,
     } = useHomeProducts();
 
-    /* ----------------------------- */
-    /* Product selection */
-    /* ----------------------------- */
-
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [cancelFlashSaleId, setCancelFlashSaleId] = useState<string | null>(null);
     const [selectedProductId, setSelectedProductId] =
         useState<string | null>(null);
 
-    /* ----------------------------- */
-    /* Flash sale form */
-    /* ----------------------------- */
 
     const [header, setHeader] = useState("");
     const [salePrice, setSalePrice] = useState("");
     const [startAt, setStartAt] = useState("");
     const [endAt, setEndAt] = useState("");
-
     const [selectedImage, setSelectedImage] =
         useState<SelectedImage | null>(null);
 
     const [submitting, setSubmitting] = useState(false);
-
-    /* ----------------------------- */
-    /* Existing flash sales */
-    /* ----------------------------- */
 
     const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
     const [loadingFlashSales, setLoadingFlashSales] = useState(false);
@@ -244,10 +228,6 @@ export default function AdminFlashSale() {
         }, 50);
     };
 
-    /* ----------------------------- */
-    /* Remove selected product */
-    /* ----------------------------- */
-
     const clearSelectedProduct = () => {
         setSelectedProductId(null);
         setHeader("");
@@ -321,10 +301,6 @@ export default function AdminFlashSale() {
             previewUrl,
         });
     };
-
-    /* ----------------------------- */
-    /* Remove image */
-    /* ----------------------------- */
 
     const removeImage = () => {
         if (selectedImage?.previewUrl) {
@@ -443,10 +419,6 @@ export default function AdminFlashSale() {
         return true;
     };
 
-    /* ----------------------------- */
-    /* Create Flash Sale */
-    /* ----------------------------- */
-
     const handleCreateFlashSale = async () => {
         if (submitting) {
             return;
@@ -556,44 +528,38 @@ export default function AdminFlashSale() {
         } finally {
             setSubmitting(false);
         }
-    };
+    }
 
-    /* ----------------------------- */
-    /* Cancel Flash Sale */
-    /* ----------------------------- */
-
-    const handleCancelFlashSale = async (
-        flashSaleId: string
-    ) => {
+    const handleCancelFlashSale = (flashSaleId: string) => {
         if (cancellingId) {
             return;
         }
 
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to cancel this flash sale?"
-            );
+        setCancelFlashSaleId(flashSaleId);
+        setShowCancelConfirm(true);
+    };
 
-        if (!confirmed) {
+
+    const handleConfirmCancelFlashSale = async () => {
+        if (!cancelFlashSaleId || cancellingId) {
             return;
         }
 
         try {
-            setCancellingId(flashSaleId);
+            setShowCancelConfirm(false);
+            setCancellingId(cancelFlashSaleId);
 
             await apiFetch(
-                `/admin/flash-sales/${flashSaleId}`,
+                `/admin/flash-sales/${cancelFlashSaleId}`,
                 {
                     method: "DELETE",
                 },
-                import.meta.env
-                    .VITE_API_BASE_URL_V1
+                import.meta.env.VITE_API_BASE_URL_V1
             );
 
             showAlert({
                 type: "success",
-                message:
-                    "Flash sale cancelled successfully.",
+                message: "Flash sale cancelled successfully.",
             });
 
             await loadFlashSales();
@@ -611,12 +577,10 @@ export default function AdminFlashSale() {
             });
         } finally {
             setCancellingId(null);
+            setCancelFlashSaleId(null);
         }
     };
 
-    /* ----------------------------- */
-    /* Helpers */
-    /* ----------------------------- */
 
     const formatCurrency = (
         value: number
@@ -672,10 +636,6 @@ export default function AdminFlashSale() {
                 return "bg-gray-100 text-gray-600";
         }
     };
-
-    /* ----------------------------- */
-    /* Render */
-    /* ----------------------------- */
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -1792,6 +1752,24 @@ export default function AdminFlashSale() {
                     )}
                 </section>
             </div>
+
+            <ConfirmDialog
+                open={showCancelConfirm}
+                title="Cancel Flash Sale?"
+                description="Are you sure you want to cancel this flash sale?"
+                confirmText="Yes, Cancel"
+                cancelText="Keep Sale"
+                loading={Boolean(cancellingId)}
+                onConfirm={handleConfirmCancelFlashSale}
+                onCancel={() => {
+                    if (cancellingId) {
+                        return;
+                    }
+
+                    setShowCancelConfirm(false);
+                    setCancelFlashSaleId(null);
+                }}
+            />
         </div>
     );
 }

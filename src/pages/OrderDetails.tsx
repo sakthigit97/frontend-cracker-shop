@@ -881,13 +881,20 @@ export default function OrderDetails() {
 
                               </div>
 
-                              {(item.discountText ||
-                                !item.isComboPackage) && (
+                              {item.isFlashSale &&
+                                typeof item.flashSalePrice === "number" ? (
+                                <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)]">
+                                  🔥 Flash Sale
+                                </p>
+                              ) : (
+                                (item.discountText ||
+                                  !item.isComboPackage) && (
                                   <p className="mt-0.5 text-xs text-green-600">
                                     {item.discountText ||
                                       "NET RATE"}
                                   </p>
-                                )}
+                                )
+                              )}
 
                             </div>
 
@@ -922,11 +929,25 @@ export default function OrderDetails() {
 
                         {/* Price */}
                         <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {item.isFlashSale &&
+                            typeof item.flashSalePrice === "number" ? (
+                            <div className="flex flex-col items-end">
+                              <span className="font-semibold text-[var(--color-primary)]">
+                                ₹{formatCurrency(item.flashSalePrice)}
+                              </span>
 
-                          <span className="font-medium text-gray-700">
-                            ₹{formatCurrency(item.price)}
-                          </span>
-
+                              {typeof item.originalPrice === "number" &&
+                                item.originalPrice > item.flashSalePrice && (
+                                  <span className="text-xs text-gray-400 line-through">
+                                    ₹{formatCurrency(item.originalPrice)}
+                                  </span>
+                                )}
+                            </div>
+                          ) : (
+                            <span className="font-medium text-gray-700">
+                              ₹{formatCurrency(item.price)}
+                            </span>
+                          )}
                         </td>
 
                         {/* Amount */}

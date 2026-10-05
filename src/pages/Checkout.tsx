@@ -12,6 +12,7 @@ import { getProductCounts } from "../utils/productCounts";
 import { calculateOrderPricingBreakdown } from "../utils/orderPricing";
 import PrivacyPolicy from "./PrivacyPolicy";
 import { FiGift } from "react-icons/fi";
+import { sortProductsByCategoryAndSequence } from "../utils/sequncerUtil";
 
 import {
   FiChevronDown,
@@ -19,6 +20,7 @@ import {
 } from "react-icons/fi";
 import { validateCoupon } from "../services/coupon.api";
 import { getDisplayPackUnit } from "../utils/displayPackUnit";
+import { useCatalog } from "../store/catalog.store";
 
 
 type ProfileResponse = {
@@ -121,6 +123,11 @@ export default function Checkout() {
     [products, config?.sparklerCategory]
   );
 
+  const {
+    categories,
+    fetchCategories,
+  } = useCatalog();
+
   const packagingPercent = config?.packagingPercent ?? 0;
   const gstPercent = config?.gstPercent ?? 0;
   const currentState = addressMode === "PROFILE"
@@ -138,6 +145,12 @@ export default function Checkout() {
       cartStore.getState().setDeliveryState(undefined);
     };
   }, []);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      fetchCategories();
+    }
+  }, [categories.length, fetchCategories]);
 
   const {
     packagingCharge,
@@ -350,6 +363,58 @@ export default function Checkout() {
     fetchProfile();
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const cleanupCart = async () => {
+      try {
+
+        const res = await apiFetch(
+          "/cart/cleanup",
+          { method: "POST" },
+          import.meta.env.VITE_API_BASE_URL_V1
+        );
+        if (!active || !res?.removedItems?.length) {
+          return;
+        }
+
+        const removedItems = res.removedItems;
+        cartStore.getState().removeItemsSilently(
+          removedItems.map(
+            (item: {
+              productId: string;
+              productName: string;
+            }) => item.productId
+          )
+        );
+
+        const productNames = removedItems.map(
+          (item: {
+            productId: string;
+            productName: string;
+          }) => item.productName
+        );
+
+        showAlert({
+          type: "error",
+          message:
+            productNames.length === 1
+              ? `${productNames[0]} is no longer available and has been removed from your cart.`
+              : `Some products are no longer available and have been removed from your cart: ${productNames.join(", ")}.`,
+          duration: 5000,
+        });
+      } catch (error) {
+        console.error("Cart cleanup failed:", error);
+      }
+    };
+
+    cleanupCart();
+
+    return () => {
+      active = false;
     };
   }, []);
 
@@ -569,12 +634,44 @@ export default function Checkout() {
         },
       });
 
-    } catch (err) {
-      console.error(err);
-      showAlert({
-        type: "error",
-        message: "Order failed. Please try again.",
-      });
+    } catch (error: any) {
+      console.error("Order placement failed:", error);
+
+      const errorMessage = String(
+        error?.message || ""
+      );
+
+      const productNotFoundMatch =
+        errorMessage.match(
+          /Product\s+(.+?)\s+not found/i
+        );
+
+      if (productNotFoundMatch) {
+        const productId =
+          productNotFoundMatch[1].trim();
+
+        const product = products.find(
+          (item: any) =>
+            String(item.id) === productId
+        );
+
+        const productName =
+          product?.name || productId;
+
+        showAlert({
+          type: "error",
+          message:
+            `${productName} is no longer available. Please refresh the page and try placing the order again.`,
+          duration: 5000,
+        });
+      } else {
+        showAlert({
+          type: "error",
+          message:
+            error?.message ||
+            "Order failed. Please try again.",
+        });
+      }
     } finally {
       setPlacingOrder(false);
     }
@@ -589,6 +686,11 @@ export default function Checkout() {
     };
   }
 
+  const displayProducts = useMemo(
+    () => sortProductsByCategoryAndSequence(products, categories),
+    [products, categories]
+  );
+
   if (products.length === 0) {
     return (
       <div className="py-24 text-center text-gray-500">
@@ -596,6 +698,7 @@ export default function Checkout() {
       </div>
     );
   }
+
   async function applyCoupon() {
 
     const code = couponCode.trim().toUpperCase();
@@ -852,20 +955,20 @@ export default function Checkout() {
           </div>
 
           <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
-            {products.map((p) => (
+            {displayProducts.map((p) => (
               <div
                 key={p.id}
                 className="
-        flex
-        items-center
-        justify-between
-        gap-3
-        text-sm
-        py-1.5
-        border-b
-        border-gray-100
-        last:border-0
-      "
+                flex
+                items-center
+                justify-between
+                gap-3
+                text-sm
+                py-1.5
+                border-b
+                border-gray-100
+                last:border-0
+              "
               >
                 {/* Product Details */}
                 <div className="min-w-0 flex-1">
@@ -941,9 +1044,29 @@ export default function Checkout() {
                       </span>
                     )}
 
-                    {(p.discountText || !p.isComboPackage) && (
+                    {p.isFlashSale &&
+                      typeof p.flashSalePrice === "number" ? (
                       <span
                         className="
+            text-[var(--color-primary)]
+            text-[10px]
+            font-semibold
+            bg-[var(--color-primary)]/10
+            px-1.5
+            py-0.5
+            rounded
+            whitespace-nowrap
+            inline-flex
+            items-center
+            gap-1
+        "
+                      >
+                        🔥 Flash Sale
+                      </span>
+                    ) : (
+                      (p.discountText || !p.isComboPackage) && (
+                        <span
+                          className="
                 text-green-600
                 text-[10px]
                 font-medium
@@ -952,10 +1075,11 @@ export default function Checkout() {
                 py-0.5
                 rounded
                 whitespace-nowrap
-              "
-                      >
-                        {p.discountText || "NET RATE"}
-                      </span>
+            "
+                        >
+                          {p.discountText || "NET RATE"}
+                        </span>
+                      )
                     )}
                   </div>
                 </div>

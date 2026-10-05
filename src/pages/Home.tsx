@@ -94,7 +94,6 @@ export default function Home() {
   const [selectedBrandId, setSelectedBrandId] = useState("");
   const categoryProducts = useCategoryProducts(selectedCategoryId);
   const brandProducts = useBrandProducts(selectedBrandId);
-
   useEffect(() => {
     fetchAll();
     fetchPopular();
@@ -600,13 +599,13 @@ export default function Home() {
 
             <div
               className={`
-          relative
-          grid
-          gap-3
-          p-3
-          sm:gap-4
-          sm:p-4
-          ${flashSaleProducts.length === 1
+  relative
+  grid
+  gap-3
+  p-3
+  sm:gap-4
+  sm:p-4
+  ${flashSaleProducts.length === 1
                   ? "grid-cols-1"
                   : flashSaleProducts.length === 2
                     ? "grid-cols-1 sm:grid-cols-2"
@@ -614,7 +613,7 @@ export default function Home() {
                       ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                       : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
                 }
-        `}
+`}
             >
               {flashSaleProducts.slice(0, 4).map((product) => {
                 const sale = flashSales.find(
@@ -692,36 +691,42 @@ export default function Home() {
                 return (
                   <article
                     key={sale.flashSaleId}
-                    className="
-                group
-                overflow-hidden
-                rounded-xl
-                border
-                border-orange-100
-                bg-white
-                shadow-[0_2px_10px_rgba(0,0,0,0.04)]
-                transition-all
-                duration-200
-                hover:-translate-y-0.5
-                hover:border-orange-200
-                hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
-              "
+                    className={`
+    group
+    overflow-hidden
+    rounded-xl
+    border
+    border-orange-100
+    bg-white
+    shadow-[0_2px_10px_rgba(0,0,0,0.04)]
+    transition-all
+    duration-200
+    hover:-translate-y-0.5
+    hover:border-orange-200
+    hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
+    ${flashSaleProducts.length === 1
+                        ? "mx-auto w-full max-w-5xl lg:grid lg:grid-cols-[38%_62%]"
+                        : ""
+                      }
+  `}
                   >
 
 
                     <div
-                      className="
-                  relative
-                  flex
-                  h-[118px]
-                  items-center
-                  justify-center
-                  overflow-hidden
-                  bg-gradient-to-br
-                  from-[#fffaf4]
-                  to-[#fff3df]
-                  sm:h-[125px]
-                "
+                      className={`
+    relative
+    flex
+    items-center
+    justify-center
+    overflow-hidden
+    bg-gradient-to-br
+    from-[#fffaf4]
+    to-[#fff3df]
+    ${flashSaleProducts.length === 1
+                          ? "h-[145px] sm:h-[170px] lg:h-[210px]"
+                          : "h-[140px] sm:h-[155px] lg:h-[170px]"
+                        }
+  `}
                     >
 
 
@@ -731,8 +736,10 @@ export default function Home() {
                         className="
     h-full
     w-full
-    object-cover
+    object-contain
     object-center
+    p-3
+    mix-blend-multiply
     transition-transform
     duration-300
     group-hover:scale-[1.03]
@@ -743,32 +750,28 @@ export default function Home() {
                       {discountPercent > 0 && (
                         <span
                           className="
-                      absolute
-                      left-2.5
-                      top-2.5
-                      inline-flex
-                      items-center
-                      gap-1
-                      rounded-full
-                      bg-[var(--color-primary)]
-                      px-2
-                      py-1
-                      text-[9px]
-                      font-bold
-                      text-white
-                      shadow-sm
-                      sm:text-[10px]
-                    "
+                              absolute
+                              left-2.5
+                              top-2.5
+                              inline-flex
+                              items-center
+                              gap-1
+                              rounded-full
+                              bg-[var(--color-primary)]
+                              px-2
+                              py-1
+                              text-[9px]
+                              font-bold
+                              text-white
+                              shadow-sm
+                              sm:text-[10px]
+                          "
                         >
                           <FaFire className="text-[8px]" />
-                          {discountPercent}% OFF
+                          Flash Sale
                         </span>
                       )}
                     </div>
-
-                    {/* =========================================
-                  DETAILS
-                 ========================================= */}
 
                     <div className="p-3 sm:p-3.5">
 
