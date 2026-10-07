@@ -196,12 +196,20 @@ export default function AddOrderItemModal({
                                         )}
 
                                         <p
-                                            className={`text-xs font-semibold mt-1 ${p.discountText
-                                                ? "text-green-600"
-                                                : "text-gray-500"
+                                            className={`text-xs font-semibold mt-1 ${p.isFlashSale &&
+                                                    typeof p.flashSalePrice === "number" &&
+                                                    p.flashSalePrice > 0
+                                                    ? "text-[var(--color-primary)]"
+                                                    : p.discountText
+                                                        ? "text-green-600"
+                                                        : "text-gray-500"
                                                 }`}
                                         >
-                                            {p.discountText || "NET RATE"}
+                                            {p.isFlashSale &&
+                                                typeof p.flashSalePrice === "number" &&
+                                                p.flashSalePrice > 0
+                                                ? "🔥 Flash Sale"
+                                                : p.discountText || "NET RATE"}
                                         </p>
 
                                         <div className="flex items-center gap-2 mt-0.5 text-sm">
