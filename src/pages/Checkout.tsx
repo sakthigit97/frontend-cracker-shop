@@ -79,7 +79,6 @@ export default function Checkout() {
   const [profileName, setProfileName] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCouponSection, setShowCouponSection] = useState(false);
-  const [minOrderValid, setMinOrderValid] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [mobile, setMobile] = useState("");
   const disableGstForTN = config?.disableGstForTN || false;
@@ -187,7 +186,6 @@ export default function Checkout() {
     const currentPincode = addressMode === "PROFILE" ? profilePincode : pincode;
     if (!currentPincode || currentPincode.length !== 6) {
       setValidatedLocation(null);
-      setMinOrderValid(false);
       return;
     }
 
@@ -214,7 +212,6 @@ export default function Checkout() {
           !data[0]?.PostOffice?.length
         ) {
           setValidatedLocation(null);
-          setMinOrderValid(false);
 
           if (addressMode === "NEW") {
             setPincode("");
@@ -242,7 +239,6 @@ export default function Checkout() {
 
         if (!state || !district || !city) {
           setValidatedLocation(null);
-          setMinOrderValid(false);
 
           if (addressMode === "NEW") {
             setCity("");
@@ -273,7 +269,6 @@ export default function Checkout() {
       } catch {
         if (!active) return;
         setValidatedLocation(null);
-        setMinOrderValid(false);
       }
     })();
 
@@ -285,31 +280,6 @@ export default function Checkout() {
     pincode,
     profilePincode,
     validatedLocation?.pincode,
-  ]);
-
-
-  useEffect(() => {
-    if (!validatedLocation) {
-      return;
-    }
-
-    let minAmount = config?.otherStateMinOrderValue ?? 5000;
-    const isTamilNadu =
-      validatedLocation.state.trim().toLowerCase() === "tamil nadu" ||
-      validatedLocation.state.trim().toLowerCase() === "pondicherry" ||
-      validatedLocation.state.trim().toLowerCase() === "puducherry";
-    if (isTamilNadu) {
-      minAmount = config?.tnMinOrderValue ?? 3000;
-    }
-
-    setMinOrderValid(
-      grandTotal >= minAmount
-    );
-  }, [
-    validatedLocation,
-    grandTotal,
-    config?.tnMinOrderValue,
-    config?.otherStateMinOrderValue,
   ]);
 
   useEffect(() => {
@@ -554,24 +524,58 @@ export default function Checkout() {
       });
       return;
     }
-    const currentPincode = addressMode === "PROFILE" ? profilePincode : pincode;
-    if (!currentPincode) {
+
+    const currentPincode =
+      addressMode === "PROFILE" ? profilePincode : pincode;
+    if (
+      validatedLocation &&
+      validatedLocation.pincode !== currentPincode
+    ) {
+      setValidatedLocation(null);
+    }
+
+    if (!currentPincode || currentPincode.length !== 6) {
       showAlert({
         type: "error",
-        message: "Pincode is required for validation",
+        message: "Please enter a valid 6-digit pincode.",
       });
       return;
     }
 
-    if (!minOrderValid) {
+    if (
+      !validatedLocation ||
+      validatedLocation.pincode !== currentPincode
+    ) {
       showAlert({
         type: "error",
-        message: "A minimum order value is required for your delivery location. Please add more items to continue with your order.",
+        message:
+          "Please wait for the delivery location to be validated.",
+      });
+      return;
+    }
+
+    const validatedState =
+      validatedLocation.state.trim().toLowerCase();
+
+    const isTamilNadu =
+      validatedState === "tamil nadu" ||
+      validatedState === "pondicherry" ||
+      validatedState === "puducherry";
+
+    const minimumOrderValue = isTamilNadu
+      ? config?.tnMinOrderValue ?? 3000
+      : config?.otherStateMinOrderValue ?? 5000;
+
+    if (grandTotal < minimumOrderValue) {
+      showAlert({
+        type: "error",
+        message: `Minimum order value is ₹${minimumOrderValue}. Please add more items to continue.`,
       });
       return;
     }
 
     setPlacingOrder(true);
+
     try {
       let paymentMode: "OFFLINE" | "ONLINE" = "OFFLINE";
       let paymentStatus:

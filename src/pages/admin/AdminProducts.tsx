@@ -8,7 +8,7 @@ import Toggle from "../../components/ui/Toggle";
 import { deactivateProduct, deleteProduct } from "../../services/adminProducts.api";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import EmptyState from "../../components/ui/EmptyState";
-import { sortProductsBySequence } from "../../utils/sequncerUtil";
+import { sortProductsByCategoryAndSequence } from "../../utils/sequncerUtil";
 
 export default function AdminProducts() {
     const { fetchPage, clearCache } = useAdminProductsStore();
@@ -71,7 +71,10 @@ export default function AdminProducts() {
             );
         });
     }, [data?.items, query, filters.brandId, filters.categoryId, filters.isActive]);
-    filteredProducts = sortProductsBySequence(filteredProducts);
+    filteredProducts = sortProductsByCategoryAndSequence(
+        filteredProducts,
+        categories
+    );
 
     const paginatedProducts = useMemo(() => {
         const start = (page - 1) * PAGE_SIZE;
