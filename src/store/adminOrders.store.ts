@@ -47,7 +47,7 @@ function buildApiParams(filters: AdminOrderFilters) {
         return {
             status: filters.status,
             orderId: filters.orderId,
-            limit: 10,
+            limit: 100,
         };
     }
     let fromDate: number;
@@ -63,7 +63,7 @@ function buildApiParams(filters: AdminOrderFilters) {
         fromDate,
         toDate: now,
         orderId: filters.orderId,
-        limit: 10,
+        limit: 100,
     };
 }
 

@@ -74,12 +74,8 @@ export function calculateOrderAmounts({
         appliedCouponDiscount -
         appliedAdditionalDiscount;
 
-    const disableGstForTN =
-        config?.disableGstForTN ?? false;
-
-    const gstDenominator =
-        Number(config?.gstDenominator ?? 2);
-
+    const disableGstForTN = config?.disableGstForTN ?? false;
+    const gstDenominator = Number(config?.gstDenominator ?? 2);
     const isTN = isTamilNadu(state);
     let gstAmount = 0;
 
