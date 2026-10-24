@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "../components/ui/Button";
 import { useAlert } from "../store/alert.store";
 import { apiFetch } from "../services/api";
@@ -49,13 +49,29 @@ export default function Profile() {
     if (profile) setForm(profile);
   }, [profile]);
 
+
+  const previousPincodeRef = useRef<string | null>(null);
   useEffect(() => {
+    const currentPincode =
+      form?.pincode?.replace(/\D/g, "") || "";
+
     if (!isEditing || !form) {
+      previousPincodeRef.current = currentPincode;
       return;
     }
 
-    const currentPincode =
-      form.pincode?.replace(/\D/g, "") || "";
+    // Don't fetch when Edit Profile is clicked.
+    // Fetch only when the pincode changes.
+    if (previousPincodeRef.current === null) {
+      previousPincodeRef.current = currentPincode;
+      return;
+    }
+
+    if (previousPincodeRef.current === currentPincode) {
+      return;
+    }
+
+    previousPincodeRef.current = currentPincode;
 
     if (currentPincode.length !== 6) {
       return;
@@ -67,51 +83,29 @@ export default function Profile() {
       try {
         setLoadingPincode(true);
 
-        const location =
-          await getPincodeLocation(
-            currentPincode
-          );
+        const location = await getPincodeLocation(currentPincode);
 
-        if (!active) {
-          return;
-        }
+        if (!active || !location) return;
 
-        if (!location) {
+        setForm((previous) =>
+          previous
+            ? {
+              ...previous,
+              city: location.city,
+              district: location.district,
+              state: location.state,
+            }
+            : previous
+        );
+      } catch {
+        if (active) {
           showAlert({
             type: "error",
-            message:
-              "Invalid pincode. Please enter a valid 6-digit pincode.",
+            message: "Unable to fetch location for this pincode.",
           });
-
-          return;
         }
-
-        setForm((previous) => {
-          if (!previous) {
-            return previous;
-          }
-
-          return {
-            ...previous,
-            city: location.city,
-            district: location.district,
-            state: location.state,
-          };
-        });
-      } catch {
-        if (!active) {
-          return;
-        }
-
-        showAlert({
-          type: "error",
-          message:
-            "Unable to fetch location for this pincode.",
-        });
       } finally {
-        if (active) {
-          setLoadingPincode(false);
-        }
+        if (active) setLoadingPincode(false);
       }
     };
 
@@ -120,11 +114,8 @@ export default function Profile() {
     return () => {
       active = false;
     };
-  }, [
-    form?.pincode,
-    isEditing,
-    showAlert,
-  ]);
+  }, [form?.pincode, isEditing, showAlert]);
+
 
   const handleSave = async () => {
     if (!form) return;
@@ -139,15 +130,15 @@ export default function Profile() {
     const district = form.district?.trim() || "";
     const state = form.state?.trim() || "";
     const pincode = form.pincode?.trim() || "";
-
     const VALID_TITLES = ["Mr", "Mrs", "Ms"];
-    if (!VALID_TITLES.includes(form.title)) {
-      throw {
-        statusCode: 400,
-        message: "Invalid title",
-      };
+    const normalizedTitle = String(form.title || "Mr").trim();
+    if (!VALID_TITLES.includes(normalizedTitle)) {
+      showAlert({
+        type: "error",
+        message: "Please select a valid title (Mr, Mrs, or Ms).",
+      });
+      return;
     }
-
     if (!name) {
       showAlert({
         type: "error",
@@ -210,7 +201,7 @@ export default function Profile() {
       await apiFetch("/user/profile", {
         method: "PUT",
         body: JSON.stringify({
-          title: form.title,
+          title: normalizedTitle,
           name,
           email: email || undefined,
           address,
@@ -447,10 +438,14 @@ export default function Profile() {
               value={form.title || "Mr"}
               disabled={!isEditing}
               onChange={(e) =>
-                setForm({
-                  ...form,
-                  title: e.target.value as "Mr" | "Mrs" | "Ms",
-                })
+                setForm((prev) =>
+                  prev
+                    ? {
+                      ...prev,
+                      title: e.target.value as "Mr" | "Mrs" | "Ms",
+                    }
+                    : prev
+                )
               }
               className="w-full border rounded-md p-2"
             >
@@ -492,6 +487,64 @@ export default function Profile() {
                 })
               }
               className="w-full border rounded-md p-2"
+            />
+          </div>
+
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              City
+            </label>
+            <input
+              value={form.city ?? ""}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev
+                    ? { ...prev, city: e.target.value }
+                    : prev
+                )
+              }
+              placeholder={loadingPincode ? "Fetching city..." : "Enter city"}
+              className="w-full border rounded-md p-2 disabled:bg-gray-50"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              District
+            </label>
+            <input
+              value={form.district ?? ""}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev
+                    ? { ...prev, district: e.target.value }
+                    : prev
+                )
+              }
+              placeholder="Enter district"
+              className="w-full border rounded-md p-2 disabled:bg-gray-50"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-[var(--color-muted)]">
+              State
+            </label>
+            <input
+              value={form.state ?? ""}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev
+                    ? { ...prev, state: e.target.value }
+                    : prev
+                )
+              }
+              placeholder="Enter state"
+              className="w-full border rounded-md p-2 disabled:bg-gray-50"
             />
           </div>
 

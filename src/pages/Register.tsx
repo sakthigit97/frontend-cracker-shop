@@ -59,6 +59,7 @@ export default function Register() {
           setForm((prev) => ({
             ...prev,
             city: "",
+            district: "",
             state: "",
           }));
 
@@ -444,25 +445,41 @@ export default function Register() {
             className="w-full border rounded-md p-2 mb-3"
           />
 
+
           <input
             placeholder="City"
             value={form.city}
-            readOnly
-            className="w-full border rounded-md p-2 mb-3 bg-gray-50"
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                city: e.target.value,
+              }))
+            }
+            className="w-full border rounded-md p-2 mb-3"
           />
 
           <input
             placeholder="District"
             value={form.district}
-            readOnly
-            className="w-full border rounded-md p-2 mb-3 bg-gray-50"
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                district: e.target.value,
+              }))
+            }
+            className="w-full border rounded-md p-2 mb-3"
           />
 
           <input
             placeholder="State"
             value={form.state}
-            readOnly
-            className="w-full border rounded-md p-2 mb-3 bg-gray-50"
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                state: e.target.value,
+              }))
+            }
+            className="w-full border rounded-md p-2 mb-3"
           />
 
           {isReferralEnabled && (

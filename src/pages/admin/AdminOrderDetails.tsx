@@ -947,7 +947,6 @@ export default function AdminOrderDetails() {
         }
     }
 
-
     async function handleDownloadInvoice() {
         if (downloading) return;
 
