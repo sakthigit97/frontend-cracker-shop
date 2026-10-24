@@ -55,6 +55,8 @@ export default function AdminConfigPage() {
                             : 2,
                     disableGstForTN: res.disableGstForTN || false,
                     isEnableBulkOrder: res.isEnableBulkOrder ?? false,
+                    isChitReminderSMSEnabled:
+                        res.isChitReminderSMSEnabled ?? false,
                     bulkOrderSchemes: (res.bulkOrderSchemes || []).map(
                         (scheme: any) => ({
                             schemeId: scheme.schemeId || "",
@@ -1516,6 +1518,7 @@ export default function AdminConfigPage() {
                                 ["isOrderDispatchSMSEnabled", "Order Dispatch SMS"],
                                 ["isPaidSMSEnabled", "Payment Success SMS"],
                                 ["isCartUpdateSMSEnabled", "Cart Update SMS"],
+                                ["isChitReminderSMSEnabled", "Chit Payment Reminder SMS"],
                             ].map(([key, label]) => (
                                 <label
                                     key={key}
@@ -1535,6 +1538,9 @@ export default function AdminConfigPage() {
                                 </label>
                             ))}
                         </div>
+                        <p className="mt-3 text-xs text-gray-500">
+                            Chit reminder SMS also requires the general SMS Enabled setting and a configured MSG91 template ID. This option defaults to off.
+                        </p>
                     </div>
 
                 </div>

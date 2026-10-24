@@ -20,6 +20,7 @@ import {
   FaTicketAlt,
   FaBoxes,
   FaFire,
+  FaCoins,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -78,6 +79,11 @@ export default function AdminHeader() {
       label: "Flash Sales",
       to: "/admin/flash-sales",
       icon: <FaFire />,
+    },
+    {
+      label: "Chit Schemes",
+      to: "/admin/chits",
+      icon: <FaCoins />,
     },
     ...(isEnableBulkOrder
       ? [
@@ -185,6 +191,11 @@ export default function AdminHeader() {
       label: "Flash Sales",
       to: "/admin/flash-sales",
       icon: <FaFire />,
+    },
+    {
+      label: "Chit Schemes",
+      to: "/admin/chits",
+      icon: <FaCoins />,
     },
     ...(isEnableBulkOrder
       ? [

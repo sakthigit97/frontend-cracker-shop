@@ -33,6 +33,7 @@ export type GlobalConfig = {
     isPaidSMSEnabled: boolean;
     isRegisterOTPEnabled: boolean;
     isCartUpdateSMSEnabled: boolean;
+    isChitReminderSMSEnabled: boolean;
     gmapLink: string;
     displayMobile: string;
     website: string;
