@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { getAdminOrders } from "../services/admin.api";
 
+const ADMIN_ORDERS_PAGE_SIZE = 25;
+
 export interface AdminOrderFilters {
     status: string;
     dateRange: "all" | "today" | "7" | "30";
@@ -47,7 +49,7 @@ function buildApiParams(filters: AdminOrderFilters) {
         return {
             status: filters.status,
             orderId: filters.orderId,
-            limit: 100,
+            limit: ADMIN_ORDERS_PAGE_SIZE,
         };
     }
     let fromDate: number;
@@ -63,7 +65,7 @@ function buildApiParams(filters: AdminOrderFilters) {
         fromDate,
         toDate: now,
         orderId: filters.orderId,
-        limit: 100,
+        limit: ADMIN_ORDERS_PAGE_SIZE,
     };
 }
 
