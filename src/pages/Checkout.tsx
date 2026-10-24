@@ -553,10 +553,7 @@ export default function Checkout() {
       });
       return;
     }
-
-    const validatedState =
-      validatedLocation.state.trim().toLowerCase();
-
+    const validatedState = deliveryState.trim().toLowerCase();
     const isTamilNadu =
       validatedState === "tamil nadu" ||
       validatedState === "pondicherry" ||
@@ -900,32 +897,30 @@ export default function Checkout() {
                     }
                     className="w-full rounded-lg border p-3 text-sm"
                   />
+
                   <input
                     type="text"
                     placeholder="City *"
                     value={city}
-                    readOnly
-                    className="w-full rounded-lg border p-3 text-sm bg-gray-50"
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm"
                   />
-
 
                   <input
                     type="text"
                     placeholder="District *"
                     value={district}
-                    readOnly
-                    className="w-full rounded-lg border p-3 text-sm bg-gray-50"
+                    onChange={(e) => setDistrict(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm"
                   />
 
                   <input
                     type="text"
                     placeholder="State *"
                     value={stateValue}
-                    readOnly
-                    className="w-full rounded-lg border p-3 text-sm bg-gray-50"
+                    onChange={(e) => setStateValue(e.target.value)}
+                    className="w-full rounded-lg border p-3 text-sm"
                   />
-
-
                 </div>
               )}
             </>

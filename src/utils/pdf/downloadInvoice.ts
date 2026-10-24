@@ -1,5 +1,7 @@
+
 import { buildInvoicePdf } from "./invoiceBuilder";
 import type { DownloadInvoiceOptions } from "./invoice.types";
+import { savePdf } from "./savePdf";
 
 export async function downloadInvoice({
     order,
@@ -11,8 +13,8 @@ export async function downloadInvoice({
         config
     );
 
-    pdf.save(
-        fileName ??
-        `invoice-${order.orderId}.pdf`
+    await savePdf(
+        pdf,
+        fileName ?? `invoice-${order.orderId}.pdf`
     );
 }

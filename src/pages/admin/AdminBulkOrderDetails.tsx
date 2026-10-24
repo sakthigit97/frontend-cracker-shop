@@ -379,7 +379,7 @@ export default function AdminBulkOrderDetails() {
         );
 
         lines.push(
-            "Transport Charges: Transportation charges are extra and are to be paid directly by the customer. The parcel will be received at the Sivakasi booking office or at the destination location, depending on the transporter’s terms, service availability, and delivery conditions."
+            "Transport Charges: Transportation charges are extra and must be paid directly by the customer to the transporter. The parcel must be collected from the designated transport booking office or service point."
         );
 
         lines.push(

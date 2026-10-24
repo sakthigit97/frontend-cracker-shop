@@ -1,5 +1,6 @@
 import { buildStaffPackingPdf } from "./staffInvoiceBuilder";
 import type { DownloadInvoiceOptions } from "./invoice.types";
+import { savePdf } from "./savePdf";
 
 export async function downloadStaffPackingList({
     order,
@@ -13,8 +14,8 @@ export async function downloadStaffPackingList({
         categories
     );
 
-    pdf.save(
-        fileName ??
-        `packing-list-${order.orderId}.pdf`
+    await savePdf(
+        pdf,
+        fileName ?? `packing-list-${order.orderId}.pdf`
     );
 }

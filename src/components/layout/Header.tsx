@@ -17,6 +17,7 @@ import {
   FaBars,
   FaTimes,
   FaPalette,
+  FaCoins,
 } from "react-icons/fa";
 
 import HeaderDropdown from "./HeaderDropdown";
@@ -180,7 +181,6 @@ export default function Header() {
       to: "/orders",
       icon: <FaClipboardList />,
     },
-
     ...(isEnableBulkOrder && profile?.isBulkUser
       ? [
         {
@@ -363,6 +363,24 @@ export default function Header() {
           >
             Quick Estimate
           </Link>
+
+          {user?.role === "USER" && (
+            <Link
+              to="/chits"
+              className="
+                rounded-xl
+                px-4
+                py-2
+                text-sm
+                font-medium
+                transition-all
+                duration-200
+                hover:bg-white/10
+              "
+            >
+              Chit Schemes
+            </Link>
+          )}
 
           <Link
             to="/ai-assistant"
@@ -612,6 +630,28 @@ export default function Header() {
               <FaCalculator />
               Quick Estimate
             </Link>
+
+            {user?.role === "USER" && (
+              <Link
+                to="/chits"
+                onClick={closeMobile}
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  rounded-2xl
+                  bg-white/5
+                  px-4
+                  py-3
+                  text-sm
+                  font-medium
+                  hover:bg-white/10
+                "
+              >
+                <FaCoins />
+                Chit Schemes
+              </Link>
+            )}
 
             <Link
               to="/ai-assistant"

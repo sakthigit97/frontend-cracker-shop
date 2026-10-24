@@ -64,6 +64,9 @@ import AdminEditComboPackagePage from "../pages/admin/AdminEditComboPackagePage"
 import AdminAccountCreditReportPage from "../pages/admin/reports/AdminAccountCreditReportPage";
 import AdminFlashSale from "../pages/admin/AdminFlashSale";
 import FlashSales from "../pages/FlashSales";
+import Chits from "../pages/Chits";
+import AdminChits from "../pages/admin/AdminChits";
+import AdminChitDetails from "../pages/admin/AdminChitDetails";
 
 export default function AppRoutes() {
   return (
@@ -103,6 +106,7 @@ export default function AppRoutes() {
             <Route path="/orders" element={<MyOrders />} />
             <Route path="/orders/:orderId" element={<OrderDetails />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/chits" element={<Chits />} />
             <Route path="/orders/:orderId/adjust" element={<AdjustOrder />} />
             <Route path="/bulk-order" element={<BulkOrder />} />
             <Route path="/bulk-order/success/:orderId" element={<BulkOrderSuccess />} />
@@ -145,6 +149,8 @@ export default function AppRoutes() {
             <Route path="/admin/combo-packages/edit/:comboId" element={<AdminEditComboPackagePage />} />
             <Route path="/admin/reports/account-credits" element={<AdminAccountCreditReportPage />} />
             <Route path="/admin/flash-sales" element={<AdminFlashSale />} />
+            <Route path="/admin/chits" element={<AdminChits />} />
+            <Route path="/admin/chits/:chitId" element={<AdminChitDetails />} />
 
           </Route>
         </Route>

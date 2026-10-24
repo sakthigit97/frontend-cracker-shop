@@ -215,7 +215,12 @@ export async function buildStaffPackingPdf(
 
                 const productName =
                     comboNames.length > 0
-                        ? `${item.name ?? "-"}\n(${comboNames.join(", ")})`
+                        ? [
+                            item.name ?? "-",
+                            ...comboNames.map(
+                                (name, index) => `${index + 1}. ${name}`
+                            ),
+                        ].join("\n")
                         : item.name ?? "-";
 
                 const packQuantity =

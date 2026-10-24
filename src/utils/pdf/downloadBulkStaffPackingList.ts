@@ -1,4 +1,6 @@
+
 import { buildBulkStaffPackingPdf } from "./buildBulkStaffPackingPdf";
+import { savePdf } from "./savePdf";
 
 export async function downloadBulkStaffPackingList(
     order: any,
@@ -9,7 +11,8 @@ export async function downloadBulkStaffPackingList(
         config
     );
 
-    pdf.save(
+    await savePdf(
+        pdf,
         `packing-list-${order.orderId}.pdf`
     );
 }
