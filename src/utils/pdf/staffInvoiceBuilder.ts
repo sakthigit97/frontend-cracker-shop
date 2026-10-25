@@ -198,8 +198,8 @@ export async function buildStaffPackingPdf(
         head: [[
             "#",
             "Product",
-            "Unit",
             "Qty",
+            "Unit",
         ]],
 
         body: items.map(
@@ -242,8 +242,8 @@ export async function buildStaffPackingPdf(
                 return [
                     String(index + 1),
                     productName,
-                    cartonText,
                     String(item.quantity ?? 0),
+                    cartonText,
                 ];
             }
         ),
@@ -269,7 +269,7 @@ export async function buildStaffPackingPdf(
             lineColor:
                 [80, 80, 80],
 
-            valign: "middle",
+            valign: "top",
 
             textColor:
                 COLORS.dark,
@@ -313,7 +313,7 @@ export async function buildStaffPackingPdf(
              * #
              */
             0: {
-                cellWidth: 10,
+                cellWidth: 8,
                 halign: "center",
             },
 
@@ -321,26 +321,25 @@ export async function buildStaffPackingPdf(
              * Product
              */
             1: {
-                cellWidth: 115,
+                cellWidth: 85,
                 halign: "left",
-            },
-
-            /*
-             * Carton
-             *
-             * Example:
-             * 50 Box
-             */
-            2: {
-                cellWidth: 30,
-                halign: "center",
             },
 
             /*
              * Qty
              */
+            2: {
+                cellWidth: 16,
+                halign: "center",
+                fontStyle: "bold",
+                fontSize: 9,
+            },
+
+            /*
+             * Unit
+             */
             3: {
-                cellWidth: 20,
+                cellWidth: 55,
                 halign: "center",
             },
         },
@@ -362,28 +361,28 @@ export async function buildStaffPackingPdf(
             }
 
             /*
-             * Carton
+             * Qty
              */
             if (
                 data.section ===
                 "body" &&
                 data.column.index === 2
             ) {
+                data.cell.styles.fontStyle =
+                    "bold";
+
                 data.cell.styles.halign =
                     "center";
             }
 
             /*
-             * Qty
+             * Unit
              */
             if (
                 data.section ===
                 "body" &&
                 data.column.index === 3
             ) {
-                data.cell.styles.fontStyle =
-                    "bold";
-
                 data.cell.styles.halign =
                     "center";
             }
@@ -420,24 +419,23 @@ export async function buildStaffPackingPdf(
     /*
      * Table columns:
      *
-     * #       = 10
-     * Product = 115
-     * Carton  = 30
-     * Qty     = 20
+     * #       = 8
+     * Product = 85
+     * Qty     = 16
+     * Unit    = 55
      *
      * Qty column starts at:
      *
-     * LEFT + 10 + 115 + 30
+     * LEFT + 8 + 85
      */
 
     const qtyColumnLeft =
         LEFT +
-        10 +
-        115 +
-        30;
+        8 +
+        85;
 
     const qtyColumnRight =
-        qtyColumnLeft + 20;
+        qtyColumnLeft + 16;
 
     /*
      * Total Qty label
