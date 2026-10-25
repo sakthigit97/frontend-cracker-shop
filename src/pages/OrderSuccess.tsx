@@ -1,4 +1,5 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { FaGoogle, FaStar } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import { useOrdersStore } from "../store/orders.store";
 
@@ -118,6 +119,29 @@ export default function OrderSuccess() {
             </div>
 
           </div>
+
+          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-amber-500 shadow-sm">
+                <FaGoogle size={21} aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-gray-900">
+                  Enjoyed your shopping experience?
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-gray-600">
+                  Share your feedback and help other customers discover Sivakasi Pyro Park.
+                </p>
+                <Link
+                  to="/reviews"
+                  className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                >
+                  <FaStar aria-hidden="true" />
+                  View and write a Google Review
+                </Link>
+              </div>
+            </div>
+          </section>
 
           {/* Buttons */}
 

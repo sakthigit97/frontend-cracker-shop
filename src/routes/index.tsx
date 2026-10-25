@@ -67,6 +67,7 @@ import FlashSales from "../pages/FlashSales";
 import Chits from "../pages/Chits";
 import AdminChits from "../pages/admin/AdminChits";
 import AdminChitDetails from "../pages/admin/AdminChitDetails";
+import GoogleReviews from "../pages/GoogleReviews";
 
 export default function AppRoutes() {
   return (
@@ -83,6 +84,7 @@ export default function AppRoutes() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/reviews" element={<GoogleReviews />} />
           <Route path="/combo-packages" element={<ComboPackages />} />
           <Route path="/combo-packages/:packageId" element={<ComboPackageDetails />} />
           <Route path="/ai-assistant" element={<AiAssistant />} />

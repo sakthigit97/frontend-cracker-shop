@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FaWhatsapp, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { FaWhatsapp, FaPhoneAlt, FaMapMarkerAlt, FaStar } from "react-icons/fa";
 import { useConfigStore } from "../../store/config.store";
 import { getMobileNumbers } from "../../utils/contact";
 
@@ -116,6 +116,16 @@ export default function Footer() {
                 </a>
               </li>
             )}
+
+            <li>
+              <Link
+                to="/reviews"
+                className="flex items-center gap-2 text-amber-300 hover:underline"
+              >
+                <FaStar />
+                <span>Google Reviews</span>
+              </Link>
+            </li>
 
           </ul>
         </div>
