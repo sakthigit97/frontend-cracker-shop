@@ -10,8 +10,9 @@ import {
     FaUsers,
 } from "react-icons/fa";
 import { useAlert } from "../../store/alert.store";
-import { createChit, listAdminChits } from "../../services/chit.api";
+import { createChit } from "../../services/chit.api";
 import type { ChitScheme } from "../../types/chit";
+import { useChitStore } from "../../store/chit.store";
 
 const fieldClass = "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm";
 const currency = (amount: number) =>
@@ -73,7 +74,8 @@ const emptyForm: FormState = {
 export default function AdminChits() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-    const [schemes, setSchemes] = useState<ChitScheme[]>([]);
+    const schemes = useChitStore((state) => state.adminChits);
+    const fetchAdminChits = useChitStore((state) => state.fetchAdminChits);
     const [form, setForm] = useState<FormState>(emptyForm);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -82,10 +84,10 @@ export default function AdminChits() {
     const [page, setPage] = useState(1);
     const hasLoadedSchemes = useRef(false);
 
-    const loadSchemes = useCallback(async () => {
+    const loadSchemes = useCallback(async (force = false) => {
         try {
             if (!hasLoadedSchemes.current) setLoading(true);
-            setSchemes(await listAdminChits());
+            await fetchAdminChits(force);
         } catch (error) {
             console.error("Unable to load chit schemes:", error);
             showAlert({
@@ -96,7 +98,7 @@ export default function AdminChits() {
             hasLoadedSchemes.current = true;
             setLoading(false);
         }
-    }, [showAlert]);
+    }, [fetchAdminChits, showAlert]);
 
     useEffect(() => {
         void loadSchemes();
@@ -165,7 +167,7 @@ export default function AdminChits() {
             });
             setForm(emptyForm);
             showAlert({ type: "success", message: "Chit scheme created successfully." });
-            await loadSchemes();
+            await loadSchemes(true);
         } catch (error) {
             console.error("Unable to create chit scheme:", error);
             showAlert({

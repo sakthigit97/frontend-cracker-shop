@@ -7,6 +7,7 @@ import { cartStore } from "./cart.store";
 import { useCartStorageSync } from "../hooks/useCartStorageSync";
 import { useOrdersStore } from "./orders.store";
 import { bulkOrderStore } from "./bulkOrder.store";
+import { useChitStore } from "./chit.store";
 export type UserRole = "USER" | "ADMIN" | "STAFF";
 
 interface AuthUser {
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     cartStore.getState().unlock();
     useOrdersStore.getState().clear();
     bulkOrderStore.getState().clearAll();
+    useChitStore.getState().clear();
   }, []);
 
   const updateUser = useCallback((data: Partial<AuthUser>) => {
@@ -162,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, logout]);
 
   const login = async (data: AuthUser) => {
+    useChitStore.getState().clear();
     localStorage.setItem("auth", JSON.stringify(data));
     setUser(data);
 

@@ -10,8 +10,11 @@ import {
     FaUsers,
 } from "react-icons/fa";
 import { useAlert } from "../../store/alert.store";
-import { listChitMembers, recordChitPayment } from "../../services/chit.api";
-import type { ChitMember, ChitScheme } from "../../types/chit";
+import { recordChitPayment } from "../../services/chit.api";
+import type { ChitMember } from "../../types/chit";
+import { useChitStore } from "../../store/chit.store";
+
+const EMPTY_MEMBERS: ChitMember[] = [];
 
 const currency = (amount: number) =>
     `₹${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -33,8 +36,10 @@ export default function AdminChitDetails() {
     const { chitId = "" } = useParams();
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-    const [scheme, setScheme] = useState<ChitScheme | null>(null);
-    const [members, setMembers] = useState<ChitMember[]>([]);
+    const cachedDetails = useChitStore((state) => state.membersByChitId[chitId]);
+    const scheme = cachedDetails?.scheme ?? null;
+    const members = cachedDetails?.members ?? EMPTY_MEMBERS;
+    const fetchChitMembers = useChitStore((state) => state.fetchChitMembers);
     const [loading, setLoading] = useState(true);
     const [savingKey, setSavingKey] = useState<string | null>(null);
     const [amounts, setAmounts] = useState<Record<string, string>>({});
@@ -42,12 +47,10 @@ export default function AdminChitDetails() {
     const [search, setSearch] = useState("");
     const hasLoadedScheme = useRef(false);
 
-    const load = useCallback(async () => {
+    const load = useCallback(async (force = false) => {
         try {
             if (!hasLoadedScheme.current) setLoading(true);
-            const result = await listChitMembers(chitId);
-            setScheme(result.scheme);
-            setMembers(result.members);
+            await fetchChitMembers(chitId, force);
         } catch (error) {
             console.error("Unable to load chit members:", error);
             showAlert({
@@ -58,7 +61,7 @@ export default function AdminChitDetails() {
             hasLoadedScheme.current = true;
             setLoading(false);
         }
-    }, [chitId, showAlert]);
+    }, [chitId, fetchChitMembers, showAlert]);
 
     useEffect(() => {
         void load();
@@ -82,13 +85,21 @@ export default function AdminChitDetails() {
             : installment.amount - installment.paidAmount;
         try {
             setSavingKey(key);
-            await recordChitPayment(chitId, member.userId, {
+            const updatedMember: ChitMember = await recordChitPayment(chitId, member.userId, {
                 dueDate: installment.dueDate,
                 amount,
                 note: notes[key],
             });
-            showAlert({ type: "success", message: "Payment recorded." });
-            await load();
+            const payoutCredited = updatedMember.installments.every(
+                (item) => item.status === "paid" && item.paidAmount >= item.amount
+            );
+            showAlert({
+                type: "success",
+                message: payoutCredited
+                    ? `Final payment recorded. ${currency(scheme?.packageAmount ?? 0)} credited to the user's chit balance.`
+                    : "Payment recorded.",
+            });
+            await load(true);
         } catch (error) {
             console.error("Unable to record chit payment:", error);
             showAlert({
