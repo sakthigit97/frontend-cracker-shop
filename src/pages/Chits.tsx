@@ -13,10 +13,9 @@ import {
 import { useAlert } from "../store/alert.store";
 import {
     joinChit,
-    listAvailableChits,
-    listMyChits,
 } from "../services/chit.api";
-import type { ChitScheme, MyChit } from "../types/chit";
+import type { ChitScheme } from "../types/chit";
+import { useChitStore } from "../store/chit.store";
 
 const currency = (amount: number) =>
     `₹${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -57,8 +56,9 @@ function ChitCardSkeleton() {
 export default function Chits() {
     const navigate = useNavigate();
     const { showAlert } = useAlert();
-    const [available, setAvailable] = useState<ChitScheme[]>([]);
-    const [myChits, setMyChits] = useState<MyChit[]>([]);
+    const available = useChitStore((state) => state.availableChits);
+    const myChits = useChitStore((state) => state.myChits);
+    const fetchCustomerData = useChitStore((state) => state.fetchCustomerData);
     const [loading, setLoading] = useState(true);
     const [joiningId, setJoiningId] = useState<string | null>(null);
     const [search, setSearch] = useState("");
@@ -66,15 +66,10 @@ export default function Chits() {
     const [openHistory, setOpenHistory] = useState<string | null>(null);
     const hasLoadedChits = useRef(false);
 
-    const load = useCallback(async () => {
+    const load = useCallback(async (force = false) => {
         try {
             if (!hasLoadedChits.current) setLoading(true);
-            const [schemes, memberships] = await Promise.all([
-                listAvailableChits(),
-                listMyChits(),
-            ]);
-            setAvailable(schemes);
-            setMyChits(memberships);
+            await fetchCustomerData(force);
         } catch (error) {
             console.error("Unable to load chit schemes:", error);
             showAlert({
@@ -85,7 +80,7 @@ export default function Chits() {
             hasLoadedChits.current = true;
             setLoading(false);
         }
-    }, [showAlert]);
+    }, [fetchCustomerData, showAlert]);
 
     useEffect(() => {
         void load();
@@ -114,7 +109,7 @@ export default function Chits() {
             setJoiningId(scheme.chitId);
             await joinChit(scheme.chitId);
             showAlert({ type: "success", message: `You joined ${scheme.name}.` });
-            await load();
+            await load(true);
         } catch (error) {
             console.error("Unable to join chit scheme:", error);
             showAlert({
